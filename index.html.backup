@@ -807,159 +807,64 @@
 
         <!-- CLIENT/FAMILY PORTAL -->
         <div id="client" class="content active">
-            <!-- Hero Section -->
-            <div class="client-hero">
-                <h2>Welcome to Elite Bridge Care</h2>
-                <p>Connect with trusted, verified caregivers for your loved ones. Simple, transparent, and compassionate care solutions.</p>
-            </div>
-
-            <!-- Quick Stats -->
-            <div class="quick-stats">
-                <div class="quick-stat">
-                    <div class="number">500+</div>
-                    <div class="label">Verified Caregivers</div>
-                </div>
-                <div class="quick-stat">
-                    <div class="number">4.8★</div>
-                    <div class="label">Average Rating</div>
-                </div>
-                <div class="quick-stat">
-                    <div class="number">24/7</div>
-                    <div class="label">Support Available</div>
-                </div>
-                <div class="quick-stat">
-                    <div class="number">2K+</div>
-                    <div class="label">Happy Families</div>
-                </div>
-            </div>
-
-            <!-- Submit Care Request -->
             <div class="section">
-                <h3>📋 Submit Your Care Request</h3>
-                <p style="margin-bottom: 20px; color: #666;">Tell us about your care needs and we'll match you with the perfect caregiver within 24 hours.</p>
-                <div class="care-request-form">
-                    <div class="form-group">
-                        <label>Your Name *</label>
-                        <input type="text" placeholder="Jane Smith" value="Jane Smith">
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label>Email Address *</label>
-                            <input type="email" placeholder="jane@example.com" value="jane@example.com">
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number *</label>
-                            <input type="tel" placeholder="(555) 123-4567" value="(555) 123-4567">
-                        </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group">
-                            <label>Care Type *</label>
-                            <select>
-                                <option selected>Select Care Type</option>
-                                <option>Companion Care</option>
-                                <option>Personal Care</option>
-                                <option>Household Support</option>
-                                <option>Mobility Assistance</option>
-                                <option>Medication Reminders</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Frequency *</label>
-                            <select>
-                                <option selected>Select Frequency</option>
-                                <option>One-time</option>
-                                <option>Daily</option>
-                                <option>3-5 Times Weekly</option>
-                                <option>Weekly</option>
-                                <option>Monthly</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Start Date *</label>
-                        <input type="date">
-                    </div>
-                    <div class="form-group">
-                        <label>Care Details & Special Requirements</label>
-                        <textarea placeholder="Describe the care needs, any medical conditions, mobility issues, dietary requirements, or other special requests..."></textarea>
-                    </div>
-                    <button class="btn-primary" onclick="alert('Care request submitted! We will match you with caregivers within 24 hours.')" style="width: 100%; padding: 14px; font-size: 1em;">Submit Care Request</button>
-                </div>
+                <h2>Request Care Services</h2>
+                <p>Find trusted, verified caregivers for your loved ones. Submit your care needs and we'll match you with the perfect caregiver.</p>
             </div>
 
-            <!-- My Care Bookings -->
             <div class="section">
-                <h3>📅 My Active Bookings</h3>
-                <p style="margin-bottom: 20px; color: #666;">Manage your ongoing care arrangements and upcoming appointments.</p>
-                
-                <div class="booking-card">
-                    <div class="booking-header">
-                        <div>
-                            <div class="booking-title">Companion Care - Mary Johnson</div>
-                            <p style="color: #666; font-size: 0.9em;">Experienced companion care specialist</p>
-                        </div>
-                        <span class="booking-status active">Active</span>
-                    </div>
-                    <div class="booking-details">
-                        <div class="booking-detail">
-                            <label>Schedule</label>
-                            <value>Mon & Wed, 2:00 PM - 5:00 PM</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Rate</label>
-                            <value>$22/hour</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Next Visit</label>
-                            <value>Monday, June 17</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Total Hours</label>
-                            <value>24 hours</value>
-                        </div>
-                    </div>
-                    <div class="booking-actions">
-                        <button class="btn-primary">View Details</button>
-                        <button class="btn-secondary">Message Caregiver</button>
-                        <button class="btn-secondary">Reschedule</button>
-                    </div>
-                </div>
+                <h3>📋 Submit Care Request</h3>
+                <div class="demo-section">
+                    <div class="demo-form">
+                        <input type="text" placeholder="Your Name" value="Jane Smith">
+                        <input type="email" placeholder="Email Address" value="jane@example.com">
+                        <input type="tel" placeholder="Phone Number" value="(555) 123-4567">
+                        
+                        <select>
+                            <option selected>Select Care Type</option>
+                            <option>Companion Care</option>
+                            <option>Personal Care</option>
+                            <option>Household Support</option>
+                            <option>Mobility Assistance</option>
+                            <option>Medication Reminders</option>
+                        </select>
 
-                <div class="booking-card">
-                    <div class="booking-header">
-                        <div>
-                            <div class="booking-title">Personal Care - Robert Davis</div>
-                            <p style="color: #666; font-size: 0.9em;">Certified Personal Care Assistant</p>
-                        </div>
-                        <span class="booking-status completed">Completed</span>
-                    </div>
-                    <div class="booking-details">
-                        <div class="booking-detail">
-                            <label>Duration</label>
-                            <value>June 10-14, 2026</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Rate</label>
-                            <value>$25/hour</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Total Hours</label>
-                            <value>15 hours</value>
-                        </div>
-                        <div class="booking-detail">
-                            <label>Total Cost</label>
-                            <value>$375</value>
-                        </div>
-                    </div>
-                    <div class="booking-actions">
-                        <button class="btn-primary">Leave Review</button>
-                        <button class="btn-secondary">Book Again</button>
+                        <select>
+                            <option selected>Frequency</option>
+                            <option>One-time</option>
+                            <option>Daily</option>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                        </select>
+
+                        <input type="date" placeholder="Start Date">
+                        
+                        <textarea placeholder="Describe care needs and any special requirements..."></textarea>
+                        
+                        <button class="btn-primary" onclick="alert('Care request submitted! We\'ll match you with caregivers shortly.')">Submit Care Request</button>
                     </div>
                 </div>
             </div>
 
-            <!-- Billing & Payments -->
+            <div class="section">
+                <h3>📊 My Care Bookings</h3>
+                <div class="list-item">
+                    <strong>Active: Companion Care - Mary Johnson</strong>
+                    <p><strong>Schedule:</strong> Monday & Wednesday, 2:00 PM - 5:00 PM</p>
+                    <p><strong>Rate:</strong> $22/hour | <strong>Status:</strong> ✅ Confirmed</p>
+                    <p style="margin-top: 10px; color: #666;">Next visit: Monday, June 17 at 2:00 PM</p>
+                    <button class="btn-secondary" style="margin-top: 10px;">View Details</button>
+                    <button class="btn-secondary" style="margin-top: 10px; margin-left: 10px;">Message Caregiver</button>
+                </div>
+                <div class="list-item">
+                    <strong>Completed: Personal Care - Robert Davis</strong>
+                    <p><strong>Schedule:</strong> June 10-14, Daily 9:00 AM - 12:00 PM</p>
+                    <p><strong>Rate:</strong> $25/hour | <strong>Status:</strong> ✅ Completed</p>
+                    <p style="margin-top: 10px; color: #666;">Total Hours: 15 | Total Cost: $375</p>
+                    <button class="btn-secondary" style="margin-top: 10px;">Leave Review</button>
+                </div>
+            </div>
+
             <div class="section">
                 <h3>💰 Billing & Payments</h3>
                 <div class="stats">
@@ -974,10 +879,6 @@
                     <div class="stat-box">
                         <div class="number">12</div>
                         <div class="label">Care Sessions</div>
-                    </div>
-                    <div class="stat-box">
-                        <div class="number">$22-25</div>
-                        <div class="label">Avg Hourly Rate</div>
                     </div>
                 </div>
             </div>
