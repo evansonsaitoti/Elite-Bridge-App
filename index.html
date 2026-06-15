@@ -814,57 +814,260 @@
     <div id="client" class="content active">
         <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
         
+        <!-- STEP 1: CARE REQUEST FORM -->
         <div style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <h3 style="color: #1B5E3F; margin-bottom: 30px; font-size: 1.5em;">📋 Submit Your Care Request</h3>
-            <p style="color: #666; margin-bottom: 25px;">Tell us about your care needs and we'll match you with the perfect caregiver within 24 hours.</p>
-            
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Your Name *</label>
-                    <input type="text" placeholder="Jane Smith">
-                </div>
-                <div class="form-group">
-                    <label>Email Address *</label>
-                    <input type="email" placeholder="jane@example.com">
-                </div>
-                <div class="form-group">
-                    <label>Phone Number *</label>
-                    <input type="tel" placeholder="(555) 123-4567">
-                </div>
-                <div class="form-group">
-                    <label>Care Type *</label>
-                    <select>
-                        <option>Select Care Type</option>
-                        <option>Companion Care</option>
-                        <option>Personal Care</option>
-                        <option>Household Support</option>
-                        <option>Mobility Assistance</option>
-                        <option>Medication Reminders</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Frequency *</label>
-                    <select>
-                        <option>Select Frequency</option>
-                        <option>One-time</option>
-                        <option>Daily</option>
-                        <option>3-5 Times Weekly</option>
-                        <option>Weekly</option>
-                        <option>Monthly</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Start Date *</label>
-                    <input type="date">
+            <!-- Progress Indicator -->
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div style="text-align: center;">
+                        <div style="width: 40px; height: 40px; background: #1B5E3F; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 8px;">1</div>
+                        <div style="font-size: 0.9em; color: #1B5E3F; font-weight: 600;">Your Info</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 15px; margin-top: -20px;"></div>
+                    <div style="text-align: center;">
+                        <div style="width: 40px; height: 40px; background: #e0e0e0; color: #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 8px;">2</div>
+                        <div style="font-size: 0.9em; color: #999;">Care Details</div>
+                    </div>
+                    <div style="flex: 1; height: 2px; background: #e0e0e0; margin: 0 15px; margin-top: -20px;"></div>
+                    <div style="text-align: center;">
+                        <div style="width: 40px; height: 40px; background: #e0e0e0; color: #999; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; margin: 0 auto 8px;">3</div>
+                        <div style="font-size: 0.9em; color: #999;">Match</div>
+                    </div>
                 </div>
             </div>
             
-            <div class="form-group">
-                <label>Care Details & Special Requirements</label>
-                <textarea placeholder="Describe the care needs, any medical conditions, mobility issues, dietary requirements, or other special requests..." style="min-height: 120px;"></textarea>
+            <h3 style="color: #1B5E3F; margin-bottom: 10px; font-size: 1.5em;">📋 Tell Us About You</h3>
+            <p style="color: #666; margin-bottom: 25px;">We'll use this information to find the perfect caregiver for your needs.</p>
+            
+            <!-- Contact Information -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="color: #1B5E3F; margin-bottom: 15px; font-size: 1.1em;">Contact Information</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Your Name *</label>
+                        <input type="text" placeholder="Jane Smith" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                        <small style="color: #999; margin-top: 5px; display: block;">Full name of the person requesting care</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" placeholder="jane@example.com" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                        <small style="color: #999; margin-top: 5px; display: block;">We'll send booking confirmations here</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" placeholder="(555) 123-4567" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                        <small style="color: #999; margin-top: 5px; display: block;">For caregiver coordination</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Relationship to Care Recipient</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Select Relationship</option>
+                            <option>Self</option>
+                            <option>Parent/Grandparent</option>
+                            <option>Spouse</option>
+                            <option>Adult Child</option>
+                            <option>Other Family</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             
-            <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1em;">Submit Care Request</button>
+            <!-- Care Recipient Information -->
+            <div style="margin-bottom: 25px; padding: 20px; background: #f8f9fa; border-radius: 8px; border-left: 4px solid #1B5E3F;">
+                <h4 style="color: #1B5E3F; margin-bottom: 15px; font-size: 1.1em;">👤 Care Recipient Information</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Care Recipient Name</label>
+                        <input type="text" placeholder="Mary Smith" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                    </div>
+                    <div class="form-group">
+                        <label>Age Range</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Select Age Range</option>
+                            <option>18-30</option>
+                            <option>31-50</option>
+                            <option>51-65</option>
+                            <option>66-75</option>
+                            <option>75+</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Mobility Level</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Select Mobility Level</option>
+                            <option>Independent</option>
+                            <option>Requires Assistance</option>
+                            <option>Limited Mobility</option>
+                            <option>Wheelchair/Bed-bound</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Care Type & Schedule -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="color: #1B5E3F; margin-bottom: 15px; font-size: 1.1em;">📅 Care Type & Schedule</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Primary Care Type *</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Select Care Type</option>
+                            <option>Companion Care</option>
+                            <option>Personal Care</option>
+                            <option>Household Support</option>
+                            <option>Mobility Assistance</option>
+                            <option>Medication Reminders</option>
+                            <option>Multiple Services</option>
+                        </select>
+                        <small style="color: #999; margin-top: 5px; display: block;">What type of care is needed?</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency *</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Select Frequency</option>
+                            <option>One-time (as needed)</option>
+                            <option>Daily</option>
+                            <option>3-5 Times Weekly</option>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                        </select>
+                        <small style="color: #999; margin-top: 5px; display: block;">How often is care needed?</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="date" style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                        <small style="color: #999; margin-top: 5px; display: block;">When do you need care to start?</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Preferred Time of Day</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>Flexible</option>
+                            <option>Morning (6am-12pm)</option>
+                            <option>Afternoon (12pm-6pm)</option>
+                            <option>Evening (6pm-12am)</option>
+                            <option>Overnight (12am-6am)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Special Requirements -->
+            <div style="margin-bottom: 25px;">
+                <h4 style="color: #1B5E3F; margin-bottom: 15px; font-size: 1.1em;">⚕️ Special Requirements & Notes</h4>
+                <div class="form-group">
+                    <label>Medical Conditions or Special Needs</label>
+                    <textarea placeholder="e.g., Dementia care, Diabetes management, Mobility issues, Dietary restrictions..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; min-height: 100px;"></textarea>
+                    <small style="color: #999; margin-top: 5px; display: block;">This helps us find caregivers with relevant experience</small>
+                </div>
+                <div class="form-group">
+                    <label>Additional Notes or Preferences</label>
+                    <textarea placeholder="e.g., Language preference, personality traits, specific tasks, household pets..." style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; min-height: 100px;"></textarea>
+                </div>
+            </div>
+            
+            <!-- Budget -->
+            <div style="margin-bottom: 30px; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                <h4 style="color: #1B5E3F; margin-bottom: 15px; font-size: 1.1em;">💰 Budget & Pricing</h4>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Budget Range (Hourly Rate)</label>
+                        <select style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em;">
+                            <option>No Preference</option>
+                            <option>$15-$20/hour</option>
+                            <option>$20-$25/hour</option>
+                            <option>$25-$30/hour</option>
+                            <option>$30-$40/hour</option>
+                            <option>$40+/hour</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; padding: 15px; background: white; border-radius: 6px; border-left: 3px solid #C4A747;">
+                    <div style="font-size: 0.9em; color: #666;">
+                        <strong>💡 Tip:</strong> Our caregivers range from $15-$40/hour depending on experience and specialty. We'll match you with caregivers within your budget.
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Submit Button -->
+            <button class="btn-primary" style="width: 100%; padding: 16px; font-size: 1.1em; background: #1B5E3F; border: none; color: white; font-weight: 600; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#0f3d2a'" onmouseout="this.style.background='#1B5E3F'">Find Caregivers & Get Matched →</button>
+            <p style="text-align: center; color: #999; margin-top: 15px; font-size: 0.9em;">✓ We'll match you with 3-5 caregivers within 24 hours</p>
+        </div>
+        
+        <!-- STEP 2: MATCHED CAREGIVERS -->
+        <div style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: none;" id="matched-caregivers">
+            <h3 style="color: #1B5E3F; margin-bottom: 30px; font-size: 1.5em;">✨ Your Perfect Matches</h3>
+            <p style="color: #666; margin-bottom: 25px;">We found 4 caregivers who match your needs. Click on any caregiver to see full details and book.</p>
+            
+            <!-- Matched Caregiver Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <!-- Match 1 -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); border-radius: 12px; padding: 20px; color: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 24px rgba(27, 94, 63, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">👩‍⚕️</div>
+                    <div style="font-size: 1.2em; font-weight: 700; margin-bottom: 5px;">Maria Santos</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 15px;">Personal Care Specialist</div>
+                    <div style="padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Match Score</span>
+                            <span style="font-weight: 700; color: #C4A747;">98%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Rating</span>
+                            <span style="font-weight: 700;">★★★★★ 4.9</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 0.9em; margin-bottom: 10px;">8 years experience • $28/hour</div>
+                        <button style="width: 100%; padding: 10px; background: #C4A747; color: #1B5E3F; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#d4b85a'" onmouseout="this.style.background='#C4A747'">View & Book</button>
+                    </div>
+                </div>
+                
+                <!-- Match 2 -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); border-radius: 12px; padding: 20px; color: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 24px rgba(27, 94, 63, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">👨‍⚕️</div>
+                    <div style="font-size: 1.2em; font-weight: 700; margin-bottom: 5px;">James Wilson</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 15px;">Companion Care Specialist</div>
+                    <div style="padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Match Score</span>
+                            <span style="font-weight: 700; color: #C4A747;">95%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Rating</span>
+                            <span style="font-weight: 700;">★★★★★ 4.8</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 0.9em; margin-bottom: 10px;">5 years experience • $22/hour</div>
+                        <button style="width: 100%; padding: 10px; background: #C4A747; color: #1B5E3F; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#d4b85a'" onmouseout="this.style.background='#C4A747'">View & Book</button>
+                    </div>
+                </div>
+                
+                <!-- Match 3 -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); border-radius: 12px; padding: 20px; color: white; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 24px rgba(27, 94, 63, 0.3)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                    <div style="font-size: 2.5em; margin-bottom: 10px;">👩‍⚕️</div>
+                    <div style="font-size: 1.2em; font-weight: 700; margin-bottom: 5px;">Lisa Chen</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 15px;">Mobility & Physical Care</div>
+                    <div style="padding: 15px 0; border-top: 1px solid rgba(255,255,255,0.2); border-bottom: 1px solid rgba(255,255,255,0.2);">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <span>Match Score</span>
+                            <span style="font-weight: 700; color: #C4A747;">92%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span>Rating</span>
+                            <span style="font-weight: 700;">★★★★★ 5.0</span>
+                        </div>
+                    </div>
+                    <div style="margin-top: 15px;">
+                        <div style="font-size: 0.9em; margin-bottom: 10px;">10 years experience • $32/hour</div>
+                        <button style="width: 100%; padding: 10px; background: #C4A747; color: #1B5E3F; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.3s ease;" onmouseover="this.style.background='#d4b85a'" onmouseout="this.style.background='#C4A747'">View & Book</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div style="padding: 20px; background: #e8f5e9; border-radius: 8px; border-left: 4px solid #1B5E3F;">
+                <div style="color: #1B5E3F; font-weight: 600; margin-bottom: 8px;">✓ All caregivers are verified and background-checked</div>
+                <div style="font-size: 0.9em; color: #666;">You can message any caregiver before booking to ask questions and confirm availability.</div>
+            </div>
         </div>
 
         <h3 style="color: #1B5E3F; margin: 40px 0 25px 0; font-size: 1.5em;">📅 My Active Bookings</h3>
