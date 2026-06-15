@@ -1264,8 +1264,25 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <img src="elite-bridge-icon.png" alt="Elite Bridge" style="max-width: 100%; height: auto; max-height: 180px;">
+        <header style="display: flex; align-items: center; justify-content: center; gap: 15px; padding: 15px 0;">
+            <!-- Logo Icon SVG -->
+            <svg width="60" height="60" viewBox="0 0 100 100" style="flex-shrink: 0;">
+                <!-- Left hand (dark green) -->
+                <path d="M 20 50 Q 15 40 20 30 Q 25 35 30 40 Q 25 45 20 50" fill="#1B5E3F" stroke="none"/>
+                <!-- Right hand (dark green) -->
+                <path d="M 80 50 Q 85 40 80 30 Q 75 35 70 40 Q 75 45 80 50" fill="#1B5E3F" stroke="none"/>
+                <!-- Heart (gold) -->
+                <path d="M 50 65 C 40 55 30 50 30 42 C 30 35 35 30 40 30 C 45 30 50 35 50 35 C 50 35 55 30 60 30 C 65 30 70 35 70 42 C 70 50 60 55 50 65 Z" fill="#C4A747" stroke="none"/>
+            </svg>
+            
+            <!-- Text -->
+            <div style="text-align: left;">
+                <div style="font-size: 1.3em; font-weight: 700; letter-spacing: 1px;">
+                    <span style="color: #1B5E3F;">ELITE</span>
+                    <span style="color: #C4A747; margin-left: 5px;">BRIDGE</span>
+                </div>
+                <div style="font-size: 0.65em; color: #1B5E3F; letter-spacing: 0.5px; margin-top: 2px; font-weight: 500;">STAFFING YOU CAN RELY ON</div>
+            </div>
         </header>
 
         <div class="mode-selector">
