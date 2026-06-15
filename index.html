@@ -58,6 +58,7 @@
             color: #333;
             font-weight: 500;
             transition: color 0.3s ease;
+            cursor: pointer;
         }
 
         nav a:hover {
@@ -98,21 +99,19 @@
         }
 
         .btn-signup:hover {
-            background: #154530;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(27, 94, 63, 0.2);
+            background: #0d3d2a;
         }
 
         /* HERO SECTION */
         .hero {
-            background: linear-gradient(135deg, #1B5E3F 0%, #2d7a3e 100%);
+            background: linear-gradient(135deg, #1B5E3F 0%, #2a8659 100%);
             color: white;
             padding: 80px 20px;
             text-align: center;
         }
 
         .hero-content {
-            max-width: 800px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -120,68 +119,65 @@
             font-size: 3.5em;
             margin-bottom: 20px;
             font-weight: 700;
-            line-height: 1.2;
         }
 
         .hero p {
             font-size: 1.3em;
-            margin-bottom: 30px;
+            margin-bottom: 40px;
             opacity: 0.95;
         }
 
         .hero-buttons {
             display: flex;
-            gap: 15px;
+            gap: 20px;
             justify-content: center;
+            margin-bottom: 60px;
             flex-wrap: wrap;
-            margin-bottom: 50px;
         }
 
         .btn-primary {
-            padding: 14px 32px;
-            background: #C4A747;
-            color: #1B5E3F;
+            padding: 15px 40px;
+            background: #D4A574;
+            color: white;
             border: none;
             border-radius: 8px;
             font-size: 1.1em;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background: #d4b857;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(196, 167, 71, 0.3);
+            background: #c49460;
+            transform: translateY(-2px);
         }
 
         .btn-secondary {
-            padding: 14px 32px;
-            background: white;
-            color: #1B5E3F;
+            padding: 15px 40px;
+            background: transparent;
+            color: white;
             border: 2px solid white;
             border-radius: 8px;
             font-size: 1.1em;
-            font-weight: 700;
+            font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .btn-secondary:hover {
-            background: transparent;
-            color: white;
+            background: white;
+            color: #1B5E3F;
         }
 
         .hero-stats {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 30px;
-            margin-top: 50px;
         }
 
         .stat-card {
             background: rgba(255, 255, 255, 0.1);
-            padding: 25px;
+            padding: 30px;
             border-radius: 12px;
             backdrop-filter: blur(10px);
         }
@@ -204,32 +200,22 @@
             padding: 0 20px;
         }
 
-        .section-title {
+        .features h2 {
             text-align: center;
             font-size: 2.5em;
-            margin-bottom: 50px;
             color: #1B5E3F;
+            margin-bottom: 60px;
         }
 
         .features-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
+            gap: 40px;
         }
 
         .feature-card {
-            background: white;
-            padding: 40px;
-            border-radius: 12px;
             text-align: center;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-            transition: all 0.3s ease;
-            border-top: 4px solid #1B5E3F;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            padding: 30px;
         }
 
         .feature-icon {
@@ -238,9 +224,9 @@
         }
 
         .feature-card h3 {
+            color: #1B5E3F;
             font-size: 1.5em;
             margin-bottom: 15px;
-            color: #1B5E3F;
         }
 
         .feature-card p {
@@ -248,159 +234,54 @@
             line-height: 1.8;
         }
 
-        /* TESTIMONIALS */
-        .testimonials {
-            background: #f0f4f2;
-            padding: 80px 20px;
-            margin: 80px 0;
-        }
-
-        .testimonials-container {
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-
-        .testimonials-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .testimonial-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-        }
-
-        .stars {
-            color: #C4A747;
-            font-size: 1.2em;
-            margin-bottom: 15px;
-        }
-
-        .testimonial-text {
-            color: #666;
-            margin-bottom: 20px;
-            font-style: italic;
-            line-height: 1.8;
-        }
-
-        .testimonial-author {
-            font-weight: 600;
-            color: #1B5E3F;
-        }
-
-        .testimonial-role {
-            color: #999;
-            font-size: 0.9em;
-        }
-
-        /* TRUST SECTION */
-        .trust-section {
-            max-width: 1400px;
-            margin: 80px auto;
-            padding: 0 20px;
-        }
-
-        .trust-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
-            margin-top: 40px;
-        }
-
-        .trust-card {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            text-align: center;
-            border: 2px solid #1B5E3F;
-        }
-
-        .trust-icon {
-            font-size: 2.5em;
-            margin-bottom: 15px;
-        }
-
-        .trust-card h4 {
-            color: #1B5E3F;
-            margin-bottom: 10px;
-        }
-
-        /* CTA SECTION */
-        .cta-section {
-            background: linear-gradient(135deg, #1B5E3F 0%, #2d7a3e 100%);
-            color: white;
-            padding: 60px 20px;
-            text-align: center;
-            margin: 80px 0 0 0;
-        }
-
-        .cta-content {
-            max-width: 800px;
-            margin: 0 auto;
-        }
-
-        .cta-section h2 {
-            font-size: 2.5em;
-            margin-bottom: 20px;
-        }
-
-        .cta-section p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            opacity: 0.95;
-        }
-
         /* MODE SELECTOR */
         .mode-selector {
+            max-width: 1400px;
+            margin: 60px auto;
+            padding: 0 20px;
             display: flex;
             gap: 15px;
-            justify-content: center;
-            margin: 40px 0;
             flex-wrap: wrap;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 0 20px;
+            justify-content: center;
         }
 
         .mode-btn {
-            padding: 12px 28px;
-            font-size: 1em;
-            border: 2px solid #1B5E3F;
+            padding: 12px 24px;
             background: white;
-            color: #1B5E3F;
+            border: 2px solid #ddd;
             border-radius: 8px;
             cursor: pointer;
+            font-size: 1em;
             font-weight: 600;
+            color: #333;
             transition: all 0.3s ease;
+        }
+
+        .mode-btn:hover {
+            border-color: #1B5E3F;
+            color: #1B5E3F;
         }
 
         .mode-btn.active {
             background: #1B5E3F;
             color: white;
-            box-shadow: 0 4px 12px rgba(27, 94, 63, 0.2);
-        }
-
-        .mode-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(27, 94, 63, 0.2);
+            border-color: #1B5E3F;
         }
 
         /* CONTENT SECTIONS */
+        .content-wrapper {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
         .content {
             display: none;
-            animation: fadeIn 0.3s ease;
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 20px;
         }
 
         .content.active {
             display: block;
+            animation: fadeIn 0.3s ease;
         }
 
         @keyframes fadeIn {
@@ -505,31 +386,32 @@
         }
 
         .detail-label {
-            font-size: 0.85em;
             color: #999;
+            font-size: 0.9em;
+            font-weight: 600;
             margin-bottom: 5px;
         }
 
         .detail-value {
-            font-weight: 600;
             color: #1B5E3F;
+            font-weight: 600;
+            font-size: 1.1em;
         }
 
         .booking-actions {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-top: 15px;
         }
 
         .btn-small {
             padding: 8px 16px;
-            border: 1px solid #1B5E3F;
-            background: white;
-            color: #1B5E3F;
+            background: #f0f4f2;
+            border: 1px solid #ddd;
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
+            color: #1B5E3F;
             transition: all 0.3s ease;
         }
 
@@ -538,12 +420,76 @@
             color: white;
         }
 
+        /* MODAL STYLES */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 40px;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            color: #1B5E3F;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 2em;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close-btn:hover {
+            color: #333;
+        }
+
+        /* CTA SECTION */
+        .cta-section {
+            background: linear-gradient(135deg, #1B5E3F 0%, #2a8659 100%);
+            color: white;
+            padding: 60px 20px;
+            text-align: center;
+        }
+
+        .cta-content h2 {
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .cta-content p {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
         /* FOOTER */
         footer {
             background: #1B5E3F;
             color: white;
-            padding: 40px 20px;
-            margin-top: 80px;
+            padding: 60px 20px 20px;
         }
 
         .footer-content {
@@ -551,29 +497,31 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 30px;
+            gap: 40px;
+            margin-bottom: 40px;
         }
 
         .footer-section h4 {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            font-size: 1.1em;
         }
 
         .footer-section a {
             display: block;
             color: rgba(255, 255, 255, 0.8);
             text-decoration: none;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             transition: color 0.3s ease;
+            cursor: pointer;
         }
 
         .footer-section a:hover {
-            color: #C4A747;
+            color: white;
         }
 
         .footer-bottom {
             text-align: center;
-            margin-top: 30px;
-            padding-top: 30px;
+            padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
             opacity: 0.8;
         }
@@ -581,15 +529,11 @@
         /* RESPONSIVE */
         @media (max-width: 768px) {
             .hero h1 {
-                font-size: 2.5em;
+                font-size: 2em;
             }
 
             .hero p {
-                font-size: 1.1em;
-            }
-
-            nav {
-                display: none;
+                font-size: 1em;
             }
 
             .hero-buttons {
@@ -600,55 +544,8 @@
                 width: 100%;
             }
 
-            .section-title {
-                font-size: 2em;
-            }
-
-            .feature-card {
-                padding: 25px;
-            }
-
-            .cta-section h2 {
-                font-size: 2em;
-            }
-
-            .form-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .booking-details {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .header-container {
-                padding: 10px 15px;
-            }
-
-            .logo-section img {
-                height: 40px;
-            }
-
-            .auth-buttons {
-                display: none;
-            }
-
-            .hero {
-                padding: 50px 15px;
-            }
-
-            .hero h1 {
-                font-size: 2em;
-            }
-
-            .hero-stats {
-                grid-template-columns: 1fr;
+            nav {
                 gap: 15px;
-            }
-
-            .stat-number {
-                font-size: 2em;
             }
 
             .mode-selector {
@@ -669,13 +566,13 @@
                 <img src="logo.webp" alt="Elite Bridge" style="height: 50px; width: auto;">
             </div>
             <nav>
-                <a href="#browse">Browse Caregivers</a>
-                <a href="#request">Request Care</a>
-                <a href="#about">About Us</a>
+                <a onclick="scrollToFeatures(); return false;">Browse Caregivers</a>
+                <a onclick="switchMode('client'); return false;">Request Care</a>
+                <a onclick="scrollToFeatures(); return false;">About Us</a>
             </nav>
             <div class="auth-buttons">
-                <button class="btn-signin">Sign In</button>
-                <button class="btn-signup">Sign Up</button>
+                <button class="btn-signin" onclick="openModal('signin-modal')">Sign In</button>
+                <button class="btn-signup" onclick="openModal('signup-modal')">Sign Up</button>
             </div>
         </div>
     </header>
@@ -712,7 +609,7 @@
 
     <!-- FEATURES SECTION -->
     <section class="features">
-        <h2 class="section-title">Why Choose Elite Bridge?</h2>
+        <h2>Why Choose Elite Bridge?</h2>
         <div class="features-grid">
             <div class="feature-card">
                 <div class="feature-icon">✅</div>
@@ -747,506 +644,345 @@
         </div>
     </section>
 
-    <!-- TESTIMONIALS -->
-    <section class="testimonials">
-        <div class="testimonials-container">
-            <h2 class="section-title">What Families & Caregivers Say</h2>
-            <div class="testimonials-grid">
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="testimonial-text">"Elite Bridge made finding a caregiver so easy. The verification process gave us peace of mind, and the caregiver they matched us with has been wonderful."</p>
-                    <div class="testimonial-author">Sarah Johnson</div>
-                    <div class="testimonial-role">Family Member</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="testimonial-text">"As a caregiver, I appreciate how Elite Bridge values quality and trust. The platform is professional and the support team is always helpful."</p>
-                    <div class="testimonial-author">Maria Rodriguez</div>
-                    <div class="testimonial-role">Certified Caregiver</div>
-                </div>
-                <div class="testimonial-card">
-                    <div class="stars">★★★★★</div>
-                    <p class="testimonial-text">"The matching process was incredibly accurate. Our caregiver understands our mother's needs perfectly. Highly recommend!"</p>
-                    <div class="testimonial-author">James Chen</div>
-                    <div class="testimonial-role">Family Member</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- TRUST SECTION -->
-    <section class="trust-section">
-        <h2 class="section-title">Trust & Verification</h2>
-        <div class="trust-grid">
-            <div class="trust-card">
-                <div class="trust-icon">🔍</div>
-                <h4>Background Checks</h4>
-                <p>Comprehensive background screening for all caregivers</p>
-            </div>
-            <div class="trust-card">
-                <div class="trust-icon">📜</div>
-                <h4>Certifications</h4>
-                <p>Verified professional certifications and licenses</p>
-            </div>
-            <div class="trust-card">
-                <div class="trust-icon">⭐</div>
-                <h4>Ratings & Reviews</h4>
-                <p>Transparent feedback from families</p>
-            </div>
-            <div class="trust-card">
-                <div class="trust-icon">🏥</div>
-                <h4>Healthcare Partners</h4>
-                <p>Trusted by leading healthcare facilities</p>
-            </div>
-        </div>
-    </section>
-
     <!-- MODE SELECTOR -->
     <div class="mode-selector">
-        <button class="mode-btn active" onclick="switchMode('client')">👨‍👩‍👧 Client Portal</button>
+        <button class="mode-btn active" onclick="switchMode('home')">👨‍👩‍👧 Client Portal</button>
         <button class="mode-btn" onclick="switchMode('directory')">👥 Caregiver Directory</button>
-        <button class="mode-btn" onclick="switchMode('staff')">👤 Staff Portal</button>
+        <button class="mode-btn" onclick="switchMode('caregiver')">👤 Staff Portal</button>
         <button class="mode-btn" onclick="switchMode('admin')">👨‍💼 Admin Dashboard</button>
         <button class="mode-btn" onclick="switchMode('messaging')">💬 Messaging</button>
     </div>
 
-    <!-- CLIENT PORTAL -->
-    <div id="client" class="content active">
-        <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
-        
-        <div style="background: white; padding: 40px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <h3 style="color: #1B5E3F; margin-bottom: 30px; font-size: 1.5em;">📋 Submit Your Care Request</h3>
-            <p style="color: #666; margin-bottom: 25px;">Tell us about your care needs and we'll match you with the perfect caregiver within 24 hours.</p>
+    <!-- CONTENT SECTIONS -->
+    <div class="content-wrapper">
+        <!-- CLIENT PORTAL -->
+        <div id="home" class="content active">
+            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
             
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Your Name *</label>
-                    <input type="text" placeholder="Jane Smith">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 20px;">📋 Submit Your Care Request</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Your Name *</label>
+                        <input type="text" placeholder="Jane Smith">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" placeholder="jane@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number *</label>
+                        <input type="tel" placeholder="(555) 123-4567">
+                    </div>
+                    <div class="form-group">
+                        <label>Care Type *</label>
+                        <select>
+                            <option>Select Care Type</option>
+                            <option>Companion Care</option>
+                            <option>Personal Care</option>
+                            <option>Household Support</option>
+                            <option>Mobility Assistance</option>
+                            <option>Medication Reminders</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Frequency *</label>
+                        <select>
+                            <option>Select Frequency</option>
+                            <option>One-time</option>
+                            <option>Daily</option>
+                            <option>3-5 Times Weekly</option>
+                            <option>Weekly</option>
+                            <option>Monthly</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Start Date *</label>
+                        <input type="date">
+                    </div>
                 </div>
                 <div class="form-group">
-                    <label>Email Address *</label>
-                    <input type="email" placeholder="jane@example.com">
+                    <label>Care Details & Special Requirements</label>
+                    <textarea placeholder="Describe the care needs, any medical conditions, mobility issues, dietary requirements, or other special requests..." rows="5"></textarea>
                 </div>
-                <div class="form-group">
-                    <label>Phone Number *</label>
-                    <input type="tel" placeholder="(555) 123-4567">
+                <button class="btn-primary" onclick="alert('Care request submitted! We will match you with caregivers within 24 hours.')">Submit Care Request</button>
+            </div>
+
+            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">📅 My Active Bookings</h3>
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-title">Companion Care - Mary Johnson</div>
+                        <p style="color: #999; margin-top: 5px;">Experienced companion care specialist</p>
+                    </div>
+                    <span class="status-badge status-active">Active</span>
                 </div>
-                <div class="form-group">
-                    <label>Care Type *</label>
-                    <select>
-                        <option>Select Care Type</option>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Schedule</span>
+                        <span class="detail-value">Mon & Wed, 2:00 PM - 5:00 PM</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Rate</span>
+                        <span class="detail-value">$22/hour</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Next Visit</span>
+                        <span class="detail-value">Monday, June 17</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Hours</span>
+                        <span class="detail-value">24 hours</span>
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    <button class="btn-small" onclick="alert('Viewing booking details...')">View Details</button>
+                    <button class="btn-small" onclick="switchMode('messaging')">Message Caregiver</button>
+                    <button class="btn-small" onclick="alert('Reschedule booking - coming soon!')">Reschedule</button>
+                </div>
+            </div>
+
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-title">Personal Care - Robert Davis</div>
+                        <p style="color: #999; margin-top: 5px;">Certified Personal Care Assistant</p>
+                    </div>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Duration</span>
+                        <span class="detail-value">June 10-14, 2026</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Rate</span>
+                        <span class="detail-value">$25/hour</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Hours</span>
+                        <span class="detail-value">15 hours</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Total Cost</span>
+                        <span class="detail-value">$375</span>
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    <button class="btn-small" onclick="alert('Thank you for your review!')">Leave Review</button>
+                    <button class="btn-small" onclick="switchMode('client')">Book Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CAREGIVER DIRECTORY -->
+        <div id="directory" class="content">
+            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
+            
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <div class="form-grid">
+                    <input type="text" placeholder="Search by name or specialty..." style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                    <select style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
+                        <option>All Specialties</option>
                         <option>Companion Care</option>
                         <option>Personal Care</option>
-                        <option>Household Support</option>
-                        <option>Mobility Assistance</option>
-                        <option>Medication Reminders</option>
+                        <option>Dementia Care</option>
                     </select>
-                </div>
-                <div class="form-group">
-                    <label>Frequency *</label>
-                    <select>
-                        <option>Select Frequency</option>
-                        <option>One-time</option>
-                        <option>Daily</option>
-                        <option>3-5 Times Weekly</option>
-                        <option>Weekly</option>
-                        <option>Monthly</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Start Date *</label>
-                    <input type="date">
+                    <button class="btn-primary" onclick="alert('Searching caregivers...')">Search</button>
                 </div>
             </div>
+
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-title">Maria Santos</div>
+                        <p style="color: #999; margin-top: 5px;">Companion Care Specialist • 8 years experience</p>
+                    </div>
+                    <span style="color: #D4A574; font-size: 1.2em;">★★★★★ 4.9</span>
+                </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Rate</span>
+                        <span class="detail-value">$22/hour</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Availability</span>
+                        <span class="detail-value">Flexible</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Languages</span>
+                        <span class="detail-value">English, Spanish</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Certifications</span>
+                        <span class="detail-value">CPR, First Aid</span>
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    <button class="btn-small" onclick="alert('Viewing caregiver profile...')">View Profile</button>
+                    <button class="btn-small" onclick="switchMode('messaging')">Message</button>
+                    <button class="btn-small" onclick="alert('Booking caregiver...')">Book Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- STAFF PORTAL -->
+        <div id="caregiver" class="content">
+            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Staff Portal</h2>
             
-            <div class="form-group">
-                <label>Care Details & Special Requirements</label>
-                <textarea placeholder="Describe the care needs, any medical conditions, mobility issues, dietary requirements, or other special requests..." style="min-height: 120px;"></textarea>
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 20px;">👤 Your Profile</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">4.9★</div>
+                        <div style="color: #999; margin-top: 5px;">Your Rating</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">12</div>
+                        <div style="color: #999; margin-top: 5px;">Families Served</div>
+                    </div>
+                </div>
             </div>
+
+            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">📅 Upcoming Shifts</h3>
+            <div class="booking-card">
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-title">Companion Care - Johnson Family</div>
+                        <p style="color: #999; margin-top: 5px;">Regular weekly shift</p>
+                    </div>
+                    <span class="status-badge status-active">Confirmed</span>
+                </div>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Date & Time</span>
+                        <span class="detail-value">Mon, June 17, 2-5 PM</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Duration</span>
+                        <span class="detail-value">3 hours</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Rate</span>
+                        <span class="detail-value">$28/hour</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label">Earnings</span>
+                        <span class="detail-value">$84</span>
+                    </div>
+                </div>
+                <div class="booking-actions">
+                    <button class="btn-small" onclick="alert('Viewing shift details...')">View Details</button>
+                    <button class="btn-small" onclick="switchMode('messaging')">Message Family</button>
+                    <button class="btn-small" onclick="alert('Clocked in successfully!')">Clock In</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ADMIN DASHBOARD -->
+        <div id="admin" class="content">
+            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
             
-            <button class="btn-primary" style="width: 100%; padding: 14px; font-size: 1.1em;">Submit Care Request</button>
-        </div>
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Platform Overview</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">245</div>
+                        <div style="color: #999; margin-top: 5px;">Active Care Requests</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">523</div>
+                        <div style="color: #999; margin-top: 5px;">Verified Caregivers</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">1,847</div>
+                        <div style="color: #999; margin-top: 5px;">Registered Families</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
+                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$156K</div>
+                        <div style="color: #999; margin-top: 5px;">Monthly Revenue</div>
+                    </div>
+                </div>
+            </div>
 
-        <h3 style="color: #1B5E3F; margin: 40px 0 25px 0; font-size: 1.5em;">📅 My Active Bookings</h3>
-        <p style="color: #666; margin-bottom: 25px;">Manage your ongoing care arrangements and upcoming appointments.</p>
-
-        <div class="booking-card">
-            <div class="booking-header">
-                <div>
-                    <div class="booking-title">Companion Care - Mary Johnson</div>
-                    <p style="color: #999; margin-top: 5px;">Experienced companion care specialist</p>
-                </div>
-                <span class="status-badge status-active">Active</span>
-            </div>
-            <div class="booking-details">
-                <div class="detail-item">
-                    <span class="detail-label">Schedule</span>
-                    <span class="detail-value">Mon & Wed, 2:00 PM - 5:00 PM</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Rate</span>
-                    <span class="detail-value">$22/hour</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Next Visit</span>
-                    <span class="detail-value">Monday, June 17</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Hours</span>
-                    <span class="detail-value">24 hours</span>
-                </div>
-            </div>
-            <div class="booking-actions">
-                <button class="btn-small">View Details</button>
-                <button class="btn-small">Message Caregiver</button>
-                <button class="btn-small">Reschedule</button>
-            </div>
-        </div>
-
-        <div class="booking-card">
-            <div class="booking-header">
-                <div>
-                    <div class="booking-title">Personal Care - Robert Davis</div>
-                    <p style="color: #999; margin-top: 5px;">Certified Personal Care Assistant</p>
-                </div>
-                <span class="status-badge status-completed">Completed</span>
-            </div>
-            <div class="booking-details">
-                <div class="detail-item">
-                    <span class="detail-label">Duration</span>
-                    <span class="detail-value">June 10-14, 2026</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Rate</span>
-                    <span class="detail-value">$25/hour</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Hours</span>
-                    <span class="detail-value">15 hours</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Total Cost</span>
-                    <span class="detail-value">$375</span>
-                </div>
-            </div>
-            <div class="booking-actions">
-                <button class="btn-small">Leave Review</button>
-                <button class="btn-small">Book Again</button>
-            </div>
-        </div>
-
-        <h3 style="color: #1B5E3F; margin: 40px 0 25px 0; font-size: 1.5em;">💰 Billing & Payments</h3>
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$1,250</div>
-                    <div style="color: #999; margin-top: 5px;">Total Spent</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$375</div>
-                    <div style="color: #999; margin-top: 5px;">This Month</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">12</div>
-                    <div style="color: #999; margin-top: 5px;">Care Sessions</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$22-25</div>
-                    <div style="color: #999; margin-top: 5px;">Avg Hourly Rate</div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- CAREGIVER DIRECTORY -->
-    <div id="directory" class="content">
-        <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
-        
-        <div style="background: white; padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-            <h3 style="color: #1B5E3F; margin-bottom: 20px;">🔍 Search & Filter Caregivers</h3>
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Care Type</label>
-                    <select>
-                        <option>All Types</option>
-                        <option>Companion Care</option>
-                        <option>Personal Care</option>
-                        <option>Household Support</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Experience Level</label>
-                    <select>
-                        <option>All Levels</option>
-                        <option>Entry Level</option>
-                        <option>Experienced</option>
-                        <option>Expert</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Availability</label>
-                    <select>
-                        <option>Any Time</option>
-                        <option>Weekdays</option>
-                        <option>Weekends</option>
-                        <option>24/7</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Max Hourly Rate</label>
-                    <input type="number" placeholder="$50">
-                </div>
-            </div>
-            <button class="btn-primary" style="width: 100%; padding: 12px;">Search Caregivers</button>
-        </div>
-
-        <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">Featured Caregivers</h3>
-        <div class="features-grid">
+            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">🔍 Pending Verifications</h3>
             <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👩‍⚕️</div>
-                    <div class="booking-title">Maria Santos</div>
-                    <p style="color: #999; margin-top: 5px;">Certified Personal Care Assistant</p>
+                <div class="booking-header">
+                    <div>
+                        <div class="booking-title">Robert Martinez</div>
+                        <p style="color: #999; margin-top: 5px;">Personal Care Assistant</p>
+                    </div>
+                    <span class="status-badge" style="background: #fff3cd; color: #856404;">Pending</span>
                 </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 4.9</span>
+                <div class="booking-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Applied</span>
+                        <span class="detail-value">June 10, 2026</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">8 years</span>
+                    <div class="detail-item">
+                        <span class="detail-label">Background Check</span>
+                        <span class="detail-value">✓ Completed</span>
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$28/hour</span>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
-                </div>
-            </div>
-
-            <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👨‍⚕️</div>
-                    <div class="booking-title">James Wilson</div>
-                    <p style="color: #999; margin-top: 5px;">Companion Care Specialist</p>
-                </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 4.8</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">5 years</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$22/hour</span>
+                    <div class="detail-item">
+                        <span class="detail-label">Certifications</span>
+                        <span class="detail-value">⏳ Pending</span>
                     </div>
                 </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
-                </div>
-            </div>
-
-            <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👩‍⚕️</div>
-                    <div class="booking-title">Lisa Chen</div>
-                    <p style="color: #999; margin-top: 5px;">Mobility & Physical Care</p>
-                </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 5.0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">10 years</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$32/hour</span>
-                    </div>
-                </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- STAFF PORTAL -->
-    <div id="staff" class="content">
-        <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Staff Portal</h2>
-        <p style="color: #666; font-size: 1.1em; margin-bottom: 30px;">Manage your shifts, earnings, and professional profile.</p>
-        
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-            <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Your Stats</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$2,450</div>
-                    <div style="color: #999; margin-top: 5px;">This Month</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">45</div>
-                    <div style="color: #999; margin-top: 5px;">Hours Worked</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">4.9★</div>
-                    <div style="color: #999; margin-top: 5px;">Your Rating</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">12</div>
-                    <div style="color: #999; margin-top: 5px;">Families Served</div>
+                <div class="booking-actions">
+                    <button class="btn-small" onclick="alert('Reviewing application...')">Review Application</button>
+                    <button class="btn-small" onclick="alert('Document request sent!')">Request Documents</button>
+                    <button class="btn-small" onclick="alert('Applicant approved!')">Approve</button>
                 </div>
             </div>
         </div>
 
-        <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">📅 Upcoming Shifts</h3>
-        <div class="booking-card">
-            <div class="booking-header">
-                <div>
-                    <div class="booking-title">Companion Care - Johnson Family</div>
-                    <p style="color: #999; margin-top: 5px;">Regular weekly shift</p>
-                </div>
-                <span class="status-badge status-active">Confirmed</span>
-            </div>
-            <div class="booking-details">
-                <div class="detail-item">
-                    <span class="detail-label">Date & Time</span>
-                    <span class="detail-value">Mon, June 17, 2-5 PM</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Duration</span>
-                    <span class="detail-value">3 hours</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Rate</span>
-                    <span class="detail-value">$28/hour</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Earnings</span>
-                    <span class="detail-value">$84</span>
-                </div>
-            </div>
-            <div class="booking-actions">
-                <button class="btn-small">View Details</button>
-                <button class="btn-small">Message Family</button>
-                <button class="btn-small">Clock In</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ADMIN DASHBOARD -->
-    <div id="admin" class="content">
-        <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
-        
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-            <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Platform Overview</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">245</div>
-                    <div style="color: #999; margin-top: 5px;">Active Care Requests</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">523</div>
-                    <div style="color: #999; margin-top: 5px;">Verified Caregivers</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">1,847</div>
-                    <div style="color: #999; margin-top: 5px;">Registered Families</div>
-                </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$156K</div>
-                    <div style="color: #999; margin-top: 5px;">Monthly Revenue</div>
-                </div>
-            </div>
-        </div>
-
-        <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">🔍 Pending Verifications</h3>
-        <div class="booking-card">
-            <div class="booking-header">
-                <div>
-                    <div class="booking-title">Robert Martinez</div>
-                    <p style="color: #999; margin-top: 5px;">Personal Care Assistant</p>
-                </div>
-                <span class="status-badge" style="background: #fff3cd; color: #856404;">Pending</span>
-            </div>
-            <div class="booking-details">
-                <div class="detail-item">
-                    <span class="detail-label">Applied</span>
-                    <span class="detail-value">June 10, 2026</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Background Check</span>
-                    <span class="detail-value">✓ Completed</span>
-                </div>
-                <div class="detail-item">
-                    <span class="detail-label">Certifications</span>
-                    <span class="detail-value">⏳ Pending</span>
-                </div>
-            </div>
-            <div class="booking-actions">
-                <button class="btn-small">Review Application</button>
-                <button class="btn-small">Request Documents</button>
-                <button class="btn-small">Approve</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- MESSAGING -->
-    <div id="messaging" class="content">
-        <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Messaging</h2>
-        
-        <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
-            <!-- Conversation List -->
-            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
-                <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
-                    <h3 style="color: #1B5E3F;">Conversations</h3>
-                </div>
-                <div style="overflow-y: auto;">
-                    <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: #f0f4f2;">
-                        <div style="font-weight: 600; color: #1B5E3F;">Maria Santos</div>
-                        <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Thanks for the booking!</p>
+        <!-- MESSAGING -->
+        <div id="messaging" class="content">
+            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Messaging</h2>
+            
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
+                <!-- Conversation List -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
+                        <h3 style="color: #1B5E3F;">Conversations</h3>
                     </div>
-                    <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;">
-                        <div style="font-weight: 600; color: #1B5E3F;">James Wilson</div>
-                        <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Can we reschedule for next week?</p>
-                    </div>
-                    <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;">
-                        <div style="font-weight: 600; color: #1B5E3F;">Elite Bridge Support</div>
-                        <p style="color: #999; font-size: 0.9em; margin-top: 5px;">How can we help you today?</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Chat Area -->
-            <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;">
-                <div style="padding: 20px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #1B5E3F;">Maria Santos</div>
-                <div style="flex: 1; padding: 20px; overflow-y: auto;">
-                    <div style="margin-bottom: 15px;">
-                        <div style="background: #f0f4f2; padding: 12px 15px; border-radius: 8px; max-width: 70%; word-wrap: break-word;">
-                            <p style="color: #333; margin: 0;">Hi! I'm excited to start with your family. See you on Monday!</p>
+                    <div style="overflow-y: auto;">
+                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: #f0f4f2;" onclick="alert('Opening conversation with Maria Santos')">
+                            <div style="font-weight: 600; color: #1B5E3F;">Maria Santos</div>
+                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Thanks for the booking!</p>
                         </div>
-                        <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:30 PM</p>
-                    </div>
-                    <div style="margin-bottom: 15px; text-align: right;">
-                        <div style="background: #1B5E3F; color: white; padding: 12px 15px; border-radius: 8px; max-width: 70%; margin-left: auto; word-wrap: break-word;">
-                            <p style="margin: 0;">Thank you! We're looking forward to meeting you too.</p>
+                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with James Wilson')">
+                            <div style="font-weight: 600; color: #1B5E3F;">James Wilson</div>
+                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Can we reschedule for next week?</p>
                         </div>
-                        <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:45 PM</p>
+                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with Elite Bridge Support')">
+                            <div style="font-weight: 600; color: #1B5E3F;">Elite Bridge Support</div>
+                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">How can we help you today?</p>
+                        </div>
                     </div>
                 </div>
-                <div style="padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px;">
-                    <input type="text" placeholder="Type your message..." style="flex: 1; padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 6px; font-family: inherit;">
-                    <button class="btn-primary" style="padding: 10px 20px;">Send</button>
+
+                <!-- Chat Area -->
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #1B5E3F;">Maria Santos</div>
+                    <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                        <div style="margin-bottom: 15px;">
+                            <div style="background: #f0f4f2; padding: 12px 15px; border-radius: 8px; max-width: 70%; word-wrap: break-word;">
+                                <p style="color: #333; margin: 0;">Hi! I'm excited to start with your family. See you on Monday!</p>
+                            </div>
+                            <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:30 PM</p>
+                        </div>
+                        <div style="margin-bottom: 15px; text-align: right;">
+                            <div style="background: #1B5E3F; color: white; padding: 12px 15px; border-radius: 8px; max-width: 70%; margin-left: auto; word-wrap: break-word;">
+                                <p style="margin: 0;">Thank you! We're looking forward to meeting you too.</p>
+                            </div>
+                            <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:45 PM</p>
+                        </div>
+                    </div>
+                    <div style="padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px;">
+                        <input type="text" placeholder="Type your message..." style="flex: 1; padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 6px; font-family: inherit;">
+                        <button class="btn-primary" style="padding: 10px 20px;" onclick="alert('Message sent!')">Send</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1266,24 +1002,24 @@
         <div class="footer-content">
             <div class="footer-section">
                 <h4>For Families</h4>
-                <a href="#">Request Care</a>
-                <a href="#">Browse Caregivers</a>
-                <a href="#">How It Works</a>
-                <a href="#">Pricing</a>
+                <a onclick="switchMode('client'); return false;">Request Care</a>
+                <a onclick="switchMode('directory'); return false;">Browse Caregivers</a>
+                <a onclick="alert('How It Works - Coming Soon!'); return false;">How It Works</a>
+                <a onclick="alert('Pricing Information - Coming Soon!'); return false;">Pricing</a>
             </div>
             <div class="footer-section">
                 <h4>For Caregivers</h4>
-                <a href="#">Join Our Team</a>
-                <a href="#">Manage Shifts</a>
-                <a href="#">Resources</a>
-                <a href="#">Support</a>
+                <a onclick="alert('Join Our Team - Coming Soon!'); return false;">Join Our Team</a>
+                <a onclick="switchMode('caregiver'); return false;">Manage Shifts</a>
+                <a onclick="alert('Resources - Coming Soon!'); return false;">Resources</a>
+                <a onclick="alert('Support - Coming Soon!'); return false;">Support</a>
             </div>
             <div class="footer-section">
                 <h4>Company</h4>
-                <a href="#">About Us</a>
-                <a href="#">Blog</a>
-                <a href="#">Careers</a>
-                <a href="#">Contact</a>
+                <a onclick="alert('About Us - Coming Soon!'); return false;">About Us</a>
+                <a onclick="alert('Blog - Coming Soon!'); return false;">Blog</a>
+                <a onclick="alert('Careers - Coming Soon!'); return false;">Careers</a>
+                <a onclick="alert('Contact Us - Coming Soon!'); return false;">Contact</a>
             </div>
             <div class="footer-section">
                 <h4>Contact</h4>
@@ -1297,20 +1033,111 @@
         </div>
     </footer>
 
+    <!-- MODALS -->
+    <div id="signin-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Sign In</h2>
+                <button class="close-btn" onclick="closeModal('signin-modal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••">
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Signed in successfully!'); closeModal('signin-modal')">Sign In</button>
+            <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="closeModal('signin-modal'); openModal('signup-modal'); return false;" style="color: #1B5E3F; font-weight: 600; text-decoration: none;">Sign Up</a></p>
+        </div>
+    </div>
+
+    <div id="signup-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Sign Up</h2>
+                <button class="close-btn" onclick="closeModal('signup-modal')">×</button>
+            </div>
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" placeholder="John Doe">
+            </div>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" placeholder="••••••••">
+            </div>
+            <div class="form-group">
+                <label>I am a:</label>
+                <select>
+                    <option>Select your role</option>
+                    <option>Family seeking care</option>
+                    <option>Caregiver</option>
+                </select>
+            </div>
+            <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Account created successfully!'); closeModal('signup-modal')">Create Account</button>
+            <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="closeModal('signup-modal'); openModal('signin-modal'); return false;" style="color: #1B5E3F; font-weight: 600; text-decoration: none;">Sign In</a></p>
+        </div>
+    </div>
+
     <script>
         function switchMode(mode) {
             // Hide all content
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
             
             // Show selected content
-            document.getElementById(mode).classList.add('active');
+            const element = document.getElementById(mode);
+            if (element) {
+                element.classList.add('active');
+            }
             
             // Update button states
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            event.target.classList.add('active');
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                if (btn.textContent.includes('Client Portal') && mode === 'home') btn.classList.add('active');
+                if (btn.textContent.includes('Caregiver Directory') && mode === 'directory') btn.classList.add('active');
+                if (btn.textContent.includes('Staff Portal') && mode === 'caregiver') btn.classList.add('active');
+                if (btn.textContent.includes('Admin Dashboard') && mode === 'admin') btn.classList.add('active');
+                if (btn.textContent.includes('Messaging') && mode === 'messaging') btn.classList.add('active');
+            });
             
             // Scroll to content
-            document.querySelector('.mode-selector').scrollIntoView({ behavior: 'smooth' });
+            const selector = document.querySelector('.mode-selector');
+            if (selector) {
+                selector.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        function openModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function closeModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        function scrollToFeatures() {
+            const features = document.querySelector('.features');
+            if (features) {
+                features.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
         }
     </script>
 </body>
