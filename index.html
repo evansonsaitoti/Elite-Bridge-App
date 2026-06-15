@@ -961,9 +961,18 @@
     <!-- CAREGIVER DIRECTORY -->
     <div id="directory" class="content">
         <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
+        <p style="color: #666; font-size: 1.1em; margin-bottom: 30px;">Find verified, compassionate caregivers matched to your needs. All caregivers are background-checked and certified.</p>
         
+        <!-- SEARCH & FILTER SECTION -->
         <div style="background: white; padding: 30px; border-radius: 12px; margin-bottom: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
             <h3 style="color: #1B5E3F; margin-bottom: 20px;">🔍 Search & Filter Caregivers</h3>
+            
+            <!-- Search Bar -->
+            <div style="margin-bottom: 20px;">
+                <input type="text" placeholder="Search by name, specialty, or location..." style="width: 100%; padding: 12px 15px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; transition: border-color 0.3s ease;" onmouseover="this.style.borderColor='#1B5E3F'" onmouseout="this.style.borderColor='#e0e0e0'">
+            </div>
+            
+            <!-- Filter Grid -->
             <div class="form-grid">
                 <div class="form-group">
                     <label>Care Type</label>
@@ -972,15 +981,27 @@
                         <option>Companion Care</option>
                         <option>Personal Care</option>
                         <option>Household Support</option>
+                        <option>Mobility Assistance</option>
+                        <option>Medication Management</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label>Experience Level</label>
                     <select>
                         <option>All Levels</option>
-                        <option>Entry Level</option>
-                        <option>Experienced</option>
-                        <option>Expert</option>
+                        <option>Entry Level (0-2 years)</option>
+                        <option>Experienced (3-7 years)</option>
+                        <option>Expert (8+ years)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Certifications</label>
+                    <select>
+                        <option>All Certifications</option>
+                        <option>✓ CPR Certified</option>
+                        <option>✓ Background Checked</option>
+                        <option>✓ CNA Certified</option>
+                        <option>✓ First Aid Certified</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -990,95 +1011,258 @@
                         <option>Weekdays</option>
                         <option>Weekends</option>
                         <option>24/7</option>
+                        <option>Flexible</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Max Hourly Rate</label>
-                    <input type="number" placeholder="$50">
+                    <label>Hourly Rate Range</label>
+                    <select>
+                        <option>Any Rate</option>
+                        <option>$15-$20/hour</option>
+                        <option>$20-$25/hour</option>
+                        <option>$25-$30/hour</option>
+                        <option>$30+/hour</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Sort By</label>
+                    <select>
+                        <option>Top Rated</option>
+                        <option>Most Experienced</option>
+                        <option>Newest</option>
+                        <option>Lowest Rate</option>
+                        <option>Highest Rate</option>
+                    </select>
                 </div>
             </div>
-            <button class="btn-primary" style="width: 100%; padding: 12px;">Search Caregivers</button>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button class="btn-primary" style="flex: 1; padding: 12px;">Search Caregivers</button>
+                <button class="btn-secondary" style="flex: 1; padding: 12px;">Reset Filters</button>
+            </div>
         </div>
 
-        <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">Featured Caregivers</h3>
-        <div class="features-grid">
-            <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👩‍⚕️</div>
-                    <div class="booking-title">Maria Santos</div>
-                    <p style="color: #999; margin-top: 5px;">Certified Personal Care Assistant</p>
+        <!-- CAREGIVER CARDS SECTION -->
+        <div style="margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="color: #1B5E3F;">Verified Caregivers (12 results)</h3>
+                <span style="color: #999; font-size: 0.9em;">Showing 1-12 of 12</span>
+            </div>
+        </div>
+
+        <!-- CAREGIVER CARDS GRID -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-bottom: 40px;">
+            <!-- CAREGIVER CARD 1 -->
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.boxShadow='0 8px 24px rgba(27, 94, 63, 0.15)'; this.style.transform='translateY(-5px)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'; this.style.transform='translateY(0)'">
+                <!-- Profile Header -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); padding: 20px; text-align: center; color: white;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">👩‍⚕️</div>
+                    <div style="font-size: 1.3em; font-weight: 700;">Maria Santos</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">Certified Personal Care Assistant</div>
                 </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 4.9</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">8 years</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$28/hour</span>
-                    </div>
+                
+                <!-- Verification Badges -->
+                <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: #e8f5e9; color: #1B5E3F; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ Verified</span>
+                    <span style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ CPR</span>
+                    <span style="background: #f3e5f5; color: #6a1b9a; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ Background Check</span>
                 </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
+                
+                <!-- Details Section -->
+                <div style="padding: 20px;">
+                    <!-- Rating -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+                        <div>
+                            <div style="color: #999; font-size: 0.9em;">Rating</div>
+                            <div style="color: #C4A747; font-weight: 700; font-size: 1.1em;">★★★★★ 4.9</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #999; font-size: 0.9em;">Reviews</div>
+                            <div style="font-weight: 600; color: #1B5E3F;">127 reviews</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Info Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Experience</div>
+                            <div style="font-weight: 600; color: #1B5E3F; font-size: 1.1em;">8 years</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Hourly Rate</div>
+                            <div style="font-weight: 600; color: #C4A747; font-size: 1.1em;">$28/hour</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Availability</div>
+                            <div style="font-weight: 600;">Weekdays & Weekends</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Families Served</div>
+                            <div style="font-weight: 600;">45+ families</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Specialties -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #999; font-size: 0.85em; margin-bottom: 8px;">Specialties</div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Personal Care</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Mobility</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Medication</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" style="flex: 1; padding: 10px; font-size: 0.9em;">View Profile</button>
+                        <button class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.9em;">Message</button>
+                    </div>
+                    <button class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; background: #C4A747; border: none; color: white; font-weight: 600;">Book Now</button>
                 </div>
             </div>
 
-            <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👨‍⚕️</div>
-                    <div class="booking-title">James Wilson</div>
-                    <p style="color: #999; margin-top: 5px;">Companion Care Specialist</p>
+            <!-- CAREGIVER CARD 2 -->
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.boxShadow='0 8px 24px rgba(27, 94, 63, 0.15)'; this.style.transform='translateY(-5px)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'; this.style.transform='translateY(0)'">
+                <!-- Profile Header -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); padding: 20px; text-align: center; color: white;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">👨‍⚕️</div>
+                    <div style="font-size: 1.3em; font-weight: 700;">James Wilson</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">Companion Care Specialist</div>
                 </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 4.8</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">5 years</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$22/hour</span>
-                    </div>
+                
+                <!-- Verification Badges -->
+                <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: #e8f5e9; color: #1B5E3F; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ Verified</span>
+                    <span style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ CPR</span>
+                    <span style="background: #fff3e0; color: #e65100; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ First Aid</span>
                 </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
+                
+                <!-- Details Section -->
+                <div style="padding: 20px;">
+                    <!-- Rating -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+                        <div>
+                            <div style="color: #999; font-size: 0.9em;">Rating</div>
+                            <div style="color: #C4A747; font-weight: 700; font-size: 1.1em;">★★★★★ 4.8</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #999; font-size: 0.9em;">Reviews</div>
+                            <div style="font-weight: 600; color: #1B5E3F;">98 reviews</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Info Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Experience</div>
+                            <div style="font-weight: 600; color: #1B5E3F; font-size: 1.1em;">5 years</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Hourly Rate</div>
+                            <div style="font-weight: 600; color: #C4A747; font-size: 1.1em;">$22/hour</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Availability</div>
+                            <div style="font-weight: 600;">Flexible Schedule</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Families Served</div>
+                            <div style="font-weight: 600;">32+ families</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Specialties -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #999; font-size: 0.85em; margin-bottom: 8px;">Specialties</div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Companion Care</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Dementia Care</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Social Support</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" style="flex: 1; padding: 10px; font-size: 0.9em;">View Profile</button>
+                        <button class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.9em;">Message</button>
+                    </div>
+                    <button class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; background: #C4A747; border: none; color: white; font-weight: 600;">Book Now</button>
                 </div>
             </div>
 
-            <div class="booking-card">
-                <div style="margin-bottom: 15px;">
-                    <div style="font-size: 2em; margin-bottom: 10px;">👩‍⚕️</div>
-                    <div class="booking-title">Lisa Chen</div>
-                    <p style="color: #999; margin-top: 5px;">Mobility & Physical Care</p>
+            <!-- CAREGIVER CARD 3 -->
+            <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: all 0.3s ease; cursor: pointer;" onmouseover="this.style.boxShadow='0 8px 24px rgba(27, 94, 63, 0.15)'; this.style.transform='translateY(-5px)'" onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.08)'; this.style.transform='translateY(0)'">
+                <!-- Profile Header -->
+                <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d7a56 100%); padding: 20px; text-align: center; color: white;">
+                    <div style="font-size: 3em; margin-bottom: 10px;">👩‍⚕️</div>
+                    <div style="font-size: 1.3em; font-weight: 700;">Lisa Chen</div>
+                    <div style="font-size: 0.9em; opacity: 0.9; margin-top: 5px;">Mobility & Physical Care Specialist</div>
                 </div>
-                <div style="margin: 15px 0; padding: 15px 0; border-top: 1px solid #e0e0e0; border-bottom: 1px solid #e0e0e0;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Rating:</span>
-                        <span style="color: #C4A747; font-weight: 700;">★★★★★ 5.0</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                        <span style="color: #999;">Experience:</span>
-                        <span style="font-weight: 600;">10 years</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="color: #999;">Rate:</span>
-                        <span style="font-weight: 600; color: #1B5E3F;">$32/hour</span>
-                    </div>
+                
+                <!-- Verification Badges -->
+                <div style="padding: 15px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span style="background: #e8f5e9; color: #1B5E3F; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ Verified</span>
+                    <span style="background: #e3f2fd; color: #1565c0; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ CNA</span>
+                    <span style="background: #f3e5f5; color: #6a1b9a; padding: 4px 10px; border-radius: 20px; font-size: 0.8em; font-weight: 600;">✓ Physical Therapy</span>
                 </div>
-                <div style="margin-top: 15px; display: flex; gap: 10px;">
-                    <button class="btn-primary" style="flex: 1; padding: 10px;">View Profile</button>
-                    <button class="btn-small" style="flex: 1;">Book Now</button>
+                
+                <!-- Details Section -->
+                <div style="padding: 20px;">
+                    <!-- Rating -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0;">
+                        <div>
+                            <div style="color: #999; font-size: 0.9em;">Rating</div>
+                            <div style="color: #C4A747; font-weight: 700; font-size: 1.1em;">★★★★★ 5.0</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="color: #999; font-size: 0.9em;">Reviews</div>
+                            <div style="font-weight: 600; color: #1B5E3F;">156 reviews</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Key Info Grid -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Experience</div>
+                            <div style="font-weight: 600; color: #1B5E3F; font-size: 1.1em;">10 years</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Hourly Rate</div>
+                            <div style="font-weight: 600; color: #C4A747; font-size: 1.1em;">$32/hour</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Availability</div>
+                            <div style="font-weight: 600;">24/7 Available</div>
+                        </div>
+                        <div>
+                            <div style="color: #999; font-size: 0.85em; margin-bottom: 5px;">Families Served</div>
+                            <div style="font-weight: 600;">67+ families</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Specialties -->
+                    <div style="margin-bottom: 15px;">
+                        <div style="color: #999; font-size: 0.85em; margin-bottom: 8px;">Specialties</div>
+                        <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Physical Therapy</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Mobility</span>
+                            <span style="background: #f0f4f2; color: #1B5E3F; padding: 5px 10px; border-radius: 6px; font-size: 0.8em;">Recovery</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div style="display: flex; gap: 10px;">
+                        <button class="btn-primary" style="flex: 1; padding: 10px; font-size: 0.9em;">View Profile</button>
+                        <button class="btn-secondary" style="flex: 1; padding: 10px; font-size: 0.9em;">Message</button>
+                    </div>
+                    <button class="btn-primary" style="width: 100%; padding: 12px; margin-top: 10px; background: #C4A747; border: none; color: white; font-weight: 600;">Book Now</button>
                 </div>
             </div>
+        </div>
+        
+        <!-- LOAD MORE BUTTON -->
+        <div style="text-align: center; margin-bottom: 40px;">
+            <button class="btn-secondary" style="padding: 12px 40px; font-size: 1em;">Load More Caregivers</button>
         </div>
     </div>
 
