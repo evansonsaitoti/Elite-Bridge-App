@@ -1634,24 +1634,287 @@
     <div id="admin" class="content">
         <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
         
-        <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-            <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Platform Overview</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">245</div>
-                    <div style="color: #999; margin-top: 5px;">Active Care Requests</div>
+        <!-- Navigation Tabs -->
+        <div style="display: flex; gap: 10px; margin-bottom: 30px; border-bottom: 2px solid #e0e0e0; flex-wrap: wrap;">
+            <button onclick="switchAdminTab('overview')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #1B5E3F; font-weight: 600; cursor: pointer; border-bottom: 3px solid #1B5E3F;">📊 Overview</button>
+            <button onclick="switchAdminTab('requests')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">📋 Care Requests</button>
+            <button onclick="switchAdminTab('caregivers')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">👥 Caregivers</button>
+            <button onclick="switchAdminTab('bookings')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">📅 Active Bookings</button>
+            <button onclick="switchAdminTab('analytics')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">📈 Analytics</button>
+            <button onclick="switchAdminTab('quality')" class="admin-tab" style="padding: 12px 20px; border: none; background: none; color: #999; font-weight: 600; cursor: pointer;">⭐ Quality</button>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div id="admin-overview" style="display: block;">
+            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Platform Overview</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #1B5E3F 0%, #2d8659 100%); border-radius: 8px; color: white;">
+                        <div style="font-size: 2.5em; font-weight: 700;">245</div>
+                        <div style="margin-top: 5px; opacity: 0.9;">Active Care Requests</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #C4A747 0%, #d4b957 100%); border-radius: 8px; color: white;">
+                        <div style="font-size: 2.5em; font-weight: 700;">523</div>
+                        <div style="margin-top: 5px; opacity: 0.9;">Verified Caregivers</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); border-radius: 8px; color: white;">
+                        <div style="font-size: 2.5em; font-weight: 700;">1,847</div>
+                        <div style="margin-top: 5px; opacity: 0.9;">Registered Families</div>
+                    </div>
+                    <div style="text-align: center; padding: 20px; background: linear-gradient(135deg, #2196F3 0%, #42A5F5 100%); border-radius: 8px; color: white;">
+                        <div style="font-size: 2.5em; font-weight: 700;">$156K</div>
+                        <div style="margin-top: 5px; opacity: 0.9;">Monthly Revenue</div>
+                    </div>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">523</div>
-                    <div style="color: #999; margin-top: 5px;">Verified Caregivers</div>
+            </div>
+
+            <!-- Key Metrics -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 30px;">
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #1B5E3F;">
+                    <div style="color: #999; font-size: 0.9em; margin-bottom: 10px;">Average Booking Time</div>
+                    <div style="font-size: 1.8em; font-weight: 700; color: #1B5E3F;">4.2 hrs</div>
+                    <p style="color: #999; font-size: 0.85em; margin-top: 10px;">From request to match</p>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">1,847</div>
-                    <div style="color: #999; margin-top: 5px;">Registered Families</div>
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #C4A747;">
+                    <div style="color: #999; font-size: 0.9em; margin-bottom: 10px;">Family Satisfaction</div>
+                    <div style="font-size: 1.8em; font-weight: 700; color: #C4A747;">4.8/5.0 ⭐</div>
+                    <p style="color: #999; font-size: 0.85em; margin-top: 10px;">Based on 2,145 reviews</p>
                 </div>
-                <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                    <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$156K</div>
-                    <div style="color: #999; margin-top: 5px;">Monthly Revenue</div>
+                <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border-left: 4px solid #4CAF50;">
+                    <div style="color: #999; font-size: 0.9em; margin-bottom: 10px;">Caregiver Retention</div>
+                    <div style="font-size: 1.8em; font-weight: 700; color: #4CAF50;">92%</div>
+                    <p style="color: #999; font-size: 0.85em; margin-top: 10px;">Caregivers active after 6 months</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- CARE REQUESTS TAB -->
+        <div id="admin-requests" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 15px;">📋 Care Requests Management</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button style="padding: 8px 15px; background: #1B5E3F; color: white; border: none; border-radius: 6px; cursor: pointer;">All (245)</button>
+                    <button style="padding: 8px 15px; background: #fff3cd; color: #856404; border: none; border-radius: 6px; cursor: pointer;">Pending (42)</button>
+                    <button style="padding: 8px 15px; background: #d1ecf1; color: #0c5460; border: none; border-radius: 6px; cursor: pointer;">Matched (156)</button>
+                    <button style="padding: 8px 15px; background: #d4edda; color: #155724; border: none; border-radius: 6px; cursor: pointer;">Active (47)</button>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f0f4f2; border-bottom: 2px solid #e0e0e0;">
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Family Name</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Care Type</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Status</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Requested</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">Sarah Johnson</td>
+                            <td style="padding: 12px;">Companion Care</td>
+                            <td style="padding: 12px;"><span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Active</span></td>
+                            <td style="padding: 12px;">June 12, 2026</td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">View</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">James Chen</td>
+                            <td style="padding: 12px;">Personal Care</td>
+                            <td style="padding: 12px;"><span style="background: #d1ecf1; color: #0c5460; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Matched</span></td>
+                            <td style="padding: 12px;">June 14, 2026</td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">View</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">Emma Martinez</td>
+                            <td style="padding: 12px;">Household Support</td>
+                            <td style="padding: 12px;"><span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Pending</span></td>
+                            <td style="padding: 12px;">June 15, 2026</td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #C4A747; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Assign</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- CAREGIVERS TAB -->
+        <div id="admin-caregivers" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 15px;">👥 Caregiver Management</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap;">
+                    <button style="padding: 8px 15px; background: #1B5E3F; color: white; border: none; border-radius: 6px; cursor: pointer;">All (523)</button>
+                    <button style="padding: 8px 15px; background: #d4edda; color: #155724; border: none; border-radius: 6px; cursor: pointer;">Verified (489)</button>
+                    <button style="padding: 8px 15px; background: #fff3cd; color: #856404; border: none; border-radius: 6px; cursor: pointer;">Pending (34)</button>
+                    <button style="padding: 8px 15px; background: #f8d7da; color: #721c24; border: none; border-radius: 6px; cursor: pointer;">Inactive (12)</button>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f0f4f2; border-bottom: 2px solid #e0e0e0;">
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Name</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Specialty</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Rating</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Status</th>
+                            <th style="padding: 12px; text-align: left; color: #1B5E3F; font-weight: 600;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">Maria Santos</td>
+                            <td style="padding: 12px;">Companion Care</td>
+                            <td style="padding: 12px;">⭐⭐⭐⭐⭐ (4.9)</td>
+                            <td style="padding: 12px;"><span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Verified</span></td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">View</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">David Lee</td>
+                            <td style="padding: 12px;">Personal Care</td>
+                            <td style="padding: 12px;">⭐⭐⭐⭐⭐ (4.8)</td>
+                            <td style="padding: 12px;"><span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Verified</span></td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">View</button></td>
+                        </tr>
+                        <tr style="border-bottom: 1px solid #e0e0e0;">
+                            <td style="padding: 12px;">Robert Martinez</td>
+                            <td style="padding: 12px;">Personal Care</td>
+                            <td style="padding: 12px;">⭐⭐⭐⭐ (4.5)</td>
+                            <td style="padding: 12px;"><span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Pending</span></td>
+                            <td style="padding: 12px;"><button style="padding: 4px 8px; background: #C4A747; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Verify</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ACTIVE BOOKINGS TAB -->
+        <div id="admin-bookings" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 15px;">📅 Active Bookings</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                    <div style="background: #f0f4f2; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                        <div style="font-weight: 600; color: #1B5E3F; margin-bottom: 10px;">Sarah Johnson + Maria Santos</div>
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Companion Care • Weekdays 10am-2pm</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Active</span>
+                            <button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Update</button>
+                        </div>
+                    </div>
+                    <div style="background: #f0f4f2; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                        <div style="font-weight: 600; color: #1B5E3F; margin-bottom: 10px;">James Chen + David Lee</div>
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Personal Care • Daily 8am-4pm</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Active</span>
+                            <button style="padding: 4px 8px; background: #1B5E3F; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Update</button>
+                        </div>
+                    </div>
+                    <div style="background: #f0f4f2; padding: 20px; border-radius: 8px; border-left: 4px solid #2196F3;">
+                        <div style="font-weight: 600; color: #1B5E3F; margin-bottom: 10px;">Emma Martinez + TBD</div>
+                        <div style="font-size: 0.9em; color: #666; margin-bottom: 10px;">Household Support • Flexible</div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="background: #d1ecf1; color: #0c5460; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">Matching</span>
+                            <button style="padding: 4px 8px; background: #C4A747; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85em;">Assign</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ANALYTICS TAB -->
+        <div id="admin-analytics" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 15px;">📈 Analytics & Reports</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div style="background: linear-gradient(135deg, #1B5E3F 0%, #2d8659 100%); color: white; padding: 20px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 10px;">Bookings This Month</div>
+                        <div style="font-size: 2em; font-weight: 700;">1,247</div>
+                        <div style="font-size: 0.85em; opacity: 0.8; margin-top: 10px;">↑ 12% from last month</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #C4A747 0%, #d4b957 100%); color: white; padding: 20px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 10px;">Revenue This Month</div>
+                        <div style="font-size: 2em; font-weight: 700;">$156,800</div>
+                        <div style="font-size: 0.85em; opacity: 0.8; margin-top: 10px;">↑ 18% from last month</div>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%); color: white; padding: 20px; border-radius: 8px;">
+                        <div style="font-size: 0.9em; opacity: 0.9; margin-bottom: 10px;">New Caregivers</div>
+                        <div style="font-size: 2em; font-weight: 700;">34</div>
+                        <div style="font-size: 0.85em; opacity: 0.8; margin-top: 10px;">Verified & Active</div>
+                    </div>
+                </div>
+                <div style="background: #f0f4f2; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #1B5E3F; margin-bottom: 15px;">Top Performing Caregivers</h4>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 2px solid #e0e0e0;">
+                                <th style="padding: 10px; text-align: left; color: #1B5E3F; font-weight: 600;">Caregiver</th>
+                                <th style="padding: 10px; text-align: left; color: #1B5E3F; font-weight: 600;">Bookings</th>
+                                <th style="padding: 10px; text-align: left; color: #1B5E3F; font-weight: 600;">Revenue</th>
+                                <th style="padding: 10px; text-align: left; color: #1B5E3F; font-weight: 600;">Rating</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 10px;">Maria Santos</td>
+                                <td style="padding: 10px;">156</td>
+                                <td style="padding: 10px;">$12,480</td>
+                                <td style="padding: 10px;">⭐⭐⭐⭐⭐ 4.9</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #e0e0e0;">
+                                <td style="padding: 10px;">David Lee</td>
+                                <td style="padding: 10px;">142</td>
+                                <td style="padding: 10px;">$11,360</td>
+                                <td style="padding: 10px;">⭐⭐⭐⭐⭐ 4.8</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">Jennifer White</td>
+                                <td style="padding: 10px;">128</td>
+                                <td style="padding: 10px;">$10,240</td>
+                                <td style="padding: 10px;">⭐⭐⭐⭐⭐ 4.7</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- QUALITY TAB -->
+        <div id="admin-quality" style="display: none;">
+            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px;">
+                <h3 style="color: #1B5E3F; margin-bottom: 15px;">⭐ Quality Assurance</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div style="background: #d4edda; padding: 20px; border-radius: 8px; border-left: 4px solid #4CAF50;">
+                        <div style="font-weight: 600; color: #155724; margin-bottom: 5px;">✓ Positive Feedback</div>
+                        <div style="font-size: 1.8em; font-weight: 700; color: #155724;">1,847</div>
+                        <p style="color: #155724; font-size: 0.85em; margin-top: 5px;">Families satisfied with care</p>
+                    </div>
+                    <div style="background: #fff3cd; padding: 20px; border-radius: 8px; border-left: 4px solid #FFC107;">
+                        <div style="font-weight: 600; color: #856404; margin-bottom: 5px;">⚠️ Follow-ups Needed</div>
+                        <div style="font-size: 1.8em; font-weight: 700; color: #856404;">12</div>
+                        <p style="color: #856404; font-size: 0.85em; margin-top: 5px;">Pending quality reviews</p>
+                    </div>
+                    <div style="background: #f8d7da; padding: 20px; border-radius: 8px; border-left: 4px solid #DC3545;">
+                        <div style="font-weight: 600; color: #721c24; margin-bottom: 5px;">⚠️ Issues Reported</div>
+                        <div style="font-size: 1.8em; font-weight: 700; color: #721c24;">3</div>
+                        <p style="color: #721c24; font-size: 0.85em; margin-top: 5px;">Requiring investigation</p>
+                    </div>
+                </div>
+                <div style="background: #f0f4f2; padding: 20px; border-radius: 8px;">
+                    <h4 style="color: #1B5E3F; margin-bottom: 15px;">Recent Feedback</h4>
+                    <div style="border-bottom: 1px solid #e0e0e0; padding: 15px 0; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <div style="font-weight: 600; color: #1B5E3F;">Sarah Johnson</div>
+                                <p style="color: #999; font-size: 0.85em; margin-top: 3px;">About Maria Santos • June 14, 2026</p>
+                            </div>
+                            <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <p style="color: #666; font-size: 0.9em;">"Maria is wonderful! She's caring, professional, and my mother loves her. Highly recommend!"</p>
+                    </div>
+                    <div style="border-bottom: 1px solid #e0e0e0; padding: 15px 0; margin-bottom: 15px;">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <div>
+                                <div style="font-weight: 600; color: #1B5E3F;">James Chen</div>
+                                <p style="color: #999; font-size: 0.85em; margin-top: 3px;">About David Lee • June 12, 2026</p>
+                            </div>
+                            <span style="background: #d4edda; color: #155724; padding: 4px 8px; border-radius: 4px; font-size: 0.85em;">⭐⭐⭐⭐⭐</span>
+                        </div>
+                        <p style="color: #666; font-size: 0.9em;">"David is very professional and attentive. He takes great care of my father. Thank you!"</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1686,6 +1949,30 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function switchAdminTab(tab) {
+            // Hide all tabs
+            document.getElementById('admin-overview').style.display = 'none';
+            document.getElementById('admin-requests').style.display = 'none';
+            document.getElementById('admin-caregivers').style.display = 'none';
+            document.getElementById('admin-bookings').style.display = 'none';
+            document.getElementById('admin-analytics').style.display = 'none';
+            document.getElementById('admin-quality').style.display = 'none';
+            
+            // Show selected tab
+            document.getElementById('admin-' + tab).style.display = 'block';
+            
+            // Update tab buttons
+            const tabs = document.querySelectorAll('.admin-tab');
+            tabs.forEach(t => {
+                t.style.color = '#999';
+                t.style.borderBottom = 'none';
+            });
+            event.target.style.color = '#1B5E3F';
+            event.target.style.borderBottom = '3px solid #1B5E3F';
+        }
+    </script>
 
     <!-- MESSAGING -->
     <div id="messaging" class="content">
