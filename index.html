@@ -18,9 +18,18 @@
             line-height: 1.6;
         }
 
+        /* BRAND COLORS */
+        :root {
+            --primary-dark: #1B5E3F;
+            --accent-gold: #D4A574;
+            --text-dark: #1B5E3F;
+            --bg-light: #f8f9fa;
+            --white: #ffffff;
+        }
+
         /* HEADER & NAVIGATION */
         header {
-            background: white;
+            background: var(--white);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             position: sticky;
             top: 0;
@@ -43,7 +52,7 @@
         }
 
         .logo-section img {
-            height: 50px;
+            height: 60px;
             width: auto;
         }
 
@@ -62,7 +71,7 @@
         }
 
         nav a:hover {
-            color: #1B5E3F;
+            color: var(--primary-dark);
         }
 
         .auth-buttons {
@@ -73,9 +82,9 @@
 
         .btn-signin {
             padding: 10px 20px;
-            border: 2px solid #1B5E3F;
-            background: white;
-            color: #1B5E3F;
+            border: 2px solid var(--primary-dark);
+            background: var(--white);
+            color: var(--primary-dark);
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
@@ -83,14 +92,14 @@
         }
 
         .btn-signin:hover {
-            background: #1B5E3F;
-            color: white;
+            background: var(--primary-dark);
+            color: var(--white);
         }
 
         .btn-signup {
             padding: 10px 24px;
-            background: #1B5E3F;
-            color: white;
+            background: var(--primary-dark);
+            color: var(--white);
             border: none;
             border-radius: 6px;
             cursor: pointer;
@@ -104,8 +113,8 @@
 
         /* HERO SECTION */
         .hero {
-            background: linear-gradient(135deg, #1B5E3F 0%, #2a8659 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #2a8659 100%);
+            color: var(--white);
             padding: 80px 20px;
             text-align: center;
         }
@@ -137,8 +146,8 @@
 
         .btn-primary {
             padding: 15px 40px;
-            background: #D4A574;
-            color: white;
+            background: var(--accent-gold);
+            color: var(--white);
             border: none;
             border-radius: 8px;
             font-size: 1.1em;
@@ -155,8 +164,8 @@
         .btn-secondary {
             padding: 15px 40px;
             background: transparent;
-            color: white;
-            border: 2px solid white;
+            color: var(--white);
+            border: 2px solid var(--white);
             border-radius: 8px;
             font-size: 1.1em;
             font-weight: 600;
@@ -165,8 +174,8 @@
         }
 
         .btn-secondary:hover {
-            background: white;
-            color: #1B5E3F;
+            background: var(--white);
+            color: var(--primary-dark);
         }
 
         .hero-stats {
@@ -203,7 +212,7 @@
         .features h2 {
             text-align: center;
             font-size: 2.5em;
-            color: #1B5E3F;
+            color: var(--primary-dark);
             margin-bottom: 60px;
         }
 
@@ -224,7 +233,7 @@
         }
 
         .feature-card h3 {
-            color: #1B5E3F;
+            color: var(--primary-dark);
             font-size: 1.5em;
             margin-bottom: 15px;
         }
@@ -247,7 +256,7 @@
 
         .mode-btn {
             padding: 12px 24px;
-            background: white;
+            background: var(--white);
             border: 2px solid #ddd;
             border-radius: 8px;
             cursor: pointer;
@@ -258,14 +267,14 @@
         }
 
         .mode-btn:hover {
-            border-color: #1B5E3F;
-            color: #1B5E3F;
+            border-color: var(--primary-dark);
+            color: var(--primary-dark);
         }
 
         .mode-btn.active {
-            background: #1B5E3F;
-            color: white;
-            border-color: #1B5E3F;
+            background: var(--primary-dark);
+            color: var(--white);
+            border-color: var(--primary-dark);
         }
 
         /* CONTENT SECTIONS */
@@ -298,7 +307,7 @@
             display: block;
             margin-bottom: 8px;
             font-weight: 600;
-            color: #1B5E3F;
+            color: var(--primary-dark);
         }
 
         .form-group input,
@@ -317,7 +326,7 @@
         .form-group select:focus,
         .form-group textarea:focus {
             outline: none;
-            border-color: #1B5E3F;
+            border-color: var(--primary-dark);
         }
 
         .form-grid {
@@ -328,7 +337,7 @@
 
         /* BOOKING CARDS */
         .booking-card {
-            background: white;
+            background: var(--white);
             border: 1px solid #e0e0e0;
             border-radius: 12px;
             padding: 25px;
@@ -350,7 +359,7 @@
         .booking-title {
             font-size: 1.3em;
             font-weight: 700;
-            color: #1B5E3F;
+            color: var(--primary-dark);
         }
 
         .status-badge {
@@ -393,7 +402,7 @@
         }
 
         .detail-value {
-            color: #1B5E3F;
+            color: var(--primary-dark);
             font-weight: 600;
             font-size: 1.1em;
         }
@@ -411,13 +420,13 @@
             border-radius: 6px;
             cursor: pointer;
             font-weight: 600;
-            color: #1B5E3F;
+            color: var(--primary-dark);
             transition: all 0.3s ease;
         }
 
         .btn-small:hover {
-            background: #1B5E3F;
-            color: white;
+            background: var(--primary-dark);
+            color: var(--white);
         }
 
         /* MODAL STYLES */
@@ -435,7 +444,7 @@
         }
 
         .modal-content {
-            background-color: white;
+            background-color: var(--white);
             padding: 40px;
             border-radius: 12px;
             width: 90%;
@@ -451,7 +460,7 @@
         }
 
         .modal-header h2 {
-            color: #1B5E3F;
+            color: var(--primary-dark);
         }
 
         .close-btn {
@@ -468,8 +477,8 @@
 
         /* CTA SECTION */
         .cta-section {
-            background: linear-gradient(135deg, #1B5E3F 0%, #2a8659 100%);
-            color: white;
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #2a8659 100%);
+            color: var(--white);
             padding: 60px 20px;
             text-align: center;
         }
@@ -487,8 +496,8 @@
 
         /* FOOTER */
         footer {
-            background: #1B5E3F;
-            color: white;
+            background: var(--primary-dark);
+            color: var(--white);
             padding: 60px 20px 20px;
         }
 
@@ -516,7 +525,7 @@
         }
 
         .footer-section a:hover {
-            color: white;
+            color: var(--accent-gold);
         }
 
         .footer-bottom {
@@ -563,7 +572,7 @@
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <img src="logo.webp" alt="Elite Bridge" style="height: 50px; width: auto;">
+                <img src="logo.webp" alt="Elite Bridge" style="height: 60px; width: auto;">
             </div>
             <nav>
                 <a onclick="scrollToFeatures(); return false;">Browse Caregivers</a>
@@ -657,10 +666,10 @@
     <div class="content-wrapper">
         <!-- CLIENT PORTAL -->
         <div id="home" class="content active">
-            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
+            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
             
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: #1B5E3F; margin-bottom: 20px;">📋 Submit Your Care Request</h3>
+            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">📋 Submit Your Care Request</h3>
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Your Name *</label>
@@ -708,7 +717,7 @@
                 <button class="btn-primary" onclick="alert('Care request submitted! We will match you with caregivers within 24 hours.')">Submit Care Request</button>
             </div>
 
-            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">📅 My Active Bookings</h3>
+            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">📅 My Active Bookings</h3>
             <div class="booking-card">
                 <div class="booking-header">
                     <div>
@@ -777,9 +786,9 @@
 
         <!-- CAREGIVER DIRECTORY -->
         <div id="directory" class="content">
-            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
+            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
             
-            <div style="background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+            <div style="background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
                 <div class="form-grid">
                     <input type="text" placeholder="Search by name or specialty..." style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
                     <select style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
@@ -798,7 +807,7 @@
                         <div class="booking-title">Maria Santos</div>
                         <p style="color: #999; margin-top: 5px;">Companion Care Specialist • 8 years experience</p>
                     </div>
-                    <span style="color: #D4A574; font-size: 1.2em;">★★★★★ 4.9</span>
+                    <span style="color: var(--accent-gold); font-size: 1.2em;">★★★★★ 4.9</span>
                 </div>
                 <div class="booking-details">
                     <div class="detail-item">
@@ -828,23 +837,23 @@
 
         <!-- STAFF PORTAL -->
         <div id="caregiver" class="content">
-            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Staff Portal</h2>
+            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Staff Portal</h2>
             
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: #1B5E3F; margin-bottom: 20px;">👤 Your Profile</h3>
+            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">👤 Your Profile</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">4.9★</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">4.9★</div>
                         <div style="color: #999; margin-top: 5px;">Your Rating</div>
                     </div>
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">12</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">12</div>
                         <div style="color: #999; margin-top: 5px;">Families Served</div>
                     </div>
                 </div>
             </div>
 
-            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">📅 Upcoming Shifts</h3>
+            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">📅 Upcoming Shifts</h3>
             <div class="booking-card">
                 <div class="booking-header">
                     <div>
@@ -881,31 +890,31 @@
 
         <!-- ADMIN DASHBOARD -->
         <div id="admin" class="content">
-            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
+            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
             
-            <div style="background: white; padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: #1B5E3F; margin-bottom: 20px;">📊 Platform Overview</h3>
+            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
+                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">📊 Platform Overview</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">245</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">245</div>
                         <div style="color: #999; margin-top: 5px;">Active Care Requests</div>
                     </div>
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">523</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">523</div>
                         <div style="color: #999; margin-top: 5px;">Verified Caregivers</div>
                     </div>
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">1,847</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">1,847</div>
                         <div style="color: #999; margin-top: 5px;">Registered Families</div>
                     </div>
                     <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: #1B5E3F;">$156K</div>
+                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">$156K</div>
                         <div style="color: #999; margin-top: 5px;">Monthly Revenue</div>
                     </div>
                 </div>
             </div>
 
-            <h3 style="color: #1B5E3F; margin: 30px 0 20px 0;">🔍 Pending Verifications</h3>
+            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">🔍 Pending Verifications</h3>
             <div class="booking-card">
                 <div class="booking-header">
                     <div>
@@ -938,33 +947,33 @@
 
         <!-- MESSAGING -->
         <div id="messaging" class="content">
-            <h2 style="color: #1B5E3F; margin: 40px 0 30px 0; font-size: 2em;">Messaging</h2>
+            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Messaging</h2>
             
             <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
                 <!-- Conversation List -->
-                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
+                <div style="background: var(--white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
                     <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
-                        <h3 style="color: #1B5E3F;">Conversations</h3>
+                        <h3 style="color: var(--primary-dark);">Conversations</h3>
                     </div>
                     <div style="overflow-y: auto;">
                         <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: #f0f4f2;" onclick="alert('Opening conversation with Maria Santos')">
-                            <div style="font-weight: 600; color: #1B5E3F;">Maria Santos</div>
+                            <div style="font-weight: 600; color: var(--primary-dark);">Maria Santos</div>
                             <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Thanks for the booking!</p>
                         </div>
                         <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with James Wilson')">
-                            <div style="font-weight: 600; color: #1B5E3F;">James Wilson</div>
+                            <div style="font-weight: 600; color: var(--primary-dark);">James Wilson</div>
                             <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Can we reschedule for next week?</p>
                         </div>
                         <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with Elite Bridge Support')">
-                            <div style="font-weight: 600; color: #1B5E3F;">Elite Bridge Support</div>
+                            <div style="font-weight: 600; color: var(--primary-dark);">Elite Bridge Support</div>
                             <p style="color: #999; font-size: 0.9em; margin-top: 5px;">How can we help you today?</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Chat Area -->
-                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;">
-                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: #1B5E3F;">Maria Santos</div>
+                <div style="background: var(--white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;">
+                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: var(--primary-dark);">Maria Santos</div>
                     <div style="flex: 1; padding: 20px; overflow-y: auto;">
                         <div style="margin-bottom: 15px;">
                             <div style="background: #f0f4f2; padding: 12px 15px; border-radius: 8px; max-width: 70%; word-wrap: break-word;">
@@ -973,7 +982,7 @@
                             <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:30 PM</p>
                         </div>
                         <div style="margin-bottom: 15px; text-align: right;">
-                            <div style="background: #1B5E3F; color: white; padding: 12px 15px; border-radius: 8px; max-width: 70%; margin-left: auto; word-wrap: break-word;">
+                            <div style="background: var(--primary-dark); color: var(--white); padding: 12px 15px; border-radius: 8px; max-width: 70%; margin-left: auto; word-wrap: break-word;">
                                 <p style="margin: 0;">Thank you! We're looking forward to meeting you too.</p>
                             </div>
                             <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:45 PM</p>
@@ -1049,7 +1058,7 @@
                 <input type="password" placeholder="••••••••">
             </div>
             <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Signed in successfully!'); closeModal('signin-modal')">Sign In</button>
-            <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="closeModal('signin-modal'); openModal('signup-modal'); return false;" style="color: #1B5E3F; font-weight: 600; text-decoration: none;">Sign Up</a></p>
+            <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="closeModal('signin-modal'); openModal('signup-modal'); return false;" style="color: var(--primary-dark); font-weight: 600; text-decoration: none;">Sign Up</a></p>
         </div>
     </div>
 
@@ -1080,22 +1089,17 @@
                 </select>
             </div>
             <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Account created successfully!'); closeModal('signup-modal')">Create Account</button>
-            <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="closeModal('signup-modal'); openModal('signin-modal'); return false;" style="color: #1B5E3F; font-weight: 600; text-decoration: none;">Sign In</a></p>
+            <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="closeModal('signup-modal'); openModal('signin-modal'); return false;" style="color: var(--primary-dark); font-weight: 600; text-decoration: none;">Sign In</a></p>
         </div>
     </div>
 
     <script>
         function switchMode(mode) {
-            // Hide all content
             document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            
-            // Show selected content
             const element = document.getElementById(mode);
             if (element) {
                 element.classList.add('active');
             }
-            
-            // Update button states
             document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.mode-btn').forEach(btn => {
                 if (btn.textContent.includes('Client Portal') && mode === 'home') btn.classList.add('active');
@@ -1104,8 +1108,6 @@
                 if (btn.textContent.includes('Admin Dashboard') && mode === 'admin') btn.classList.add('active');
                 if (btn.textContent.includes('Messaging') && mode === 'messaging') btn.classList.add('active');
             });
-            
-            // Scroll to content
             const selector = document.querySelector('.mode-selector');
             if (selector) {
                 selector.scrollIntoView({ behavior: 'smooth' });
@@ -1133,7 +1135,6 @@
             }
         }
 
-        // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
                 event.target.style.display = 'none';
