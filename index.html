@@ -49,6 +49,7 @@
             display: flex;
             align-items: center;
             gap: 10px;
+            flex-shrink: 0;
         }
 
         .logo-section img {
@@ -56,10 +57,43 @@
             width: auto;
         }
 
+        /* Hamburger Menu */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            cursor: pointer;
+            gap: 5px;
+            background: none;
+            border: none;
+            padding: 5px;
+        }
+
+        .hamburger span {
+            width: 25px;
+            height: 3px;
+            background: var(--primary-dark);
+            border-radius: 2px;
+            transition: all 0.3s ease;
+        }
+
+        .hamburger.active span:nth-child(1) {
+            transform: rotate(45deg) translate(10px, 10px);
+        }
+
+        .hamburger.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .hamburger.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(7px, -7px);
+        }
+
         nav {
             display: flex;
             gap: 30px;
             align-items: center;
+            flex: 1;
+            justify-content: center;
         }
 
         nav a {
@@ -68,6 +102,7 @@
             font-weight: 500;
             transition: color 0.3s ease;
             cursor: pointer;
+            white-space: nowrap;
         }
 
         nav a:hover {
@@ -78,6 +113,7 @@
             display: flex;
             gap: 15px;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .btn-signin {
@@ -89,6 +125,7 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .btn-signin:hover {
@@ -105,34 +142,80 @@
             cursor: pointer;
             font-weight: 600;
             transition: all 0.3s ease;
+            white-space: nowrap;
         }
 
         .btn-signup:hover {
-            background: #0d3d2a;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        /* Mobile Menu */
+        .mobile-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 999;
+        }
+
+        .mobile-menu.active {
+            display: flex;
+        }
+
+        .mobile-menu a {
+            text-decoration: none;
+            color: #333;
+            font-weight: 500;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .mobile-menu a:last-child {
+            border-bottom: none;
+        }
+
+        .mobile-menu .auth-buttons {
+            flex-direction: column;
+            width: 100%;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .mobile-menu .btn-signin,
+        .mobile-menu .btn-signup {
+            width: 100%;
+            padding: 12px;
         }
 
         /* HERO SECTION */
         .hero {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #2a8659 100%);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1a5a3f 100%);
             color: var(--white);
-            padding: 80px 20px;
+            padding: 60px 20px;
             text-align: center;
         }
 
         .hero-content {
-            max-width: 1000px;
+            max-width: 800px;
             margin: 0 auto;
         }
 
         .hero h1 {
-            font-size: 3.5em;
+            font-size: 3rem;
             margin-bottom: 20px;
-            font-weight: 700;
+            line-height: 1.2;
         }
 
         .hero p {
-            font-size: 1.3em;
-            margin-bottom: 40px;
+            font-size: 1.2rem;
+            margin-bottom: 30px;
             opacity: 0.95;
         }
 
@@ -140,34 +223,33 @@
             display: flex;
             gap: 20px;
             justify-content: center;
-            margin-bottom: 60px;
             flex-wrap: wrap;
         }
 
         .btn-primary {
-            padding: 15px 40px;
+            padding: 14px 40px;
             background: var(--accent-gold);
-            color: var(--white);
+            color: var(--primary-dark);
             border: none;
-            border-radius: 8px;
-            font-size: 1.1em;
+            border-radius: 6px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
         }
 
         .btn-primary:hover {
-            background: #c49460;
             transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
 
         .btn-secondary {
-            padding: 15px 40px;
+            padding: 14px 40px;
             background: transparent;
             color: var(--white);
             border: 2px solid var(--white);
-            border-radius: 8px;
-            font-size: 1.1em;
+            border-radius: 6px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -178,258 +260,332 @@
             color: var(--primary-dark);
         }
 
-        .hero-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.1);
-            padding: 30px;
-            border-radius: 12px;
-            backdrop-filter: blur(10px);
-        }
-
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: 700;
-            margin-bottom: 10px;
-        }
-
-        .stat-label {
-            font-size: 1em;
-            opacity: 0.9;
-        }
-
         /* FEATURES SECTION */
         .features {
-            max-width: 1400px;
-            margin: 80px auto;
-            padding: 0 20px;
+            padding: 60px 20px;
+            background: var(--white);
         }
 
-        .features h2 {
+        .features-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
             text-align: center;
-            font-size: 2.5em;
+            font-size: 2.5rem;
+            margin-bottom: 50px;
             color: var(--primary-dark);
-            margin-bottom: 60px;
         }
 
         .features-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
         }
 
         .feature-card {
-            text-align: center;
+            background: #f8f9fa;
             padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent-gold);
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
         }
 
         .feature-icon {
-            font-size: 3em;
-            margin-bottom: 20px;
+            font-size: 3rem;
+            margin-bottom: 15px;
         }
 
         .feature-card h3 {
             color: var(--primary-dark);
-            font-size: 1.5em;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
+            font-size: 1.3rem;
         }
 
         .feature-card p {
             color: #666;
-            line-height: 1.8;
+            font-size: 0.95rem;
         }
 
-        /* MODE SELECTOR */
-        .mode-selector {
-            max-width: 1400px;
-            margin: 60px auto;
-            padding: 0 20px;
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .mode-btn {
-            padding: 12px 24px;
-            background: var(--white);
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 1em;
-            font-weight: 600;
-            color: #333;
-            transition: all 0.3s ease;
-        }
-
-        .mode-btn:hover {
-            border-color: var(--primary-dark);
-            color: var(--primary-dark);
-        }
-
-        .mode-btn.active {
+        /* STATS SECTION */
+        .stats {
             background: var(--primary-dark);
             color: var(--white);
-            border-color: var(--primary-dark);
+            padding: 50px 20px;
         }
 
-        /* CONTENT SECTIONS */
-        .content-wrapper {
-            max-width: 1400px;
-            margin: 40px auto;
-            padding: 0 20px;
-        }
-
-        .content {
-            display: none;
-        }
-
-        .content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        /* FORM STYLING */
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: var(--primary-dark);
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            padding: 12px;
-            border: 2px solid #e0e0e0;
-            border-radius: 6px;
-            font-size: 1em;
-            font-family: inherit;
-            transition: border-color 0.3s ease;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus,
-        .form-group textarea:focus {
-            outline: none;
-            border-color: var(--primary-dark);
-        }
-
-        .form-grid {
+        .stats-container {
+            max-width: 1200px;
+            margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 30px;
+            text-align: center;
         }
 
-        /* BOOKING CARDS */
-        .booking-card {
+        .stat-item h2 {
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+        }
+
+        .stat-item p {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        /* TESTIMONIALS */
+        .testimonials {
+            padding: 60px 20px;
+            background: var(--bg-light);
+        }
+
+        .testimonials-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .testimonial-card {
             background: var(--white);
-            border: 1px solid #e0e0e0;
-            border-radius: 12px;
             padding: 25px;
-            margin-bottom: 20px;
-            transition: all 0.3s ease;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
 
-        .booking-card:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .booking-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: start;
+        .testimonial-card p {
+            color: #666;
             margin-bottom: 15px;
+            font-style: italic;
         }
 
-        .booking-title {
-            font-size: 1.3em;
-            font-weight: 700;
-            color: var(--primary-dark);
-        }
-
-        .status-badge {
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 0.85em;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-completed {
-            background: #e2e3e5;
-            color: #383d41;
-        }
-
-        .booking-details {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
-            padding: 20px 0;
-            border-top: 1px solid #e0e0e0;
-            border-bottom: 1px solid #e0e0e0;
-        }
-
-        .detail-item {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .detail-label {
-            color: #999;
-            font-size: 0.9em;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-
-        .detail-value {
-            color: var(--primary-dark);
-            font-weight: 600;
-            font-size: 1.1em;
-        }
-
-        .booking-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-small {
-            padding: 8px 16px;
-            background: #f0f4f2;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            cursor: pointer;
+        .testimonial-author {
             font-weight: 600;
             color: var(--primary-dark);
-            transition: all 0.3s ease;
         }
 
-        .btn-small:hover {
-            background: var(--primary-dark);
+        .rating {
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+        }
+
+        /* CTA SECTION */
+        .cta {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #1a5a3f 100%);
             color: var(--white);
+            padding: 60px 20px;
+            text-align: center;
         }
 
-        /* MODAL STYLES */
+        .cta-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            font-size: 2.2rem;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            opacity: 0.95;
+        }
+
+        /* FOOTER */
+        footer {
+            background: #1a1a1a;
+            color: #ccc;
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent-gold);
+        }
+
+        /* RESPONSIVE DESIGN */
+        @media (max-width: 768px) {
+            .header-container {
+                padding: 12px 15px;
+            }
+
+            .logo-section img {
+                height: 50px;
+            }
+
+            nav {
+                display: none;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .auth-buttons {
+                display: none;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .hero-buttons {
+                gap: 10px;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                padding: 12px 24px;
+                font-size: 0.95rem;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stat-item h2 {
+                font-size: 2rem;
+            }
+
+            .cta h2 {
+                font-size: 1.6rem;
+            }
+
+            .cta p {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-container {
+                padding: 10px 12px;
+            }
+
+            .logo-section img {
+                height: 45px;
+            }
+
+            .hero {
+                padding: 40px 15px;
+            }
+
+            .hero h1 {
+                font-size: 1.6rem;
+                margin-bottom: 15px;
+            }
+
+            .hero p {
+                font-size: 0.95rem;
+                margin-bottom: 20px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                padding: 12px 20px;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                margin-bottom: 30px;
+            }
+
+            .features-grid {
+                gap: 20px;
+            }
+
+            .feature-card {
+                padding: 20px;
+            }
+
+            .feature-icon {
+                font-size: 2.5rem;
+            }
+
+            .stats-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .stat-item h2 {
+                font-size: 1.8rem;
+            }
+
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .cta {
+                padding: 40px 15px;
+            }
+
+            .cta h2 {
+                font-size: 1.4rem;
+            }
+
+            .cta p {
+                font-size: 0.95rem;
+            }
+
+            .footer-links {
+                gap: 10px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* Modal Styles */
         .modal {
             display: none;
             position: fixed;
@@ -438,7 +594,12 @@
             top: 0;
             width: 100%;
             height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
+            background-color: rgba(0, 0, 0, 0.4);
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal.active {
+            display: flex;
             align-items: center;
             justify-content: center;
         }
@@ -446,10 +607,12 @@
         .modal-content {
             background-color: var(--white);
             padding: 40px;
-            border-radius: 12px;
-            width: 90%;
-            max-width: 500px;
+            border-radius: 8px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
         }
 
         .modal-header {
@@ -461,108 +624,79 @@
 
         .modal-header h2 {
             color: var(--primary-dark);
+            font-size: 1.5rem;
         }
 
         .close-btn {
             background: none;
             border: none;
-            font-size: 2em;
+            font-size: 2rem;
             cursor: pointer;
             color: #999;
+            transition: color 0.3s ease;
         }
 
         .close-btn:hover {
-            color: #333;
+            color: var(--primary-dark);
         }
 
-        /* CTA SECTION */
-        .cta-section {
-            background: linear-gradient(135deg, var(--primary-dark) 0%, #2a8659 100%);
-            color: var(--white);
-            padding: 60px 20px;
-            text-align: center;
-        }
-
-        .cta-content h2 {
-            font-size: 2.5em;
+        .form-group {
             margin-bottom: 20px;
         }
 
-        .cta-content p {
-            font-size: 1.2em;
-            margin-bottom: 30px;
-            opacity: 0.95;
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--primary-dark);
+            font-weight: 600;
         }
 
-        /* FOOTER */
-        footer {
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-gold);
+            box-shadow: 0 0 0 3px rgba(192, 133, 48, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-submit {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .form-submit:hover {
             background: var(--primary-dark);
             color: var(--white);
-            padding: 60px 20px 20px;
         }
 
-        .footer-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-
-        .footer-section h4 {
-            margin-bottom: 20px;
-            font-size: 1.1em;
-        }
-
-        .footer-section a {
-            display: block;
-            color: rgba(255, 255, 255, 0.8);
-            text-decoration: none;
-            margin-bottom: 12px;
-            transition: color 0.3s ease;
-            cursor: pointer;
-        }
-
-        .footer-section a:hover {
-            color: var(--accent-gold);
-        }
-
-        .footer-bottom {
-            text-align: center;
-            padding-top: 20px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-            opacity: 0.8;
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-            .hero h1 {
-                font-size: 2em;
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
             }
-
-            .hero p {
-                font-size: 1em;
-            }
-
-            .hero-buttons {
-                flex-direction: column;
-            }
-
-            .btn-primary, .btn-secondary {
-                width: 100%;
-            }
-
-            nav {
-                gap: 15px;
-            }
-
-            .mode-selector {
-                flex-direction: column;
-            }
-
-            .mode-btn {
-                width: 100%;
+            to {
+                opacity: 1;
             }
         }
     </style>
@@ -572,16 +706,38 @@
     <header>
         <div class="header-container">
             <div class="logo-section">
-                <img src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663474297434/UXHFFFqIPQkEzksE.webp" alt="Elite Bridge" style="height: 60px; width: auto;">
+                <img src="https://manus-public-assets.s3.us-east-1.amazonaws.com/uploads/logo_a89b1227_444ccba9.webp" alt="Elite Bridge Logo">
             </div>
+
+            <!-- Desktop Navigation -->
             <nav>
-                <a onclick="scrollToFeatures(); return false;">Browse Caregivers</a>
-                <a onclick="switchMode('client'); return false;">Request Care</a>
-                <a onclick="scrollToFeatures(); return false;">About Us</a>
+                <a onclick="scrollToSection('features')">Browse Caregivers</a>
+                <a onclick="scrollToSection('features')">Request Care</a>
+                <a onclick="scrollToSection('features')">About Us</a>
             </nav>
-            <div class="auth-buttons">
+
+            <!-- Desktop Auth Buttons -->
+            <div class="auth-buttons" id="desktopAuthButtons">
                 <button class="btn-signin" onclick="openModal('signin-modal')">Sign In</button>
                 <button class="btn-signup" onclick="openModal('signup-modal')">Sign Up</button>
+            </div>
+
+            <!-- Mobile Hamburger -->
+            <button class="hamburger" id="hamburger" onclick="toggleMobileMenu()">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div class="mobile-menu" id="mobileMenu">
+            <a onclick="scrollToSection('features'); closeMobileMenu()">Browse Caregivers</a>
+            <a onclick="scrollToSection('features'); closeMobileMenu()">Request Care</a>
+            <a onclick="scrollToSection('features'); closeMobileMenu()">About Us</a>
+            <div class="auth-buttons">
+                <button class="btn-signin" onclick="openModal('signin-modal'); closeMobileMenu()">Sign In</button>
+                <button class="btn-signup" onclick="openModal('signup-modal'); closeMobileMenu()">Sign Up</button>
             </div>
         </div>
     </header>
@@ -589,556 +745,221 @@
     <!-- HERO SECTION -->
     <section class="hero">
         <div class="hero-content">
-            <h1>Find Trusted Caregivers for Your Loved Ones</h1>
-            <p>Connect with verified, compassionate caregivers. Simple, transparent, and reliable care solutions.</p>
+            <h1>Professional Caregiver Staffing You Can Rely On</h1>
+            <p>Connect with vetted, qualified caregivers or find your next opportunity in care work</p>
             <div class="hero-buttons">
-                <button class="btn-primary" onclick="switchMode('client')">Request Care</button>
-                <button class="btn-secondary" onclick="switchMode('directory')">Browse Caregivers</button>
-            </div>
-            <div class="hero-stats">
-                <div class="stat-card">
-                    <div class="stat-number">500+</div>
-                    <div class="stat-label">Verified Caregivers</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">4.8★</div>
-                    <div class="stat-label">Average Rating</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">24/7</div>
-                    <div class="stat-label">Support Available</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number">2K+</div>
-                    <div class="stat-label">Happy Families</div>
-                </div>
+                <button class="btn-primary" onclick="openModal('signup-modal')">Get Started</button>
+                <button class="btn-secondary" onclick="scrollToSection('features')">Learn More</button>
             </div>
         </div>
     </section>
 
     <!-- FEATURES SECTION -->
-    <section class="features">
-        <h2>Why Choose Elite Bridge?</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">✅</div>
-                <h3>Verified & Trusted</h3>
-                <p>All caregivers undergo thorough background checks, certifications, and verification to ensure the highest quality care.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3>Perfect Matching</h3>
-                <p>Our intelligent matching system connects you with caregivers who meet your specific needs and preferences.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💬</div>
-                <h3>Easy Communication</h3>
-                <p>Direct messaging and real-time updates keep you connected with your caregiver throughout the care journey.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⭐</div>
-                <h3>Transparent Ratings</h3>
-                <p>Read honest reviews from other families and make informed decisions based on real experiences.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🛡️</div>
-                <h3>Quality Assurance</h3>
-                <p>We follow up on every care session to ensure quality and address any concerns immediately.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">💰</div>
-                <h3>Transparent Pricing</h3>
-                <p>No hidden fees. Know exactly what you'll pay before booking. Flexible rates for different care types.</p>
+    <section class="features" id="features">
+        <div class="features-container">
+            <h2 class="section-title">Why Choose Elite Bridge?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">✓</div>
+                    <h3>Verified & Trusted</h3>
+                    <p>Thorough background checks, certifications, and verification to ensure highest quality care.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Smart Matching</h3>
+                    <p>Our matching system connects you with caregivers that meet your specific needs and preferences.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3>Easy Communication</h3>
+                    <p>Real-time messaging and scheduling to coordinate care seamlessly.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3>Transparent Pricing</h3>
+                    <p>Clear, competitive rates with no hidden fees. Pay only for the care you receive.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">📱</div>
+                    <h3>Mobile Friendly</h3>
+                    <p>Manage your care needs on the go with our mobile app.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3>Secure & Safe</h3>
+                    <p>Your data is protected with enterprise-grade security.</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- MODE SELECTOR -->
-    <div class="mode-selector">
-        <button class="mode-btn active" onclick="switchMode('home')">👨‍👩‍👧 Client Portal</button>
-        <button class="mode-btn" onclick="switchMode('directory')">👥 Caregiver Directory</button>
-        <button class="mode-btn" onclick="switchMode('caregiver')">👤 Staff Portal</button>
-        <button class="mode-btn" onclick="switchMode('admin')">👨‍💼 Admin Dashboard</button>
-        <button class="mode-btn" onclick="switchMode('messaging')">💬 Messaging</button>
-    </div>
-
-    <!-- CONTENT SECTIONS -->
-    <div class="content-wrapper">
-        <!-- CLIENT PORTAL -->
-        <div id="home" class="content active">
-            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Client Portal</h2>
-            
-            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">📋 Submit Your Care Request</h3>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Your Name *</label>
-                        <input type="text" placeholder="Jane Smith">
-                    </div>
-                    <div class="form-group">
-                        <label>Email Address *</label>
-                        <input type="email" placeholder="jane@example.com">
-                    </div>
-                    <div class="form-group">
-                        <label>Phone Number *</label>
-                        <input type="tel" placeholder="(555) 123-4567">
-                    </div>
-                    <div class="form-group">
-                        <label>Care Type *</label>
-                        <select>
-                            <option>Select Care Type</option>
-                            <option>Companion Care</option>
-                            <option>Personal Care</option>
-                            <option>Household Support</option>
-                            <option>Mobility Assistance</option>
-                            <option>Medication Reminders</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Frequency *</label>
-                        <select>
-                            <option>Select Frequency</option>
-                            <option>One-time</option>
-                            <option>Daily</option>
-                            <option>3-5 Times Weekly</option>
-                            <option>Weekly</option>
-                            <option>Monthly</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Start Date *</label>
-                        <input type="date">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Care Details & Special Requirements</label>
-                    <textarea placeholder="Describe the care needs, any medical conditions, mobility issues, dietary requirements, or other special requests..." rows="5"></textarea>
-                </div>
-                <button class="btn-primary" onclick="alert('Care request submitted! We will match you with caregivers within 24 hours.')">Submit Care Request</button>
+    <!-- STATS SECTION -->
+    <section class="stats">
+        <div class="stats-container">
+            <div class="stat-item">
+                <h2>5,000+</h2>
+                <p>Verified Caregivers</p>
             </div>
-
-            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">📅 My Active Bookings</h3>
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div>
-                        <div class="booking-title">Companion Care - Mary Johnson</div>
-                        <p style="color: #999; margin-top: 5px;">Experienced companion care specialist</p>
-                    </div>
-                    <span class="status-badge status-active">Active</span>
-                </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Schedule</span>
-                        <span class="detail-value">Mon & Wed, 2:00 PM - 5:00 PM</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Rate</span>
-                        <span class="detail-value">$22/hour</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Next Visit</span>
-                        <span class="detail-value">Monday, June 17</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Total Hours</span>
-                        <span class="detail-value">24 hours</span>
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-small" onclick="alert('Viewing booking details...')">View Details</button>
-                    <button class="btn-small" onclick="switchMode('messaging')">Message Caregiver</button>
-                    <button class="btn-small" onclick="alert('Reschedule booking - coming soon!')">Reschedule</button>
-                </div>
+            <div class="stat-item">
+                <h2>10,000+</h2>
+                <p>Families Served</p>
             </div>
+            <div class="stat-item">
+                <h2>50,000+</h2>
+                <p>Hours of Care</p>
+            </div>
+            <div class="stat-item">
+                <h2>4.9★</h2>
+                <p>Average Rating</p>
+            </div>
+        </div>
+    </section>
 
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div>
-                        <div class="booking-title">Personal Care - Robert Davis</div>
-                        <p style="color: #999; margin-top: 5px;">Certified Personal Care Assistant</p>
-                    </div>
-                    <span class="status-badge status-completed">Completed</span>
+    <!-- TESTIMONIALS SECTION -->
+    <section class="testimonials">
+        <div class="testimonials-container">
+            <h2 class="section-title">What Our Users Say</h2>
+            <div class="testimonials-grid">
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p>"Elite Bridge made finding reliable care so easy. The caregivers are professional and trustworthy."</p>
+                    <div class="testimonial-author">- Sarah M., Boston</div>
                 </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Duration</span>
-                        <span class="detail-value">June 10-14, 2026</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Rate</span>
-                        <span class="detail-value">$25/hour</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Total Hours</span>
-                        <span class="detail-value">15 hours</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Total Cost</span>
-                        <span class="detail-value">$375</span>
-                    </div>
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p>"As a caregiver, I love the flexibility and fair pay. Great platform to grow my career."</p>
+                    <div class="testimonial-author">- Maria R., Cambridge</div>
                 </div>
-                <div class="booking-actions">
-                    <button class="btn-small" onclick="alert('Thank you for your review!')">Leave Review</button>
-                    <button class="btn-small" onclick="switchMode('client')">Book Again</button>
+                <div class="testimonial-card">
+                    <div class="rating">★★★★★</div>
+                    <p>"Excellent service from start to finish. Highly recommend Elite Bridge to everyone."</p>
+                    <div class="testimonial-author">- John D., Worcester</div>
                 </div>
             </div>
         </div>
-
-        <!-- CAREGIVER DIRECTORY -->
-        <div id="directory" class="content">
-            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Caregiver Directory</h2>
-            
-            <div style="background: var(--white); padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <div class="form-grid">
-                    <input type="text" placeholder="Search by name or specialty..." style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
-                    <select style="padding: 12px; border: 2px solid #e0e0e0; border-radius: 6px;">
-                        <option>All Specialties</option>
-                        <option>Companion Care</option>
-                        <option>Personal Care</option>
-                        <option>Dementia Care</option>
-                    </select>
-                    <button class="btn-primary" onclick="alert('Searching caregivers...')">Search</button>
-                </div>
-            </div>
-
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div>
-                        <div class="booking-title">Maria Santos</div>
-                        <p style="color: #999; margin-top: 5px;">Companion Care Specialist • 8 years experience</p>
-                    </div>
-                    <span style="color: var(--accent-gold); font-size: 1.2em;">★★★★★ 4.9</span>
-                </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Rate</span>
-                        <span class="detail-value">$22/hour</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Availability</span>
-                        <span class="detail-value">Flexible</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Languages</span>
-                        <span class="detail-value">English, Spanish</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Certifications</span>
-                        <span class="detail-value">CPR, First Aid</span>
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-small" onclick="alert('Viewing caregiver profile...')">View Profile</button>
-                    <button class="btn-small" onclick="switchMode('messaging')">Message</button>
-                    <button class="btn-small" onclick="alert('Booking caregiver...')">Book Now</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- STAFF PORTAL -->
-        <div id="caregiver" class="content">
-            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Staff Portal</h2>
-            
-            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">👤 Your Profile</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">4.9★</div>
-                        <div style="color: #999; margin-top: 5px;">Your Rating</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">12</div>
-                        <div style="color: #999; margin-top: 5px;">Families Served</div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">📅 Upcoming Shifts</h3>
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div>
-                        <div class="booking-title">Companion Care - Johnson Family</div>
-                        <p style="color: #999; margin-top: 5px;">Regular weekly shift</p>
-                    </div>
-                    <span class="status-badge status-active">Confirmed</span>
-                </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Date & Time</span>
-                        <span class="detail-value">Mon, June 17, 2-5 PM</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Duration</span>
-                        <span class="detail-value">3 hours</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Rate</span>
-                        <span class="detail-value">$28/hour</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Earnings</span>
-                        <span class="detail-value">$84</span>
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-small" onclick="alert('Viewing shift details...')">View Details</button>
-                    <button class="btn-small" onclick="switchMode('messaging')">Message Family</button>
-                    <button class="btn-small" onclick="alert('Clocked in successfully!')">Clock In</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- ADMIN DASHBOARD -->
-        <div id="admin" class="content">
-            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Admin Dashboard</h2>
-            
-            <div style="background: var(--white); padding: 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 30px;">
-                <h3 style="color: var(--primary-dark); margin-bottom: 20px;">📊 Platform Overview</h3>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">245</div>
-                        <div style="color: #999; margin-top: 5px;">Active Care Requests</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">523</div>
-                        <div style="color: #999; margin-top: 5px;">Verified Caregivers</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">1,847</div>
-                        <div style="color: #999; margin-top: 5px;">Registered Families</div>
-                    </div>
-                    <div style="text-align: center; padding: 20px; background: #f0f4f2; border-radius: 8px;">
-                        <div style="font-size: 2em; font-weight: 700; color: var(--primary-dark);">$156K</div>
-                        <div style="color: #999; margin-top: 5px;">Monthly Revenue</div>
-                    </div>
-                </div>
-            </div>
-
-            <h3 style="color: var(--primary-dark); margin: 30px 0 20px 0;">🔍 Pending Verifications</h3>
-            <div class="booking-card">
-                <div class="booking-header">
-                    <div>
-                        <div class="booking-title">Robert Martinez</div>
-                        <p style="color: #999; margin-top: 5px;">Personal Care Assistant</p>
-                    </div>
-                    <span class="status-badge" style="background: #fff3cd; color: #856404;">Pending</span>
-                </div>
-                <div class="booking-details">
-                    <div class="detail-item">
-                        <span class="detail-label">Applied</span>
-                        <span class="detail-value">June 10, 2026</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Background Check</span>
-                        <span class="detail-value">✓ Completed</span>
-                    </div>
-                    <div class="detail-item">
-                        <span class="detail-label">Certifications</span>
-                        <span class="detail-value">⏳ Pending</span>
-                    </div>
-                </div>
-                <div class="booking-actions">
-                    <button class="btn-small" onclick="alert('Reviewing application...')">Review Application</button>
-                    <button class="btn-small" onclick="alert('Document request sent!')">Request Documents</button>
-                    <button class="btn-small" onclick="alert('Applicant approved!')">Approve</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- MESSAGING -->
-        <div id="messaging" class="content">
-            <h2 style="color: var(--primary-dark); margin: 40px 0 30px 0; font-size: 2em;">Messaging</h2>
-            
-            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px; min-height: 500px;">
-                <!-- Conversation List -->
-                <div style="background: var(--white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden;">
-                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0;">
-                        <h3 style="color: var(--primary-dark);">Conversations</h3>
-                    </div>
-                    <div style="overflow-y: auto;">
-                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer; background: #f0f4f2;" onclick="alert('Opening conversation with Maria Santos')">
-                            <div style="font-weight: 600; color: var(--primary-dark);">Maria Santos</div>
-                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Thanks for the booking!</p>
-                        </div>
-                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with James Wilson')">
-                            <div style="font-weight: 600; color: var(--primary-dark);">James Wilson</div>
-                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">Can we reschedule for next week?</p>
-                        </div>
-                        <div style="padding: 15px; border-bottom: 1px solid #e0e0e0; cursor: pointer;" onclick="alert('Opening conversation with Elite Bridge Support')">
-                            <div style="font-weight: 600; color: var(--primary-dark);">Elite Bridge Support</div>
-                            <p style="color: #999; font-size: 0.9em; margin-top: 5px;">How can we help you today?</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Chat Area -->
-                <div style="background: var(--white); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); display: flex; flex-direction: column;">
-                    <div style="padding: 20px; border-bottom: 1px solid #e0e0e0; font-weight: 600; color: var(--primary-dark);">Maria Santos</div>
-                    <div style="flex: 1; padding: 20px; overflow-y: auto;">
-                        <div style="margin-bottom: 15px;">
-                            <div style="background: #f0f4f2; padding: 12px 15px; border-radius: 8px; max-width: 70%; word-wrap: break-word;">
-                                <p style="color: #333; margin: 0;">Hi! I'm excited to start with your family. See you on Monday!</p>
-                            </div>
-                            <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:30 PM</p>
-                        </div>
-                        <div style="margin-bottom: 15px; text-align: right;">
-                            <div style="background: var(--primary-dark); color: var(--white); padding: 12px 15px; border-radius: 8px; max-width: 70%; margin-left: auto; word-wrap: break-word;">
-                                <p style="margin: 0;">Thank you! We're looking forward to meeting you too.</p>
-                            </div>
-                            <p style="color: #999; font-size: 0.85em; margin-top: 5px;">Today, 2:45 PM</p>
-                        </div>
-                    </div>
-                    <div style="padding: 15px; border-top: 1px solid #e0e0e0; display: flex; gap: 10px;">
-                        <input type="text" placeholder="Type your message..." style="flex: 1; padding: 10px 15px; border: 1px solid #e0e0e0; border-radius: 6px; font-family: inherit;">
-                        <button class="btn-primary" style="padding: 10px 20px;" onclick="alert('Message sent!')">Send</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    </section>
 
     <!-- CTA SECTION -->
-    <section class="cta-section">
+    <section class="cta">
         <div class="cta-content">
             <h2>Ready to Get Started?</h2>
-            <p>Join thousands of families and caregivers who trust Elite Bridge for quality care.</p>
-            <button class="btn-primary" onclick="switchMode('client')">Request Care Today</button>
+            <p>Join thousands of caregivers and families who trust Elite Bridge</p>
+            <button class="btn-primary" onclick="openModal('signup-modal')">Sign Up Today</button>
         </div>
     </section>
 
     <!-- FOOTER -->
     <footer>
         <div class="footer-content">
-            <div class="footer-section">
-                <h4>For Families</h4>
-                <a onclick="switchMode('client'); return false;">Request Care</a>
-                <a onclick="switchMode('directory'); return false;">Browse Caregivers</a>
-                <a onclick="alert('How It Works - Coming Soon!'); return false;">How It Works</a>
-                <a onclick="alert('Pricing Information - Coming Soon!'); return false;">Pricing</a>
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Terms of Service</a>
+                <a href="#">Contact Us</a>
+                <a href="mailto:info@elitebridgestaffing.com">Email: info@elitebridgestaffing.com</a>
             </div>
-            <div class="footer-section">
-                <h4>For Caregivers</h4>
-                <a onclick="alert('Join Our Team - Coming Soon!'); return false;">Join Our Team</a>
-                <a onclick="switchMode('caregiver'); return false;">Manage Shifts</a>
-                <a onclick="alert('Resources - Coming Soon!'); return false;">Resources</a>
-                <a onclick="alert('Support - Coming Soon!'); return false;">Support</a>
-            </div>
-            <div class="footer-section">
-                <h4>Company</h4>
-                <a onclick="alert('About Us - Coming Soon!'); return false;">About Us</a>
-                <a onclick="alert('Blog - Coming Soon!'); return false;">Blog</a>
-                <a onclick="alert('Careers - Coming Soon!'); return false;">Careers</a>
-                <a onclick="alert('Contact Us - Coming Soon!'); return false;">Contact</a>
-            </div>
-            <div class="footer-section">
-                <h4>Contact</h4>
-                <a href="tel:(555)123-4567">(555) 123-4567</a>
-                <a href="mailto:info@elitebridgestaffing.com">info@elitebridgestaffing.com</a>
-                <p style="margin-top: 15px; opacity: 0.8;">Available 24/7 for support</p>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <p>© 2026 Elite Bridge. All rights reserved. Professional Caregiver Staffing Platform.</p>
+            <p>&copy; 2024 Elite Bridge Staffing. All rights reserved. Non-medical services in Massachusetts.</p>
         </div>
     </footer>
 
-    <!-- MODALS -->
+    <!-- SIGN IN MODAL -->
     <div id="signin-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Sign In</h2>
-                <button class="close-btn" onclick="closeModal('signin-modal')">×</button>
+                <button class="close-btn" onclick="closeModal('signin-modal')">&times;</button>
             </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" placeholder="••••••••">
-            </div>
-            <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Signed in successfully!'); closeModal('signin-modal')">Sign In</button>
-            <p style="text-align: center; margin-top: 15px; color: #666;">Don't have an account? <a href="#" onclick="closeModal('signin-modal'); openModal('signup-modal'); return false;" style="color: var(--primary-dark); font-weight: 600; text-decoration: none;">Sign Up</a></p>
+            <form onsubmit="handleSignIn(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="form-submit">Sign In</button>
+            </form>
         </div>
     </div>
 
+    <!-- SIGN UP MODAL -->
     <div id="signup-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Sign Up</h2>
-                <button class="close-btn" onclick="closeModal('signup-modal')">×</button>
+                <button class="close-btn" onclick="closeModal('signup-modal')">&times;</button>
             </div>
-            <div class="form-group">
-                <label>Full Name</label>
-                <input type="text" placeholder="John Doe">
-            </div>
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" placeholder="your@email.com">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" placeholder="••••••••">
-            </div>
-            <div class="form-group">
-                <label>I am a:</label>
-                <select>
-                    <option>Select your role</option>
-                    <option>Family seeking care</option>
-                    <option>Caregiver</option>
-                </select>
-            </div>
-            <button class="btn-primary" style="width: 100%; margin-top: 20px;" onclick="alert('Account created successfully!'); closeModal('signup-modal')">Create Account</button>
-            <p style="text-align: center; margin-top: 15px; color: #666;">Already have an account? <a href="#" onclick="closeModal('signup-modal'); openModal('signin-modal'); return false;" style="color: var(--primary-dark); font-weight: 600; text-decoration: none;">Sign In</a></p>
+            <form onsubmit="handleSignUp(event)">
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" required placeholder="John Doe">
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" required placeholder="your@email.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" required placeholder="••••••••">
+                </div>
+                <button type="submit" class="form-submit">Create Account</button>
+            </form>
         </div>
     </div>
 
     <script>
-        function switchMode(mode) {
-            document.querySelectorAll('.content').forEach(el => el.classList.remove('active'));
-            const element = document.getElementById(mode);
-            if (element) {
-                element.classList.add('active');
-            }
-            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.mode-btn').forEach(btn => {
-                if (btn.textContent.includes('Client Portal') && mode === 'home') btn.classList.add('active');
-                if (btn.textContent.includes('Caregiver Directory') && mode === 'directory') btn.classList.add('active');
-                if (btn.textContent.includes('Staff Portal') && mode === 'caregiver') btn.classList.add('active');
-                if (btn.textContent.includes('Admin Dashboard') && mode === 'admin') btn.classList.add('active');
-                if (btn.textContent.includes('Messaging') && mode === 'messaging') btn.classList.add('active');
-            });
-            const selector = document.querySelector('.mode-selector');
-            if (selector) {
-                selector.scrollIntoView({ behavior: 'smooth' });
-            }
+        // Mobile Menu Toggle
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.getElementById('hamburger');
+            menu.classList.toggle('active');
+            hamburger.classList.toggle('active');
         }
 
+        function closeMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            const hamburger = document.getElementById('hamburger');
+            menu.classList.remove('active');
+            hamburger.classList.remove('active');
+        }
+
+        // Modal Functions
         function openModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'flex';
-            }
+            document.getElementById(modalId).classList.add('active');
+            closeMobileMenu();
         }
 
         function closeModal(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) {
-                modal.style.display = 'none';
-            }
+            document.getElementById(modalId).classList.remove('active');
         }
 
-        function scrollToFeatures() {
-            const features = document.querySelector('.features');
-            if (features) {
-                features.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
+        // Close modal when clicking outside
         window.onclick = function(event) {
             if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+                event.target.classList.remove('active');
             }
+        }
+
+        // Scroll to Section
+        function scrollToSection(sectionId) {
+            const section = document.getElementById(sectionId);
+            if (section) {
+                section.scrollIntoView({ behavior: 'smooth' });
+            }
+            closeMobileMenu();
+        }
+
+        // Form Handlers
+        function handleSignIn(event) {
+            event.preventDefault();
+            alert('Sign In functionality - Coming soon!');
+            closeModal('signin-modal');
+        }
+
+        function handleSignUp(event) {
+            event.preventDefault();
+            alert('Sign Up functionality - Coming soon!');
+            closeModal('signup-modal');
         }
     </script>
 </body>
