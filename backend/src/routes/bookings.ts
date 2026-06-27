@@ -2,6 +2,7 @@ import { Router } from "express";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
+import { ensureCoreTables } from "../db/bootstrap";
 import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
@@ -45,6 +46,8 @@ async function ensureShiftPostsTable() {
   if (shiftTableReady) {
     return;
   }
+
+  await ensureCoreTables();
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_posts (
@@ -91,6 +94,8 @@ async function getOrCreateEmployer(req: AuthRequest) {
   if (req.user.role !== "employer" && req.user.role !== "admin") {
     throw new AppError(403, "Only employers can manage shift posts");
   }
+
+  await ensureCoreTables();
 
   const existing = await db.query.employers.findFirst({
     where: (table, { eq }) => eq(table.userId, req.user!.id),
