@@ -1,6 +1,18 @@
 import axios, { AxiosInstance } from "axios";
+import { localAuthClient } from "./localAuth";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const CONFIGURED_API_URL = import.meta.env.VITE_API_URL as string | undefined;
+const API_BASE_URL = CONFIGURED_API_URL || "http://localhost:3000/api";
+const USE_LOCAL_AUTH = !CONFIGURED_API_URL || import.meta.env.VITE_AUTH_MODE === "local";
+
+type RegisterPayload = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  companyName: string;
+  phone?: string;
+};
 
 class APIClient {
   private client: AxiosInstance;
@@ -13,7 +25,6 @@ class APIClient {
       },
     });
 
-    // Add token to requests
     this.client.interceptors.request.use((config) => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -22,28 +33,17 @@ class APIClient {
       return config;
     });
 
-    // Handle responses
     this.client.interceptors.response.use(
       (response) => response,
-      (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem("token");
-          window.location.href = "/login";
-        }
-        return Promise.reject(error);
-      }
+      (error) => Promise.reject(error)
     );
   }
 
-  // Auth endpoints
-  async register(data: {
-    email: string;
-    password: string;
-    firstName: string;
-    lastName: string;
-    companyName: string;
-    phone?: string;
-  }) {
+  async register(data: RegisterPayload) {
+    if (USE_LOCAL_AUTH) {
+      return localAuthClient.register(data);
+    }
+
     const response = await this.client.post("/auth/register", {
       ...data,
       role: "employer",
@@ -52,27 +52,44 @@ class APIClient {
   }
 
   async login(email: string, password: string) {
+    if (USE_LOCAL_AUTH) {
+      return localAuthClient.login(email, password);
+    }
+
     const response = await this.client.post("/auth/login", { email, password });
     return response.data;
   }
 
   async getCurrentUser() {
+    const token = localStorage.getItem("token");
+
+    if (USE_LOCAL_AUTH || token?.startsWith("local-auth-")) {
+      return localAuthClient.getCurrentUser(token);
+    }
+
     const response = await this.client.get("/auth/me");
     return response.data;
   }
 
-  // Employer endpoints
+  logout() {
+    localAuthClient.logout();
+    localStorage.removeItem("token");
+  }
+
   async getEmployerProfile(id: number) {
     const response = await this.client.get(`/employers/${id}`);
     return response.data;
   }
 
   async updateEmployerProfile(id: number, data: any) {
+    if (USE_LOCAL_AUTH) {
+      return localAuthClient.updateEmployerProfile(data);
+    }
+
     const response = await this.client.put(`/employers/${id}`, data);
     return response.data;
   }
 
-  // Shift/Job endpoints
   async createShift(data: any) {
     const response = await this.client.post("/bookings", data);
     return response.data;
@@ -93,7 +110,6 @@ class APIClient {
     return response.data;
   }
 
-  // Caregiver search
   async searchCaregivers(filters?: any) {
     const response = await this.client.get("/caregivers", { params: filters });
     return response.data;
@@ -104,7 +120,6 @@ class APIClient {
     return response.data;
   }
 
-  // Booking management
   async getBookings() {
     const response = await this.client.get("/bookings/employer");
     return response.data;
@@ -122,7 +137,6 @@ class APIClient {
     return response.data;
   }
 
-  // Messaging
   async getMessages(conversationId: number) {
     const response = await this.client.get(`/messages/${conversationId}`);
     return response.data;
@@ -136,7 +150,6 @@ class APIClient {
     return response.data;
   }
 
-  // Billing
   async getBillingInfo() {
     const response = await this.client.get("/payments/billing");
     return response.data;
@@ -147,7 +160,6 @@ class APIClient {
     return response.data;
   }
 
-  // Team management
   async getTeamMembers() {
     const response = await this.client.get("/employers/team");
     return response.data;
