@@ -77,6 +77,9 @@ function AppRoutes() {
       {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/signup" element={<Navigate to="/register" replace />} />
+      <Route path="/sign-up" element={<Navigate to="/register" replace />} />
+      <Route path="/employer/register" element={<Navigate to="/register" replace />} />
 
       {/* Protected Routes */}
       <Route
