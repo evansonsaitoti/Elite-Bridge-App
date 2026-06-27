@@ -13,7 +13,7 @@ type LocalUser = {
 };
 
 type StoredUser = LocalUser & {
-  password: string;
+  passwordHash: string;
 };
 
 type RegisterData = {
@@ -46,8 +46,15 @@ function saveStoredUsers(users: StoredUser[]) {
 }
 
 function sanitizeUser(user: StoredUser): LocalUser {
-  const { password: _password, ...safeUser } = user;
+  const { passwordHash: _passwordHash, ...safeUser } = user;
   return safeUser;
+}
+
+async function hashPassword(password: string) {
+  const encodedPassword = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest("SHA-256", encodedPassword);
+  const hashArray = Array.from(new Uint8Array(digest));
+  return hashArray.map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
 function generateToken(userId: number) {
@@ -68,7 +75,7 @@ function getSession() {
 }
 
 export const localAuthClient = {
-  register(data: RegisterData) {
+  async register(data: RegisterData) {
     const email = normalizeEmail(data.email);
     const users = getStoredUsers();
     const existingUser = users.find((user) => user.email === email);
@@ -80,7 +87,7 @@ export const localAuthClient = {
     const user: StoredUser = {
       id: Date.now(),
       email,
-      password: data.password,
+      passwordHash: await hashPassword(data.password),
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
       role: "employer",
@@ -102,12 +109,13 @@ export const localAuthClient = {
     };
   },
 
-  login(email: string, password: string) {
+  async login(email: string, password: string) {
     const normalizedEmail = normalizeEmail(email);
     const users = getStoredUsers();
     const user = users.find((storedUser) => storedUser.email === normalizedEmail);
+    const passwordHash = await hashPassword(password);
 
-    if (!user || user.password !== password) {
+    if (!user || user.passwordHash !== passwordHash) {
       throw new Error("Invalid email or password");
     }
 
