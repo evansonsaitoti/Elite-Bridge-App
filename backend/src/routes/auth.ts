@@ -1,8 +1,8 @@
-import { Router, Response } from "express";
+import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
 import { db } from "../db";
-import { users } from "../db/schema";
+import { users, employers } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
@@ -17,6 +17,7 @@ const registerSchema = z.object({
   lastName: z.string().min(2),
   role: z.enum(["caregiver", "employer"]),
   phone: z.string().optional(),
+  companyName: z.string().optional(),
 });
 
 const loginSchema = z.object({
@@ -58,6 +59,13 @@ router.post("/register", async (req, res, next) => {
 
     const user = newUser[0];
 
+    if (user.role === "employer") {
+      await db.insert(employers).values({
+        userId: user.id,
+        companyName: data.companyName || `${user.firstName} ${user.lastName}`,
+      });
+    }
+
     // Generate token
     const token = generateToken({
       id: user.id,
@@ -74,6 +82,10 @@ router.post("/register", async (req, res, next) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        phone: user.phone,
+        companyName: data.companyName,
+        verificationStatus: user.verificationStatus,
+        emailVerified: user.emailVerified,
       },
     });
   } catch (error) {
@@ -126,7 +138,10 @@ router.post("/login", async (req, res, next) => {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        phone: user.phone,
         verificationStatus: user.verificationStatus,
+        emailVerified: user.emailVerified,
+        profileImage: user.profileImage,
       },
     });
   } catch (error) {
