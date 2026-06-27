@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "Elite Bridge",
+    "slug": "elite-bridge-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "elitebridge",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#0b3726"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.elitebridge.mobile"
+    },
+    "android": {
+      "package": "com.elitebridge.mobile"
+    },
+    "plugins": ["expo-router"],
+    "extra": {
+      "apiUrl": "https://YOUR-BACKEND-URL.vercel.app/api"
+    }
+  }
+}
