@@ -37,9 +37,11 @@ app.use(morgan("combined"));
 app.use(requestLogger);
 
 // Health check endpoint
-app.get("/health", (req, res) => {
-  res.json({
-    status: "ok",
+app.get("/health", async (req, res) => {
+  const dbConnected = await checkDatabaseConnection();
+
+  res.status(dbConnected ? 200 : 503).json({
+    status: dbConnected ? "ok" : "database_unavailable",
     timestamp: new Date().toISOString(),
     environment: config.NODE_ENV,
   });
@@ -57,20 +59,16 @@ app.use("/api/admin", adminRoutes);
 
 // Socket.IO for real-time features
 io.on("connection", (socket) => {
-  console.log(`✅ User connected: ${socket.id}`);
+  console.log(`User connected: ${socket.id}`);
 
-  // Join user to their personal room
   socket.on("join", (userId: number) => {
     socket.join(`user_${userId}`);
-    console.log(`User ${userId} joined their room`);
   });
 
-  // Messaging
   socket.on("send_message", (data) => {
     io.to(`user_${data.recipientId}`).emit("receive_message", data);
   });
 
-  // Typing indicator
   socket.on("typing", (data) => {
     io.to(`user_${data.recipientId}`).emit("user_typing", {
       senderId: data.senderId,
@@ -78,13 +76,8 @@ io.on("connection", (socket) => {
     });
   });
 
-  // Notifications
   socket.on("send_notification", (data) => {
     io.to(`user_${data.userId}`).emit("receive_notification", data);
-  });
-
-  socket.on("disconnect", () => {
-    console.log(`❌ User disconnected: ${socket.id}`);
   });
 });
 
@@ -99,40 +92,31 @@ app.use((req, res) => {
   });
 });
 
-// Start server
+// Start server outside Vercel serverless runtime
 async function startServer() {
   try {
-    // Check database connection
     const dbConnected = await checkDatabaseConnection();
     if (!dbConnected) {
       throw new Error("Failed to connect to database");
     }
 
     httpServer.listen(config.PORT, () => {
-      console.log(`
-╔════════════════════════════════════════╗
-║   Elite Bridge Backend Server          ║
-║   Environment: ${config.NODE_ENV.padEnd(24)} ║
-║   Port: ${config.PORT.toString().padEnd(30)} ║
-║   Status: ✅ Running                   ║
-╚════════════════════════════════════════╝
-      `);
+      console.log(`Elite Bridge Backend Server running on port ${config.PORT}`);
     });
   } catch (error) {
-    console.error("❌ Failed to start server:", error);
+    console.error("Failed to start server:", error);
     process.exit(1);
   }
 }
 
-// Handle graceful shutdown
+if (!process.env.VERCEL) {
+  startServer();
+}
+
 process.on("SIGTERM", () => {
-  console.log("SIGTERM received, shutting down gracefully...");
   httpServer.close(() => {
-    console.log("Server closed");
     process.exit(0);
   });
 });
-
-startServer();
 
 export { app, httpServer, io };
