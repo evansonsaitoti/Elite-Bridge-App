@@ -20,7 +20,7 @@ export function LoginPage() {
       await login(email, password);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.response?.data?.error || "Login failed. Please try again.");
+      setError(err.response?.data?.error || err.message || "Login failed. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -29,7 +29,6 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0b3726] to-[#1a5a3f] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-        {/* Header */}
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-2 mb-3">
             <Building2 className="w-8 h-8 text-[#c08530]" />
@@ -38,7 +37,6 @@ export function LoginPage() {
           <p className="text-gray-600">Employer Platform</p>
         </div>
 
-        {/* Error Alert */}
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
@@ -46,9 +44,7 @@ export function LoginPage() {
           </div>
         )}
 
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Email Address
@@ -66,7 +62,6 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Password
@@ -84,7 +79,6 @@ export function LoginPage() {
             </div>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isLoading}
@@ -95,27 +89,18 @@ export function LoginPage() {
           </button>
         </form>
 
-        {/* Divider */}
         <div className="my-6 flex items-center gap-4">
           <div className="flex-1 h-px bg-gray-300"></div>
           <span className="text-gray-500 text-sm">New to Elite Bridge?</span>
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* Register Link */}
         <Link
           to="/register"
           className="block w-full text-center bg-[#0b3726] hover:bg-[#0a2f1f] text-white font-semibold py-2 rounded-lg transition-colors"
         >
           Create Account
         </Link>
-
-        {/* Footer Links */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          <a href="#" className="text-[#c08530] hover:underline">
-            Forgot password?
-          </a>
-        </div>
       </div>
     </div>
   );
