@@ -1,14 +1,15 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ProfileSetupPage } from "./pages/ProfileSetupPage";
 import { EmployerDashboardPage } from "./pages/EmployerDashboardPage";
 import { PostShiftApiPage } from "./pages/PostShiftApiPage";
+import { CaregiverSearchPage } from "./pages/CaregiverSearchPage";
 import { Loader } from "lucide-react";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -60,6 +61,15 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <PostShiftApiPage />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/caregivers"
+        element={
+          <ProtectedRoute>
+            <CaregiverSearchPage />
           </ProtectedRoute>
         }
       />
