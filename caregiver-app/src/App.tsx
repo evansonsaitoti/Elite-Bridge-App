@@ -1,12 +1,14 @@
-import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import type { ReactNode } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LoginPage } from "./pages/LoginPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import { ProfileSetupPage } from "./pages/ProfileSetupPage";
+import { CaregiverDashboardPage } from "./pages/CaregiverDashboardPage";
+import { AvailableShiftsPage } from "./pages/AvailableShiftsPage";
 import { Loader } from "lucide-react";
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
@@ -29,11 +31,11 @@ function AppRoutes() {
 
   return (
     <Routes>
-      {/* Public Routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/signup" element={<Navigate to="/register" replace />} />
+      <Route path="/sign-up" element={<Navigate to="/register" replace />} />
 
-      {/* Protected Routes */}
       <Route
         path="/profile-setup"
         element={
@@ -43,22 +45,24 @@ function AppRoutes() {
         }
       />
 
-      {/* Placeholder for Dashboard - Coming Soon */}
       <Route
         path="/dashboard"
         element={
           <ProtectedRoute>
-            <div className="min-h-screen bg-gradient-to-br from-[#0b3726] to-[#1a5a3f] p-4">
-              <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-xl p-8">
-                <h1 className="text-3xl font-bold text-[#0b3726] mb-4">Dashboard</h1>
-                <p className="text-gray-600">Coming soon...</p>
-              </div>
-            </div>
+            <CaregiverDashboardPage />
           </ProtectedRoute>
         }
       />
 
-      {/* Redirect */}
+      <Route
+        path="/shifts"
+        element={
+          <ProtectedRoute>
+            <AvailableShiftsPage />
+          </ProtectedRoute>
+        }
+      />
+
       <Route path="/" element={<Navigate to={isAuthenticated ? "/dashboard" : "/login"} replace />} />
     </Routes>
   );

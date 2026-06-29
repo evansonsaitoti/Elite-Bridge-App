@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Elite Bridge | Trusted Home Care Support in Massachusetts</title>
+    <meta
+      name="description"
+      content="Elite Bridge connects Massachusetts families and care organizations with verified non-medical caregivers for companionship, personal care, respite, homemaker support, and overnight coverage."
+    />
+    <style>
+      :root {
+        --green: #0b3726;
+        --green-2: #15523a;
+        --gold: #c08530;
+        --cream: #f8f5ee;
+        --ink: #17231d;
+        --muted: #627068;
+        --white: #ffffff;
+        --line: #e8e1d5;
+      }
+      * { box-sizing: border-box; }
+      html { scroll-behavior: smooth; }
+      body {
+        margin: 0;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        color: var(--ink);
+        background: var(--cream);
+      }
+      a { color: inherit; text-decoration: none; }
+      .container { width: min(1120px, calc(100% - 32px)); margin: 0 auto; }
+      .nav {
+        position: sticky; top: 0; z-index: 20;
+        background: rgba(11, 55, 38, 0.95);
+        backdrop-filter: blur(14px);
+        color: var(--white);
+        border-bottom: 1px solid rgba(255,255,255,.12);
+      }
+      .nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 18px 0; }
+      .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; letter-spacing: -.03em; }
+      .brand-mark { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--gold); color: var(--green); font-weight: 900; }
+      .nav-links { display: flex; gap: 22px; color: rgba(255,255,255,.78); font-size: 14px; font-weight: 700; }
+      .nav-actions { display: flex; gap: 10px; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; border-radius: 999px; padding: 12px 18px; font-weight: 800; border: 1px solid transparent; cursor: pointer; }
+      .btn-primary { background: var(--gold); color: var(--white); }
+      .btn-dark { background: var(--green); color: var(--white); }
+      .btn-light { border-color: rgba(255,255,255,.22); color: var(--white); }
+      .btn-outline { border-color: var(--line); color: var(--green); background: var(--white); }
+      .hero { background: radial-gradient(circle at 80% 10%, rgba(192,133,48,.35), transparent 35%), linear-gradient(135deg, var(--green), #072016); color: var(--white); padding: 80px 0 56px; }
+      .hero-grid { display: grid; grid-template-columns: 1.2fr .8fr; gap: 44px; align-items: center; }
+      .eyebrow { display: inline-flex; align-items: center; border-radius: 999px; padding: 8px 12px; background: rgba(255,255,255,.1); color: rgba(255,255,255,.86); font-weight: 800; font-size: 13px; }
+      h1 { margin: 22px 0 16px; font-size: clamp(42px, 7vw, 76px); line-height: .95; letter-spacing: -.06em; }
+      .lead { font-size: 20px; line-height: 1.7; color: rgba(255,255,255,.78); max-width: 680px; }
+      .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 30px; }
+      .hero-card { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.18); border-radius: 30px; padding: 24px; box-shadow: 0 24px 80px rgba(0,0,0,.28); }
+      .search-box { background: var(--white); color: var(--ink); border-radius: 24px; padding: 18px; }
+      .search-box label { display:block; font-size: 13px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+      .search-row { display: grid; gap: 12px; }
+      .fake-input { padding: 14px 15px; border: 1px solid var(--line); border-radius: 16px; color: var(--muted); background: #fbfaf6; }
+      .trust-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 28px; }
+      .trust-item { background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.14); border-radius: 20px; padding: 16px; }
+      .trust-item strong { display:block; font-size: 22px; color: var(--gold); }
+      section { padding: 72px 0; }
+      .section-head { max-width: 720px; margin-bottom: 28px; }
+      .kicker { color: var(--gold); font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: .12em; }
+      h2 { font-size: clamp(30px, 4vw, 48px); line-height: 1.05; letter-spacing: -.04em; margin: 10px 0 12px; color: var(--green); }
+      .muted { color: var(--muted); line-height: 1.7; }
+      .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .card { background: var(--white); border: 1px solid var(--line); border-radius: 28px; padding: 24px; box-shadow: 0 14px 40px rgba(11,55,38,.07); }
+      .card-icon { width: 48px; height: 48px; border-radius: 16px; display: grid; place-items: center; background: rgba(192,133,48,.14); color: var(--green); font-size: 22px; }
+      .card h3 { margin: 18px 0 8px; font-size: 20px; color: var(--green); }
+      .steps { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+      .step-list { counter-reset: step; display: grid; gap: 14px; }
+      .step { counter-increment: step; background: var(--white); border: 1px solid var(--line); border-radius: 22px; padding: 18px; display: flex; gap: 14px; align-items: flex-start; }
+      .step:before { content: counter(step); width: 32px; height: 32px; border-radius: 999px; display: grid; place-items: center; flex: 0 0 auto; background: var(--green); color: var(--white); font-weight: 900; }
+      .profile-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+      .profile { background: var(--white); border: 1px solid var(--line); border-radius: 28px; padding: 22px; }
+      .avatar { width: 56px; height: 56px; border-radius: 18px; background: linear-gradient(135deg, var(--green), var(--gold)); color: white; display: grid; place-items: center; font-weight: 900; margin-bottom: 14px; }
+      .badge { display:inline-flex; border-radius: 999px; padding: 6px 10px; background: #eef7f1; color: #1d6b43; font-size: 12px; font-weight: 900; }
+      .cta { background: var(--green); color: var(--white); border-radius: 36px; padding: 42px; display: grid; grid-template-columns: 1.2fr .8fr; gap: 24px; align-items: center; }
+      .cta h2 { color: white; }
+      footer { padding: 34px 0; background: #071f16; color: rgba(255,255,255,.72); }
+      footer .container { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+      @media (max-width: 860px) {
+        .nav-links { display: none; }
+        .hero-grid, .steps, .cta { grid-template-columns: 1fr; }
+        .cards, .profile-grid, .trust-strip { grid-template-columns: 1fr; }
+        .nav-actions .btn-light { display: none; }
+        section { padding: 52px 0; }
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <div class="container nav-inner">
+        <a class="brand" href="#top"><span class="brand-mark">EB</span><span>Elite Bridge</span></a>
+        <div class="nav-links">
+          <a href="#care">Care services</a>
+          <a href="#how">How it works</a>
+          <a href="#trust">Trust</a>
+          <a href="#jobs">Caregiver jobs</a>
+        </div>
+        <div class="nav-actions">
+          <a class="btn btn-light" href="../employer-app/">Sign in</a>
+          <a class="btn btn-primary" href="../employer-app/">Request care</a>
+        </div>
+      </div>
+    </nav>
+
+    <header class="hero" id="top">
+      <div class="container hero-grid">
+        <div>
+          <span class="eyebrow">Massachusetts home care staffing, built for trust</span>
+          <h1>Reliable care support when families need it most.</h1>
+          <p class="lead">Elite Bridge connects families, agencies, and care organizations with verified non-medical caregivers for companionship, personal care, respite, homemaker support, and overnight coverage.</p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="../employer-app/">Request care</a>
+            <a class="btn btn-light" href="../caregiver-app/">Find caregiver work</a>
+          </div>
+          <div class="trust-strip">
+            <div class="trust-item"><strong>Local</strong><span>Greater Lowell focus</span></div>
+            <div class="trust-item"><strong>Verified</strong><span>Profile readiness checks</span></div>
+            <div class="trust-item"><strong>Flexible</strong><span>Hourly, overnight, respite</span></div>
+            <div class="trust-item"><strong>Clear</strong><span>No inflated job claims</span></div>
+          </div>
+        </div>
+        <div class="hero-card">
+          <div class="search-box">
+            <label>What kind of support do you need?</label>
+            <div class="search-row">
+              <div class="fake-input">Companion care, personal care, respite...</div>
+              <div class="fake-input">City or ZIP code</div>
+              <div class="fake-input">Today, this weekend, or recurring</div>
+              <a class="btn btn-dark" href="../employer-app/">Start care request</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section id="care">
+      <div class="container">
+        <div class="section-head">
+          <span class="kicker">Care services</span>
+          <h2>Focused on practical home support, not everything for everyone.</h2>
+          <p class="muted">Elite Bridge starts with the care categories families and agencies need most often, then builds trust through clear profiles, shift details, and local support.</p>
+        </div>
+        <div class="cards">
+          <div class="card"><div class="card-icon">🤝</div><h3>Companion care</h3><p class="muted">Conversation, supervision, light daily support, and friendly presence.</p></div>
+          <div class="card"><div class="card-icon">🧼</div><h3>Personal care</h3><p class="muted">Non-medical assistance with daily routines, hygiene reminders, and mobility support.</p></div>
+          <div class="card"><div class="card-icon">🌙</div><h3>Respite & overnight</h3><p class="muted">Evening, weekend, overnight, and short-notice coverage for families and agencies.</p></div>
+          <div class="card"><div class="card-icon">🍲</div><h3>Meal prep</h3><p class="muted">Simple meals, hydration reminders, light kitchen cleanup, and household routines.</p></div>
+          <div class="card"><div class="card-icon">🏠</div><h3>Homemaker support</h3><p class="muted">Light housekeeping, laundry support, errands, and home organization assistance.</p></div>
+          <div class="card"><div class="card-icon">♾️</div><h3>Family support</h3><p class="muted">Caregiver matching for autism-aware support, family respite, and structured routines.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" style="background:#fff;">
+      <div class="container steps">
+        <div>
+          <span class="kicker">For families & agencies</span>
+          <h2>Request care in a few clear steps.</h2>
+          <div class="step-list">
+            <div class="step"><div><strong>Post the care need</strong><p class="muted">Add location, time, service type, rate, and notes.</p></div></div>
+            <div class="step"><div><strong>Review caregiver matches</strong><p class="muted">Compare availability, skills, experience, and verification status.</p></div></div>
+            <div class="step"><div><strong>Confirm coverage</strong><p class="muted">Message, approve, and track shifts from the employer dashboard.</p></div></div>
+          </div>
+        </div>
+        <div id="jobs">
+          <span class="kicker">For caregivers</span>
+          <h2>Find flexible care work near you.</h2>
+          <div class="step-list">
+            <div class="step"><div><strong>Create your profile</strong><p class="muted">Show your skills, certifications, experience, and availability.</p></div></div>
+            <div class="step"><div><strong>Apply for shifts</strong><p class="muted">Browse open shifts by city, pay, service type, and schedule.</p></div></div>
+            <div class="step"><div><strong>Build your reputation</strong><p class="muted">Track bookings, earnings, reviews, and repeat work.</p></div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="trust">
+      <div class="container">
+        <div class="section-head">
+          <span class="kicker">Trust & transparency</span>
+          <h2>A care marketplace should be clear, local, and honest.</h2>
+          <p class="muted">Elite Bridge should avoid inflated job numbers, confusing subscriptions, and vague verification claims. The platform is designed around real shifts, plain pricing, and visible caregiver readiness.</p>
+        </div>
+        <div class="profile-grid">
+          <div class="profile"><div class="avatar">FM</div><span class="badge">Profile verified</span><h3>Felistus M.</h3><p class="muted">Personal care aide • Lowell area • Evenings available</p></div>
+          <div class="profile"><div class="avatar">LW</div><span class="badge">Background check ready</span><h3>Lucy W.</h3><p class="muted">Companion care • Dracut area • Friday coverage</p></div>
+          <div class="profile"><div class="avatar">SK</div><span class="badge">Weekend support</span><h3>Serah K.</h3><p class="muted">Respite support • Chelmsford area • Saturday availability</p></div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container cta">
+        <div>
+          <span class="kicker">Start with one shift</span>
+          <h2>Build the bridge between families and trusted caregivers.</h2>
+          <p class="muted" style="color:rgba(255,255,255,.78)">Post a shift, review caregivers, and manage coverage from one clean dashboard.</p>
+        </div>
+        <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:flex-end;">
+          <a class="btn btn-primary" href="../employer-app/">Post a shift</a>
+          <a class="btn btn-light" href="../caregiver-app/">Join as caregiver</a>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="container"><span>© Elite Bridge Staffing</span><span>Companionship • Personal care • Respite • Homemaker support</span></div>
+    </footer>
+  </body>
+</html>
