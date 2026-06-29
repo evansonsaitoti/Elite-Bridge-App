@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { CalendarDays, Clock, DollarSign, Loader, MapPin, PlusCircle } from "lucide-react";
+import { CalendarDays, Clock, DollarSign, Loader, MapPin, PlusCircle, Users } from "lucide-react";
 import { BrandLogo } from "../components/BrandLogo";
 import { useAuth } from "../context/AuthContext";
 import { apiClient } from "../services/api";
@@ -98,16 +98,40 @@ export function EmployerDashboardPage() {
             <div>
               <h1 className="text-3xl font-bold text-[#0b3726]">Employer Dashboard</h1>
               <p className="mt-2 max-w-2xl text-gray-600">
-                Post caregiver shifts and manage your open staffing requests.
+                Post caregiver shifts, compare caregiver matches, and manage open staffing requests.
               </p>
             </div>
-            <Link
-              to="/post-shift"
-              className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#c08530] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#b0743f]"
-            >
-              <PlusCircle className="h-5 w-5" />
-              Post a Shift
-            </Link>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/caregivers"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#0b3726] px-5 py-3 font-semibold text-[#0b3726] transition-colors hover:bg-[#0b3726] hover:text-white"
+              >
+                <Users className="h-5 w-5" />
+                Find Caregivers
+              </Link>
+              <Link
+                to="/post-shift"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#c08530] px-5 py-3 font-semibold text-white transition-colors hover:bg-[#b0743f]"
+              >
+                <PlusCircle className="h-5 w-5" />
+                Post a Shift
+              </Link>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-8 grid gap-4 md:grid-cols-3">
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+            <p className="text-sm font-semibold text-gray-500">Open shifts</p>
+            <p className="mt-1 text-3xl font-bold text-[#0b3726]">{shifts.filter((shift) => shift.status === "open").length}</p>
+          </div>
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+            <p className="text-sm font-semibold text-gray-500">Total posted</p>
+            <p className="mt-1 text-3xl font-bold text-[#0b3726]">{shifts.length}</p>
+          </div>
+          <div className="rounded-lg border border-gray-100 bg-gray-50 p-4">
+            <p className="text-sm font-semibold text-gray-500">Next action</p>
+            <p className="mt-1 text-lg font-bold text-[#0b3726]">Review caregiver matches</p>
           </div>
         </div>
 
