@@ -44,7 +44,7 @@ export function AvailableShiftsPage() {
           setShifts(apiShifts);
           setNotice("");
         }
-      } catch (error) {
+      } catch {
         setNotice("Showing sample shifts until caregiver shift feed is connected.");
       } finally {
         setIsLoading(false);
