@@ -29,7 +29,7 @@ platform :ios do
     end
     increment_build_number(build_number: build_num + 1)
 
-    # Build the app with explicit team ID and signing configuration
+    # Build the app with automatic signing support in CI
     build_app(
       workspace: "EliteBridgeAdmin.xcodeproj/project.xcworkspace",
       scheme: "EliteBridgeAdmin",
@@ -37,10 +37,11 @@ platform :ios do
       output_directory: "./build",
       output_name: "EliteBridgeApp.ipa",
       clean: true,
-      xcargs: "DEVELOPMENT_TEAM=F42HSPN3W4 CODE_SIGN_STYLE=Manual",
+      xcargs: "DEVELOPMENT_TEAM=F42HSPN3W4 -allowProvisioningUpdates",
       export_options: {
+        method: "app-store",
         provisioningProfiles: {
-          "com.app.elitebridgemobile" => ENV["SIGH_UUID"] || "com.app.elitebridgemobile AppStore"
+          "com.app.elitebridgemobile" => "com.app.elitebridgemobile AppStore"
         }
       }
     )
