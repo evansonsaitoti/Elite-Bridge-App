@@ -1,3 +1,4 @@
+# GitHub Actions installs the matching signing certificate and provisioning profile before this lane runs.
 default_platform(:ios)
 
 IOS_APP_IDENTIFIER = "com.app.elitebridgemobile"
