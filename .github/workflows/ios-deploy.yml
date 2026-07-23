@@ -24,8 +24,10 @@ jobs:
           cd elitebridge-mobile
           npm install --legacy-peer-deps
 
-      - name: Install Fastlane
-        run: brew install fastlane
+      - name: Install Fastlane and CocoaPods
+        run: |
+          brew install fastlane
+          sudo gem install cocoapods
 
       - name: Set up Fastlane
         run: |
