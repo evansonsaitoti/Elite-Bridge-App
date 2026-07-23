@@ -1,0 +1,4 @@
+app_identifier("com.app.elitebridgemobile") # The bundle identifier of your app
+apple_id("evasaitoti@gmail.com") # Your Apple Developer Portal username
+itc_team_id("125338002") # App Store Connect Team ID
+team_id("F42HSPN3W4") # Developer Portal Team ID

@@ -1,0 +1,40 @@
+default_platform(:ios)
+
+platform :ios do
+  desc "Update app metadata in App Store Connect"
+  lane :update_metadata do
+    api_key = app_store_connect_api_key(
+      key_id: "3VCN742K92",
+      issuer_id: "94a27216-e287-4aa5-9471-57173e4af009",
+      key_filepath: "fastlane/AuthKey_3VCN742K92.p8"
+    )
+
+    deliver(
+      api_key: api_key,
+      app_identifier: "com.app.elitebridgemobile",
+      privacy_url: {
+        "default" => "http://34.75.156.104:8080/privacy.html"
+      },
+      skip_screenshots: true,
+      skip_metadata: false,
+      edit_live: false
+    )
+  end
+
+  desc "Push a new beta build to TestFlight"
+  lane :beta do
+    api_key = app_store_connect_api_key(
+      key_id: "3VCN742K92",
+      issuer_id: "94a27216-e287-4aa5-9471-57173e4af009",
+      key_filepath: "fastlane/AuthKey_3VCN742K92.p8",
+      duration: 1200,
+      in_house: false
+    )
+    
+    upload_to_testflight(
+      api_key: api_key,
+      app_identifier: "com.app.elitebridgemobile",
+      skip_waiting_for_build_processing: true
+    )
+  end
+end
