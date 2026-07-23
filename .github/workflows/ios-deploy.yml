@@ -34,13 +34,12 @@ jobs:
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
           APP_STORE_CONNECT_P8_KEY: ${{ secrets.APP_STORE_CONNECT_P8_KEY }}
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          for secret_name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD BUILD_PROVISION_PROFILE_BASE64 KEYCHAIN_PASSWORD APP_STORE_CONNECT_P8_KEY APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID; do
+          for secret_name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD KEYCHAIN_PASSWORD APP_STORE_CONNECT_P8_KEY APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID; do
             if [ -z "${!secret_name}" ]; then
               echo "::error::Missing required GitHub secret: $secret_name"
               exit 1
@@ -56,21 +55,16 @@ jobs:
           command -v fastlane >/dev/null 2>&1 || brew install fastlane
           command -v pod >/dev/null 2>&1 || brew install cocoapods
 
-      - name: Install signing certificate and provisioning profile
+      - name: Install signing certificate
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
           CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
-          PROVISIONING_PROFILE_PATH="$RUNNER_TEMP/build_profile.mobileprovision"
-          PROFILE_PLIST_PATH="$RUNNER_TEMP/build_profile.plist"
           KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
-          PROFILE_DIRECTORY="$HOME/Library/MobileDevice/Provisioning Profiles"
 
           echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o "$PROVISIONING_PROFILE_PATH"
 
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
@@ -78,17 +72,8 @@ jobs:
           security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-          security cms -D -i "$PROVISIONING_PROFILE_PATH" > "$PROFILE_PLIST_PATH"
-          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$PROFILE_PLIST_PATH")
-          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$PROFILE_PLIST_PATH")
-
-          mkdir -p "$PROFILE_DIRECTORY"
-          INSTALLED_PROFILE_PATH="$PROFILE_DIRECTORY/$PROFILE_UUID.mobileprovision"
-          cp "$PROVISIONING_PROFILE_PATH" "$INSTALLED_PROFILE_PATH"
-
-          echo "PROVISIONING_PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
-          echo "INSTALLED_PROFILE_PATH=$INSTALLED_PROFILE_PATH" >> "$GITHUB_ENV"
           echo "SIGNING_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
       - name: Install iOS dependencies
@@ -119,10 +104,8 @@ jobs:
           if [ -n "${SIGNING_KEYCHAIN_PATH:-}" ]; then
             security delete-keychain "$SIGNING_KEYCHAIN_PATH" || true
           fi
-          if [ -n "${INSTALLED_PROFILE_PATH:-}" ]; then
-            rm -f "$INSTALLED_PROFILE_PATH"
-          fi
           if [ -n "${APP_STORE_CONNECT_KEY_PATH:-}" ]; then
             rm -f "$APP_STORE_CONNECT_KEY_PATH"
           fi
-          rm -f "$RUNNER_TEMP/build_certificate.p12" "$RUNNER_TEMP/build_profile.mobileprovision" "$RUNNER_TEMP/build_profile.plist"
+          rm -f "$RUNNER_TEMP/build_certificate.p12"
+          rm -f "elitebridge-mobile/ios/EliteBridgeAdmin_CI.mobileprovision"
