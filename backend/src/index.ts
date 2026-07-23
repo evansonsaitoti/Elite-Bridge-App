@@ -4,7 +4,7 @@ import helmet from "helmet";
 import morgan from "morgan";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
-import { config } from "./config/env";
+import { config } from "./config/env.js";
 import { checkDatabaseConnection } from "./db";
 import { errorHandler } from "./middleware/errorHandler";
 import { requestLogger } from "./middleware/requestLogger";
@@ -17,6 +17,7 @@ import employerRoutes from "./routes/employers";
 import bookingRoutes from "./routes/bookings";
 import messageRoutes from "./routes/messages";
 import paymentRoutes from "./routes/payments";
+import payrollRoutes from "./routes/payroll";
 import adminRoutes from "./routes/admin";
 
 const app = express();
@@ -55,6 +56,7 @@ app.use("/api/employers", employerRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/payments", paymentRoutes);
+app.use("/api/payroll", payrollRoutes);
 app.use("/api/admin", adminRoutes);
 
 // Socket.IO for real-time features

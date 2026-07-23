@@ -42,6 +42,7 @@ router.post("/register", async (req, res, next) => {
       .insert(users)
       .values({
         email: data.email,
+        verificationStatus: "pending",
         password: hashedPassword,
         firstName: data.firstName,
         lastName: data.lastName,
@@ -54,6 +55,7 @@ router.post("/register", async (req, res, next) => {
 
     if (user.role === "employer") {
       await db.insert(employers).values({
+        verificationStatus: "pending",
         userId: user.id,
         companyName: data.companyName || `${user.firstName} ${user.lastName}`,
       });

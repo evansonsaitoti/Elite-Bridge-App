@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { z } from "zod";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 import { db } from "../db";
 import { ensureCoreTables } from "../db/bootstrap";
 import { employers } from "../db/schema";
@@ -43,12 +43,9 @@ const shiftSchema = z.object({
 let shiftTableReady = false;
 
 async function ensureShiftPostsTable() {
-  if (shiftTableReady) {
-    return;
-  }
-
+  if (shiftTableReady) return;
   await ensureCoreTables();
-
+  
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_posts (
       id SERIAL PRIMARY KEY,
@@ -79,50 +76,35 @@ async function ensureShiftPostsTable() {
     )
   `);
 
-  await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_posts_employer_id_idx ON shift_posts(employer_id)`);
-  await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_posts_status_idx ON shift_posts(status)`);
-  await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_posts_start_time_idx ON shift_posts(start_time)`);
-
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS shift_activities (
+      id SERIAL PRIMARY KEY,
+      shift_id INTEGER NOT NULL REFERENCES shift_posts(id) ON DELETE CASCADE,
+      caregiver_id INTEGER NOT NULL,
+      type VARCHAR(50) NOT NULL,
+      timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      location JSONB,
+      notes TEXT
+    )
+  `);
+  
   shiftTableReady = true;
 }
 
 async function getOrCreateEmployer(req: AuthRequest) {
-  if (!req.user) {
-    throw new AppError(401, "User not authenticated");
-  }
-
-  if (req.user.role !== "employer" && req.user.role !== "admin") {
-    throw new AppError(403, "Only employers can manage shift posts");
-  }
-
-  await ensureCoreTables();
-
-  const existing = await db.query.employers.findFirst({
-    where: (table, { eq }) => eq(table.userId, req.user!.id),
-  });
-
-  if (existing) {
-    return existing;
-  }
-
-  const created = await db
-    .insert(employers)
-    .values({
-      userId: req.user.id,
-      companyName: req.user.email,
-    })
-    .returning();
-
+  const employerList = await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1);
+  if (employerList.length > 0) return employerList[0];
+  
+  const created = await db.insert(employers).values({
+    userId: req.user!.id,
+    companyName: req.user!.email,
+  }).returning();
   return created[0];
 }
 
 function combineDateAndTime(date: string, time: string) {
   const value = new Date(`${date}T${time}:00`);
-
-  if (Number.isNaN(value.getTime())) {
-    throw new AppError(400, "Invalid shift date or time");
-  }
-
+  if (Number.isNaN(value.getTime())) throw new AppError(400, "Invalid shift date or time");
   return value;
 }
 
@@ -160,6 +142,7 @@ function mapShift(row: any) {
   };
 }
 
+// Routes
 router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
@@ -167,11 +150,7 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
     const data = shiftSchema.parse(req.body);
     const startDateTime = combineDateAndTime(data.startDate, data.startTime);
     const endDateTime = combineDateAndTime(data.startDate, data.endTime);
-
-    if (endDateTime <= startDateTime) {
-      throw new AppError(400, "End time must be later than start time");
-    }
-
+    
     const result = await db.execute(sql`
       INSERT INTO shift_posts (
         employer_id, title, service_type, caregiver_type, care_recipient_name,
@@ -187,77 +166,75 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       )
       RETURNING *
     `);
-
-    res.status(201).json({
-      message: "Shift posted successfully",
-      shift: mapShift((result as any).rows[0]),
-    });
-  } catch (error) {
-    next(error);
-  }
+    res.status(201).json({ shift: mapShift((result as any).rows[0]) });
+  } catch (error) { next(error); }
 });
 
 router.get("/employer/my", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
-
-    const result = await db.execute(sql`
-      SELECT * FROM shift_posts
-      WHERE employer_id = ${employer.id}
-      ORDER BY created_at DESC
-    `);
-
+    const result = await db.execute(sql`SELECT * FROM shift_posts WHERE employer_id = ${employer.id} ORDER BY created_at DESC`);
     res.json({ shifts: (result as any).rows.map(mapShift) });
-  } catch (error) {
-    next(error);
-  }
+  } catch (error) { next(error); }
 });
 
-router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
+// Clock-in route for caregivers
+router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const shiftId = parseInt(req.params.shiftId);
+    await db.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type)
+      VALUES (${shiftId}, ${req.user!.id}, 'clock_in')
+    `);
+    res.json({ message: "Clocked in successfully" });
+  } catch (error) { next(error); }
+});
+
+// Clock-out route for caregivers
+router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const shiftId = parseInt(req.params.shiftId);
+    await db.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type)
+      VALUES (${shiftId}, ${req.user!.id}, 'clock_out')
+    `);
+    res.json({ message: "Clocked out successfully" });
+  } catch (error) { next(error); }
+});
+
+// Get activities for employer monitoring
+router.get("/activities", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
-
     const result = await db.execute(sql`
-      SELECT * FROM shift_posts
-      WHERE employer_id = ${employer.id}
-      ORDER BY created_at DESC
+      SELECT sa.*, sp.title as shift_title, u.first_name, u.last_name
+      FROM shift_activities sa
+      JOIN shift_posts sp ON sa.shift_id = sp.id
+      JOIN users u ON sa.caregiver_id = u.id
+      WHERE sp.employer_id = ${employer.id}
+      ORDER BY sa.timestamp DESC
+      LIMIT 50
     `);
-
-    res.json({ shifts: (result as any).rows.map(mapShift) });
-  } catch (error) {
-    next(error);
-  }
+    res.json({ activities: (result as any).rows });
+  } catch (error) { next(error); }
 });
 
 router.put("/:shiftId/close", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
-    const shiftId = Number(req.params.shiftId);
-
-    if (!Number.isInteger(shiftId)) {
-      throw new AppError(400, "Invalid shift ID");
-    }
-
     const result = await db.execute(sql`
-      UPDATE shift_posts
-      SET status = 'closed', updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${shiftId} AND employer_id = ${employer.id}
+      UPDATE shift_posts SET status = 'closed', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${Number(req.params.shiftId)} AND employer_id = ${employer.id}
       RETURNING *
     `);
-
-    const shift = (result as any).rows[0];
-
-    if (!shift) {
-      throw new AppError(404, "Shift not found");
-    }
-
-    res.json({ message: "Shift closed", shift: mapShift(shift) });
-  } catch (error) {
-    next(error);
-  }
+    if (!(result as any).rows[0]) throw new AppError(404, "Shift not found");
+    res.json({ shift: mapShift((result as any).rows[0]) });
+  } catch (error) { next(error); }
 });
 
 export default router;

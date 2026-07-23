@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Care - Elite Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f4f7f6;
+            color: #333;
+        }
+
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+        }
+
+        header {
+            background: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+            flex: 1;
+            justify-content: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #444;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--primary-dark);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn-signin {
+            padding: 8px 18px;
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .btn-signup {
+            padding: 10px 24px;
+            background: var(--primary-dark);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: background 0.3s ease;
+        }
+
+        .btn-signup:hover {
+            background: var(--accent-gold);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .search-section {
+            background: var(--white);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 40px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+
+        .search-section h2 {
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+        }
+
+        .search-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 15px;
+            align-items: end;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            padding: 12px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
+        }
+
+        .btn-search {
+            padding: 12px 30px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-search:hover {
+            background: var(--accent-gold);
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .results-header h3 {
+            color: var(--primary-dark);
+        }
+
+        .sort-select {
+            padding: 8px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+
+        .caregivers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+
+        .caregiver-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: all 0.3s ease;
+        }
+
+        .caregiver-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .caregiver-header {
+            padding: 20px;
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .caregiver-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #ddd;
+            flex-shrink: 0;
+        }
+
+        .caregiver-name {
+            flex: 1;
+        }
+
+        .caregiver-name h4 {
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .caregiver-title {
+            color: var(--accent-gold);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .caregiver-rating {
+            color: #ffc107;
+            font-size: 0.9rem;
+        }
+
+        .caregiver-body {
+            padding: 20px;
+        }
+
+        .caregiver-body p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+
+        .caregiver-services {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .service-tag {
+            background: var(--gray-light);
+            color: var(--primary-dark);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .caregiver-footer {
+            display: flex;
+            gap: 10px;
+            padding: 0 20px 20px;
+        }
+
+        .btn-view {
+            flex: 1;
+            padding: 10px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-view:hover {
+            background: var(--accent-gold);
+        }
+
+        .btn-message {
+            flex: 1;
+            padding: 10px;
+            background: var(--white);
+            color: var(--primary-dark);
+            border: 2px solid var(--primary-dark);
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-message:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+        }
+
+        @media (max-width: 768px) {
+            .search-form {
+                grid-template-columns: 1fr;
+            }
+            .caregivers-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-container">
+        <div class="logo-section">
+            <img src="logo.webp" alt="Elite Bridge Logo">
+        </div>
+        <nav>
+            <a href="index.html">Home</a>
+            <a href="find-care.html" style="color: var(--primary-dark); font-weight: 700;">Find Care</a>
+            <a href="find-jobs.html">Find Jobs</a>
+            <a href="services.html">Services</a>
+        </nav>
+        <div class="auth-buttons">
+            <a href="#" class="btn-signin">Sign in</a>
+            <a href="#" class="btn-signup">Join Now</a>
+        </div>
+    </div>
+</header>
+
+<div class="container">
+    <div class="search-section">
+        <h2>Find Care in Your Area</h2>
+        <form class="search-form" onsubmit="handleSearch(event)">
+            <div class="form-group">
+                <label>Zip Code</label>
+                <input type="text" id="zipCode" placeholder="Enter MA zip code" required>
+            </div>
+            <div class="form-group">
+                <label>Service Type</label>
+                <select id="serviceType">
+                    <option value="">All Services</option>
+                    <option value="senior">Senior Companion</option>
+                    <option value="housekeeping">Housekeeping</option>
+                    <option value="transportation">Transportation</option>
+                    <option value="errands">Errands & Groceries</option>
+                    <option value="meal">Meal Preparation</option>
+                    <option value="pet">Pet Support</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Availability</label>
+                <select id="availability">
+                    <option value="">Any Time</option>
+                    <option value="weekday">Weekdays</option>
+                    <option value="weekend">Weekends</option>
+                    <option value="fulltime">Full-time</option>
+                </select>
+            </div>
+            <button type="submit" class="btn-search">Search</button>
+        </form>
+    </div>
+
+    <div id="resultsContainer" style="display: none;">
+        <div class="results-header">
+            <h3 id="resultsCount"></h3>
+            <select class="sort-select" onchange="sortResults(this.value)">
+                <option value="rating">Highest Rated</option>
+                <option value="experience">Most Experience</option>
+                <option value="recent">Recently Active</option>
+            </select>
+        </div>
+        <div class="caregivers-grid" id="caregiversGrid"></div>
+    </div>
+
+    <div id="noResults" class="no-results" style="display: none;">
+        <h3>No caregivers found</h3>
+        <p>Try adjusting your search criteria or check back soon.</p>
+    </div>
+</div>
+
+<script>
+    // Get URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialZip = urlParams.get('zip');
+
+    // Auto-fill and search if zip code is provided
+    if (initialZip) {
+        document.getElementById('zipCode').value = initialZip;
+        // Trigger search after page loads
+        window.addEventListener('load', () => {
+            const form = document.querySelector('.search-form');
+            const event = new Event('submit');
+            form.dispatchEvent(event);
+        });
+    }
+
+    // Mock data for caregivers
+    const mockCaregivers = [
+        {
+            id: 1,
+            name: "Sarah J.",
+            title: "Senior Companion & Housekeeper",
+            rating: 4.9,
+            reviews: 42,
+            zipCode: "02101",
+            services: ["Senior Companion", "Housekeeping", "Meal Prep"],
+            description: "I love helping seniors maintain their independence. Experienced with dementia care and light housekeeping.",
+            experience: 8,
+            availability: "weekday",
+            serviceType: "senior"
+        },
+        {
+            id: 2,
+            name: "James M.",
+            title: "Transportation & Errands Specialist",
+            rating: 5.0,
+            reviews: 18,
+            zipCode: "01601",
+            services: ["Transportation", "Errands", "Groceries"],
+            description: "Reliable transportation and help with groceries. 5+ years supporting families in Worcester area.",
+            experience: 5,
+            availability: "fulltime",
+            serviceType: "transportation"
+        },
+        {
+            id: 3,
+            name: "Maria R.",
+            title: "Housekeeping & Pet Care",
+            rating: 4.8,
+            reviews: 35,
+            zipCode: "02134",
+            services: ["Housekeeping", "Pet Support", "Light Cleaning"],
+            description: "Professional housekeeping with attention to detail. Also experienced with pet sitting and dog walking.",
+            experience: 10,
+            availability: "weekend",
+            serviceType: "housekeeping"
+        },
+        {
+            id: 4,
+            name: "David K.",
+            title: "Meal Preparation & Nutrition",
+            rating: 4.7,
+            reviews: 28,
+            zipCode: "02115",
+            services: ["Meal Preparation", "Grocery Shopping", "Nutrition Planning"],
+            description: "Specialized in preparing healthy, delicious meals. Can accommodate dietary restrictions and preferences.",
+            experience: 6,
+            availability: "weekday",
+            serviceType: "meal"
+        },
+        {
+            id: 5,
+            name: "Lisa T.",
+            title: "Pet Care & Companion",
+            rating: 4.9,
+            reviews: 52,
+            zipCode: "02101",
+            services: ["Pet Support", "Dog Walking", "Pet Sitting"],
+            description: "Animal lover with 7+ years experience. Specializes in dog walking, pet sitting, and animal companionship.",
+            experience: 7,
+            availability: "fulltime",
+            serviceType: "pet"
+        },
+        {
+            id: 6,
+            name: "Robert C.",
+            title: "Senior Care & Transportation",
+            rating: 4.6,
+            reviews: 31,
+            zipCode: "02601",
+            services: ["Senior Companion", "Transportation", "Errands"],
+            description: "Compassionate caregiver with experience in senior care. Reliable transportation and errand assistance.",
+            experience: 9,
+            availability: "fulltime",
+            serviceType: "senior"
+        }
+    ];
+
+    function handleSearch(event) {
+        event.preventDefault();
+        
+        const zipCode = document.getElementById('zipCode').value;
+        const serviceType = document.getElementById('serviceType').value;
+        const availability = document.getElementById('availability').value;
+
+        // Filter caregivers based on search criteria
+        let results = mockCaregivers.filter(caregiver => {
+            const zipMatch = !zipCode || caregiver.zipCode.includes(zipCode.substring(0, 3));
+            const serviceMatch = !serviceType || caregiver.serviceType === serviceType;
+            const availabilityMatch = !availability || caregiver.availability === availability;
+            
+            return zipMatch && serviceMatch && availabilityMatch;
+        });
+
+        // Sort by rating (default)
+        results.sort((a, b) => b.rating - a.rating);
+
+        displayResults(results, zipCode);
+    }
+
+    function displayResults(caregivers, zipCode) {
+        const container = document.getElementById('resultsContainer');
+        const noResults = document.getElementById('noResults');
+        const grid = document.getElementById('caregiversGrid');
+        const count = document.getElementById('resultsCount');
+
+        if (caregivers.length === 0) {
+            container.style.display = 'none';
+            noResults.style.display = 'block';
+            return;
+        }
+
+        container.style.display = 'block';
+        noResults.style.display = 'none';
+        count.textContent = `${caregivers.length} caregiver${caregivers.length !== 1 ? 's' : ''} found in ${zipCode}`;
+
+        grid.innerHTML = caregivers.map(caregiver => `
+            <div class="caregiver-card">
+                <div class="caregiver-header">
+                    <div class="caregiver-avatar"></div>
+                    <div class="caregiver-name">
+                        <h4>${caregiver.name}</h4>
+                        <div class="caregiver-title">${caregiver.title}</div>
+                        <div class="caregiver-rating">⭐ ${caregiver.rating} (${caregiver.reviews} reviews)</div>
+                    </div>
+                </div>
+                <div class="caregiver-body">
+                    <p>${caregiver.description}</p>
+                    <div class="caregiver-services">
+                        ${caregiver.services.map(service => `<span class="service-tag">${service}</span>`).join('')}
+                    </div>
+                    <p style="font-size: 0.85rem; color: #999;">📍 ${caregiver.zipCode} • ${caregiver.experience}+ years experience</p>
+                </div>
+                <div class="caregiver-footer">
+                    <button class="btn-view">View Profile</button>
+                    <button class="btn-message">Message</button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function sortResults(sortBy) {
+        const zipCode = document.getElementById('zipCode').value;
+        const serviceType = document.getElementById('serviceType').value;
+        const availability = document.getElementById('availability').value;
+
+        let results = mockCaregivers.filter(caregiver => {
+            const zipMatch = !zipCode || caregiver.zipCode.includes(zipCode.substring(0, 3));
+            const serviceMatch = !serviceType || caregiver.serviceType === serviceType;
+            const availabilityMatch = !availability || caregiver.availability === availability;
+            
+            return zipMatch && serviceMatch && availabilityMatch;
+        });
+
+        if (sortBy === 'rating') {
+            results.sort((a, b) => b.rating - a.rating);
+        } else if (sortBy === 'experience') {
+            results.sort((a, b) => b.experience - a.experience);
+        } else if (sortBy === 'recent') {
+            results.sort((a, b) => b.id - a.id);
+        }
+
+        const grid = document.getElementById('caregiversGrid');
+        grid.innerHTML = results.map(caregiver => `
+            <div class="caregiver-card">
+                <div class="caregiver-header">
+                    <div class="caregiver-avatar"></div>
+                    <div class="caregiver-name">
+                        <h4>${caregiver.name}</h4>
+                        <div class="caregiver-title">${caregiver.title}</div>
+                        <div class="caregiver-rating">⭐ ${caregiver.rating} (${caregiver.reviews} reviews)</div>
+                    </div>
+                </div>
+                <div class="caregiver-body">
+                    <p>${caregiver.description}</p>
+                    <div class="caregiver-services">
+                        ${caregiver.services.map(service => `<span class="service-tag">${service}</span>`).join('')}
+                    </div>
+                    <p style="font-size: 0.85rem; color: #999;">📍 ${caregiver.zipCode} • ${caregiver.experience}+ years experience</p>
+                </div>
+                <div class="caregiver-footer">
+                    <button class="btn-view">View Profile</button>
+                    <button class="btn-message">Message</button>
+                </div>
+            </div>
+        `).join('');
+    }
+</script>
+
+</body>
+</html>

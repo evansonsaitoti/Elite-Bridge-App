@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caregiver Dashboard - Elite Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f4f7f6;
+            color: #333;
+        }
+
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+        }
+
+        header {
+            background: var(--white);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .header-left img {
+            height: 40px;
+            width: auto;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+        }
+
+        .logout-btn {
+            padding: 8px 16px;
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: var(--primary-dark);
+            color: var(--white);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .profile-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+        }
+
+        .profile-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--primary-dark);
+            color: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin: 0 auto 15px;
+        }
+
+        .profile-card h3 {
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .profile-card p {
+            color: #999;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-top: 15px;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: #999;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 10px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-gold);
+        }
+
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .card h2 {
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
+        }
+
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .service-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .service-checkbox input {
+            width: auto;
+            margin: 0;
+        }
+
+        .service-checkbox label {
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-save {
+            padding: 12px 30px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-save:hover {
+            background: var(--accent-gold);
+        }
+
+        .time-tracking {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .time-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clock-in {
+            background: #4caf50;
+            color: var(--white);
+        }
+
+        .clock-in:hover {
+            background: #45a049;
+        }
+
+        .clock-out {
+            background: #f44336;
+            color: var(--white);
+        }
+
+        .clock-out:hover {
+            background: #da190b;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .status-active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status-inactive {
+            background: #f3e5f5;
+            color: #6a1b9a;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            .time-tracking {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-left">
+        <img src="logo.webp" alt="Elite Bridge Logo">
+    </div>
+    <div class="header-right">
+        <div class="user-menu">
+            <div class="user-avatar" id="userInitial">J</div>
+            <span id="userName">John Doe</span>
+        </div>
+        <button class="logout-btn" onclick="handleLogout()">Logout</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="dashboard-grid">
+        <div class="sidebar">
+            <div class="profile-card">
+                <div class="profile-avatar">👵</div>
+                <h3 id="profileName">John Doe</h3>
+                <p id="profileRole">Caregiver</p>
+                <div class="profile-stats">
+                    <div class="stat">
+                        <div class="stat-value" id="ratingValue">4.8</div>
+                        <div class="stat-label">Rating</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value" id="bookingsValue">12</div>
+                        <div class="stat-label">Bookings</div>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="scrollToSection('profile')">Edit Profile</button>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">Quick Actions</h3>
+                <button class="btn-primary" style="margin-bottom: 10px;" onclick="scrollToSection('availability')">Set Availability</button>
+                <button class="btn-primary" style="margin-bottom: 10px; background: var(--accent-gold); color: var(--primary-dark);" onclick="scrollToSection('time-tracking')">Clock In/Out</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <!-- Time Tracking Section -->
+            <div class="card" id="time-tracking">
+                <h2>Time Tracking</h2>
+                <div class="time-tracking">
+                    <button class="time-btn clock-in" onclick="clockIn()">⏱️ Clock In</button>
+                    <button class="time-btn clock-out" onclick="clockOut()">⏹️ Clock Out</button>
+                </div>
+                <p style="margin-top: 15px; color: #999; font-size: 0.9rem;">Current Status: <span class="status-badge status-inactive">Offline</span></p>
+            </div>
+
+            <!-- Profile Section -->
+            <div class="card" id="profile">
+                <h2>Profile Information</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>First Name</label>
+                        <input type="text" id="firstName" placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name</label>
+                        <input type="text" id="lastName" placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="email" placeholder="john@example.com" disabled>
+                </div>
+                <div class="form-group">
+                    <label>Phone</label>
+                    <input type="tel" id="phone" placeholder="(555) 123-4567">
+                </div>
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="bio" placeholder="Tell families about yourself..."></textarea>
+                </div>
+                <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+            </div>
+
+            <!-- Services Section -->
+            <div class="card">
+                <h2>Services Offered</h2>
+                <div class="services-grid">
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="senior" name="services" value="senior">
+                        <label for="senior">Senior Companion</label>
+                    </div>
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="housekeeping" name="services" value="housekeeping">
+                        <label for="housekeeping">Housekeeping</label>
+                    </div>
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="transportation" name="services" value="transportation">
+                        <label for="transportation">Transportation</label>
+                    </div>
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="errands" name="services" value="errands">
+                        <label for="errands">Errands</label>
+                    </div>
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="meal" name="services" value="meal">
+                        <label for="meal">Meal Prep</label>
+                    </div>
+                    <div class="service-checkbox">
+                        <input type="checkbox" id="pet" name="services" value="pet">
+                        <label for="pet">Pet Care</label>
+                    </div>
+                </div>
+                <button class="btn-save" onclick="saveServices()">Save Services</button>
+            </div>
+
+            <!-- Availability Section -->
+            <div class="card" id="availability">
+                <h2>Availability & Rates</h2>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Hourly Rate ($)</label>
+                        <input type="number" id="hourlyRate" placeholder="20" min="10" step="0.50">
+                    </div>
+                    <div class="form-group">
+                        <label>Availability</label>
+                        <select id="availability">
+                            <option value="">Select availability</option>
+                            <option value="fulltime">Full-time</option>
+                            <option value="parttime">Part-time</option>
+                            <option value="flexible">Flexible</option>
+                            <option value="weekends">Weekends Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Zip Code</label>
+                    <input type="text" id="zipCode" placeholder="02101">
+                </div>
+                <button class="btn-save" onclick="saveAvailability()">Save Availability</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://34.75.156.104:3000/api';
+
+    // Load user data on page load
+    window.addEventListener('load', () => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
+        document.getElementById('userInitial').textContent = user.firstName.charAt(0);
+        document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
+        document.getElementById('firstName').value = user.firstName;
+        document.getElementById('lastName').value = user.lastName;
+        document.getElementById('email').value = user.email;
+        document.getElementById('phone').value = user.phone || '';
+    });
+
+    function scrollToSection(sectionId) {
+        const element = document.getElementById(sectionId);
+        if (element) {
+            element.scrollIntoView({ behavior: 'smooth' });
+        }
+    }
+
+    function saveProfile() {
+        alert('Profile saved successfully!');
+    }
+
+    function saveServices() {
+        const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value);
+        console.log('Selected services:', selectedServices);
+        alert('Services updated successfully!');
+    }
+
+    function saveAvailability() {
+        alert('Availability saved successfully!');
+    }
+
+    function clockIn() {
+        alert('Clocked in at ' + new Date().toLocaleTimeString());
+    }
+
+    function clockOut() {
+        alert('Clocked out at ' + new Date().toLocaleTimeString());
+    }
+
+    function handleLogout() {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        window.location.href = 'index.html';
+    }
+</script>
+
+</body>
+</html>

@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign In - Elite Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0b3726 0%, #1a5a3f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        .form-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
+        }
+
+        .remember-forgot {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            font-size: 0.9rem;
+        }
+
+        .remember-forgot a {
+            color: var(--accent-gold);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .remember-forgot a:hover {
+            text-decoration: underline;
+        }
+
+        .btn-signin {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .btn-signin:hover {
+            background: var(--accent-gold);
+        }
+
+        .btn-signin:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #999;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--gray-light);
+        }
+
+        .divider span {
+            padding: 0 15px;
+            font-size: 0.85rem;
+        }
+
+        .signup-link {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+        }
+
+        .signup-link a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        @media (max-width: 480px) {
+            .form-card {
+                padding: 30px 20px;
+            }
+
+            .logo-section h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-card">
+        <div class="logo-section">
+            <img src="logo.webp" alt="Elite Bridge Logo">
+            <h1>Elite Bridge</h1>
+            <p>Sign in to your account</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="loginForm" onsubmit="handleLogin(event)">
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required>
+            </div>
+
+            <div class="remember-forgot">
+                <label style="display: flex; align-items: center; gap: 8px; font-weight: normal;">
+                    <input type="checkbox" name="remember" style="width: auto;">
+                    Remember me
+                </label>
+                <a href="#">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="btn-signin" id="submitBtn">Sign In</button>
+
+            <div class="loading" id="loading">Signing in...</div>
+        </form>
+
+        <div class="divider"><span>or</span></div>
+
+        <div class="signup-link">
+            Don't have an account? <a href="signup.html">Sign up here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://34.75.156.104:3000/api';
+
+    async function handleLogin(event) {
+        event.preventDefault();
+
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        // Clear messages
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+
+        // Show loading
+        submitBtn.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email, password }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Login failed');
+            }
+
+            // Store token
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Show success message
+            successDiv.textContent = 'Login successful! Redirecting...';
+            successDiv.style.display = 'block';
+
+            // Redirect based on role
+            setTimeout(() => {
+                if (data.user.role === 'caregiver') {
+                    window.location.href = 'caregiver-dashboard.html';
+                } else if (data.user.role === 'employer') {
+                    window.location.href = 'employer-dashboard.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }, 1500);
+
+        } catch (error) {
+            errorDiv.textContent = error.message || 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.style.display = 'block';
+            loading.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>

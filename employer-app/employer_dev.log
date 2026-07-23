@@ -1,0 +1,4 @@
+nohup: ignoring input
+npm notice run elite-bridge-employer@1.0.0 dev
+npm notice run vite --host --port 5174
+sh: 1: vite: not found

@@ -50,7 +50,9 @@ export function requireRole(...roles: string[]) {
 }
 
 export function generateToken(user: { id: number; email: string; role: string }): string {
+  // @ts-ignore
   return jwt.sign(user, config.JWT_SECRET, {
+
     expiresIn: config.JWT_EXPIRE,
   });
 }

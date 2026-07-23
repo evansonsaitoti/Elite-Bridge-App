@@ -82,7 +82,18 @@ export function ProfileSetupPage() {
       return;
     }
 
-    if (formData.specialties.length === 0) {
+    // Prepare final lists including currently selected but not yet "added" items
+    const finalSpecialties = [...formData.specialties];
+    if (newSpecialty && !finalSpecialties.includes(newSpecialty)) {
+      finalSpecialties.push(newSpecialty);
+    }
+
+    const finalCertifications = [...formData.certifications];
+    if (newCertification && !finalCertifications.includes(newCertification)) {
+      finalCertifications.push(newCertification);
+    }
+
+    if (finalSpecialties.length === 0) {
       setError("Please select at least one specialty");
       return;
     }
@@ -94,8 +105,8 @@ export function ProfileSetupPage() {
         bio: formData.bio,
         hourlyRate: parseFloat(formData.hourlyRate),
         yearsExperience: parseInt(formData.yearsExperience) || 0,
-        specialties: formData.specialties,
-        certifications: formData.certifications,
+        specialties: finalSpecialties,
+        certifications: finalCertifications,
       });
       navigate("/dashboard");
     } catch (err: any) {

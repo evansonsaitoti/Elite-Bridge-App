@@ -8,7 +8,7 @@ import {
   decimal,
   integer,
   json,
-  enum as pgEnum,
+  pgEnum,
   uniqueIndex,
   index,
   foreignKey,

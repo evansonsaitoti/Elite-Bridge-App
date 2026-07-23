@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Elite Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0b3726 0%, #1a5a3f 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+        }
+
+        .form-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: #999;
+            font-size: 0.95rem;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .role-option {
+            position: relative;
+        }
+
+        .role-option input {
+            display: none;
+        }
+
+        .role-option label {
+            display: block;
+            padding: 15px;
+            border: 2px solid var(--gray-light);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+        }
+
+        .role-option input:checked + label {
+            border-color: var(--primary-dark);
+            background: rgba(11, 55, 38, 0.05);
+            color: var(--primary-dark);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 6px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-signup {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-signup:hover {
+            background: var(--accent-gold);
+        }
+
+        .btn-signup:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .terms {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .terms a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signin-link {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 20px;
+        }
+
+        .signin-link a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .signin-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .company-section {
+            display: none;
+        }
+
+        .company-section.active {
+            display: block;
+        }
+
+        @media (max-width: 480px) {
+            .form-card {
+                padding: 30px 20px;
+            }
+
+            .logo-section h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="form-card">
+        <div class="logo-section">
+            <img src="logo.webp" alt="Elite Bridge Logo">
+            <h1>Elite Bridge</h1>
+            <p>Create your account</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: 600; color: var(--primary-dark); margin-bottom: 12px;">I am a:</label>
+                <div class="role-selector">
+                    <div class="role-option">
+                        <input type="radio" id="caregiver" name="role" value="caregiver" required onchange="updateCompanySection()">
+                        <label for="caregiver">👵 Caregiver</label>
+                    </div>
+                    <div class="role-option">
+                        <input type="radio" id="employer" name="role" value="employer" required onchange="updateCompanySection()">
+                        <label for="employer">🏢 Employer</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" placeholder="••••••••" required minlength="8">
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required minlength="8">
+            </div>
+
+            <div class="company-section" id="companySection">
+                <div class="form-group">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" name="companyName" placeholder="Your Company">
+                </div>
+            </div>
+
+            <div class="terms">
+                By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+            </div>
+
+            <button type="submit" class="btn-signup" id="submitBtn">Create Account</button>
+
+            <div class="loading" id="loading">Creating account...</div>
+        </form>
+
+        <div class="signin-link">
+            Already have an account? <a href="login.html">Sign in here</a>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://34.75.156.104:3000/api';
+
+    function updateCompanySection() {
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const companySection = document.getElementById('companySection');
+        const companyInput = document.getElementById('companyName');
+
+        if (role === 'employer') {
+            companySection.classList.add('active');
+            companyInput.required = true;
+        } else {
+            companySection.classList.remove('active');
+            companyInput.required = false;
+        }
+    }
+
+    async function handleSignup(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const email = document.getElementById('email').value;
+        const phone = document.getElementById('phone').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const companyName = document.getElementById('companyName').value;
+
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        // Clear messages
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Show loading
+        submitBtn.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    password,
+                    role,
+                    companyName: role === 'employer' ? companyName : undefined,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Registration failed');
+            }
+
+            // Store token
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            // Show success message
+            successDiv.textContent = 'Account created successfully! Redirecting...';
+            successDiv.style.display = 'block';
+
+            // Redirect based on role
+            setTimeout(() => {
+                if (role === 'caregiver') {
+                    window.location.href = 'caregiver-dashboard.html';
+                } else if (role === 'employer') {
+                    window.location.href = 'employer-dashboard.html';
+                } else {
+                    window.location.href = 'index.html';
+                }
+            }, 1500);
+
+        } catch (error) {
+            errorDiv.textContent = error.message || 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.style.display = 'block';
+            loading.style.display = 'none';
+        }
+    }
+</script>
+
+</body>
+</html>
