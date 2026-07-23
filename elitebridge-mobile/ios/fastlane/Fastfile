@@ -15,8 +15,16 @@ platform :ios do
       in_house: false
     )
 
-    # Install CocoaPods using system command to avoid Bundler issues
+    # Install CocoaPods
     sh("pod install")
+
+    # Get latest provisioning profile
+    profile = get_provisioning_profile(
+      api_key: api_key,
+      app_identifier: "com.app.elitebridgemobile",
+      provisioning_name: "com.app.elitebridgemobile AppStore",
+      ignore_profiles_with_different_name: true
+    )
 
     # Get latest build number and increment
     build_num = lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
@@ -29,7 +37,7 @@ platform :ios do
     end
     increment_build_number(build_number: build_num + 1)
 
-    # Build the app with automatic signing support in CI
+    # Build the app with explicit profile mapping
     build_app(
       workspace: "EliteBridgeAdmin.xcodeproj/project.xcworkspace",
       scheme: "EliteBridgeAdmin",
@@ -37,11 +45,11 @@ platform :ios do
       output_directory: "./build",
       output_name: "EliteBridgeApp.ipa",
       clean: true,
-      xcargs: "DEVELOPMENT_TEAM=F42HSPN3W4 -allowProvisioningUpdates",
+      xcargs: "DEVELOPMENT_TEAM=F42HSPN3W4 CODE_SIGN_STYLE=Manual",
       export_options: {
         method: "app-store",
         provisioningProfiles: {
-          "com.app.elitebridgemobile" => "com.app.elitebridgemobile AppStore"
+          "com.app.elitebridgemobile" => profile
         }
       }
     )
