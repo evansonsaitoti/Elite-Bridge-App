@@ -1,30 +1,21 @@
-# GitHub Actions imports the Apple Distribution certificate before this lane runs.
-# Fastlane handles provisioning and TestFlight upload directly; Expo/EAS is not used.
 default_platform(:ios)
 
-IOS_APP_IDENTIFIER = "com.app.elitebridgemobile"
-APPLE_DEVELOPER_TEAM_ID = "F42HSPN3W4"
-IOS_VERSION = "1.0.0"
-CI_PROVISIONING_PROFILE_NAME = "EliteBridgeAdmin AppStore CI"
-
 platform :ios do
-  private_lane :app_store_api_key do
-    app_store_connect_api_key(
-      key_id: ENV.fetch("APP_STORE_CONNECT_KEY_ID"),
-      issuer_id: ENV.fetch("APP_STORE_CONNECT_ISSUER_ID"),
-      key_filepath: ENV.fetch("APP_STORE_CONNECT_KEY_PATH"),
-      duration: 1200,
-      in_house: false
-    )
+  before_all do
+    setup_ci if ENV["GITHUB_ACTIONS"]
   end
 
   desc "Update app metadata in App Store Connect"
   lane :update_metadata do
-    api_key = app_store_api_key
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_filepath: "fastlane/AuthKey_3VCN742K92.p8"
+    )
 
     deliver(
       api_key: api_key,
-      app_identifier: IOS_APP_IDENTIFIER,
+      app_identifier: "com.app.elitebridgemobile",
       privacy_url: {
         "default" => "http://34.75.156.104:8080/privacy.html"
       },
@@ -34,66 +25,33 @@ platform :ios do
     )
   end
 
-  desc "Build, sign, and upload a new beta build to TestFlight"
+  desc "Push a new beta build to TestFlight"
   lane :beta do
-    api_key = app_store_api_key
-    team_id = ENV.fetch("APPLE_TEAM_ID", APPLE_DEVELOPER_TEAM_ID)
-
-    get_provisioning_profile(
-      api_key: api_key,
-      app_identifier: IOS_APP_IDENTIFIER,
-      team_id: team_id,
-      force: true,
-      provisioning_name: CI_PROVISIONING_PROFILE_NAME,
-      ignore_profiles_with_different_name: true,
-      cert_owner_name: "Evanson Saitoti",
-      filename: "EliteBridgeAdmin_CI.mobileprovision"
-    )
-    profile_name = lane_context[SharedValues::SIGH_NAME]
-    UI.user_error!("Fastlane did not return a provisioning profile name") if profile_name.to_s.empty?
-
-    latest_build = latest_testflight_build_number(
-      api_key: api_key,
-      app_identifier: IOS_APP_IDENTIFIER,
-      version: IOS_VERSION,
-      initial_build_number: 0
-    )
-    next_build = latest_build + 1
-
-    increment_build_number(
-      xcodeproj: "EliteBridgeAdmin.xcodeproj",
-      build_number: next_build
-    )
-    set_info_plist_value(
-      path: "EliteBridgeAdmin/Info.plist",
-      key: "CFBundleVersion",
-      value: next_build.to_s
+    api_key = app_store_connect_api_key(
+      key_id: ENV["APP_STORE_CONNECT_KEY_ID"],
+      issuer_id: ENV["APP_STORE_CONNECT_ISSUER_ID"],
+      key_filepath: "fastlane/AuthKey_3VCN742K92.p8",
+      duration: 1200,
+      in_house: false
     )
 
+    # Install CocoaPods
+    cocoapods
+
+    # Build the app
     build_app(
-      workspace: "EliteBridgeAdmin.xcworkspace",
+      workspace: "EliteBridgeAdmin.xcodeproj/project.xcworkspace",
       scheme: "EliteBridgeAdmin",
-      configuration: "Release",
-      clean: true,
       export_method: "app-store",
       output_directory: "./build",
-      output_name: "EliteBridgeAdmin.ipa",
-      codesigning_identity: "Apple Distribution",
-      export_options: {
-        method: "app-store",
-        signingStyle: "manual",
-        teamID: team_id,
-        provisioningProfiles: {
-          IOS_APP_IDENTIFIER => profile_name
-        }
-      },
-      xcargs: "DEVELOPMENT_TEAM=#{team_id} CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY='Apple Distribution' PROVISIONING_PROFILE_SPECIFIER='#{profile_name}'"
+      output_name: "EliteBridgeApp.ipa"
     )
 
+    # Upload to TestFlight
     upload_to_testflight(
       api_key: api_key,
-      app_identifier: IOS_APP_IDENTIFIER,
-      ipa: "./build/EliteBridgeAdmin.ipa",
+      app_identifier: "com.app.elitebridgemobile",
+      ipa: "./build/EliteBridgeApp.ipa",
       skip_waiting_for_build_processing: true
     )
   end
