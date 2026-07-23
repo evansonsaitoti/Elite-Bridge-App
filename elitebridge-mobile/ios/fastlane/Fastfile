@@ -35,8 +35,19 @@ platform :ios do
       in_house: false
     )
 
-    # Install CocoaPods
-    cocoapods
+    # Install CocoaPods using system command to avoid Bundler issues
+    sh("pod install")
+
+    # Get latest build number and increment
+    build_num = lane_context[SharedValues::LATEST_TESTFLIGHT_BUILD_NUMBER]
+    if build_num.nil?
+      begin
+        build_num = get_latest_testflight_build_number(api_key: api_key, app_identifier: "com.app.elitebridgemobile")
+      rescue
+        build_num = 0
+      end
+    end
+    increment_build_number(build_number: build_num + 1)
 
     # Build the app
     build_app(
@@ -44,7 +55,8 @@ platform :ios do
       scheme: "EliteBridgeAdmin",
       export_method: "app-store",
       output_directory: "./build",
-      output_name: "EliteBridgeApp.ipa"
+      output_name: "EliteBridgeApp.ipa",
+      clean: true
     )
 
     # Upload to TestFlight
