@@ -2,12 +2,16 @@ import { ScrollView, Text, View, TouchableOpacity, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useState } from "react";
+import { useRouter } from "expo-router";
+import { useTimekeeping } from "@/lib/timekeeping-context";
 
 /**
  * Admin Home Screen - Consolidated dashboard with all features
  */
 export default function AdminHomeScreen() {
   const colors = useColors();
+  const router = useRouter();
+  const { entries } = useTimekeeping();
   const [expandedSection, setExpandedSection] = useState<string | null>(null);
   const [selectedShift, setSelectedShift] = useState<string | null>(null);
   const [selectedApplication, setSelectedApplication] = useState<string | null>(null);
@@ -21,7 +25,13 @@ export default function AdminHomeScreen() {
     notifications: "#98D8C8", // Mint
     settings: "#F7DC6F",      // Yellow
     activity: "#BB8FCE",      // Purple
+    timesheets: "#1B5E3F",    // Brand green
   };
+
+  const pendingTimesheets = entries.filter(
+    (entry) =>
+      entry.status === "completed" || entry.status === "correction_requested",
+  ).length;
 
   const styles = {
     container: {
@@ -313,6 +323,14 @@ export default function AdminHomeScreen() {
         {/* Primary Action */}
         <TouchableOpacity style={styles.actionButton} onPress={handlePostShift}>
           <Text style={styles.actionButtonText}>+ Post New Shift</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.actionButton, { backgroundColor: sectionColors.timesheets }]}
+          onPress={() => router.push("/(admin)/timesheets")}
+        >
+          <Text style={styles.actionButtonText}>
+            Review Timesheets{pendingTimesheets ? ` • ${pendingTimesheets} pending` : ""}
+          </Text>
         </TouchableOpacity>
 
         {/* Shifts Management Section */}

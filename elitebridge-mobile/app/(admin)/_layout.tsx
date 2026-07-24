@@ -22,6 +22,12 @@ export default function AdminStackLayout() {
           title: "Dashboard",
         }}
       />
+      <Stack.Screen
+        name="timesheets"
+        options={{
+          title: "Timesheets",
+        }}
+      />
     </Stack>
   );
 }

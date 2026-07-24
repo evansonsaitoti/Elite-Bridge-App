@@ -49,6 +49,8 @@
     </dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>Elite Bridge needs microphone access for voice communication.</string>
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Elite Bridge records your location only when you clock in or out of a scheduled visit.</string>
     <key>UILaunchStoryboardName</key>
     <string>SplashScreen</string>
     <key>UIRequiredDeviceCapabilities</key>
