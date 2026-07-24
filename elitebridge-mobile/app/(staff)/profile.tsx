@@ -21,7 +21,7 @@ export default function StaffProfile() {
         text: "Logout",
         onPress: async () => {
           await logout();
-          router.replace("/(tabs)");
+          router.replace("/(tabs)/login");
         },
       },
     ]);

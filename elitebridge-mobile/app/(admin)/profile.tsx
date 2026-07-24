@@ -24,7 +24,7 @@ export default function AdminProfileScreen() {
 
   const handleLogout = async () => {
     await logout();
-    router.replace("/(tabs)");
+    router.replace("/(tabs)/login");
   };
 
   const styles = StyleSheet.create({

@@ -1,75 +1,111 @@
 name: iOS Deploy
+
 on:
   workflow_dispatch:
   push:
     branches: [ main ]
     paths:
       - 'elitebridge-mobile/**'
+
+concurrency:
+  group: ios-testflight
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: macos-latest
+    timeout-minutes: 60
+
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 20
-          cache: 'npm'
-          cache-dependency-path: 'elitebridge-mobile/package-lock.json'
+          cache: npm
+          cache-dependency-path: elitebridge-mobile/package-lock.json
 
-      - name: Install dependencies
-        run: |
-          cd elitebridge-mobile
-          npm install --legacy-peer-deps
-
-      - name: Install Fastlane and CocoaPods
-        run: |
-          brew install fastlane
-          sudo gem install cocoapods
-          echo "/usr/local/bin" >> $GITHUB_PATH
-
-      - name: Set up Fastlane
-        run: |
-          cd elitebridge-mobile/ios
-          mkdir -p fastlane
-          echo "${{ secrets.APP_STORE_CONNECT_P8_KEY }}" > fastlane/AuthKey_3VCN742K92.p8
-
-      - name: Install Apple Certificate and Provisioning Profile
+      - name: Verify required secrets
         env:
           BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
           P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+          APP_STORE_CONNECT_P8_KEY: ${{ secrets.APP_STORE_CONNECT_P8_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          for secret_name in BUILD_CERTIFICATE_BASE64 P12_PASSWORD KEYCHAIN_PASSWORD APP_STORE_CONNECT_P8_KEY APP_STORE_CONNECT_KEY_ID APP_STORE_CONNECT_ISSUER_ID; do
+            if [ -z "${!secret_name}" ]; then
+              echo "::error::Missing required GitHub secret: $secret_name"
+              exit 1
+            fi
+          done
+
+      - name: Install JavaScript dependencies
+        working-directory: elitebridge-mobile
+        run: npm install --legacy-peer-deps
+
+      - name: Install Fastlane and CocoaPods
+        run: |
+          command -v fastlane >/dev/null 2>&1 || brew install fastlane
+          command -v pod >/dev/null 2>&1 || brew install cocoapods
+
+      - name: Install Apple Distribution certificate
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
           KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
         run: |
-          # Create variables
-          CERTIFICATE_PATH=$RUNNER_TEMP/build_certificate.p12
-          PP_PATH=$RUNNER_TEMP/build_pp.mobileprovision
-          KEYCHAIN_PATH=$RUNNER_TEMP/app-signing.keychain-db
+          CERTIFICATE_PATH="$RUNNER_TEMP/build_certificate.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
 
-          # Import certificate and provisioning profile from secrets
-          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o $CERTIFICATE_PATH
-          echo -n "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode -o $PP_PATH
+          echo -n "$BUILD_CERTIFICATE_BASE64" | base64 --decode -o "$CERTIFICATE_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERTIFICATE_PATH" -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
 
-          # Create temporary keychain
-          security create-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
-          security set-keychain-settings -lut 21600 $KEYCHAIN_PATH
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          echo "SIGNING_KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
 
-          # Import certificate to keychain
-          security import $CERTIFICATE_PATH -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k $KEYCHAIN_PATH
-          security list-keychain -d user -s $KEYCHAIN_PATH
+      - name: Install iOS dependencies
+        working-directory: elitebridge-mobile/ios
+        run: pod install
 
-          # Apply provisioning profile
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
-          cp $PP_PATH ~/Library/MobileDevice/Provisioning\ Profiles
-
-      - name: Deploy to TestFlight
+      - name: Prepare App Store Connect API key
+        env:
+          APP_STORE_CONNECT_P8_KEY: ${{ secrets.APP_STORE_CONNECT_P8_KEY }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
         run: |
-          cd elitebridge-mobile/ios
-          fastlane beta
+          P8_PATH="$RUNNER_TEMP/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          printf '%s' "$APP_STORE_CONNECT_P8_KEY" > "$P8_PATH"
+          chmod 600 "$P8_PATH"
+          echo "APP_STORE_CONNECT_KEY_PATH=$P8_PATH" >> "$GITHUB_ENV"
+
+      - name: Build, sign, and upload to TestFlight
+        working-directory: elitebridge-mobile/ios
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          GITHUB_ACTIONS: true
+          APPLE_TEAM_ID: F42HSPN3W4
+        run: fastlane beta
+
+      - name: Clean up signing material
+        if: always()
+        run: |
+          if [ -n "${SIGNING_KEYCHAIN_PATH:-}" ]; then
+            security delete-keychain "$SIGNING_KEYCHAIN_PATH" || true
+          fi
+          if [ -n "${APP_STORE_CONNECT_KEY_PATH:-}" ]; then
+            rm -f "$APP_STORE_CONNECT_KEY_PATH"
+          fi
+          rm -f "$RUNNER_TEMP/build_certificate.p12"
+          rm -f "elitebridge-mobile/ios/EliteBridgeAdmin_CI.mobileprovision"

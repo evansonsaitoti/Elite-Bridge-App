@@ -23,7 +23,7 @@ export default function RootIndex() {
 
   // Not authenticated - redirect to login
   if (!isAuthenticated) {
-    return <Redirect href="/(tabs)" />;
+    return <Redirect href="/(tabs)/login" />;
   }
 
   // Authenticated - route based on role and onboarding status
