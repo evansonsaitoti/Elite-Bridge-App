@@ -64,6 +64,7 @@ platform :ios do
       export_method: "app-store",
       output_directory: "./build",
       output_name: "EliteBridgeAdmin.ipa",
+      xcodebuild_formatter: "",
       codesigning_identity: "Apple Distribution",
       skip_profile_detection: true,
       export_options: {
