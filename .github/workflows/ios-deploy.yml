@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
       - 'elitebridge-mobile/**'
+      - '.github/workflows/ios-deploy.yml'
 
 concurrency:
   group: ios-testflight
