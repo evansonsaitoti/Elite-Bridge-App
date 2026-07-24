@@ -22,6 +22,8 @@ const config: ExpoConfig = {
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSMicrophoneUsageDescription: "Elite Bridge needs microphone access for voice communication.",
+      NSLocationWhenInUseUsageDescription:
+        "Elite Bridge records your location only when you clock in or out of a scheduled visit.",
     },
   },
   android: {
