@@ -16,16 +16,6 @@ const config: ExpoConfig = {
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
   userInterfaceStyle: "automatic",
-  owner: "esaitoti",
-  runtimeVersion: "1.0.0",
-  updates: {
-    url: "https://u.expo.dev/15715728-ffc5-4ea1-9da8-5158f1e539ef",
-  },
-  extra: {
-    eas: {
-      projectId: "15715728-ffc5-4ea1-9da8-5158f1e539ef",
-    },
-  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
