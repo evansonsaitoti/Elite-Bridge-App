@@ -1,176 +1,178 @@
-import { ScrollView, View, Text, TextInput, TouchableOpacity, StyleSheet, Image } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import { useState } from "react";
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
+
 import { ScreenContainer } from "@/components/screen-container";
 
+type LoginRole = "administrator" | "staff";
+
+const DEMO_ACCOUNTS = {
+  administrator: {
+    email: "admin@elitebridge.com",
+    password: "Admin123!",
+    destination: "/(admin)/home" as const,
+  },
+  staff: {
+    email: "staff@elitebridge.com",
+    password: "Staff123!",
+    destination: "/(staff)/home" as const,
+  },
+};
+
 export default function LoginScreen() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const router = useRouter();
+  const [role, setRole] = useState<LoginRole>("administrator");
+  const [email, setEmail] = useState(DEMO_ACCOUNTS.administrator.email);
+  const [password, setPassword] = useState(DEMO_ACCOUNTS.administrator.password);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleLogin = async () => {
+  const chooseRole = (nextRole: LoginRole) => {
+    setRole(nextRole);
+    setEmail(DEMO_ACCOUNTS[nextRole].email);
+    setPassword(DEMO_ACCOUNTS[nextRole].password);
     setError("");
-    if (!email || !password) {
-      setError("Please enter both email and password");
+  };
+
+  const handleLogin = async () => {
+    const account = DEMO_ACCOUNTS[role];
+    setError("");
+
+    if (!email.trim() || !password) {
+      setError("Enter both your email address and password.");
       return;
     }
 
-    setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => {
+    if (
+      email.trim().toLowerCase() !== account.email.toLowerCase() ||
+      password !== account.password
+    ) {
+      setError(
+        `These details do not match the selected ${role} account. Use the demo credentials shown below.`,
+      );
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+      await AsyncStorage.setItem(
+        "elitebridge-session",
+        JSON.stringify({ role, email: account.email, signedInAt: new Date().toISOString() }),
+      );
+      router.replace(account.destination);
+    } catch {
+      setError("We could not sign you in. Please try again.");
+    } finally {
       setIsLoading(false);
-      console.log("Login attempt:", { email, password });
-    }, 1500);
+    }
   };
+
+  const account = DEMO_ACCOUNTS[role];
+  const isAdmin = role === "administrator";
 
   return (
     <ScreenContainer>
-      <ScrollView contentContainerStyle={styles.container}>
-        {/* Logo Section */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoBox}>
-            <Text style={styles.logoText}>🏥</Text>
-          </View>
-          <Text style={styles.appName}>Elite Bridge</Text>
-          <Text style={styles.tagline}>Assisted Living Staffing</Text>
+      <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+        <View style={styles.logoBox}>
+          <Text style={styles.logoText}>🏥</Text>
+        </View>
+        <Text style={styles.appName}>Elite Bridge</Text>
+        <Text style={styles.tagline}>Choose the portal you are signing into</Text>
+
+        <View style={styles.roleRow}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => chooseRole("administrator")}
+            style={[styles.roleCard, isAdmin && styles.roleCardSelected]}
+          >
+            <Text style={styles.roleIcon}>🛡️</Text>
+            <Text style={[styles.roleTitle, isAdmin && styles.roleTitleSelected]}>Administrator</Text>
+            <Text style={[styles.roleDescription, isAdmin && styles.roleDescriptionSelected]}>
+              Manage shifts, staff, applications and timesheets
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => chooseRole("staff")}
+            style={[styles.roleCard, !isAdmin && styles.roleCardSelected]}
+          >
+            <Text style={styles.roleIcon}>👤</Text>
+            <Text style={[styles.roleTitle, !isAdmin && styles.roleTitleSelected]}>Staff</Text>
+            <Text style={[styles.roleDescription, !isAdmin && styles.roleDescriptionSelected]}>
+              View shifts, clock in and manage your profile
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Welcome Text */}
-        <View style={styles.welcomeSection}>
-          <Text style={styles.welcomeTitle}>Welcome Back</Text>
-          <Text style={styles.welcomeSubtitle}>
-            Sign in to your account to view shifts and manage your schedule
+        <View style={styles.portalBanner}>
+          <Text style={styles.portalLabel}>YOU ARE SIGNING IN TO</Text>
+          <Text style={styles.portalTitle}>
+            {isAdmin ? "Administrator Portal" : "Staff Portal"}
           </Text>
         </View>
 
-        {/* Error Message */}
         {error ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>⚠️ {error}</Text>
           </View>
         ) : null}
 
-        {/* Form Section */}
-        <View style={styles.formSection}>
-          {/* Email Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputIcon}>✉️</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="your@email.com"
-                placeholderTextColor="#999"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                value={email}
-                onChangeText={setEmail}
-                editable={!isLoading}
-              />
-            </View>
-          </View>
+        <View style={styles.formCard}>
+          <Text style={styles.label}>Email address</Text>
+          <TextInput
+            style={styles.input}
+            value={email}
+            onChangeText={setEmail}
+            autoCapitalize="none"
+            keyboardType="email-address"
+            editable={!isLoading}
+            placeholder="name@elitebridge.com"
+          />
 
-          {/* Password Input */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Password</Text>
-            <View style={styles.inputContainer}>
-              <Text style={styles.inputIcon}>🔒</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password"
-                placeholderTextColor="#999"
-                secureTextEntry={!showPassword}
-                value={password}
-                onChangeText={setPassword}
-                editable={!isLoading}
-              />
-              <TouchableOpacity
-                onPress={() => setShowPassword(!showPassword)}
-                style={styles.eyeIcon}
-              >
-                <Text>{showPassword ? "👁️" : "👁️‍🗨️"}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Remember Me & Forgot Password */}
-          <View style={styles.optionsRow}>
-            <TouchableOpacity style={styles.rememberMe}>
-              <View style={styles.checkbox}>
-                <Text style={styles.checkboxText}>✓</Text>
-              </View>
-              <Text style={styles.rememberText}>Remember me</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Text style={styles.forgotPassword}>Forgot password?</Text>
+          <Text style={styles.label}>Password</Text>
+          <View style={styles.passwordRow}>
+            <TextInput
+              style={styles.passwordInput}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+              editable={!isLoading}
+              placeholder="Enter password"
+            />
+            <TouchableOpacity onPress={() => setShowPassword((value) => !value)} style={styles.showButton}>
+              <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Login Button */}
+          <View style={styles.demoBox}>
+            <Text style={styles.demoTitle}>Demo {isAdmin ? "administrator" : "staff"} login</Text>
+            <Text style={styles.demoText}>Email: {account.email}</Text>
+            <Text style={styles.demoText}>Password: {account.password}</Text>
+          </View>
+
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
             disabled={isLoading}
           >
-            <Text style={styles.loginButtonText}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Text>
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.dividerContainer}>
-            <View style={styles.divider} />
-            <Text style={styles.dividerText}>OR</Text>
-            <View style={styles.divider} />
-          </View>
-
-          {/* Social Login */}
-          <View style={styles.socialContainer}>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialIcon}>🍎</Text>
-              <Text style={styles.socialText}>Apple</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton}>
-              <Text style={styles.socialIcon}>🔵</Text>
-              <Text style={styles.socialText}>Google</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        {/* Sign Up Link */}
-        <View style={styles.signupSection}>
-          <Text style={styles.signupText}>Don't have an account? </Text>
-          <TouchableOpacity>
-            <Text style={styles.signupLink}>Sign up here</Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Features */}
-        <View style={styles.featuresSection}>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>✓</Text>
-            <Text style={styles.featureText}>Secure login with encryption</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>✓</Text>
-            <Text style={styles.featureText}>Access shifts on the go</Text>
-          </View>
-          <View style={styles.featureItem}>
-            <Text style={styles.featureIcon}>✓</Text>
-            <Text style={styles.featureText}>Track your earnings</Text>
-          </View>
-        </View>
-
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>By signing in, you agree to our </Text>
-          <TouchableOpacity>
-            <Text style={styles.footerLink}>Terms of Service</Text>
-          </TouchableOpacity>
-          <Text style={styles.footerText}> and </Text>
-          <TouchableOpacity>
-            <Text style={styles.footerLink}>Privacy Policy</Text>
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>
+                Sign in as {isAdmin ? "Administrator" : "Staff"}
+              </Text>
+            )}
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -179,241 +181,35 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#ffffff",
-  },
-  logoSection: {
-    alignItems: "center",
-    marginBottom: 32,
-    marginTop: 20,
-  },
-  logoBox: {
-    width: 80,
-    height: 80,
-    borderRadius: 20,
-    backgroundColor: "#e8f5e9",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "#1B5E3F",
-  },
-  logoText: {
-    fontSize: 40,
-  },
-  appName: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#1B5E3F",
-  },
-  tagline: {
-    fontSize: 14,
-    color: "#666",
-    marginTop: 4,
-  },
-  welcomeSection: {
-    marginBottom: 24,
-  },
-  welcomeTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 8,
-  },
-  welcomeSubtitle: {
-    fontSize: 14,
-    color: "#666",
-    lineHeight: 22,
-  },
-  errorBox: {
-    backgroundColor: "#ffebee",
-    borderLeftWidth: 4,
-    borderLeftColor: "#d32f2f",
-    padding: 12,
-    borderRadius: 4,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: "#c62828",
-    fontSize: 13,
-    fontWeight: "500",
-  },
-  formSection: {
-    marginBottom: 24,
-  },
-  inputGroup: {
-    marginBottom: 16,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#333",
-    marginBottom: 8,
-  },
-  inputContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    backgroundColor: "#f9f9f9",
-    height: 48,
-  },
-  inputIcon: {
-    fontSize: 18,
-    marginRight: 8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
-    color: "#333",
-  },
-  eyeIcon: {
-    padding: 8,
-  },
-  optionsRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  rememberMe: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderWidth: 2,
-    borderColor: "#1B5E3F",
-    borderRadius: 3,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 8,
-    backgroundColor: "#e8f5e9",
-  },
-  checkboxText: {
-    color: "#1B5E3F",
-    fontSize: 12,
-    fontWeight: "bold",
-  },
-  rememberText: {
-    fontSize: 13,
-    color: "#666",
-  },
-  forgotPassword: {
-    fontSize: 13,
-    color: "#1B5E3F",
-    fontWeight: "600",
-  },
-  loginButton: {
-    backgroundColor: "#1B5E3F",
-    paddingVertical: 14,
-    borderRadius: 8,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  loginButtonDisabled: {
-    backgroundColor: "#999",
-  },
-  loginButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  dividerContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  divider: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ddd",
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: "#999",
-    fontSize: 12,
-    fontWeight: "500",
-  },
-  socialContainer: {
-    flexDirection: "row",
-    gap: 12,
-  },
-  socialButton: {
-    flex: 1,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    paddingVertical: 12,
-    backgroundColor: "#f9f9f9",
-  },
-  socialIcon: {
-    fontSize: 18,
-    marginRight: 6,
-  },
-  socialText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#333",
-  },
-  signupSection: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 24,
-  },
-  signupText: {
-    fontSize: 14,
-    color: "#666",
-  },
-  signupLink: {
-    fontSize: 14,
-    color: "#1B5E3F",
-    fontWeight: "600",
-  },
-  featuresSection: {
-    backgroundColor: "#e8f5e9",
-    borderRadius: 8,
-    padding: 16,
-    marginBottom: 16,
-  },
-  featureItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 12,
-  },
-  featureIcon: {
-    fontSize: 16,
-    color: "#1B5E3F",
-    marginRight: 12,
-    fontWeight: "bold",
-  },
-  featureText: {
-    fontSize: 13,
-    color: "#333",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    flexWrap: "wrap",
-    paddingBottom: 20,
-  },
-  footerText: {
-    fontSize: 12,
-    color: "#999",
-  },
-  footerLink: {
-    fontSize: 12,
-    color: "#1B5E3F",
-    fontWeight: "600",
-  },
+  container: { flexGrow: 1, padding: 20, paddingBottom: 40, backgroundColor: "#FFFFFF" },
+  logoBox: { width: 70, height: 70, borderRadius: 18, alignSelf: "center", alignItems: "center", justifyContent: "center", backgroundColor: "#E8F5E9", borderWidth: 2, borderColor: "#1B5E3F", marginTop: 12 },
+  logoText: { fontSize: 34 },
+  appName: { marginTop: 10, textAlign: "center", fontSize: 28, fontWeight: "800", color: "#1B5E3F" },
+  tagline: { marginTop: 5, marginBottom: 22, textAlign: "center", color: "#667085", fontSize: 14 },
+  roleRow: { flexDirection: "row", gap: 12 },
+  roleCard: { flex: 1, minHeight: 154, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB" },
+  roleCardSelected: { borderColor: "#1B5E3F", backgroundColor: "#E8F5E9" },
+  roleIcon: { fontSize: 28, marginBottom: 8 },
+  roleTitle: { fontSize: 16, fontWeight: "800", color: "#344054" },
+  roleTitleSelected: { color: "#1B5E3F" },
+  roleDescription: { marginTop: 6, fontSize: 12, lineHeight: 17, color: "#667085" },
+  roleDescriptionSelected: { color: "#315D46" },
+  portalBanner: { marginTop: 16, marginBottom: 16, padding: 14, borderRadius: 12, backgroundColor: "#1B5E3F" },
+  portalLabel: { color: "#CDE7D8", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
+  portalTitle: { marginTop: 3, color: "#FFFFFF", fontSize: 20, fontWeight: "800" },
+  errorBox: { marginBottom: 14, padding: 12, borderRadius: 10, backgroundColor: "#FEE4E2" },
+  errorText: { color: "#B42318", fontSize: 13, lineHeight: 18 },
+  formCard: { padding: 16, borderRadius: 14, borderWidth: 1, borderColor: "#EAECF0", backgroundColor: "#FFFFFF" },
+  label: { marginBottom: 7, fontSize: 13, fontWeight: "700", color: "#344054" },
+  input: { height: 48, marginBottom: 16, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: "#D0D5DD", color: "#101828", backgroundColor: "#F9FAFB" },
+  passwordRow: { flexDirection: "row", height: 48, marginBottom: 14, borderRadius: 10, borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", overflow: "hidden" },
+  passwordInput: { flex: 1, paddingHorizontal: 12, color: "#101828" },
+  showButton: { width: 66, alignItems: "center", justifyContent: "center" },
+  showText: { color: "#1B5E3F", fontWeight: "700" },
+  demoBox: { marginBottom: 16, padding: 12, borderRadius: 10, backgroundColor: "#F2F4F7" },
+  demoTitle: { marginBottom: 5, fontSize: 12, fontWeight: "800", color: "#344054" },
+  demoText: { fontSize: 12, lineHeight: 18, color: "#475467" },
+  loginButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 10, backgroundColor: "#1B5E3F" },
+  loginButtonDisabled: { opacity: 0.6 },
+  loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
 });
