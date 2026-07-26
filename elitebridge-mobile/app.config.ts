@@ -1,9 +1,9 @@
 import type { ExpoConfig } from "expo/config";
 
 const env = {
-  appName: "Elite Bridge Admin",
+  appName: "Elite Bridge",
   appSlug: "elitebridge-mobile",
-  scheme: "elitebridge-admin",
+  scheme: "elitebridge",
   iosBundleId: "com.app.elitebridgeadmin",
   androidPackage: "com.app.elitebridgeadmin",
 };
@@ -29,17 +29,25 @@ const config: ExpoConfig = {
   android: {
     package: env.androidPackage,
     adaptiveIcon: {
-      backgroundColor: "#E6F4FE",
+      backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/images/android-icon-foreground.png",
     },
   },
-
   web: {
     bundler: "metro",
     output: "static",
     favicon: "./assets/images/favicon.png",
   },
   plugins: [
+    [
+      "expo-splash-screen",
+      {
+        backgroundColor: "#FFFFFF",
+        image: "./assets/images/elitebridge-logo.png",
+        imageWidth: 210,
+        resizeMode: "contain",
+      },
+    ],
     [
       "expo-build-properties",
       {
