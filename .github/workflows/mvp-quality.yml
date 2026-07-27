@@ -36,16 +36,26 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Type check
+        id: typecheck
+        continue-on-error: true
         shell: bash
         run: |
           set -o pipefail
-          pnpm check 2>&1 | tail -n 100
+          pnpm check 2>&1 | tee typecheck.log
+
+      - name: Upload type-check log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: typecheck-log
+          path: elitebridge-mobile/typecheck.log
+
+      - name: Fail when type check fails
+        if: steps.typecheck.outcome == 'failure'
+        run: exit 1
 
       - name: Lint
-        shell: bash
-        run: |
-          set -o pipefail
-          pnpm lint 2>&1 | tail -n 100
+        run: pnpm lint
 
       - name: Unit tests
         run: pnpm test
