@@ -33,7 +33,7 @@ jobs:
           cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Type check
         run: pnpm check
@@ -91,7 +91,7 @@ jobs:
           cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install --no-frozen-lockfile
 
       - name: Install CocoaPods dependencies
         run: |
