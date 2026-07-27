@@ -1,0 +1,1 @@
+Legacy login route is redirected to the role-based authentication portal in login.tsx.
