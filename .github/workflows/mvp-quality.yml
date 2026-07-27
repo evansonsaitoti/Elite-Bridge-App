@@ -1,0 +1,114 @@
+name: MVP Quality Checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [release/complete-mvp]
+
+concurrency:
+  group: mvp-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Type check
+        run: pnpm check
+      - name: Lint
+        run: pnpm lint
+      - name: Unit tests
+        run: pnpm test
+      - name: Build server bundle
+        run: pnpm build
+      - name: Export mobile web bundle
+        run: npx expo export --platform web --output-dir dist-web
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/expo-config.json
+      - name: Verify required routes and assets
+        run: |
+          test -f 'app/(auth)/login.tsx'
+          test -f 'app/(admin)/_layout.tsx'
+          test -f 'app/(admin)/home.tsx'
+          test -f 'app/(admin)/clients.tsx'
+          test -f 'app/(admin)/operations.tsx'
+          test -f 'app/(admin)/timesheets.tsx'
+          test -f 'app/(staff)/_layout.tsx'
+          test -f 'app/(staff)/home.tsx'
+          test -f 'app/(staff)/clock.tsx'
+          test -f 'app/(staff)/services.tsx'
+          test -f 'app/(staff)/earnings.tsx'
+          test -f 'app/(staff)/profile.tsx'
+          test -f 'assets/images/elitebridge-logo.png'
+
+  ios-compile:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install
+      - name: Compile iOS simulator app
+        id: iosbuild
+        continue-on-error: true
+        shell: bash
+        run: |
+          cd ios
+          set -o pipefail
+          WORKSPACE=$(find . -maxdepth 1 -name '*.xcworkspace' -print -quit)
+          if [ -z "$WORKSPACE" ]; then
+            echo "No .xcworkspace was generated in elitebridge-mobile/ios" | tee ../ios-build.log
+            exit 1
+          fi
+          xcodebuild -workspace "$WORKSPACE" -list -json > /tmp/xcode-list.json
+          SCHEME=$(python3 -c "import json; data=json.load(open('/tmp/xcode-list.json')); schemes=data.get('workspace',{}).get('schemes',[]); print(schemes[0] if schemes else '')")
+          if [ -z "$SCHEME" ]; then
+            echo "No shared Xcode scheme was found" | tee ../ios-build.log
+            exit 1
+          fi
+          echo "Building workspace $WORKSPACE with scheme $SCHEME" | tee ../ios-build.log
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee -a ../ios-build.log
+      - name: Upload iOS build log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: elitebridge-mobile/ios-build.log
+      - name: Fail when iOS build fails
+        if: steps.iosbuild.outcome == 'failure'
+        run: exit 1

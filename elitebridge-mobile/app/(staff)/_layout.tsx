@@ -9,13 +9,12 @@ import { useColors } from "@/hooks/use-colors";
 
 const STAFF_TABS = [
   { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
-  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "dollarsign.circle.fill" },
   { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
-  { label: "Swap", route: "/(staff)/swap-shifts", match: "/swap-shifts", icon: "arrow.2.squarepath" },
+  { label: "Services", route: "/(staff)/services", match: "/services", icon: "checklist" },
+  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "dollarsign.circle.fill" },
   { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.fill" },
 ] as const;
 
-/** Protected staff workspace with a fixed, predictable bottom navigation bar. */
 export default function StaffLayout() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
@@ -25,15 +24,10 @@ export default function StaffLayout() {
 
   useEffect(() => {
     let mounted = true;
-
     AsyncStorage.getItem("elitebridge-session")
       .then((stored) => {
         if (!mounted) return;
-        if (!stored) {
-          router.replace("/(auth)/login");
-          return;
-        }
-
+        if (!stored) { router.replace("/(auth)/login"); return; }
         try {
           const session = JSON.parse(stored) as { role?: string };
           if (session.role !== "staff") {
@@ -41,75 +35,25 @@ export default function StaffLayout() {
             return;
           }
           setReady(true);
-        } catch {
-          router.replace("/(auth)/login");
-        }
+        } catch { router.replace("/(auth)/login"); }
       })
       .catch(() => router.replace("/(auth)/login"));
-
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, [router]);
 
-  if (!ready) {
-    return (
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
-  }
+  if (!ready) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
-  return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ flex: 1 }}>
-        <Slot />
-      </View>
-
-      <View
-        style={{
-          flexDirection: "row",
-          minHeight: 62 + Math.max(insets.bottom, 8),
-          paddingTop: 8,
-          paddingBottom: Math.max(insets.bottom, 8),
-          borderTopWidth: 0.5,
-          borderTopColor: colors.border,
-          backgroundColor: colors.background,
-        }}
-      >
-        {STAFF_TABS.map((tab) => {
-          const active = pathname.includes(tab.match);
-          const tint = active ? colors.primary : colors.muted;
-
-          return (
-            <Pressable
-              key={tab.route}
-              accessibilityRole="button"
-              accessibilityState={{ selected: active }}
-              onPress={() => router.replace(tab.route)}
-              style={({ pressed }) => ({
-                flex: 1,
-                alignItems: "center",
-                justifyContent: "center",
-                opacity: pressed ? 0.65 : 1,
-              })}
-            >
-              <IconSymbol size={23} name={tab.icon} color={tint} />
-              <Text
-                numberOfLines={1}
-                style={{
-                  marginTop: 4,
-                  fontSize: 10,
-                  fontWeight: active ? "800" : "600",
-                  color: tint,
-                }}
-              >
-                {tab.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </View>
+  return <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1 }}><Slot /></View>
+    <View style={{ flexDirection: "row", minHeight: 62 + Math.max(insets.bottom, 8), paddingTop: 8, paddingBottom: Math.max(insets.bottom, 8), borderTopWidth: 0.5, borderTopColor: colors.border, backgroundColor: colors.background }}>
+      {STAFF_TABS.map((tab) => {
+        const active = pathname.includes(tab.match);
+        const tint = active ? colors.primary : colors.muted;
+        return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.65 : 1 })}>
+          <IconSymbol size={22} name={tab.icon} color={tint} />
+          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 9.5, fontWeight: active ? "800" : "600", color: tint }}>{tab.label}</Text>
+        </Pressable>;
+      })}
     </View>
-  );
+  </View>;
 }
