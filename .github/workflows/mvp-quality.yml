@@ -90,7 +90,24 @@ jobs:
         run: |
           cd ios
           set -o pipefail
-          xcodebuild -workspace projecttitle.xcworkspace -scheme projecttitle -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee ../ios-build.log
+          WORKSPACE=$(find . -maxdepth 1 -name '*.xcworkspace' -print -quit)
+          if [ -z "$WORKSPACE" ]; then
+            echo "No .xcworkspace was generated in elitebridge-mobile/ios" | tee ../ios-build.log
+            exit 1
+          fi
+          xcodebuild -workspace "$WORKSPACE" -list -json > /tmp/xcode-list.json
+          SCHEME=$(python3 - <<'PY'
+import json
+with open('/tmp/xcode-list.json', encoding='utf-8') as f:
+    data = json.load(f)
+schemes = data.get('workspace', {}).get('schemes', [])
+if not schemes:
+    raise SystemExit('No shared Xcode scheme found')
+print(schemes[0])
+PY
+          )
+          echo "Building workspace $WORKSPACE with scheme $SCHEME" | tee ../ios-build.log
+          xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee -a ../ios-build.log
       - name: Upload iOS build log
         if: always()
         uses: actions/upload-artifact@v4
