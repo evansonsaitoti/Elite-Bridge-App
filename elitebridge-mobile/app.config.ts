@@ -4,8 +4,8 @@ const env = {
   appName: "Elite Bridge",
   appSlug: "elitebridge-mobile",
   scheme: "elitebridge",
-  iosBundleId: "com.app.elitebridgeadmin",
-  androidPackage: "com.app.elitebridgeadmin",
+  iosBundleId: "com.app.elitebridgemobile",
+  androidPackage: "com.app.elitebridgemobile",
 };
 
 const config: ExpoConfig = {
