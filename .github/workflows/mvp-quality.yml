@@ -36,10 +36,16 @@ jobs:
         run: pnpm install --no-frozen-lockfile
 
       - name: Type check
-        run: pnpm check
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm check 2>&1 | tail -n 100
 
       - name: Lint
-        run: pnpm lint
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm lint 2>&1 | tail -n 100
 
       - name: Unit tests
         run: pnpm test
