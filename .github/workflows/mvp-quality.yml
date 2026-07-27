@@ -1,0 +1,112 @@
+name: MVP Quality Checks
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [release/complete-mvp]
+
+concurrency:
+  group: mvp-quality-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type check
+        run: pnpm check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build server bundle
+        run: pnpm build
+
+      - name: Export mobile web bundle
+        run: npx expo export --platform web --output-dir dist-web
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/expo-config.json
+
+      - name: Verify required routes and assets
+        run: |
+          test -f 'app/(auth)/login.tsx'
+          test -f 'app/(admin)/_layout.tsx'
+          test -f 'app/(admin)/home.tsx'
+          test -f 'app/(admin)/clients.tsx'
+          test -f 'app/(admin)/operations.tsx'
+          test -f 'app/(admin)/timesheets.tsx'
+          test -f 'app/(staff)/_layout.tsx'
+          test -f 'app/(staff)/home.tsx'
+          test -f 'app/(staff)/clock.tsx'
+          test -f 'app/(staff)/services.tsx'
+          test -f 'app/(staff)/earnings.tsx'
+          test -f 'app/(staff)/profile.tsx'
+          test -f 'assets/images/elitebridge-logo.png'
+
+  ios-compile:
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install CocoaPods dependencies
+        run: |
+          cd ios
+          pod install --repo-update
+
+      - name: Compile iOS simulator app
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild \
+            -workspace projecttitle.xcworkspace \
+            -scheme projecttitle \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+            CODE_SIGNING_ALLOWED=NO \
+            build | xcpretty
