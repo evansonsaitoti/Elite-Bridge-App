@@ -55,7 +55,23 @@ jobs:
         run: exit 1
 
       - name: Lint
-        run: pnpm lint
+        id: lint
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -o pipefail
+          pnpm lint 2>&1 | tee lint.log
+
+      - name: Upload lint log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lint-log
+          path: elitebridge-mobile/lint.log
+
+      - name: Fail when lint fails
+        if: steps.lint.outcome == 'failure'
+        run: exit 1
 
       - name: Unit tests
         run: pnpm test
