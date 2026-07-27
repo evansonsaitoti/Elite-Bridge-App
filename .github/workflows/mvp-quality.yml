@@ -96,16 +96,11 @@ jobs:
             exit 1
           fi
           xcodebuild -workspace "$WORKSPACE" -list -json > /tmp/xcode-list.json
-          SCHEME=$(python3 - <<'PY'
-import json
-with open('/tmp/xcode-list.json', encoding='utf-8') as f:
-    data = json.load(f)
-schemes = data.get('workspace', {}).get('schemes', [])
-if not schemes:
-    raise SystemExit('No shared Xcode scheme found')
-print(schemes[0])
-PY
-          )
+          SCHEME=$(python3 -c "import json; data=json.load(open('/tmp/xcode-list.json')); schemes=data.get('workspace',{}).get('schemes',[]); print(schemes[0] if schemes else '')")
+          if [ -z "$SCHEME" ]; then
+            echo "No shared Xcode scheme was found" | tee ../ios-build.log
+            exit 1
+          fi
           echo "Building workspace $WORKSPACE with scheme $SCHEME" | tee ../ios-build.log
           xcodebuild -workspace "$WORKSPACE" -scheme "$SCHEME" -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build 2>&1 | tee -a ../ios-build.log
       - name: Upload iOS build log
