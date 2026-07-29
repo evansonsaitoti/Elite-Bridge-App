@@ -5,6 +5,7 @@ on:
   push:
     branches: [main]
     paths:
+      - "elitebridge-mobile/**"
       - ".github/workflows/testflight.yml"
 
 concurrency:
