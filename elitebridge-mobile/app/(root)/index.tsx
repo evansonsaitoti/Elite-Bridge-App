@@ -3,9 +3,9 @@ import { useAuth } from "@/hooks/use-auth";
 import { ActivityIndicator, View } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 
-/** Root role-based routing for the legacy auth context. */
+/** Root routing for the caregiver-only Elite Bridge app. */
 export default function RootIndex() {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { loading, isAuthenticated, user } = useAuth();
   const colors = useColors();
 
   if (loading) {
@@ -20,14 +20,7 @@ export default function RootIndex() {
     return <Redirect href="/(auth)/login" />;
   }
 
-  const role = user?.role || "user";
-  const onboardingCompleted = user?.onboardingCompleted || false;
-
-  if (role === "admin") {
-    return <Redirect href="/(admin)/home" />;
-  }
-
-  if (!onboardingCompleted) {
+  if (!user?.onboardingCompleted) {
     return <Redirect href="/(onboarding)/welcome" />;
   }
 
