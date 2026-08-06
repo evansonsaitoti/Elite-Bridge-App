@@ -1,5 +1,6 @@
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
 
 const stats = [
   { value: "3", label: "Open shifts", tone: "#FDECEC", valueColor: "#B42318" },
@@ -14,16 +15,20 @@ const intelligence = [
     title: "Tonight’s 7 PM shift needs attention",
     body: "I found 4 eligible caregivers. Sarah is the strongest match based on availability, travel time, continuity and overtime risk.",
     action: "Review matches",
+    route: "/coverage" as const,
   },
   {
     eyebrow: "COMPLIANCE COPILOT",
     title: "3 items need review this week",
     body: "One credential expires in 8 days, one worker acknowledgment is missing, and one assignment may need a Massachusetts job-order notice.",
     action: "Open compliance inbox",
+    route: null,
   },
 ];
 
 export default function EmployerHome() {
+  const router = useRouter();
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.content}>
@@ -70,7 +75,7 @@ export default function EmployerHome() {
             <Text style={styles.aiEyebrow}>{item.eyebrow}</Text>
             <Text style={styles.aiTitle}>{item.title}</Text>
             <Text style={styles.aiBody}>{item.body}</Text>
-            <TouchableOpacity style={styles.aiButton}>
+            <TouchableOpacity style={styles.aiButton} onPress={() => item.route && router.push(item.route)}>
               <Text style={styles.aiButtonText}>{item.action}</Text>
             </TouchableOpacity>
           </View>
@@ -91,14 +96,14 @@ export default function EmployerHome() {
             <Text style={styles.covered}>Covered</Text>
           </View>
           <View style={styles.divider} />
-          <View style={styles.scheduleRow}>
+          <TouchableOpacity style={styles.scheduleRow} onPress={() => router.push("/coverage")}>
             <View style={[styles.timeBadge, styles.timeBadgeRisk]}><Text style={[styles.timeBadgeText, styles.timeBadgeRiskText]}>7 PM</Text></View>
             <View style={styles.scheduleCopy}>
               <Text style={styles.scheduleTitle}>Personal Care · Mary Thompson</Text>
               <Text style={styles.scheduleMeta}>Unassigned · Dracut</Text>
             </View>
-            <Text style={styles.atRisk}>At risk</Text>
-          </View>
+            <Text style={styles.atRisk}>Rescue →</Text>
+          </TouchableOpacity>
         </View>
 
         <Text style={styles.footerNote}>Massachusetts-first workforce operations for care agencies.</Text>
