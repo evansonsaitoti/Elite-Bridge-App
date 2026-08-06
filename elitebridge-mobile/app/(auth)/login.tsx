@@ -14,64 +14,43 @@ import {
 
 import { ScreenContainer } from "@/components/screen-container";
 
-type LoginRole = "administrator" | "staff";
-
-const DEMO_ACCOUNTS = {
-  administrator: {
-    email: "admin@elitebridge.com",
-    password: "Admin123!",
-    destination: "/(admin)/home" as const,
-  },
-  staff: {
-    email: "staff@elitebridge.com",
-    password: "Staff123!",
-    destination: "/(staff)/home" as const,
-  },
+const STAFF_ACCOUNT = {
+  email: "staff@elitebridge.com",
+  password: "Staff123!",
 };
 
 export default function LoginScreen() {
   const router = useRouter();
-  const [role, setRole] = useState<LoginRole>("administrator");
-  const [email, setEmail] = useState(DEMO_ACCOUNTS.administrator.email);
-  const [password, setPassword] = useState(DEMO_ACCOUNTS.administrator.password);
+  const [email, setEmail] = useState(STAFF_ACCOUNT.email);
+  const [password, setPassword] = useState(STAFF_ACCOUNT.password);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const chooseRole = (nextRole: LoginRole) => {
-    setRole(nextRole);
-    setEmail(DEMO_ACCOUNTS[nextRole].email);
-    setPassword(DEMO_ACCOUNTS[nextRole].password);
-    setError("");
-  };
-
   const handleLogin = async () => {
-    const account = DEMO_ACCOUNTS[role];
     setError("");
     if (!email.trim() || !password) {
       setError("Enter both your email address and password.");
       return;
     }
-    if (email.trim().toLowerCase() !== account.email.toLowerCase() || password !== account.password) {
-      setError(`These details do not match the selected ${role} account. Use the demo credentials shown below.`);
+    if (email.trim().toLowerCase() !== STAFF_ACCOUNT.email.toLowerCase() || password !== STAFF_ACCOUNT.password) {
+      setError("These details do not match the demo caregiver account. Use the credentials shown below.");
       return;
     }
+
     try {
       setIsLoading(true);
       await AsyncStorage.setItem(
         "elitebridge-session",
-        JSON.stringify({ role, email: account.email, signedInAt: new Date().toISOString() }),
+        JSON.stringify({ role: "staff", email: STAFF_ACCOUNT.email, signedInAt: new Date().toISOString() }),
       );
-      router.replace(account.destination);
+      router.replace("/(staff)/home");
     } catch {
       setError("We could not sign you in. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
-
-  const account = DEMO_ACCOUNTS[role];
-  const isAdmin = role === "administrator";
 
   return (
     <ScreenContainer>
@@ -82,40 +61,14 @@ export default function LoginScreen() {
           resizeMode="contain"
           accessibilityLabel="Elite Bridge logo"
         />
-        <Text style={styles.slogan}>STAFFING YOU CAN RELY ON</Text>
-        <Text style={styles.tagline}>Choose the portal you are signing into</Text>
+        <Text style={styles.slogan}>ELITE BRIDGE</Text>
+        <Text style={styles.caregiverLabel}>FOR CAREGIVERS</Text>
+        <Text style={styles.tagline}>Find work, manage your shifts and keep your day moving.</Text>
 
-        <View style={styles.roleRow}>
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityState={{ selected: isAdmin }}
-            onPress={() => chooseRole("administrator")}
-            style={[styles.roleCard, isAdmin && styles.roleCardSelected]}
-          >
-            <Text style={styles.roleEyebrow}>AGENCY</Text>
-            <Text style={[styles.roleTitle, isAdmin && styles.roleTitleSelected]}>Administrator</Text>
-            <Text style={[styles.roleDescription, isAdmin && styles.roleDescriptionSelected]}>
-              Manage shifts, staff, applications and timesheets
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            accessibilityRole="button"
-            accessibilityState={{ selected: !isAdmin }}
-            onPress={() => chooseRole("staff")}
-            style={[styles.roleCard, !isAdmin && styles.roleCardSelected]}
-          >
-            <Text style={styles.roleEyebrow}>CAREGIVER</Text>
-            <Text style={[styles.roleTitle, !isAdmin && styles.roleTitleSelected]}>Staff</Text>
-            <Text style={[styles.roleDescription, !isAdmin && styles.roleDescriptionSelected]}>
-              View shifts, clock in and manage your profile
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        <View style={styles.portalBanner}>
-          <Text style={styles.portalLabel}>YOU ARE SIGNING IN TO</Text>
-          <Text style={styles.portalTitle}>{isAdmin ? "Administrator Portal" : "Staff Portal"}</Text>
+        <View style={styles.heroCard}>
+          <Text style={styles.heroEyebrow}>YOUR WORKDAY, ONE PLACE</Text>
+          <Text style={styles.heroTitle}>Ready for your next shift?</Text>
+          <Text style={styles.heroBody}>Browse available work, clock in, complete visit notes and keep track of your hours.</Text>
         </View>
 
         {error ? (
@@ -133,7 +86,7 @@ export default function LoginScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             editable={!isLoading}
-            placeholder="name@elitebridge.com"
+            placeholder="caregiver@example.com"
           />
 
           <Text style={styles.label}>Password</Text>
@@ -152,9 +105,9 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>Demo {isAdmin ? "administrator" : "staff"} login</Text>
-            <Text style={styles.demoText}>Email: {account.email}</Text>
-            <Text style={styles.demoText}>Password: {account.password}</Text>
+            <Text style={styles.demoTitle}>Demo caregiver login</Text>
+            <Text style={styles.demoText}>Email: {STAFF_ACCOUNT.email}</Text>
+            <Text style={styles.demoText}>Password: {STAFF_ACCOUNT.password}</Text>
           </View>
 
           <TouchableOpacity
@@ -162,13 +115,11 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={isLoading}
           >
-            {isLoading ? (
-              <ActivityIndicator color="#FFFFFF" />
-            ) : (
-              <Text style={styles.loginButtonText}>Sign in as {isAdmin ? "Administrator" : "Staff"}</Text>
-            )}
+            {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in</Text>}
           </TouchableOpacity>
         </View>
+
+        <Text style={styles.employerHint}>Agency administrator? Use the separate Elite Bridge Employer app.</Text>
       </ScrollView>
     </ScreenContainer>
   );
@@ -176,23 +127,17 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   container: { flexGrow: 1, padding: 20, paddingBottom: 40, backgroundColor: "#FFFFFF" },
-  logo: { width: 118, height: 118, alignSelf: "center", marginTop: 8 },
-  slogan: { textAlign: "center", color: "#C58A24", fontSize: 11, fontWeight: "800", letterSpacing: 2.1 },
-  tagline: { marginTop: 8, marginBottom: 22, textAlign: "center", color: "#667085", fontSize: 14 },
-  roleRow: { flexDirection: "row", gap: 12 },
-  roleCard: { flex: 1, minHeight: 150, padding: 14, borderRadius: 14, borderWidth: 2, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB" },
-  roleCardSelected: { borderColor: "#0A4A35", backgroundColor: "#EAF4EF" },
-  roleEyebrow: { color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.2, marginBottom: 8 },
-  roleTitle: { fontSize: 16, fontWeight: "800", color: "#344054" },
-  roleTitleSelected: { color: "#0A4A35" },
-  roleDescription: { marginTop: 6, fontSize: 12, lineHeight: 17, color: "#667085" },
-  roleDescriptionSelected: { color: "#315D46" },
-  portalBanner: { marginTop: 16, marginBottom: 16, padding: 14, borderRadius: 12, backgroundColor: "#0A4A35", borderBottomWidth: 4, borderBottomColor: "#C58A24" },
-  portalLabel: { color: "#D5E8DF", fontSize: 10, fontWeight: "700", letterSpacing: 1 },
-  portalTitle: { marginTop: 3, color: "#FFFFFF", fontSize: 20, fontWeight: "800" },
+  logo: { width: 112, height: 112, alignSelf: "center", marginTop: 10 },
+  slogan: { textAlign: "center", color: "#0A4A35", fontSize: 20, fontWeight: "900", letterSpacing: 1.2 },
+  caregiverLabel: { marginTop: 4, textAlign: "center", color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 2.2 },
+  tagline: { marginTop: 10, marginBottom: 22, textAlign: "center", color: "#667085", fontSize: 14, lineHeight: 20 },
+  heroCard: { marginBottom: 16, padding: 18, borderRadius: 18, backgroundColor: "#0A4A35" },
+  heroEyebrow: { color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 },
+  heroTitle: { marginTop: 7, color: "#FFFFFF", fontSize: 23, fontWeight: "900" },
+  heroBody: { marginTop: 8, color: "#D9E9E2", fontSize: 13, lineHeight: 19 },
   errorBox: { marginBottom: 14, padding: 12, borderRadius: 10, backgroundColor: "#FEE4E2" },
   errorText: { color: "#B42318", fontSize: 13, lineHeight: 18 },
-  formCard: { padding: 16, borderRadius: 14, borderWidth: 1, borderColor: "#EAECF0", backgroundColor: "#FFFFFF" },
+  formCard: { padding: 16, borderRadius: 16, borderWidth: 1, borderColor: "#EAECF0", backgroundColor: "#FFFFFF" },
   label: { marginBottom: 7, fontSize: 13, fontWeight: "700", color: "#344054" },
   input: { height: 48, marginBottom: 16, paddingHorizontal: 12, borderRadius: 10, borderWidth: 1, borderColor: "#D0D5DD", color: "#101828", backgroundColor: "#F9FAFB" },
   passwordRow: { flexDirection: "row", height: 48, marginBottom: 14, borderRadius: 10, borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", overflow: "hidden" },
@@ -205,4 +150,5 @@ const styles = StyleSheet.create({
   loginButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 10, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  employerHint: { marginTop: 20, color: "#667085", fontSize: 12, lineHeight: 18, textAlign: "center" },
 });
