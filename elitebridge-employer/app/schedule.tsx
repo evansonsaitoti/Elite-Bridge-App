@@ -16,12 +16,6 @@ type Shift = {
   remoteId?: number;
 };
 
-const seed: Shift[] = [
-  { id: "s1", client: "Robert Davis", service: "Companionship", time: "Today · 3:00 PM–8:00 PM", location: "Lowell", status: "Covered", caregiver: "Sarah Johnson" },
-  { id: "s2", client: "Mary Thompson", service: "Personal Care", time: "Today · 7:00 PM–11:00 PM", location: "Dracut", status: "At risk" },
-  { id: "s3", client: "Alice Green", service: "Respite Care", time: "Tomorrow · 9:00 AM–1:00 PM", location: "Chelmsford", status: "Open" },
-];
-
 const emptyDraft = {
   client: "",
   service: "",
@@ -47,79 +41,51 @@ function formatRemoteShift(shift: SharedShift): Shift {
   const startTime = Number.isNaN(start.getTime()) ? "" : start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const endTime = Number.isNaN(end.getTime()) ? "" : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const status: Shift["status"] = shift.status === "assigned" ? "Covered" : shift.urgency === "urgent" ? "At risk" : "Open";
-  return {
-    id: `remote-${shift.id}`,
-    remoteId: shift.id,
-    client: shift.careRecipientName || "Client",
-    service: shift.serviceType,
-    time: `${date} · ${startTime}–${endTime}`,
-    location: `${shift.location.city}, ${shift.location.state}`,
-    status,
-  };
+  return { id: `remote-${shift.id}`, remoteId: shift.id, client: shift.careRecipientName || "Client", service: shift.serviceType, time: `${date} · ${startTime}–${endTime}`, location: `${shift.location.city}, ${shift.location.state}`, status };
 }
 
 export default function ScheduleScreen() {
   const router = useRouter();
-  const [shifts, setShifts] = useState<Shift[]>(seed);
+  const [shifts, setShifts] = useState<Shift[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
   const [refreshing, setRefreshing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting shared schedule…" : "Local demo schedule");
+  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting secure shared schedule…" : "Secure local preview");
 
   const loadShifts = async () => {
     if (!sharedApiConfigured) return;
     try {
       setRefreshing(true);
       const remote = await fetchEmployerShifts();
-      setShifts(remote.length ? remote.map(formatRemoteShift) : []);
+      setShifts(remote.map(formatRemoteShift));
       setSyncMessage("Shared with Elite Bridge caregivers");
     } catch (error) {
       setSyncMessage(error instanceof Error ? `Shared sync issue: ${error.message}` : "Shared sync unavailable");
-    } finally {
-      setRefreshing(false);
-    }
+    } finally { setRefreshing(false); }
   };
 
-  useEffect(() => {
-    void loadShifts();
-  }, []);
+  useEffect(() => { void loadShifts(); }, []);
 
   const postShift = async () => {
     const rate = Number(draft.hourlyRate);
-    if (!draft.client.trim() || !draft.service.trim() || !draft.startDate.trim() || !draft.startTime.trim() || !draft.endTime.trim()) {
-      return Alert.alert("Missing information", "Add the client, service, date, start time and end time.");
-    }
-    if (!draft.address.trim() || !draft.city.trim() || !draft.zipCode.trim()) {
-      return Alert.alert("Missing location", "Add the service address, city and ZIP code.");
-    }
+    if (!draft.client.trim() || !draft.service.trim() || !draft.startDate.trim() || !draft.startTime.trim() || !draft.endTime.trim()) return Alert.alert("Missing information", "Add the client, service, date, start time and end time.");
+    if (!draft.address.trim() || !draft.city.trim() || !draft.zipCode.trim()) return Alert.alert("Missing location", "Add the service address, city and ZIP code.");
     if (!Number.isFinite(rate) || rate <= 0) return Alert.alert("Invalid rate", "Enter a valid hourly rate.");
     if (!draft.contactPhone.trim()) return Alert.alert("Missing contact", "Add the scheduler contact phone number.");
 
     try {
       if (sharedApiConfigured) {
-        const created = await createEmployerShift({
-          ...draft,
-          hourlyRate: rate,
-        });
+        const created = await createEmployerShift({ ...draft, hourlyRate: rate });
         setShifts((current) => [formatRemoteShift(created), ...current]);
         setSyncMessage("Posted to the caregiver shift feed");
       } else {
-        const local: Shift = {
-          id: String(Date.now()),
-          client: draft.client,
-          service: draft.service,
-          time: `${draft.startDate} · ${draft.startTime}–${draft.endTime}`,
-          location: `${draft.city}, ${draft.state}`,
-          status: draft.urgency === "urgent" ? "At risk" : "Open",
-        };
+        const local: Shift = { id: String(Date.now()), client: draft.client, service: draft.service, time: `${draft.startDate} · ${draft.startTime}–${draft.endTime}`, location: `${draft.city}, ${draft.state}`, status: draft.urgency === "urgent" ? "At risk" : "Open" };
         setShifts((current) => [local, ...current]);
       }
       setDraft(emptyDraft);
       setShowForm(false);
-      Alert.alert("Shift posted", sharedApiConfigured ? "The shift is now available in Elite Bridge for caregivers." : "Coverage Copilot will watch this demo shift for fill risk.");
-    } catch (error) {
-      Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again.");
-    }
+      Alert.alert("Shift posted", sharedApiConfigured ? "The shift is now available in Elite Bridge for caregivers." : "The shift was saved in this local preview.");
+    } catch (error) { Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again."); }
   };
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadShifts} />}>
@@ -144,17 +110,9 @@ export default function ScheduleScreen() {
 
     <View style={styles.summaryRow}><View style={styles.summary}><Text style={styles.summaryValue}>{shifts.filter(s=>s.status==="Covered").length}</Text><Text style={styles.summaryLabel}>Covered</Text></View><View style={styles.summary}><Text style={styles.summaryValue}>{shifts.filter(s=>s.status!=="Covered").length}</Text><Text style={styles.summaryLabel}>Need attention</Text></View></View>
 
-    {shifts.map((shift) => <View key={shift.id} style={styles.card}>
-      <View style={styles.row}><View style={{flex:1}}><Text style={styles.cardTitle}>{shift.service} · {shift.client}</Text><Text style={styles.meta}>{shift.time}</Text><Text style={styles.meta}>{shift.location}{shift.caregiver ? ` · ${shift.caregiver}` : " · Unassigned"}</Text></View><Text style={[styles.status, shift.status==="Covered"?styles.good:shift.status==="At risk"?styles.risk:styles.open]}>{shift.status}</Text></View>
-      {shift.status !== "Covered" && <TouchableOpacity style={styles.secondary} onPress={() => router.push("/coverage")}><Text style={styles.secondaryText}>Run Coverage Copilot</Text></TouchableOpacity>}
-    </View>)}
-    {shifts.length === 0 && <View style={styles.empty}><Text style={styles.emptyTitle}>No shifts yet</Text><Text style={styles.meta}>Post the first shift and it will appear in the caregiver app when shared sync is enabled.</Text></View>}
+    {shifts.map((shift) => <View key={shift.id} style={styles.card}><View style={styles.row}><View style={{flex:1}}><Text style={styles.cardTitle}>{shift.service} · {shift.client}</Text><Text style={styles.meta}>{shift.time}</Text><Text style={styles.meta}>{shift.location}{shift.caregiver ? ` · ${shift.caregiver}` : " · Unassigned"}</Text></View><Text style={[styles.status, shift.status==="Covered"?styles.good:shift.status==="At risk"?styles.risk:styles.open]}>{shift.status}</Text></View>{shift.status !== "Covered" && <TouchableOpacity style={styles.secondary} onPress={() => router.push("/coverage")}><Text style={styles.secondaryText}>Run Coverage Copilot</Text></TouchableOpacity>}</View>)}
+    {shifts.length === 0 && <View style={styles.empty}><Text style={styles.emptyTitle}>No shifts yet</Text><Text style={styles.meta}>Post the first shift and it will appear in the caregiver app through secure shared sync.</Text></View>}
   </ScrollView></SafeAreaView>;
 }
 
-const styles = StyleSheet.create({
-  safe:{flex:1,backgroundColor:"#F7F9F8"},content:{padding:18,paddingBottom:90},headerRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",gap:12},eyebrow:{fontSize:10,fontWeight:"900",letterSpacing:1.3,color:"#C58A24"},title:{fontSize:30,fontWeight:"900",color:"#101828",marginTop:4},sub:{color:"#667085",marginTop:6,marginBottom:10,lineHeight:20},
-  syncPill:{alignSelf:"flex-start",borderRadius:999,paddingHorizontal:10,paddingVertical:6,marginBottom:16},syncPillOn:{backgroundColor:"#ECFDF3"},syncPillOff:{backgroundColor:"#F2F4F7"},syncText:{fontSize:11,fontWeight:"800",color:"#0A4A35"},
-  primary:{backgroundColor:"#0A4A35",paddingHorizontal:14,paddingVertical:11,borderRadius:11},primaryWide:{backgroundColor:"#0A4A35",padding:14,borderRadius:11,alignItems:"center",marginTop:4},primaryText:{color:"white",fontWeight:"900"},card:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:16,padding:15,marginBottom:12},cardTitle:{fontSize:16,fontWeight:"900",color:"#101828"},input:{borderWidth:1,borderColor:"#D0D5DD",backgroundColor:"#F9FAFB",borderRadius:10,padding:12,marginTop:10,color:"#101828"},notes:{minHeight:76,textAlignVertical:"top"},twoCol:{flexDirection:"row",gap:8},flexInput:{flex:1},rateInput:{width:100},stateInput:{width:64},zipInput:{width:90},urgencyRow:{flexDirection:"row",gap:8,marginTop:10,marginBottom:10},urgencyButton:{flex:1,borderWidth:1,borderColor:"#D0D5DD",borderRadius:10,padding:11,alignItems:"center"},urgencyActive:{backgroundColor:"#0A4A35",borderColor:"#0A4A35"},urgencyRisk:{backgroundColor:"#B42318",borderColor:"#B42318"},urgencyText:{fontWeight:"800",color:"#475467",fontSize:12},urgencyTextActive:{color:"white"},
-  summaryRow:{flexDirection:"row",gap:10,marginBottom:14},summary:{flex:1,backgroundColor:"#ECF6F1",borderRadius:15,padding:14},summaryValue:{fontSize:26,fontWeight:"900",color:"#0A4A35"},summaryLabel:{color:"#475467",marginTop:2,fontWeight:"700"},row:{flexDirection:"row",alignItems:"flex-start",gap:10},meta:{color:"#667085",fontSize:12,marginTop:4,lineHeight:18},status:{fontSize:11,fontWeight:"900",paddingHorizontal:9,paddingVertical:6,borderRadius:999,overflow:"hidden"},good:{color:"#067647",backgroundColor:"#ECFDF3"},risk:{color:"#B42318",backgroundColor:"#FEF3F2"},open:{color:"#B54708",backgroundColor:"#FFFAEB"},secondary:{marginTop:12,backgroundColor:"#ECF6F1",padding:11,borderRadius:10,alignItems:"center"},secondaryText:{color:"#0A4A35",fontWeight:"900"},empty:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:16,padding:22,alignItems:"center"},emptyTitle:{color:"#101828",fontWeight:"900",fontSize:17}
-});
+const styles=StyleSheet.create({safe:{flex:1,backgroundColor:"#F7F9F8"},content:{padding:18,paddingBottom:90},headerRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",gap:12},eyebrow:{fontSize:10,fontWeight:"900",letterSpacing:1.3,color:"#C58A24"},title:{fontSize:30,fontWeight:"900",color:"#101828",marginTop:4},sub:{color:"#667085",marginTop:6,marginBottom:10,lineHeight:20},syncPill:{alignSelf:"flex-start",borderRadius:999,paddingHorizontal:10,paddingVertical:6,marginBottom:16},syncPillOn:{backgroundColor:"#ECFDF3"},syncPillOff:{backgroundColor:"#F2F4F7"},syncText:{fontSize:11,fontWeight:"800",color:"#0A4A35"},primary:{backgroundColor:"#0A4A35",paddingHorizontal:14,paddingVertical:11,borderRadius:11},primaryWide:{backgroundColor:"#0A4A35",padding:14,borderRadius:11,alignItems:"center",marginTop:4},primaryText:{color:"white",fontWeight:"900"},card:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:16,padding:15,marginBottom:12},cardTitle:{fontSize:16,fontWeight:"900",color:"#101828"},input:{borderWidth:1,borderColor:"#D0D5DD",backgroundColor:"#F9FAFB",borderRadius:10,padding:12,marginTop:10,color:"#101828"},notes:{minHeight:76,textAlignVertical:"top"},twoCol:{flexDirection:"row",gap:8},flexInput:{flex:1},rateInput:{width:100},stateInput:{width:64},zipInput:{width:90},urgencyRow:{flexDirection:"row",gap:8,marginTop:10,marginBottom:10},urgencyButton:{flex:1,borderWidth:1,borderColor:"#D0D5DD",borderRadius:10,padding:11,alignItems:"center"},urgencyActive:{backgroundColor:"#0A4A35",borderColor:"#0A4A35"},urgencyRisk:{backgroundColor:"#B42318",borderColor:"#B42318"},urgencyText:{fontWeight:"800",color:"#475467",fontSize:12},urgencyTextActive:{color:"white"},summaryRow:{flexDirection:"row",gap:10,marginBottom:14},summary:{flex:1,backgroundColor:"#ECF6F1",borderRadius:15,padding:14},summaryValue:{fontSize:26,fontWeight:"900",color:"#0A4A35"},summaryLabel:{color:"#475467",marginTop:2,fontWeight:"700"},row:{flexDirection:"row",alignItems:"flex-start",gap:10},meta:{color:"#667085",fontSize:12,marginTop:4,lineHeight:18},status:{fontSize:11,fontWeight:"900",paddingHorizontal:9,paddingVertical:6,borderRadius:999,overflow:"hidden"},good:{color:"#067647",backgroundColor:"#ECFDF3"},risk:{color:"#B42318",backgroundColor:"#FEF3F2"},open:{color:"#B54708",backgroundColor:"#FFFAEB"},secondary:{marginTop:12,backgroundColor:"#ECF6F1",padding:11,borderRadius:10,alignItems:"center"},secondaryText:{color:"#0A4A35",fontWeight:"900"},empty:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:16,padding:22,alignItems:"center"},emptyTitle:{color:"#101828",fontWeight:"900",fontSize:17}});
