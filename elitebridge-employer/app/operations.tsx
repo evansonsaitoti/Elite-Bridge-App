@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 
 import { fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
 
-type OpsRoute = "/timesheets" | "/coverage" | "/compliance" | "/applications" | "/ask-elite";
+type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule";
 
 export default function OperationsScreen() {
   const router = useRouter();
@@ -50,19 +50,19 @@ export default function OperationsScreen() {
     if (openCallouts > 0) return { title: "Resolve active caregiver call-outs.", body: `${openCallouts} assigned shift${openCallouts === 1 ? " has" : "s have"} reopened for urgent replacement coverage.`, route: "/coverage" as OpsRoute, label: "Open Coverage Copilot" };
     if (urgentShifts > 0) return { title: "Urgent open shifts need coverage.", body: `${urgentShifts} urgent shift${urgentShifts === 1 ? " is" : "s are"} currently unassigned.`, route: "/coverage" as OpsRoute, label: "Review coverage" };
     if (pendingApplications > 0) return { title: "Caregiver applications are waiting.", body: `${pendingApplications} application${pendingApplications === 1 ? " needs" : "s need"} an agency decision.`, route: "/applications" as OpsRoute, label: "Review applications" };
-    return { title: "No urgent staffing exception is open.", body: "Use Ask Elite for a live briefing across coverage, applications and workforce risk.", route: "/ask-elite" as OpsRoute, label: "Ask Elite" };
+    return { title: "No urgent staffing exception is open.", body: "Use Ask Elite for a live briefing across coverage, applications and schedule risk.", route: "/ask-elite" as OpsRoute, label: "Ask Elite" };
   }, [openCallouts, urgentShifts, pendingApplications]);
 
   const items: Array<{ title: string; detail: string; action: string; route: OpsRoute }> = [
     { title: "Coverage", detail: `${openCallouts} call-outs · ${urgentShifts} urgent shifts`, action: "Open", route: "/coverage" },
     { title: "Applications", detail: `${pendingApplications} pending caregiver decisions`, action: "Review", route: "/applications" },
-    { title: "Timesheets", detail: "Review visit time before payroll processing", action: "Review", route: "/timesheets" },
+    { title: "Schedule", detail: `${openShifts} open shifts currently published`, action: "Open", route: "/schedule" },
     { title: "Compliance", detail: "Massachusetts-aware agency checks and reminders", action: "Open", route: "/compliance" },
     { title: "Ask Elite", detail: "Live operations briefing from agency data", action: "Ask", route: "/ask-elite" },
   ];
 
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
-    <Text style={s.eye}>ELITE BRIDGE EMPLOYER</Text><Text style={s.title}>Operations</Text><Text style={s.sub}>One operational inbox for coverage, applications, time review, compliance and AI-assisted prioritization.</Text>
+    <Text style={s.eye}>ELITE BRIDGE EMPLOYER</Text><Text style={s.title}>Operations</Text><Text style={s.sub}>One operational inbox for coverage, applications, schedule risk, compliance and AI-assisted prioritization.</Text>
 
     {loading ? <ActivityIndicator color="#0A4A35" style={{ marginVertical: 24 }} /> : null}
     {syncError ? <View style={s.error}><Text style={s.errorTitle}>Operations sync needs attention</Text><Text style={s.errorText}>{syncError}</Text><TouchableOpacity style={s.retry} onPress={() => void refresh()}><Text style={s.retryText}>Try again</Text></TouchableOpacity></View> : null}
