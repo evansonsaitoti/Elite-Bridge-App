@@ -1,23 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { saveAgencyProfile, type AgencyProfile } from "../lib/employer-storage";
+import { getAgencyProfile, saveAgencyProfile, type AgencyProfile } from "../lib/employer-storage";
 
 const TYPES: AgencyProfile["agencyType"][] = ["Home Care Agency", "Staffing Agency", "Home Health Agency", "Other"];
+const EMPTY_PROFILE: AgencyProfile = {
+  agencyName: "",
+  agencyType: "Home Care Agency",
+  city: "",
+  state: "MA",
+  employeeCount: "1–10",
+  medicaidPrograms: false,
+  evvRequired: false,
+};
 
 export default function AgencySetup() {
   const router = useRouter();
-  const [profile, setProfile] = useState<AgencyProfile>({
-    agencyName: "",
-    agencyType: "Home Care Agency",
-    city: "",
-    state: "MA",
-    employeeCount: "1–10",
-    medicaidPrograms: false,
-    evvRequired: false,
-  });
+  const [profile, setProfile] = useState<AgencyProfile>(EMPTY_PROFILE);
+  const [editing, setEditing] = useState(false);
+
+  useEffect(() => {
+    getAgencyProfile().then((saved) => {
+      if (!saved) return;
+      setProfile(saved);
+      setEditing(true);
+    });
+  }, []);
 
   const save = async () => {
     if (!profile.agencyName.trim() || !profile.city.trim()) return Alert.alert("Missing information", "Enter the agency name and primary city.");
@@ -28,9 +38,9 @@ export default function AgencySetup() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>ONE-TIME SETUP</Text>
-        <Text style={styles.title}>Teach Elite how your agency operates.</Text>
-        <Text style={styles.sub}>This profile tailors staffing and compliance prompts to your agency. You can update it later.</Text>
+        <Text style={styles.eyebrow}>{editing ? "AGENCY PROFILE" : "ONE-TIME SETUP"}</Text>
+        <Text style={styles.title}>{editing ? "Keep your agency profile current." : "Teach Elite how your agency operates."}</Text>
+        <Text style={styles.sub}>This profile tailors staffing and compliance prompts to your agency. You can update it whenever your programs or workforce change.</Text>
 
         <View style={styles.card}>
           <Text style={styles.label}>Agency name</Text>
@@ -54,7 +64,7 @@ export default function AgencySetup() {
 
         <View style={styles.aiBox}><Text style={styles.aiEyebrow}>WHY THIS MATTERS</Text><Text style={styles.aiText}>A staffing agency, home-care agency and Medicaid provider can have different operational obligations. Elite uses your profile to surface relevant review items instead of one generic checklist.</Text></View>
 
-        <TouchableOpacity onPress={save} style={styles.primary}><Text style={styles.primaryText}>Finish agency setup</Text></TouchableOpacity>
+        <TouchableOpacity onPress={save} style={styles.primary}><Text style={styles.primaryText}>{editing ? "Save agency profile" : "Finish agency setup"}</Text></TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
