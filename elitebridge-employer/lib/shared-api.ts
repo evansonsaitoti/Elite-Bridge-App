@@ -1,5 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
+
 const TOKEN_KEY = "elitebridge-employer-api-token-v1";
 const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || "").replace(/\/$/, "");
 
