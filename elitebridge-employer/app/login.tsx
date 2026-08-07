@@ -3,29 +3,30 @@ import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, Tou
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { DEMO_EMPLOYER, saveEmployerSession } from "../lib/employer-storage";
+import { saveEmployerSession } from "../lib/employer-storage";
 import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
 export default function EmployerLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState<string>(DEMO_EMPLOYER.email);
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
 
   const signIn = async () => {
     if (!email.trim() || !password) return Alert.alert("Missing information", "Enter your email and password.");
-    if (email.trim().toLowerCase() !== DEMO_EMPLOYER.email || password !== DEMO_EMPLOYER.password) {
-      return Alert.alert("Unable to sign in", "Use the App Review employer credentials shown below.");
-    }
+    if (!sharedApiConfigured) return Alert.alert("Service unavailable", "Elite Bridge Employer cannot reach the secure agency service in this build.");
+
     setBusy(true);
     try {
-      if (sharedApiConfigured) {
-        await ensureEmployerBackendSession(DEMO_EMPLOYER.email, DEMO_EMPLOYER.password);
-      }
-      await saveEmployerSession({ email: DEMO_EMPLOYER.email, name: DEMO_EMPLOYER.name, role: "administrator" });
+      const user = await ensureEmployerBackendSession(email, password);
+      await saveEmployerSession({
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`.trim() || user.email,
+        role: "administrator",
+      });
       router.replace("/setup");
     } catch (error) {
-      Alert.alert("Shared service unavailable", error instanceof Error ? error.message : "Could not connect to the Elite Bridge shared service.");
+      Alert.alert("Unable to sign in", error instanceof Error ? error.message : "Please check your account details and try again.");
     } finally {
       setBusy(false);
     }
@@ -43,15 +44,13 @@ export default function EmployerLogin() {
 
           <View style={styles.card}>
             <Text style={styles.label}>Work email</Text>
-            <TextInput autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} style={styles.input} placeholder="you@agency.com" placeholderTextColor="#98A2B3" />
+            <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="username" value={email} onChangeText={setEmail} style={styles.input} placeholder="you@agency.com" placeholderTextColor="#98A2B3" />
             <Text style={styles.label}>Password</Text>
-            <TextInput secureTextEntry value={password} onChangeText={setPassword} style={styles.input} placeholder="Password" placeholderTextColor="#98A2B3" />
+            <TextInput secureTextEntry textContentType="password" value={password} onChangeText={setPassword} style={styles.input} placeholder="Password" placeholderTextColor="#98A2B3" onSubmitEditing={() => void signIn()} />
 
-            <View style={styles.demoBox}>
-              <Text style={styles.demoTitle}>App Review access</Text>
-              <Text style={styles.demoText}>Email: {DEMO_EMPLOYER.email}</Text>
-              <Text style={styles.demoText}>Password: {DEMO_EMPLOYER.password}</Text>
-              <Text style={styles.syncText}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure local preview enabled"}</Text>
+            <View style={styles.accessBox}>
+              <Text style={styles.accessTitle}>Employer access</Text>
+              <Text style={styles.accessText}>Sign in with an employer or agency administrator account. Caregivers use the separate Elite Bridge caregiver app.</Text>
             </View>
 
             <TouchableOpacity disabled={busy} onPress={signIn} style={[styles.primary, busy && { opacity: 0.65 }]}>
@@ -74,8 +73,7 @@ const styles = StyleSheet.create({
   card: { backgroundColor: "white", borderWidth: 1, borderColor: "#E4E7EC", borderRadius: 20, padding: 18 },
   label: { color: "#344054", fontWeight: "800", marginBottom: 6, marginTop: 6 },
   input: { borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", color: "#101828", borderRadius: 12, padding: 13, marginBottom: 10 },
-  demoBox: { backgroundColor: "#F2F4F7", borderRadius: 12, padding: 12, marginVertical: 8 }, demoTitle: { color: "#344054", fontWeight: "900", marginBottom: 5 }, demoText: { color: "#667085", lineHeight: 19 },
-  syncText: { color: "#0A4A35", fontSize: 11, fontWeight: "800", marginTop: 7 },
+  accessBox: { backgroundColor: "#F2F4F7", borderRadius: 12, padding: 12, marginVertical: 8 }, accessTitle: { color: "#344054", fontWeight: "900", marginBottom: 5 }, accessText: { color: "#667085", lineHeight: 19, fontSize: 12 },
   primary: { backgroundColor: "#0A4A35", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 10 }, primaryText: { color: "white", fontWeight: "900", fontSize: 15 },
   footer: { textAlign: "center", color: "#98A2B3", fontSize: 11, marginTop: 18 },
 });
