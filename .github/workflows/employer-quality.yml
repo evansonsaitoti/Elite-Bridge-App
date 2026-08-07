@@ -20,20 +20,29 @@ jobs:
         working-directory: elitebridge-employer
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
 
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.0
+        run: npm install --global pnpm@9.12.0
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Prepare finalized app icon
+        run: pnpm prepare:icons
+
+      - name: Verify icon output
+        run: |
+          test -s assets/images/icon.png
+          node -e "const sharp=require('sharp'); sharp('assets/images/icon.png').metadata().then(m=>{if(m.width!==1024||m.height!==1024) process.exit(1); console.log('Employer icon:',m.width+'x'+m.height,m.hasAlpha?'alpha':'opaque')})"
+
       - name: TypeScript check
         run: pnpm check
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
