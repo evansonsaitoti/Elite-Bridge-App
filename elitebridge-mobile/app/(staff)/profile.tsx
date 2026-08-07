@@ -1,15 +1,24 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import { useColors } from "@/hooks/use-colors";
 import { clearCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
-const REVIEW_EMAIL = "staff@elitebridge.com";
+type LocalSession = { email?: string; name?: string };
 
 export default function StaffProfile() {
   const colors = useColors();
   const router = useRouter();
+  const [session, setSession] = useState<LocalSession>({});
+
+  useEffect(() => {
+    AsyncStorage.getItem("elitebridge-session").then((raw) => {
+      if (!raw) return;
+      try { setSession(JSON.parse(raw) as LocalSession); } catch { setSession({}); }
+    });
+  }, []);
 
   const handleLogout = () => {
     Alert.alert("Sign out", "Sign out of Elite Bridge on this device?", [
@@ -38,10 +47,10 @@ export default function StaffProfile() {
         <View style={{ width: 58, height: 58, borderRadius: 18, backgroundColor: "#0A4A35", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
           <Text style={{ color: "#EBCB8B", fontSize: 19, fontWeight: "900" }}>EB</Text>
         </View>
-        <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>Caregiver review account</Text>
-        <Text style={{ fontSize: 13, color: colors.muted, marginTop: 5 }}>{REVIEW_EMAIL}</Text>
+        <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{session.name || "Caregiver account"}</Text>
+        {session.email ? <Text style={{ fontSize: 13, color: colors.muted, marginTop: 5 }}>{session.email}</Text> : null}
         <View style={{ alignSelf: "flex-start", marginTop: 12, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: sharedApiConfigured ? "#ECFDF3" : "#F2F4F7" }}>
-          <Text style={{ color: sharedApiConfigured ? "#067647" : "#475467", fontSize: 11, fontWeight: "900" }}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure local preview"}</Text>
+          <Text style={{ color: sharedApiConfigured ? "#067647" : "#475467", fontSize: 11, fontWeight: "900" }}>{sharedApiConfigured ? "Secure agency sync enabled" : "Service unavailable"}</Text>
         </View>
       </View>
 
@@ -52,7 +61,7 @@ export default function StaffProfile() {
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
         <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Privacy & location</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Elite Bridge only requests device permissions when a feature needs them. Operational data is exchanged through the authenticated shared service; database credentials are never stored in this app.</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Elite Bridge only requests device permissions when a feature needs them. Operational data is exchanged through the authenticated shared service; database connection details are never stored in this app.</Text>
       </View>
 
       <TouchableOpacity onPress={handleLogout} style={{ borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 12, padding: 14, alignItems: "center" }}>
