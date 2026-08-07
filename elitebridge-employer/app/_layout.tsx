@@ -54,6 +54,7 @@ export default function RootLayout() {
         <Tabs.Screen name="coverage" options={{ href: null }} />
         <Tabs.Screen name="timesheets" options={{ href: null }} />
         <Tabs.Screen name="compliance" options={{ href: null }} />
+        <Tabs.Screen name="ask-elite" options={{ href: null }} />
         <Tabs.Screen name="login" options={{ href: null }} />
         <Tabs.Screen name="setup" options={{ href: null }} />
       </Tabs>
