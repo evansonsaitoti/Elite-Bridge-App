@@ -51,6 +51,12 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
+      - name: Link caregiver EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest project:init --account esaitoti --non-interactive
+
       - name: Build caregiver iOS app and submit to TestFlight
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -86,6 +92,12 @@ jobs:
 
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
+
+      - name: Link employer EAS project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest project:init --account esaitoti --non-interactive
 
       - name: Build employer iOS app and submit to TestFlight
         env:
