@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
+import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
 const STAFF_ACCOUNT = {
   email: "staff@elitebridge.com",
@@ -40,13 +41,16 @@ export default function LoginScreen() {
 
     try {
       setIsLoading(true);
+      if (sharedApiConfigured) {
+        await ensureCaregiverBackendSession(STAFF_ACCOUNT.email, STAFF_ACCOUNT.password);
+      }
       await AsyncStorage.setItem(
         "elitebridge-session",
         JSON.stringify({ role: "staff", email: STAFF_ACCOUNT.email, signedInAt: new Date().toISOString() }),
       );
       router.replace("/(staff)/home");
-    } catch {
-      setError("We could not sign you in. Please try again.");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "We could not connect to the Elite Bridge shared service.");
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +112,7 @@ export default function LoginScreen() {
             <Text style={styles.demoTitle}>Demo caregiver login</Text>
             <Text style={styles.demoText}>Email: {STAFF_ACCOUNT.email}</Text>
             <Text style={styles.demoText}>Password: {STAFF_ACCOUNT.password}</Text>
+            <Text style={styles.syncText}>{sharedApiConfigured ? "Shared agency sync enabled" : "Local demo mode until TestFlight API is attached"}</Text>
           </View>
 
           <TouchableOpacity
@@ -147,6 +152,7 @@ const styles = StyleSheet.create({
   demoBox: { marginBottom: 16, padding: 12, borderRadius: 10, backgroundColor: "#F2F4F7" },
   demoTitle: { marginBottom: 5, fontSize: 12, fontWeight: "800", color: "#344054" },
   demoText: { fontSize: 12, lineHeight: 18, color: "#475467" },
+  syncText: { color: "#0A4A35", fontSize: 11, fontWeight: "800", marginTop: 7 },
   loginButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 10, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
