@@ -5,29 +5,6 @@ import { useRouter } from "expo-router";
 
 import { fetchEmployerApplications, sharedApiConfigured, updateEmployerApplication, type EmployerApplication } from "../lib/shared-api";
 
-const fallback: EmployerApplication[] = [
-  {
-    id: 7001,
-    shift_id: 9001,
-    caregiver_id: 1,
-    status: "pending",
-    created_at: new Date().toISOString(),
-    shift_title: "Personal Care · Mary Thompson",
-    service_type: "Personal Care",
-    start_time: new Date(Date.now() + 86_400_000).toISOString(),
-    end_time: new Date(Date.now() + 86_400_000 + 8 * 3_600_000).toISOString(),
-    city: "Lowell",
-    state: "MA",
-    caregiver_user_id: 1,
-    first_name: "Sarah",
-    last_name: "Johnson",
-    email: "staff@elitebridge.com",
-    rating: 4.9,
-    total_hours: 186,
-    certifications: ["CPR", "First Aid"],
-  },
-];
-
 function fitScore(item: EmployerApplication) {
   const rating = Number(item.rating || 0);
   const hours = Number(item.total_hours || 0);
@@ -45,7 +22,7 @@ function fitReason(item: EmployerApplication) {
 
 export default function ApplicationsScreen() {
   const router = useRouter();
-  const [items, setItems] = useState<EmployerApplication[]>(fallback);
+  const [items, setItems] = useState<EmployerApplication[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [workingId, setWorkingId] = useState<number | null>(null);
 
@@ -68,12 +45,12 @@ export default function ApplicationsScreen() {
   const update = async (item: EmployerApplication, status: "approved" | "rejected") => {
     try {
       setWorkingId(item.id);
-      if (sharedApiConfigured) {
-        await updateEmployerApplication(item.id, status);
-        await load();
-      } else {
-        setItems((current) => current.map((candidate) => candidate.id === item.id ? { ...candidate, status } : candidate));
+      if (!sharedApiConfigured) {
+        Alert.alert("Agency sync required", "Connect to the shared agency service before making assignment decisions.");
+        return;
       }
+      await updateEmployerApplication(item.id, status);
+      await load();
       Alert.alert(status === "approved" ? "Caregiver assigned" : "Application declined", status === "approved" ? "The shift is now assigned and will move into the caregiver's upcoming work." : "The caregiver will see the application update in Elite Bridge.");
     } catch (error) {
       Alert.alert("Could not update application", error instanceof Error ? error.message : "Please try again.");
@@ -83,7 +60,7 @@ export default function ApplicationsScreen() {
   };
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}>
-    <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>← Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>{sharedApiConfigured ? "LIVE SYNC" : "DEMO"}</Text></View></View>
+    <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>← Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>{sharedApiConfigured ? "LIVE SYNC" : "LOCAL PREVIEW"}</Text></View></View>
     <Text style={styles.eyebrow}>WORKFORCE MATCHING</Text>
     <Text style={styles.title}>Shift Applications</Text>
     <Text style={styles.subtitle}>Review applicants with decision support, then keep the final assignment human-approved.</Text>
@@ -97,7 +74,7 @@ export default function ApplicationsScreen() {
         <View style={styles.cardTop}><View style={{ flex: 1 }}><Text style={styles.name}>{item.first_name} {item.last_name}</Text><Text style={styles.meta}>{item.shift_title}</Text><Text style={styles.meta}>{Number.isNaN(date.getTime()) ? "Scheduled" : date.toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} · {item.city}, {item.state}</Text></View><View style={styles.score}><Text style={styles.scoreValue}>{score}</Text><Text style={styles.scoreLabel}>FIT</Text></View></View>
         <View style={styles.aiBox}><Text style={styles.aiEyebrow}>ELITE MATCH SIGNAL</Text><Text style={styles.aiText}>{fitReason(item)}</Text><Text style={styles.guardrail}>AI assists prioritization only. Verify credentials, availability and agency policy before assignment.</Text></View>
         <Text style={[styles.status, item.status === "approved" ? styles.approved : item.status === "rejected" ? styles.rejected : styles.pending]}>{item.status.toUpperCase()}</Text>
-        {item.status === "pending" && <View style={styles.actions}><TouchableOpacity disabled={workingId === item.id} onPress={() => update(item, "rejected")} style={styles.reject}><Text style={styles.rejectText}>Decline</Text></TouchableOpacity><TouchableOpacity disabled={workingId === item.id} onPress={() => update(item, "approved")} style={styles.approve}><Text style={styles.approveText}>{workingId === item.id ? "Updating…" : "Assign caregiver"}</Text></TouchableOpacity></View>}
+        {item.status === "pending" && <View style={styles.actions}><TouchableOpacity disabled={workingId === item.id} onPress={() => void update(item, "rejected")} style={styles.reject}><Text style={styles.rejectText}>Decline</Text></TouchableOpacity><TouchableOpacity disabled={workingId === item.id} onPress={() => void update(item, "approved")} style={styles.approve}><Text style={styles.approveText}>{workingId === item.id ? "Updating…" : "Assign caregiver"}</Text></TouchableOpacity></View>}
       </View>;
     })}
 
