@@ -19,16 +19,27 @@ export type CaregiverShift = {
   responsibilities: string;
   urgency: "standard" | "urgent";
   status: string;
-  applicationStatus?: "pending" | "approved" | "rejected";
+  applicationStatus?: "pending" | "approved" | "rejected" | "callout";
 };
 
 export type CaregiverApplication = {
   id: number;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "callout";
   note?: string;
   appliedAt: string;
   shift: CaregiverShift;
 };
+
+export type RescueOffer = {
+  id: number;
+  score: number;
+  rationale: string;
+  status: "offered" | "accepted";
+  offeredAt: string;
+  shift: CaregiverShift;
+};
+
+export type CalloutReason = "illness" | "family_emergency" | "transportation" | "schedule_conflict" | "other";
 
 export const sharedApiConfigured = Boolean(API_BASE_URL);
 
@@ -115,4 +126,23 @@ export async function applyToShift(shiftId: number, note = "") {
 export async function fetchMyApplications(): Promise<CaregiverApplication[]> {
   const result = await request<{ applications: CaregiverApplication[] }>("/api/bookings/caregiver/my-applications");
   return result.applications;
+}
+
+export async function callOutOfShift(shiftId: number, reason: CalloutReason, note = "") {
+  return request<{ callout: { id: number; status: string }; shift: { id: number; status: string; urgency: string } }>(
+    `/api/bookings/${shiftId}/callout`,
+    { method: "POST", body: JSON.stringify({ reason, note }) },
+  );
+}
+
+export async function fetchRescueOffers(): Promise<RescueOffer[]> {
+  const result = await request<{ offers: RescueOffer[] }>("/api/bookings/caregiver/offers");
+  return result.offers;
+}
+
+export async function respondToRescueOffer(offerId: number, status: "accepted" | "declined") {
+  return request<{ offer: { id: number; status: string }; nextStep: string }>(
+    `/api/bookings/caregiver/offers/${offerId}/respond`,
+    { method: "POST", body: JSON.stringify({ status }) },
+  );
 }
