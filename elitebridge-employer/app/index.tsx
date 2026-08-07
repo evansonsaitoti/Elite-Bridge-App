@@ -55,19 +55,19 @@ export default function EmployerHome() {
         <View style={styles.commandCard}>
           <Text style={styles.commandEyebrow}>ASK ELITE AI</Text>
           <Text style={styles.commandTitle}>What do you want to get done?</Text>
-          <View style={styles.commandInput}>
+          <TouchableOpacity style={styles.commandInput} onPress={() => router.push("/ask-elite")}>
             <Text style={styles.commandPlaceholder}>“Who can cover Mary tomorrow without overtime?”</Text>
-          </View>
+          </TouchableOpacity>
           <View style={styles.promptRow}>
-            <Text style={styles.promptChip}>Fill a shift</Text>
-            <Text style={styles.promptChip}>Check overtime</Text>
-            <Text style={styles.promptChip}>Expiring credentials</Text>
+            <TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Fill a shift</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Check overtime</Text></TouchableOpacity>
+            <TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Expiring credentials</Text></TouchableOpacity>
           </View>
         </View>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Operations inbox</Text>
-          <Text style={styles.sectionLink}>See all</Text>
+          <TouchableOpacity onPress={() => router.push("/compliance")}><Text style={styles.sectionLink}>See all</Text></TouchableOpacity>
         </View>
 
         {intelligence.map((item) => (
@@ -83,7 +83,7 @@ export default function EmployerHome() {
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>Today</Text>
-          <Text style={styles.sectionLink}>Schedule</Text>
+          <TouchableOpacity onPress={() => router.push("/schedule")}><Text style={styles.sectionLink}>Schedule</Text></TouchableOpacity>
         </View>
 
         <View style={styles.scheduleCard}>
