@@ -8,11 +8,8 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 
 const STAFF_TABS = [
-  { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
-  { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
-  { label: "Services", route: "/(staff)/services", match: "/services", icon: "checklist" },
-  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "dollarsign.circle.fill" },
-  { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.fill" },
+  { label: "Work", route: "/(staff)/home", match: "/home", icon: "house.fill" },
+  { label: "Account", route: "/(staff)/profile", match: "/profile", icon: "person.fill" },
 ] as const;
 
 export default function StaffLayout() {
@@ -31,7 +28,7 @@ export default function StaffLayout() {
         try {
           const session = JSON.parse(stored) as { role?: string };
           if (session.role !== "staff") {
-            router.replace(session.role === "administrator" ? "/(admin)/home" : "/(auth)/login");
+            router.replace("/(auth)/login");
             return;
           }
           setReady(true);
@@ -51,7 +48,7 @@ export default function StaffLayout() {
         const tint = active ? colors.primary : colors.muted;
         return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.65 : 1 })}>
           <IconSymbol size={22} name={tab.icon} color={tint} />
-          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 9.5, fontWeight: active ? "800" : "600", color: tint }}>{tab.label}</Text>
+          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 10.5, fontWeight: active ? "800" : "600", color: tint }}>{tab.label}</Text>
         </Pressable>;
       })}
     </View>
