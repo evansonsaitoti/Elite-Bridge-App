@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { DEMO_EMPLOYER, saveEmployerSession } from "../lib/employer-storage";
+import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
 export default function EmployerLogin() {
   const router = useRouter();
@@ -18,8 +19,13 @@ export default function EmployerLogin() {
     }
     setBusy(true);
     try {
+      if (sharedApiConfigured) {
+        await ensureEmployerBackendSession(DEMO_EMPLOYER.email, DEMO_EMPLOYER.password);
+      }
       await saveEmployerSession({ email: DEMO_EMPLOYER.email, name: DEMO_EMPLOYER.name, role: "administrator" });
       router.replace("/setup");
+    } catch (error) {
+      Alert.alert("Shared service unavailable", error instanceof Error ? error.message : "Could not connect to the Elite Bridge shared service.");
     } finally {
       setBusy(false);
     }
@@ -45,6 +51,7 @@ export default function EmployerLogin() {
               <Text style={styles.demoTitle}>TestFlight employer demo</Text>
               <Text style={styles.demoText}>Email: {DEMO_EMPLOYER.email}</Text>
               <Text style={styles.demoText}>Password: {DEMO_EMPLOYER.password}</Text>
+              <Text style={styles.syncText}>{sharedApiConfigured ? "Shared agency sync enabled" : "Local demo mode until TestFlight API is attached"}</Text>
             </View>
 
             <TouchableOpacity disabled={busy} onPress={signIn} style={[styles.primary, busy && { opacity: 0.65 }]}>
@@ -68,6 +75,7 @@ const styles = StyleSheet.create({
   label: { color: "#344054", fontWeight: "800", marginBottom: 6, marginTop: 6 },
   input: { borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", color: "#101828", borderRadius: 12, padding: 13, marginBottom: 10 },
   demoBox: { backgroundColor: "#F2F4F7", borderRadius: 12, padding: 12, marginVertical: 8 }, demoTitle: { color: "#344054", fontWeight: "900", marginBottom: 5 }, demoText: { color: "#667085", lineHeight: 19 },
+  syncText: { color: "#0A4A35", fontSize: 11, fontWeight: "800", marginTop: 7 },
   primary: { backgroundColor: "#0A4A35", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 10 }, primaryText: { color: "white", fontWeight: "900", fontSize: 15 },
   footer: { textAlign: "center", color: "#98A2B3", fontSize: 11, marginTop: 18 },
 });
