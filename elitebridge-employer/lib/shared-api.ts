@@ -99,7 +99,7 @@ export type AskEliteResponse = {
   answer: string;
   evidence: string[];
   actionLabel?: string;
-  route?: "/coverage" | "/compliance" | "/schedule" | "/workforce" | "/timesheets" | "/applications";
+  route?: "/coverage" | "/compliance" | "/schedule" | "/applications" | "/operations";
   confirmation?: string;
   generatedAt: string;
 };
