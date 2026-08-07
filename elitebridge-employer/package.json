@@ -11,6 +11,7 @@
     "check": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "expo": "~54.0.29",
     "expo-router": "~6.0.19",
     "expo-status-bar": "~3.0.9",
