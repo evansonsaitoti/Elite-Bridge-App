@@ -8,6 +8,9 @@
       "distribution": "store",
       "ios": {
         "resourceClass": "m-medium"
+      },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://elite-bridge-shared-api.onrender.com"
       }
     }
   },
