@@ -15,7 +15,7 @@ export default function EmployerLogin() {
   const signIn = async () => {
     if (!email.trim() || !password) return Alert.alert("Missing information", "Enter your email and password.");
     if (email.trim().toLowerCase() !== DEMO_EMPLOYER.email || password !== DEMO_EMPLOYER.password) {
-      return Alert.alert("Unable to sign in", "Use the Employer demo credentials shown below for this TestFlight build.");
+      return Alert.alert("Unable to sign in", "Use the App Review employer credentials shown below.");
     }
     setBusy(true);
     try {
@@ -48,17 +48,17 @@ export default function EmployerLogin() {
             <TextInput secureTextEntry value={password} onChangeText={setPassword} style={styles.input} placeholder="Password" placeholderTextColor="#98A2B3" />
 
             <View style={styles.demoBox}>
-              <Text style={styles.demoTitle}>TestFlight employer demo</Text>
+              <Text style={styles.demoTitle}>App Review access</Text>
               <Text style={styles.demoText}>Email: {DEMO_EMPLOYER.email}</Text>
               <Text style={styles.demoText}>Password: {DEMO_EMPLOYER.password}</Text>
-              <Text style={styles.syncText}>{sharedApiConfigured ? "Shared agency sync enabled" : "Local demo mode until TestFlight API is attached"}</Text>
+              <Text style={styles.syncText}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure local preview enabled"}</Text>
             </View>
 
             <TouchableOpacity disabled={busy} onPress={signIn} style={[styles.primary, busy && { opacity: 0.65 }]}>
               <Text style={styles.primaryText}>{busy ? "Signing in…" : "Sign in to Employer"}</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.footer}>Massachusetts pilot · Employer access only</Text>
+          <Text style={styles.footer}>Massachusetts operations · Employer access only</Text>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
