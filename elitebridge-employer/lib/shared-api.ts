@@ -46,7 +46,7 @@ export type EmployerApplication = {
   id: number;
   shift_id: number;
   caregiver_id: number;
-  status: "pending" | "approved" | "rejected";
+  status: "pending" | "approved" | "rejected" | "callout";
   note?: string;
   created_at: string;
   shift_title: string;
@@ -62,6 +62,36 @@ export type EmployerApplication = {
   rating?: string | number;
   total_hours?: string | number;
   certifications?: string[];
+};
+
+export type EmployerCallout = {
+  id: number;
+  shift_id: number;
+  reason: string;
+  note?: string;
+  status: "open" | "resolved";
+  created_at: string;
+  resolved_at?: string;
+  title: string;
+  service_type: string;
+  care_recipient_name?: string;
+  start_time: string;
+  end_time: string;
+  city: string;
+  state: string;
+  hourly_rate: string | number;
+  urgency: string;
+  first_name: string;
+  last_name: string;
+  offers_sent: number;
+  offers_accepted: number;
+};
+
+export type RescueCandidate = {
+  caregiverId: number;
+  name: string;
+  score: number;
+  rationale: string;
 };
 
 export const sharedApiConfigured = Boolean(API_BASE_URL);
@@ -152,13 +182,7 @@ export async function createEmployerShift(draft: ShiftDraft): Promise<SharedShif
       startDate: draft.startDate,
       startTime: draft.startTime,
       endTime: draft.endTime,
-      location: {
-        type: "client_home",
-        address: draft.address,
-        city: draft.city,
-        state: draft.state,
-        zipCode: draft.zipCode,
-      },
+      location: { type: "client_home", address: draft.address, city: draft.city, state: draft.state, zipCode: draft.zipCode },
       pay: { hourlyRate: draft.hourlyRate, currency: "USD" },
       numberOfCaregivers: 1,
       requirements: [],
@@ -180,4 +204,16 @@ export async function updateEmployerApplication(applicationId: number, status: "
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
+}
+
+export async function fetchEmployerCallouts(): Promise<EmployerCallout[]> {
+  const result = await request<{ callouts: EmployerCallout[] }>("/api/bookings/employer/callouts");
+  return result.callouts;
+}
+
+export async function launchCalloutRescue(calloutId: number) {
+  return request<{ calloutId: number; offersSent: number; candidates: RescueCandidate[]; note: string }>(
+    `/api/bookings/employer/callouts/${calloutId}/launch-rescue`,
+    { method: "POST" },
+  );
 }
