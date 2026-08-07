@@ -45,6 +45,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
+      - name: Prepare finalized caregiver icon
+        run: pnpm prepare:icons
+
       - name: Type check caregiver app
         run: pnpm check
 
@@ -80,6 +83,9 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized employer icon
+        run: pnpm prepare:icons
 
       - name: Type check employer app
         run: pnpm check
