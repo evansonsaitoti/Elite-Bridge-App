@@ -19,7 +19,10 @@
       "ios": {
         "appleId": "evasaitoti@gmail.com",
         "appleTeamId": "F42HSPN3W4",
-        "ascAppId": "6798899931"
+        "ascAppId": "6798899931",
+        "ascApiKeyPath": "/tmp/AuthKey.p8",
+        "ascApiKeyId": "MFTWNL24P5",
+        "ascApiKeyIssuerId": "94a27216-e287-4aa5-9471-57173e4af009"
       }
     }
   }
