@@ -3,7 +3,7 @@ import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, Tou
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { saveEmployerSession } from "../lib/employer-storage";
+import { getAgencyProfile, saveEmployerSession } from "../lib/employer-storage";
 import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
 export default function EmployerLogin() {
@@ -24,7 +24,8 @@ export default function EmployerLogin() {
         name: `${user.firstName} ${user.lastName}`.trim() || user.email,
         role: "administrator",
       });
-      router.replace("/setup");
+      const agency = await getAgencyProfile();
+      router.replace(agency ? "/" : "/setup");
     } catch (error) {
       Alert.alert("Unable to sign in", error instanceof Error ? error.message : "Please check your account details and try again.");
     } finally {
