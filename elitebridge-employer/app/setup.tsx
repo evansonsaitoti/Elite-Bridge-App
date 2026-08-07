@@ -10,9 +10,9 @@ const TYPES: AgencyProfile["agencyType"][] = ["Home Care Agency", "Staffing Agen
 export default function AgencySetup() {
   const router = useRouter();
   const [profile, setProfile] = useState<AgencyProfile>({
-    agencyName: "Elite Bridge Staffing",
+    agencyName: "",
     agencyType: "Home Care Agency",
-    city: "Lowell",
+    city: "",
     state: "MA",
     employeeCount: "1–10",
     medicaidPrograms: false,
@@ -20,8 +20,8 @@ export default function AgencySetup() {
   });
 
   const save = async () => {
-    if (!profile.agencyName.trim() || !profile.city.trim()) return Alert.alert("Missing information", "Enter the agency name and city.");
-    await saveAgencyProfile(profile);
+    if (!profile.agencyName.trim() || !profile.city.trim()) return Alert.alert("Missing information", "Enter the agency name and primary city.");
+    await saveAgencyProfile({ ...profile, agencyName: profile.agencyName.trim(), city: profile.city.trim(), state: "MA" });
     router.replace("/");
   };
 
@@ -30,15 +30,15 @@ export default function AgencySetup() {
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eyebrow}>ONE-TIME SETUP</Text>
         <Text style={styles.title}>Teach Elite how your agency operates.</Text>
-        <Text style={styles.sub}>We use this profile to tailor staffing, compliance prompts and AI recommendations. You can change it later.</Text>
+        <Text style={styles.sub}>This profile tailors staffing and compliance prompts to your agency. You can update it later.</Text>
 
         <View style={styles.card}>
           <Text style={styles.label}>Agency name</Text>
-          <TextInput style={styles.input} value={profile.agencyName} onChangeText={(agencyName) => setProfile({ ...profile, agencyName })} />
+          <TextInput style={styles.input} value={profile.agencyName} onChangeText={(agencyName) => setProfile({ ...profile, agencyName })} placeholder="Your agency name" placeholderTextColor="#98A2B3" />
           <Text style={styles.label}>Agency type</Text>
           <View style={styles.chips}>{TYPES.map((type) => <TouchableOpacity key={type} onPress={() => setProfile({ ...profile, agencyType: type })} style={[styles.chip, profile.agencyType === type && styles.chipActive]}><Text style={[styles.chipText, profile.agencyType === type && styles.chipTextActive]}>{type}</Text></TouchableOpacity>)}</View>
           <Text style={styles.label}>Primary city</Text>
-          <TextInput style={styles.input} value={profile.city} onChangeText={(city) => setProfile({ ...profile, city })} />
+          <TextInput style={styles.input} value={profile.city} onChangeText={(city) => setProfile({ ...profile, city })} placeholder="City" placeholderTextColor="#98A2B3" />
           <Text style={styles.label}>State</Text>
           <TextInput editable={false} style={[styles.input, { color: "#667085" }]} value="Massachusetts (MA)" />
           <Text style={styles.label}>Team size</Text>
@@ -52,7 +52,7 @@ export default function AgencySetup() {
           <Toggle label="Our services require EVV" value={profile.evvRequired} onPress={() => setProfile({ ...profile, evvRequired: !profile.evvRequired })} />
         </View>
 
-        <View style={styles.aiBox}><Text style={styles.aiEyebrow}>WHY THIS MATTERS</Text><Text style={styles.aiText}>A staffing agency, home-care agency and Medicaid provider can have different operational obligations. Elite will use your profile to show relevant review items instead of a generic checklist.</Text></View>
+        <View style={styles.aiBox}><Text style={styles.aiEyebrow}>WHY THIS MATTERS</Text><Text style={styles.aiText}>A staffing agency, home-care agency and Medicaid provider can have different operational obligations. Elite uses your profile to surface relevant review items instead of one generic checklist.</Text></View>
 
         <TouchableOpacity onPress={save} style={styles.primary}><Text style={styles.primaryText}>Finish agency setup</Text></TouchableOpacity>
       </ScrollView>
