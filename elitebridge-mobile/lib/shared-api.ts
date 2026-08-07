@@ -3,6 +3,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const TOKEN_KEY = "elitebridge-caregiver-api-token-v1";
 const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || "").replace(/\/$/, "");
 
+export type AuthUser = {
+  id: number;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: "caregiver" | "employer" | "admin";
+};
+
 export type CaregiverShift = {
   id: number;
   employerId: number;
@@ -64,47 +72,20 @@ async function request<T>(path: string, init: RequestInit = {}, includeAuth = tr
 }
 
 async function login(email: string, password: string) {
-  return request<{ token: string }>("/api/auth/login", {
+  return request<{ token: string; user: AuthUser }>("/api/auth/login", {
     method: "POST",
     body: JSON.stringify({ email, password }),
   }, false);
 }
 
-export async function ensureCaregiverBackendSession(email: string, password: string): Promise<boolean> {
-  if (!API_BASE_URL) return false;
-  const existing = await AsyncStorage.getItem(TOKEN_KEY);
-  if (existing) return true;
-
-  try {
-    const result = await login(email, password);
-    await AsyncStorage.setItem(TOKEN_KEY, result.token);
-    return true;
-  } catch (error) {
-    const status = (error as Error & { status?: number }).status;
-    if (status !== 401) throw error;
+export async function ensureCaregiverBackendSession(email: string, password: string): Promise<AuthUser> {
+  if (!API_BASE_URL) throw new Error("Elite Bridge cannot reach the secure agency service in this build.");
+  const result = await login(email.trim().toLowerCase(), password);
+  if (result.user.role !== "caregiver") {
+    throw new Error("This account is not a caregiver account. Agency administrators should use Elite Bridge Employer.");
   }
-
-  try {
-    const registration = await request<{ token: string }>("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({
-        email,
-        password,
-        firstName: "Sarah",
-        lastName: "Johnson",
-        role: "caregiver",
-        phone: "978-555-0190",
-      }),
-    }, false);
-    await AsyncStorage.setItem(TOKEN_KEY, registration.token);
-    return true;
-  } catch (error) {
-    const status = (error as Error & { status?: number }).status;
-    if (status !== 409) throw error;
-    const result = await login(email, password);
-    await AsyncStorage.setItem(TOKEN_KEY, result.token);
-    return true;
-  }
+  await AsyncStorage.setItem(TOKEN_KEY, result.token);
+  return result.user;
 }
 
 export async function clearCaregiverBackendSession() {
