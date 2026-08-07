@@ -4,6 +4,7 @@ import sharp from "sharp";
 
 const source = fileURLToPath(new URL("../assets/brand/caregiver-app-icon.svg", import.meta.url));
 const expoIcon = fileURLToPath(new URL("../assets/images/icon.png", import.meta.url));
+const brandLogo = fileURLToPath(new URL("../assets/images/elitebridge-logo.png", import.meta.url));
 const nativeIcon = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png", import.meta.url));
 const expoDir = fileURLToPath(new URL("../assets/images/", import.meta.url));
 const nativeDir = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/", import.meta.url));
@@ -20,6 +21,7 @@ const png = await sharp(source)
   .toBuffer();
 
 await sharp(png).toFile(expoIcon);
+await sharp(png).toFile(brandLogo);
 await sharp(png).toFile(nativeIcon);
 
 const projectText = await readFile(xcodeProject, "utf8");
@@ -33,4 +35,4 @@ await writeFile(
   "utf8",
 );
 
-console.log(`Prepared Elite Bridge caregiver icons and native iOS build ${buildNumber}.`);
+console.log(`Prepared consistent Elite Bridge caregiver branding and native iOS build ${buildNumber}.`);
