@@ -94,6 +94,16 @@ export type RescueCandidate = {
   rationale: string;
 };
 
+export type AskEliteResponse = {
+  intent: string;
+  answer: string;
+  evidence: string[];
+  actionLabel?: string;
+  route?: "/coverage" | "/compliance" | "/schedule" | "/workforce" | "/timesheets" | "/applications";
+  confirmation?: string;
+  generatedAt: string;
+};
+
 export const sharedApiConfigured = Boolean(API_BASE_URL);
 
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
@@ -146,7 +156,7 @@ export async function ensureEmployerBackendSession(email: string, password: stri
         firstName: "Agency",
         lastName: "Administrator",
         role: "employer",
-        companyName: "Elite Bridge Pilot Agency",
+        companyName: "Elite Bridge Review Agency",
         phone: "978-555-0100",
       }),
     }, false);
@@ -216,4 +226,11 @@ export async function launchCalloutRescue(calloutId: number) {
     `/api/bookings/employer/callouts/${calloutId}/launch-rescue`,
     { method: "POST" },
   );
+}
+
+export async function askElite(command: string): Promise<AskEliteResponse> {
+  return request<AskEliteResponse>("/api/ai/ask", {
+    method: "POST",
+    body: JSON.stringify({ command }),
+  });
 }
