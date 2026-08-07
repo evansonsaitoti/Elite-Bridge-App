@@ -33,7 +33,7 @@ jobs:
         run: |
           test -s assets/images/icon.png
           test -s ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
-          node -e "const sharp=require('sharp'); Promise.all(['assets/images/icon.png','ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png'].map(p=>sharp(p).metadata().then(m=>{if(m.width!==1024||m.height!==1024) process.exit(1); console.log(p,m.width+'x'+m.height,m.hasAlpha?'alpha':'opaque')})))"
+          node -e "const sharp=require('sharp'); Promise.all(['assets/images/icon.png','ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png'].map(p=>sharp(p).metadata().then(m=>{if(m.width!==1024||m.height!==1024||m.hasAlpha) process.exit(1); console.log(p,m.width+'x'+m.height,'opaque')})))"
       - name: Type check
         run: pnpm check
       - name: Lint
@@ -42,6 +42,8 @@ jobs:
         run: pnpm test
       - name: Build server bundle
         run: pnpm build
+      - name: Export iOS bundle
+        run: npx expo export --platform ios --output-dir dist-ios
       - name: Export mobile web bundle
         run: npx expo export --platform web --output-dir dist-web
       - name: Validate Expo configuration
