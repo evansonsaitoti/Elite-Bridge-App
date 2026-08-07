@@ -1,14 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
+import { clearEmployerSession, getEmployerSession, type EmployerSession } from "../lib/employer-storage";
+import { clearEmployerBackendSession, fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
 
-type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule";
+type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule" | "/setup";
 
 export default function OperationsScreen() {
   const router = useRouter();
+  const [session, setSession] = useState<EmployerSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [openShifts, setOpenShifts] = useState(0);
@@ -20,17 +22,19 @@ export default function OperationsScreen() {
   const refresh = async () => {
     if (!sharedApiConfigured) {
       setLoading(false);
-      setSyncError("Secure agency sync is unavailable in this local preview.");
+      setSyncError("Secure agency sync is unavailable in this build.");
       return;
     }
     try {
       setRefreshing(true);
       setSyncError(null);
-      const [shifts, applications, callouts] = await Promise.all([
+      const [account, shifts, applications, callouts] = await Promise.all([
+        getEmployerSession(),
         fetchEmployerShifts(),
         fetchEmployerApplications(),
         fetchEmployerCallouts(),
       ]);
+      setSession(account);
       const open = shifts.filter((item) => item.status === "open");
       setOpenShifts(open.length);
       setUrgentShifts(open.filter((item) => item.urgency === "urgent").length);
@@ -61,6 +65,20 @@ export default function OperationsScreen() {
     { title: "Ask Elite", detail: "Live operations briefing from agency data", action: "Ask", route: "/ask-elite" },
   ];
 
+  const signOut = () => {
+    Alert.alert("Sign out", "Sign out of Elite Bridge Employer on this device?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Sign out",
+        style: "destructive",
+        onPress: async () => {
+          await Promise.all([clearEmployerSession(), clearEmployerBackendSession()]);
+          router.replace("/login");
+        },
+      },
+    ]);
+  };
+
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
     <Text style={s.eye}>ELITE BRIDGE EMPLOYER</Text><Text style={s.title}>Operations</Text><Text style={s.sub}>One operational inbox for coverage, applications, schedule risk, compliance and AI-assisted prioritization.</Text>
 
@@ -76,7 +94,17 @@ export default function OperationsScreen() {
     </View>
 
     {items.map(i=><View key={i.title} style={s.card}><View style={{flex:1}}><Text style={s.cardTitle}>{i.title}</Text><Text style={s.meta}>{i.detail}</Text></View><TouchableOpacity style={s.button} onPress={()=>router.push(i.route)}><Text style={s.buttonText}>{i.action}</Text></TouchableOpacity></View>)}
+
+    <View style={s.accountCard}>
+      <Text style={s.accountEyebrow}>ACCOUNT</Text>
+      <Text style={s.accountName}>{session?.name || "Agency administrator"}</Text>
+      {session?.email ? <Text style={s.meta}>{session.email}</Text> : null}
+      <View style={s.accountActions}>
+        <TouchableOpacity style={s.accountButton} onPress={() => router.push("/setup")}><Text style={s.accountButtonText}>Edit agency setup</Text></TouchableOpacity>
+        <TouchableOpacity style={s.signOutButton} onPress={signOut}><Text style={s.signOutText}>Sign out</Text></TouchableOpacity>
+      </View>
+    </View>
   </ScrollView></SafeAreaView>;
 }
 
-const s=StyleSheet.create({safe:{flex:1,backgroundColor:"#F7F9F8"},content:{padding:18,paddingBottom:90},eye:{fontSize:10,fontWeight:"900",letterSpacing:1.2,color:"#C58A24"},title:{fontSize:30,fontWeight:"900",color:"#101828",marginTop:4},sub:{color:"#667085",marginTop:6,marginBottom:16,lineHeight:20},ai:{backgroundColor:"#0A4A35",borderRadius:18,padding:17,marginBottom:16},aiEye:{color:"#EBCB8B",fontSize:10,fontWeight:"900",letterSpacing:1.3},aiTitle:{color:"white",fontSize:19,fontWeight:"900",marginTop:7},aiText:{color:"#D8E9E2",fontSize:13,lineHeight:19,marginTop:7},aiButton:{alignSelf:"flex-start",marginTop:12,backgroundColor:"white",paddingHorizontal:13,paddingVertical:10,borderRadius:10},aiButtonText:{color:"#0A4A35",fontWeight:"900"},snapshot:{flexDirection:"row",gap:8,marginBottom:16},metric:{flex:1,backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:13,padding:12},metricValue:{fontSize:23,fontWeight:"900",color:"#0A4A35"},metricLabel:{fontSize:10,color:"#667085",fontWeight:"700",marginTop:2},card:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:15,padding:15,marginBottom:11,flexDirection:"row",alignItems:"center",gap:12},cardTitle:{fontSize:16,fontWeight:"900",color:"#101828"},meta:{fontSize:12,color:"#667085",marginTop:4,lineHeight:17},button:{backgroundColor:"#ECF6F1",paddingHorizontal:12,paddingVertical:9,borderRadius:9},buttonText:{color:"#0A4A35",fontWeight:"900",fontSize:12},error:{backgroundColor:"#FEE4E2",borderRadius:14,padding:13,marginBottom:14},errorTitle:{color:"#B42318",fontWeight:"900"},errorText:{color:"#7A271A",fontSize:12,lineHeight:18,marginTop:4},retry:{alignSelf:"flex-start",backgroundColor:"#B42318",borderRadius:9,paddingHorizontal:11,paddingVertical:8,marginTop:8},retryText:{color:"white",fontWeight:"900",fontSize:11}});
+const s=StyleSheet.create({safe:{flex:1,backgroundColor:"#F7F9F8"},content:{padding:18,paddingBottom:90},eye:{fontSize:10,fontWeight:"900",letterSpacing:1.2,color:"#C58A24"},title:{fontSize:30,fontWeight:"900",color:"#101828",marginTop:4},sub:{color:"#667085",marginTop:6,marginBottom:16,lineHeight:20},ai:{backgroundColor:"#0A4A35",borderRadius:18,padding:17,marginBottom:16},aiEye:{color:"#EBCB8B",fontSize:10,fontWeight:"900",letterSpacing:1.3},aiTitle:{color:"white",fontSize:19,fontWeight:"900",marginTop:7},aiText:{color:"#D8E9E2",fontSize:13,lineHeight:19,marginTop:7},aiButton:{alignSelf:"flex-start",marginTop:12,backgroundColor:"white",paddingHorizontal:13,paddingVertical:10,borderRadius:10},aiButtonText:{color:"#0A4A35",fontWeight:"900"},snapshot:{flexDirection:"row",gap:8,marginBottom:16},metric:{flex:1,backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:13,padding:12},metricValue:{fontSize:23,fontWeight:"900",color:"#0A4A35"},metricLabel:{fontSize:10,color:"#667085",fontWeight:"700",marginTop:2},card:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:15,padding:15,marginBottom:11,flexDirection:"row",alignItems:"center",gap:12},cardTitle:{fontSize:16,fontWeight:"900",color:"#101828"},meta:{fontSize:12,color:"#667085",marginTop:4,lineHeight:17},button:{backgroundColor:"#ECF6F1",paddingHorizontal:12,paddingVertical:9,borderRadius:9},buttonText:{color:"#0A4A35",fontWeight:"900",fontSize:12},error:{backgroundColor:"#FEE4E2",borderRadius:14,padding:13,marginBottom:14},errorTitle:{color:"#B42318",fontWeight:"900"},errorText:{color:"#7A271A",fontSize:12,lineHeight:18,marginTop:4},retry:{alignSelf:"flex-start",backgroundColor:"#B42318",borderRadius:9,paddingHorizontal:11,paddingVertical:8,marginTop:8},retryText:{color:"white",fontWeight:"900",fontSize:11},accountCard:{backgroundColor:"white",borderWidth:1,borderColor:"#E4E7EC",borderRadius:16,padding:15,marginTop:12},accountEyebrow:{color:"#C58A24",fontSize:9,fontWeight:"900",letterSpacing:1.2},accountName:{color:"#101828",fontSize:16,fontWeight:"900",marginTop:5},accountActions:{flexDirection:"row",gap:8,marginTop:13},accountButton:{flex:1,backgroundColor:"#ECF6F1",borderRadius:9,padding:10,alignItems:"center"},accountButtonText:{color:"#0A4A35",fontWeight:"900",fontSize:11},signOutButton:{borderWidth:1,borderColor:"#FDA29B",backgroundColor:"#FFF5F4",borderRadius:9,paddingHorizontal:14,paddingVertical:10},signOutText:{color:"#B42318",fontWeight:"900",fontSize:11}});
