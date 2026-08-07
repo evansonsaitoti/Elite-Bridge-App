@@ -43,21 +43,21 @@ jobs:
         run: npx expo export --platform web --output-dir dist-web
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/expo-config.json
-      - name: Verify required routes and assets
+      - name: Verify caregiver routes and assets
         run: |
           test -f 'app/(auth)/login.tsx'
-          test -f 'app/(admin)/_layout.tsx'
-          test -f 'app/(admin)/home.tsx'
-          test -f 'app/(admin)/clients.tsx'
-          test -f 'app/(admin)/operations.tsx'
-          test -f 'app/(admin)/timesheets.tsx'
           test -f 'app/(staff)/_layout.tsx'
           test -f 'app/(staff)/home.tsx'
           test -f 'app/(staff)/clock.tsx'
           test -f 'app/(staff)/services.tsx'
           test -f 'app/(staff)/earnings.tsx'
           test -f 'app/(staff)/profile.tsx'
+          test -f 'lib/shared-api.ts'
           test -f 'assets/images/elitebridge-logo.png'
+          if test -d 'app/(admin)'; then
+            echo 'Caregiver app must not contain the Employer admin route group.'
+            exit 1
+          fi
 
   ios-compile:
     runs-on: macos-15
