@@ -18,19 +18,24 @@ jobs:
         working-directory: elitebridge-mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.0
+        uses: actions/checkout@v5
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+      - name: Prepare finalized caregiver icon
+        run: pnpm prepare:icons
+      - name: Verify caregiver icon outputs
+        run: |
+          test -s assets/images/icon.png
+          test -s ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png
+          node -e "const sharp=require('sharp'); Promise.all(['assets/images/icon.png','ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png'].map(p=>sharp(p).metadata().then(m=>{if(m.width!==1024||m.height!==1024) process.exit(1); console.log(p,m.width+'x'+m.height,m.hasAlpha?'alpha':'opaque')})))"
       - name: Type check
         run: pnpm check
       - name: Lint
@@ -43,16 +48,14 @@ jobs:
         run: npx expo export --platform web --output-dir dist-web
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/expo-config.json
-      - name: Verify caregiver routes and assets
+      - name: Verify caregiver release routes and assets
         run: |
           test -f 'app/(auth)/login.tsx'
           test -f 'app/(staff)/_layout.tsx'
           test -f 'app/(staff)/home.tsx'
-          test -f 'app/(staff)/clock.tsx'
-          test -f 'app/(staff)/services.tsx'
-          test -f 'app/(staff)/earnings.tsx'
           test -f 'app/(staff)/profile.tsx'
           test -f 'lib/shared-api.ts'
+          test -f 'assets/brand/caregiver-app-icon.svg'
           test -f 'assets/images/elitebridge-logo.png'
           if test -d 'app/(admin)'; then
             echo 'Caregiver app must not contain the Employer admin route group.'
@@ -66,19 +69,19 @@ jobs:
         working-directory: elitebridge-mobile
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set up pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9.12.0
+        uses: actions/checkout@v5
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: 20
           cache: pnpm
           cache-dependency-path: elitebridge-mobile/pnpm-lock.yaml
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
+      - name: Prepare finalized caregiver icon
+        run: pnpm prepare:icons
       - name: Install CocoaPods dependencies
         run: |
           cd ios
