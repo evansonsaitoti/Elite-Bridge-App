@@ -1,29 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
-const STAFF_ACCOUNT = {
-  email: "staff@elitebridge.com",
-  password: "Staff123!",
-};
-
 export default function LoginScreen() {
   const router = useRouter();
-  const [email, setEmail] = useState(STAFF_ACCOUNT.email);
-  const [password, setPassword] = useState(STAFF_ACCOUNT.password);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -34,23 +20,23 @@ export default function LoginScreen() {
       setError("Enter both your email address and password.");
       return;
     }
-    if (email.trim().toLowerCase() !== STAFF_ACCOUNT.email.toLowerCase() || password !== STAFF_ACCOUNT.password) {
-      setError("These details do not match the review caregiver account. Use the credentials shown below.");
+    if (!sharedApiConfigured) {
+      setError("Elite Bridge cannot reach the secure agency service in this build.");
       return;
     }
 
     try {
       setIsLoading(true);
-      if (sharedApiConfigured) {
-        await ensureCaregiverBackendSession(STAFF_ACCOUNT.email, STAFF_ACCOUNT.password);
-      }
-      await AsyncStorage.setItem(
-        "elitebridge-session",
-        JSON.stringify({ role: "staff", email: STAFF_ACCOUNT.email, signedInAt: new Date().toISOString() }),
-      );
+      const user = await ensureCaregiverBackendSession(email, password);
+      await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
+        role: "staff",
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        signedInAt: new Date().toISOString(),
+      }));
       router.replace("/(staff)/home");
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "We could not connect to the Elite Bridge shared service.");
+      setError(cause instanceof Error ? cause.message : "We could not sign you in.");
     } finally {
       setIsLoading(false);
     }
@@ -59,12 +45,7 @@ export default function LoginScreen() {
   return (
     <ScreenContainer>
       <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-        <Image
-          source={require("../../assets/images/elitebridge-logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-          accessibilityLabel="Elite Bridge logo"
-        />
+        <Image source={require("../../assets/images/elitebridge-logo.png")} style={styles.logo} resizeMode="contain" accessibilityLabel="Elite Bridge logo" />
         <Text style={styles.slogan}>ELITE BRIDGE</Text>
         <Text style={styles.caregiverLabel}>FOR CAREGIVERS</Text>
         <Text style={styles.tagline}>Find work, manage your shifts and keep your day moving.</Text>
@@ -75,56 +56,29 @@ export default function LoginScreen() {
           <Text style={styles.heroBody}>Browse available work, respond to priority coverage, manage assignments and keep track of your day.</Text>
         </View>
 
-        {error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        ) : null}
+        {error ? <View style={styles.errorBox}><Text style={styles.errorText}>⚠️ {error}</Text></View> : null}
 
         <View style={styles.formCard}>
           <Text style={styles.label}>Email address</Text>
-          <TextInput
-            style={styles.input}
-            value={email}
-            onChangeText={setEmail}
-            autoCapitalize="none"
-            keyboardType="email-address"
-            editable={!isLoading}
-            placeholder="caregiver@example.com"
-          />
+          <TextInput style={styles.input} value={email} onChangeText={setEmail} autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="username" editable={!isLoading} placeholder="caregiver@example.com" />
 
           <Text style={styles.label}>Password</Text>
           <View style={styles.passwordRow}>
-            <TextInput
-              style={styles.passwordInput}
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry={!showPassword}
-              editable={!isLoading}
-              placeholder="Enter password"
-            />
-            <TouchableOpacity onPress={() => setShowPassword((value) => !value)} style={styles.showButton}>
-              <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
-            </TouchableOpacity>
+            <TextInput style={styles.passwordInput} value={password} onChangeText={setPassword} secureTextEntry={!showPassword} textContentType="password" editable={!isLoading} placeholder="Enter password" onSubmitEditing={() => void handleLogin()} />
+            <TouchableOpacity onPress={() => setShowPassword((value) => !value)} style={styles.showButton}><Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text></TouchableOpacity>
           </View>
 
-          <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>App Review access</Text>
-            <Text style={styles.demoText}>Email: {STAFF_ACCOUNT.email}</Text>
-            <Text style={styles.demoText}>Password: {STAFF_ACCOUNT.password}</Text>
-            <Text style={styles.syncText}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure local preview enabled"}</Text>
+          <View style={styles.accessBox}>
+            <Text style={styles.accessTitle}>Caregiver access</Text>
+            <Text style={styles.accessText}>Use the caregiver account associated with your agency. Agency administrators use the separate Elite Bridge Employer app.</Text>
           </View>
 
-          <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
-            onPress={handleLogin}
-            disabled={isLoading}
-          >
+          <TouchableOpacity style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} onPress={handleLogin} disabled={isLoading}>
             {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in</Text>}
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.employerHint}>Agency administrator? Use the separate Elite Bridge Employer app.</Text>
+        <Text style={styles.securityHint}>Secure agency sync</Text>
       </ScrollView>
     </ScreenContainer>
   );
@@ -149,12 +103,11 @@ const styles = StyleSheet.create({
   passwordInput: { flex: 1, paddingHorizontal: 12, color: "#101828" },
   showButton: { width: 66, alignItems: "center", justifyContent: "center" },
   showText: { color: "#0A4A35", fontWeight: "700" },
-  demoBox: { marginBottom: 16, padding: 12, borderRadius: 10, backgroundColor: "#F2F4F7" },
-  demoTitle: { marginBottom: 5, fontSize: 12, fontWeight: "800", color: "#344054" },
-  demoText: { fontSize: 12, lineHeight: 18, color: "#475467" },
-  syncText: { color: "#0A4A35", fontSize: 11, fontWeight: "800", marginTop: 7 },
+  accessBox: { marginBottom: 16, padding: 12, borderRadius: 10, backgroundColor: "#F2F4F7" },
+  accessTitle: { marginBottom: 5, fontSize: 12, fontWeight: "800", color: "#344054" },
+  accessText: { fontSize: 12, lineHeight: 18, color: "#475467" },
   loginButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 10, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  employerHint: { marginTop: 20, color: "#667085", fontSize: 12, lineHeight: 18, textAlign: "center" },
+  securityHint: { marginTop: 20, color: "#667085", fontSize: 11, textAlign: "center" },
 });
