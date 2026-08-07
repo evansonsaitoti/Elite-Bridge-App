@@ -39,10 +39,13 @@ jobs:
       - name: Verify icon output
         run: |
           test -s assets/images/icon.png
-          node -e "const sharp=require('sharp'); sharp('assets/images/icon.png').metadata().then(m=>{if(m.width!==1024||m.height!==1024) process.exit(1); console.log('Employer icon:',m.width+'x'+m.height,m.hasAlpha?'alpha':'opaque')})"
+          node -e "const sharp=require('sharp'); sharp('assets/images/icon.png').metadata().then(m=>{if(m.width!==1024||m.height!==1024||m.hasAlpha) process.exit(1); console.log('Employer icon:',m.width+'x'+m.height,'opaque')})"
 
       - name: TypeScript check
         run: pnpm check
+
+      - name: Export iOS bundle
+        run: npx expo export --platform ios --output-dir dist-ios
 
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
