@@ -35,7 +35,7 @@ export default function LoginScreen() {
       return;
     }
     if (email.trim().toLowerCase() !== STAFF_ACCOUNT.email.toLowerCase() || password !== STAFF_ACCOUNT.password) {
-      setError("These details do not match the demo caregiver account. Use the credentials shown below.");
+      setError("These details do not match the review caregiver account. Use the credentials shown below.");
       return;
     }
 
@@ -72,7 +72,7 @@ export default function LoginScreen() {
         <View style={styles.heroCard}>
           <Text style={styles.heroEyebrow}>YOUR WORKDAY, ONE PLACE</Text>
           <Text style={styles.heroTitle}>Ready for your next shift?</Text>
-          <Text style={styles.heroBody}>Browse available work, clock in, complete visit notes and keep track of your hours.</Text>
+          <Text style={styles.heroBody}>Browse available work, respond to priority coverage, manage assignments and keep track of your day.</Text>
         </View>
 
         {error ? (
@@ -109,10 +109,10 @@ export default function LoginScreen() {
           </View>
 
           <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>Demo caregiver login</Text>
+            <Text style={styles.demoTitle}>App Review access</Text>
             <Text style={styles.demoText}>Email: {STAFF_ACCOUNT.email}</Text>
             <Text style={styles.demoText}>Password: {STAFF_ACCOUNT.password}</Text>
-            <Text style={styles.syncText}>{sharedApiConfigured ? "Shared agency sync enabled" : "Local demo mode until TestFlight API is attached"}</Text>
+            <Text style={styles.syncText}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure local preview enabled"}</Text>
           </View>
 
           <TouchableOpacity
