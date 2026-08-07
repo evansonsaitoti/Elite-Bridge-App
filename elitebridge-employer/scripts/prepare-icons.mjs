@@ -1,10 +1,12 @@
 import { mkdir } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
-const source = new URL("../assets/brand/employer-app-icon.svg", import.meta.url);
-const expoIcon = new URL("../assets/images/icon.png", import.meta.url);
+const source = fileURLToPath(new URL("../assets/brand/employer-app-icon.svg", import.meta.url));
+const expoIcon = fileURLToPath(new URL("../assets/images/icon.png", import.meta.url));
+const expoDir = fileURLToPath(new URL("../assets/images/", import.meta.url));
 
-await mkdir(new URL("../assets/images/", import.meta.url), { recursive: true });
+await mkdir(expoDir, { recursive: true });
 
 await sharp(source)
   .resize(1024, 1024, { fit: "cover" })
