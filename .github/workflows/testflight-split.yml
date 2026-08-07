@@ -1,0 +1,98 @@
+name: Elite Bridge Split TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which app should be built and submitted to TestFlight?"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - caregiver
+          - employer
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elite-bridge-split-testflight
+  cancel-in-progress: false
+
+jobs:
+  caregiver:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout split branch
+        uses: actions/checkout@v4
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Type check caregiver app
+        run: pnpm check
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
+
+      - name: Build caregiver iOS app and submit to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
+
+  employer:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout split branch
+        uses: actions/checkout@v4
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Type check employer app
+        run: pnpm check
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
+
+      - name: Build employer iOS app and submit to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
