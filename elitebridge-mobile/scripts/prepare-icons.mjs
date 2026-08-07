@@ -9,7 +9,8 @@ const nativeIcon = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcasset
 const expoDir = fileURLToPath(new URL("../assets/images/", import.meta.url));
 const nativeDir = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/", import.meta.url));
 const xcodeProject = fileURLToPath(new URL("../ios/EliteBridgeAdmin.xcodeproj/project.pbxproj", import.meta.url));
-const buildNumber = "19";
+const infoPlist = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Info.plist", import.meta.url));
+const buildNumber = "20";
 
 await mkdir(expoDir, { recursive: true });
 await mkdir(nativeDir, { recursive: true });
@@ -32,6 +33,16 @@ if (versionMatches.length < 2) {
 await writeFile(
   xcodeProject,
   projectText.replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${buildNumber};`),
+  "utf8",
+);
+
+const plistText = await readFile(infoPlist, "utf8");
+if (!/<key>CFBundleVersion<\/key>\s*<string>\d+<\/string>/.test(plistText)) {
+  throw new Error("Could not locate CFBundleVersion in Info.plist.");
+}
+await writeFile(
+  infoPlist,
+  plistText.replace(/(<key>CFBundleVersion<\/key>\s*<string>)\d+(<\/string>)/, `$1${buildNumber}$2`),
   "utf8",
 );
 
