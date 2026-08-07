@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "web": "expo start --web",
+    "prepare:icons": "node scripts/prepare-icons.mjs",
     "check": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
   },
   "devDependencies": {
     "@types/react": "~19.1.17",
+    "sharp": "^0.34.3",
     "typescript": "~5.9.3"
   },
   "packageManager": "pnpm@9.12.0"
