@@ -48,9 +48,9 @@ export default function RootLayout() {
       >
         <Tabs.Screen name="index" options={{ title: "Home" }} />
         <Tabs.Screen name="schedule" options={{ title: "Schedule" }} />
-        <Tabs.Screen name="clients" options={{ title: "Clients" }} />
-        <Tabs.Screen name="workforce" options={{ title: "Team" }} />
-        <Tabs.Screen name="operations" options={{ title: "Ops" }} />
+        <Tabs.Screen name="operations" options={{ title: "Operations" }} />
+        <Tabs.Screen name="clients" options={{ href: null }} />
+        <Tabs.Screen name="workforce" options={{ href: null }} />
         <Tabs.Screen name="coverage" options={{ href: null }} />
         <Tabs.Screen name="timesheets" options={{ href: null }} />
         <Tabs.Screen name="applications" options={{ href: null }} />
