@@ -7,8 +7,8 @@ import { DEMO_EMPLOYER, saveEmployerSession } from "../lib/employer-storage";
 
 export default function EmployerLogin() {
   const router = useRouter();
-  const [email, setEmail] = useState(DEMO_EMPLOYER.email);
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState<string>(DEMO_EMPLOYER.email);
+  const [password, setPassword] = useState<string>("");
   const [busy, setBusy] = useState(false);
 
   const signIn = async () => {
