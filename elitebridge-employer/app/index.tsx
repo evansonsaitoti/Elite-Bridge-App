@@ -20,9 +20,9 @@ const intelligence = [
   {
     eyebrow: "COMPLIANCE COPILOT",
     title: "3 items need review this week",
-    body: "One credential expires in 8 days, one worker acknowledgment is missing, and one assignment may need a Massachusetts job-order notice.",
+    body: "One credential expires in 8 days, one worker acknowledgment is missing, and your Massachusetts profile has compliance signals to review.",
     action: "Open compliance inbox",
-    route: null,
+    route: "/compliance" as const,
   },
 ];
 
@@ -75,7 +75,7 @@ export default function EmployerHome() {
             <Text style={styles.aiEyebrow}>{item.eyebrow}</Text>
             <Text style={styles.aiTitle}>{item.title}</Text>
             <Text style={styles.aiBody}>{item.body}</Text>
-            <TouchableOpacity style={styles.aiButton} onPress={() => item.route && router.push(item.route)}>
+            <TouchableOpacity style={styles.aiButton} onPress={() => router.push(item.route)}>
               <Text style={styles.aiButtonText}>{item.action}</Text>
             </TouchableOpacity>
           </View>
