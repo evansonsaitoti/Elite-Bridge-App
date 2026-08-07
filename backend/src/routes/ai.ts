@@ -10,7 +10,7 @@ import { AppError } from "../middleware/errorHandler";
 const router = Router();
 const askSchema = z.object({ command: z.string().trim().min(2).max(500) });
 
-type AskRoute = "/coverage" | "/compliance" | "/schedule" | "/workforce" | "/timesheets" | "/applications" | undefined;
+type AskRoute = "/coverage" | "/compliance" | "/schedule" | "/applications" | "/operations" | undefined;
 
 async function getEmployer(req: AuthRequest) {
   if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
@@ -75,8 +75,8 @@ router.post("/ask", authMiddleware, async (req: AuthRequest, res, next) => {
     const q = command.toLowerCase();
     let intent = "Operations briefing";
     let answer = "Your live operations are synchronized. Elite reviewed current coverage, applications, call-outs and upcoming assignments and prepared the priorities below.";
-    let route: AskRoute = "/schedule";
-    let actionLabel = "Open schedule";
+    let route: AskRoute = "/operations";
+    let actionLabel = "Open operations";
 
     if (q.includes("cover") || q.includes("fill") || q.includes("call-out") || q.includes("callout") || q.includes("coverage")) {
       intent = "Coverage request";
@@ -89,14 +89,14 @@ router.post("/ask", authMiddleware, async (req: AuthRequest, res, next) => {
           : "There are no open shifts or active call-outs requiring coverage right now.";
     } else if (q.includes("overtime") || q.includes("hours") || q.includes("payroll") || q.includes("cost")) {
       intent = "Labor-cost review";
-      route = "/timesheets";
-      actionLabel = "Review timesheets";
-      answer = `${nearOvertime} available caregiver${nearOvertime === 1 ? " is" : "s are"} at or above the 36-hour early-warning threshold in the shared workforce pool. Your next seven days contain ${upcomingAssignments} scheduled assignment${upcomingAssignments === 1 ? "" : "s"} with an estimated scheduled value of $${scheduledValue.toFixed(2)}.`;
+      route = "/operations";
+      actionLabel = "Open operations";
+      answer = `${nearOvertime} available caregiver${nearOvertime === 1 ? " is" : "s are"} at or above the 36-hour early-warning threshold in the shared workforce pool. Your next seven days contain ${upcomingAssignments} scheduled assignment${upcomingAssignments === 1 ? "" : "s"} with an estimated scheduled value of $${scheduledValue.toFixed(2)}. Review schedule and coverage before making labor-cost decisions.`;
     } else if (q.includes("credential") || q.includes("compliance") || q.includes("massachusetts") || q.includes("evv")) {
       intent = "Compliance review";
       route = "/compliance";
       actionLabel = "Open Compliance Copilot";
-      answer = "Open the Massachusetts-aware Compliance Copilot to review the rules that apply to your agency profile. Elite keeps compliance guidance separate from automatic staffing actions and flags items for human review.";
+      answer = "Open the Massachusetts-aware Compliance Copilot to review the rules and operational checklists that apply to your agency profile. Elite keeps compliance guidance separate from automatic staffing actions and flags items for human review.";
     } else if (q.includes("application") || q.includes("applicant") || q.includes("hire") || q.includes("candidate")) {
       intent = "Applicant review";
       route = "/applications";
@@ -104,9 +104,9 @@ router.post("/ask", authMiddleware, async (req: AuthRequest, res, next) => {
       answer = `${pendingApplications} caregiver application${pendingApplications === 1 ? " is" : "s are"} waiting for an agency decision. Approval is always a human-confirmed action.`;
     } else if (q.includes("staff") || q.includes("workforce") || q.includes("available")) {
       intent = "Workforce readiness";
-      route = "/workforce";
-      actionLabel = "Open workforce";
-      answer = `${availableCaregivers} caregiver${availableCaregivers === 1 ? " is" : "s are"} currently marked available in the shared workforce pool; ${nearOvertime} are at or above the early overtime-warning threshold.`;
+      route = "/operations";
+      actionLabel = "Open operations";
+      answer = `${availableCaregivers} caregiver${availableCaregivers === 1 ? " is" : "s are"} currently marked available in the shared workforce pool; ${nearOvertime} are at or above the early overtime-warning threshold. Use these signals when reviewing open shifts and applications.`;
     } else if (q.includes("tomorrow") || q.includes("attention") || q.includes("risk") || q.includes("priority")) {
       intent = "Priority briefing";
       route = openCallouts > 0 ? "/coverage" : pendingApplications > 0 ? "/applications" : "/schedule";
