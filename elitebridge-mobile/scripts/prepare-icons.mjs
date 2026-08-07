@@ -1,4 +1,4 @@
-import { mkdir } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
@@ -7,6 +7,8 @@ const expoIcon = fileURLToPath(new URL("../assets/images/icon.png", import.meta.
 const nativeIcon = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png", import.meta.url));
 const expoDir = fileURLToPath(new URL("../assets/images/", import.meta.url));
 const nativeDir = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/", import.meta.url));
+const xcodeProject = fileURLToPath(new URL("../ios/EliteBridgeAdmin.xcodeproj/project.pbxproj", import.meta.url));
+const buildNumber = "19";
 
 await mkdir(expoDir, { recursive: true });
 await mkdir(nativeDir, { recursive: true });
@@ -19,4 +21,16 @@ const png = await sharp(source)
 
 await sharp(png).toFile(expoIcon);
 await sharp(png).toFile(nativeIcon);
-console.log("Prepared Elite Bridge caregiver app icons.");
+
+const projectText = await readFile(xcodeProject, "utf8");
+const versionMatches = projectText.match(/CURRENT_PROJECT_VERSION = \d+;/g) || [];
+if (versionMatches.length < 2) {
+  throw new Error("Could not locate both native iOS CURRENT_PROJECT_VERSION settings.");
+}
+await writeFile(
+  xcodeProject,
+  projectText.replace(/CURRENT_PROJECT_VERSION = \d+;/g, `CURRENT_PROJECT_VERSION = ${buildNumber};`),
+  "utf8",
+);
+
+console.log(`Prepared Elite Bridge caregiver icons and native iOS build ${buildNumber}.`);
