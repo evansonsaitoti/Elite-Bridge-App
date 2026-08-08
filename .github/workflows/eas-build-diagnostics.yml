@@ -20,53 +20,75 @@ jobs:
         with:
           ref: elitebridge-split-ai-ma
 
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 20
-
-      - name: Download caregiver failed-build artifacts
-        continue-on-error: true
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          mkdir -p /tmp/eas-diag/caregiver
-          cd elitebridge-mobile
-          npx eas-cli@latest build:download --build-id 32de35d4-4acd-4ad5-aa9c-014d08361a23 --all-artifacts --non-interactive || true
-          find . -maxdepth 2 -type f \( -name '*.zip' -o -name '*.log' -o -name '*.txt' -o -name '*.json' \) -mmin -5 -exec cp -f '{}' /tmp/eas-diag/caregiver/ \; || true
-
-      - name: Download employer failed-build artifacts
-        continue-on-error: true
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: |
-          mkdir -p /tmp/eas-diag/employer
-          cd elitebridge-employer
-          npx eas-cli@latest build:download --build-id 8de3463a-4e1e-4c16-9f02-99556c11ffc6 --all-artifacts --non-interactive || true
-          find . -maxdepth 2 -type f \( -name '*.zip' -o -name '*.log' -o -name '*.txt' -o -name '*.json' \) -mmin -5 -exec cp -f '{}' /tmp/eas-diag/employer/ \; || true
-
-      - name: Expand downloaded archives
+      - name: Verify caregiver uses one package manager
         shell: bash
         run: |
-          for d in caregiver employer; do
-            mkdir -p "/tmp/eas-diag/$d/unpacked"
-            find "/tmp/eas-diag/$d" -maxdepth 1 -type f -name '*.zip' -print0 | while IFS= read -r -d '' f; do
-              unzip -oq "$f" -d "/tmp/eas-diag/$d/unpacked" || true
-            done
-          done
+          test -f elitebridge-mobile/pnpm-lock.yaml
+          test ! -f elitebridge-mobile/package-lock.json
+          echo 'Caregiver package manager: pnpm only ✅'
 
-      - name: Summarize downloaded diagnostics
+      - name: Prepare Apple API key
         shell: bash
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
         run: |
-          echo '=== downloaded files ==='
-          find /tmp/eas-diag -type f -maxdepth 8 -print || true
-          echo '=== likely errors ==='
-          grep -RniE 'error|failed|failure|ERR_|ELIFECYCLE|frozen|lockfile|certificate|provision|security import|pnpm|npm' /tmp/eas-diag 2>/dev/null | tail -n 500 || true
+          test -n "$ASC_API_KEY_P8"
+          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
+          chmod 600 /tmp/AuthKey.p8
 
-      - name: Upload diagnostics
-        uses: actions/upload-artifact@v4
-        with:
-          name: eas-failed-build-diagnostics
-          path: /tmp/eas-diag
-          if-no-files-found: warn
-          retention-days: 2
+      - name: Validate Employer P12 has private signing key
+        shell: bash
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          test -n "$BUILD_CERTIFICATE_BASE64"
+          test -n "$P12_PASSWORD"
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
+          chmod 600 /tmp/elitebridge-dist.p12
+          openssl pkcs12 -in /tmp/elitebridge-dist.p12 -clcerts -nokeys -passin "pass:$P12_PASSWORD" -out /tmp/dist-cert.pem >/dev/null 2>&1
+          openssl pkcs12 -in /tmp/elitebridge-dist.p12 -nocerts -nodes -passin "pass:$P12_PASSWORD" -out /tmp/dist-key.pem >/dev/null 2>&1
+          test -s /tmp/dist-cert.pem
+          test -s /tmp/dist-key.pem
+          cert_pub=$(openssl x509 -in /tmp/dist-cert.pem -pubkey -noout | openssl pkey -pubin -outform DER 2>/dev/null | sha256sum | cut -d' ' -f1)
+          key_pub=$(openssl pkey -in /tmp/dist-key.pem -pubout -outform DER 2>/dev/null | sha256sum | cut -d' ' -f1)
+          test "$cert_pub" = "$key_pub"
+          echo 'Employer P12: certificate + matching private key ✅'
+
+      - name: Generate and validate Employer App Store profile
+        shell: bash
+        working-directory: elitebridge-employer
+        env:
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+        run: |
+          python3 -m pip install --quiet pyjwt cryptography
+          python3 scripts/prepare-ios-credentials.py
+          openssl smime -inform der -verify -noverify -in /tmp/elitebridge-employer.mobileprovision -out /tmp/profile.plist >/dev/null 2>&1
+          python3 - <<'PY'
+          import plistlib, subprocess, tempfile, pathlib
+          profile = plistlib.loads(pathlib.Path('/tmp/profile.plist').read_bytes())
+          app_id = profile.get('Entitlements', {}).get('application-identifier', '')
+          assert app_id.endswith('.com.app.elitebridgeemployer'), app_id
+          certs = profile.get('DeveloperCertificates', [])
+          assert certs, 'No DeveloperCertificates in provisioning profile'
+          with tempfile.NamedTemporaryFile(suffix='.der') as f:
+              f.write(certs[0]); f.flush()
+              embedded = subprocess.check_output(['openssl','x509','-inform','der','-in',f.name,'-noout','-serial']).decode().strip().split('=',1)[1].lstrip('0').upper()
+          local = subprocess.check_output(['openssl','x509','-in','/tmp/dist-cert.pem','-noout','-serial']).decode().strip().split('=',1)[1].lstrip('0').upper()
+          assert embedded == local, (embedded, local)
+          print('Employer profile: bundle ID + distribution certificate match ✅')
+          PY
+
+      - name: Verify credentials.json paths are readable
+        shell: bash
+        working-directory: elitebridge-employer
+        run: |
+          python3 - <<'PY'
+          import json, pathlib
+          data=json.loads(pathlib.Path('credentials.json').read_text())['ios']
+          assert pathlib.Path(data['provisioningProfilePath']).is_file()
+          assert pathlib.Path(data['distributionCertificate']['path']).is_file()
+          print('Employer local credentials files readable by EAS CLI ✅')
+          PY
