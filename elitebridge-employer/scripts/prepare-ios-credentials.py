@@ -14,6 +14,7 @@ import jwt
 API_ROOT = "https://api.appstoreconnect.apple.com"
 BUNDLE_IDENTIFIER = "com.app.elitebridgeemployer"
 P12_PATH = "/tmp/elitebridge-dist.p12"
+COMPAT_P12_PATH = "/tmp/elitebridge-dist-compatible.p12"
 PROFILE_PATH = "/tmp/elitebridge-employer.mobileprovision"
 KEY_PATH = "/tmp/AuthKey.p8"
 
@@ -45,13 +46,13 @@ def api_request(token: str, method: str, path: str, payload=None):
         raise RuntimeError(f"Apple API {method} {path} failed with HTTP {exc.code}: {detail}") from exc
 
 
-def p12_serial(password: str) -> str:
+def p12_serial(path: str, password: str) -> str:
     cert_pem = subprocess.check_output(
         [
             "openssl",
             "pkcs12",
             "-in",
-            P12_PATH,
+            path,
             "-clcerts",
             "-nokeys",
             "-passin",
@@ -65,6 +66,70 @@ def p12_serial(password: str) -> str:
         stderr=subprocess.STDOUT,
     ).decode("utf-8")
     return normalize_serial(serial_output.split("=", 1)[1])
+
+
+def make_macos_compatible_p12(password: str) -> None:
+    cert_path = "/tmp/elitebridge-dist-cert.pem"
+    key_path = "/tmp/elitebridge-dist-key.pem"
+
+    subprocess.check_call(
+        [
+            "openssl",
+            "pkcs12",
+            "-in",
+            P12_PATH,
+            "-clcerts",
+            "-nokeys",
+            "-passin",
+            f"pass:{password}",
+            "-out",
+            cert_path,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    subprocess.check_call(
+        [
+            "openssl",
+            "pkcs12",
+            "-in",
+            P12_PATH,
+            "-nocerts",
+            "-nodes",
+            "-passin",
+            f"pass:{password}",
+            "-out",
+            key_path,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+
+    if not pathlib.Path(key_path).stat().st_size:
+        raise RuntimeError("The distribution PKCS#12 does not contain a private key.")
+
+    # Re-export the same certificate/private key with conservative PKCS#12
+    # algorithms that macOS keychain imports reliably on EAS workers.
+    subprocess.check_call(
+        [
+            "openssl",
+            "pkcs12",
+            "-export",
+            "-legacy",
+            "-inkey",
+            key_path,
+            "-in",
+            cert_path,
+            "-out",
+            COMPAT_P12_PATH,
+            "-passout",
+            f"pass:{password}",
+            "-name",
+            "Elite Bridge Distribution",
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
 
 
 def main():
@@ -81,7 +146,11 @@ def main():
         headers={"kid": key_id, "typ": "JWT"},
     )
 
-    local_serial = p12_serial(p12_password)
+    local_serial = p12_serial(P12_PATH, p12_password)
+    make_macos_compatible_p12(p12_password)
+    compatible_serial = p12_serial(COMPAT_P12_PATH, p12_password)
+    if compatible_serial != local_serial:
+        raise RuntimeError("Repacked distribution certificate serial does not match the source certificate.")
 
     cert_query = urllib.parse.urlencode({
         "limit": "200",
@@ -142,14 +211,14 @@ def main():
         "ios": {
             "provisioningProfilePath": PROFILE_PATH,
             "distributionCertificate": {
-                "path": P12_PATH,
+                "path": COMPAT_P12_PATH,
                 "password": p12_password,
             },
         }
     }
     pathlib.Path("credentials.json").write_text(json.dumps(credentials), encoding="utf-8")
     print(
-        f"Prepared Employer App Store provisioning profile using Apple certificate serial {local_serial}."
+        f"Prepared Employer App Store provisioning profile using Apple certificate serial {local_serial} and macOS-compatible PKCS#12 packaging."
     )
 
 
