@@ -46,20 +46,21 @@ def api_request(token: str, method: str, path: str, payload=None):
         raise RuntimeError(f"Apple API {method} {path} failed with HTTP {exc.code}: {detail}") from exc
 
 
-def p12_serial(path: str, password: str) -> str:
-    cert_pem = subprocess.check_output(
+def p12_serial(path: str, password: str, legacy: bool = False) -> str:
+    command = ["openssl", "pkcs12"]
+    if legacy:
+        command.append("-legacy")
+    command.extend(
         [
-            "openssl",
-            "pkcs12",
             "-in",
             path,
             "-clcerts",
             "-nokeys",
             "-passin",
             f"pass:{password}",
-        ],
-        stderr=subprocess.STDOUT,
+        ]
     )
+    cert_pem = subprocess.check_output(command, stderr=subprocess.STDOUT)
     serial_output = subprocess.check_output(
         ["openssl", "x509", "-noout", "-serial"],
         input=cert_pem,
@@ -108,8 +109,9 @@ def make_macos_compatible_p12(password: str) -> None:
     if not pathlib.Path(key_path).stat().st_size:
         raise RuntimeError("The distribution PKCS#12 does not contain a private key.")
 
-    # Re-export the same certificate/private key with conservative PKCS#12
-    # algorithms that macOS keychain imports reliably on EAS workers.
+    # EAS imports the distribution identity into a macOS keychain. Re-export
+    # the same certificate/private key using the broadly supported legacy
+    # PKCS#12 ciphers. OpenSSL 3 requires -legacy when reading this format.
     subprocess.check_call(
         [
             "openssl",
@@ -148,7 +150,7 @@ def main():
 
     local_serial = p12_serial(P12_PATH, p12_password)
     make_macos_compatible_p12(p12_password)
-    compatible_serial = p12_serial(COMPAT_P12_PATH, p12_password)
+    compatible_serial = p12_serial(COMPAT_P12_PATH, p12_password, legacy=True)
     if compatible_serial != local_serial:
         raise RuntimeError("Repacked distribution certificate serial does not match the source certificate.")
 
