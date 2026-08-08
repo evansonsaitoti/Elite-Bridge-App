@@ -41,18 +41,16 @@ jobs:
           mkdir -p /tmp/eas-caregiver-logs
           npx eas-cli@latest build:view c0764102-e6d1-4c71-aeae-d3df2f333220 --json > /tmp/eas-caregiver-build.json
           python3 - <<'PY'
-          import json, os, pathlib, re, urllib.request
+          import json, pathlib, urllib.request
           data=json.loads(pathlib.Path('/tmp/eas-caregiver-build.json').read_text())
           print('Caregiver EAS status:', data.get('status'))
           print('Caregiver EAS error:', data.get('error'))
           urls=[]
           def walk(value, path='root'):
               if isinstance(value, dict):
-                  for k,v in value.items():
-                      walk(v, f'{path}.{k}')
+                  for k,v in value.items(): walk(v, f'{path}.{k}')
               elif isinstance(value, list):
-                  for i,v in enumerate(value):
-                      walk(v, f'{path}[{i}]')
+                  for i,v in enumerate(value): walk(v, f'{path}[{i}]')
               elif isinstance(value, str) and value.startswith(('https://','http://')) and 'log' in path.lower():
                   urls.append((path,value))
           walk(data)
@@ -102,8 +100,9 @@ jobs:
           printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
           printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
           chmod 600 /tmp/AuthKey.p8 /tmp/elitebridge-dist.p12
-          python3 -m pip install --quiet --user pyjwt cryptography
-          python3 scripts/prepare-ios-credentials.py
+          python3 -m venv /tmp/elitebridge-python
+          /tmp/elitebridge-python/bin/pip install --quiet pyjwt cryptography
+          /tmp/elitebridge-python/bin/python scripts/prepare-ios-credentials.py
 
       - name: Verify repacked Employer identity imports into macOS keychain
         env:
