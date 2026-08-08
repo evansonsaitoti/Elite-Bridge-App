@@ -9,8 +9,9 @@
     "dev:metro": "cross-env EXPO_USE_METRO_WORKSPACE_ROOT=1 npx expo start --web --port ${EXPO_PORT:-8081}",
     "build": "esbuild server/_core/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
     "start": "NODE_ENV=production node dist/index.js",
+    "prepare:icons": "node scripts/prepare-icons.mjs",
     "check": "tsc --noEmit",
-    "lint": "eslint \"app/(auth)/**/*.{ts,tsx}\" \"app/(admin)/**/*.{ts,tsx}\" \"app/(staff)/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" --rule \"react/no-unescaped-entities: off\"",
+    "lint": "eslint \"app/(auth)/**/*.{ts,tsx}\" \"app/(staff)/**/*.{ts,tsx}\" \"components/**/*.{ts,tsx}\" \"hooks/**/*.{ts,tsx}\" \"lib/**/*.{ts,tsx}\" --rule \"react/no-unescaped-entities: off\"",
     "format": "prettier --write .",
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
@@ -93,6 +94,7 @@
     "eslint-config-expo": "~10.0.0",
     "prettier": "^3.7.4",
     "qrcode": "^1.5.4",
+    "sharp": "^0.34.3",
     "tsx": "^4.21.0",
     "typescript": "~5.9.3",
     "vitest": "^2.1.9"

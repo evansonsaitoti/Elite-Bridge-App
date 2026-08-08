@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F3EEE3"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B5C43"/>
+      <stop offset="1" stop-color="#063B2E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4B54E"/>
+      <stop offset="1" stop-color="#B97A16"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- Bridge: the shared Elite Bridge brand -->
+  <path fill="url(#green)" d="M145 702V574l128-90 107-75 132-92 132 92 107 75 128 90v128H749V596l-105-74v180H380V522l-105 74v106H145zm307 0V477l60-42 60 42v225H452z"/>
+  <path fill="#083F31" d="M205 702c43-156 154-248 307-248s264 92 307 248H700c-36-93-101-140-188-140s-152 47-188 140H205z"/>
+  <!-- Briefcase: agency operations, staffing and management -->
+  <path fill="url(#gold)" d="M340 276h344c25 0 46 21 46 46v151c0 25-21 46-46 46H340c-25 0-46-21-46-46V322c0-25 21-46 46-46z"/>
+  <path fill="none" stroke="#B97A16" stroke-width="34" stroke-linecap="round" d="M432 276v-42c0-24 19-43 43-43h74c24 0 43 19 43 43v42"/>
+  <path fill="#FFFDF8" d="M294 384h436v44H294z" opacity=".92"/>
+  <rect x="472" y="362" width="80" height="88" rx="14" fill="#0B5C43"/>
+</svg>

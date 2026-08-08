@@ -19,6 +19,7 @@ import messageRoutes from "./routes/messages";
 import paymentRoutes from "./routes/payments";
 import payrollRoutes from "./routes/payroll";
 import adminRoutes from "./routes/admin";
+import aiRoutes from "./routes/ai";
 
 const app = express();
 const httpServer = createServer(app);
@@ -58,6 +59,7 @@ app.use("/api/messages", messageRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/payroll", payrollRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/ai", aiRoutes);
 
 // Socket.IO for real-time features
 io.on("connection", (socket) => {

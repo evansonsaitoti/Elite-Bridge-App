@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFDF8"/>
+      <stop offset="1" stop-color="#F3EEE3"/>
+    </linearGradient>
+    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0B5C43"/>
+      <stop offset="1" stop-color="#063B2E"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#E4B54E"/>
+      <stop offset="1" stop-color="#B97A16"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <!-- Bridge: connection, continuity and dependable access to care -->
+  <path fill="url(#green)" d="M158 690V565l126-89 104-72 124-86 124 86 104 72 126 89v125H738V585l-102-73v178H388V512l-102 73v105H158zm300 0V478l54-38 54 38v212H458z"/>
+  <path fill="#083F31" d="M218 690c42-150 150-238 294-238s252 88 294 238H690c-35-89-98-134-178-134s-143 45-178 134H218z"/>
+  <!-- Upward path/person: caregiver growth and assignment readiness -->
+  <path fill="url(#gold)" d="M458 690c0-86 4-146 28-201l-57 52-47-51 130-123 130 123-47 51-57-52c24 55 28 115 28 201H458z"/>
+  <circle cx="512" cy="284" r="57" fill="url(#gold)"/>
+</svg>
