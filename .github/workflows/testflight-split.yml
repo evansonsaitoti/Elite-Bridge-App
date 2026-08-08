@@ -58,18 +58,33 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
-      - name: Remove build-only image tooling from EAS upload
+      - name: Prepare clean EAS upload and CocoaPods PATH workaround
         shell: bash
         run: |
+          cat > scripts/eas-fix-pod-path.sh <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          if [ "${EAS_BUILD_PLATFORM:-}" = "ios" ]; then
+            BIN_DIR="${EAS_BUILD_WORKINGDIR:-/Users/expo/workingdir}/bin"
+            mkdir -p "$BIN_DIR"
+            echo "Ensuring CocoaPods executable is available at $BIN_DIR/pod"
+            gem install cocoapods -v 1.16.2 --no-document --bindir "$BIN_DIR"
+            test -x "$BIN_DIR/pod"
+            "$BIN_DIR/pod" --version
+          fi
+          SH
+          chmod +x scripts/eas-fix-pod-path.sh
           node - <<'NODE'
           const fs = require('fs');
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           if (pkg.devDependencies) delete pkg.devDependencies.sharp;
+          pkg.scripts = pkg.scripts || {};
+          pkg.scripts['eas-build-pre-install'] = 'bash scripts/eas-fix-pod-path.sh';
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
           pnpm install --lockfile-only --no-frozen-lockfile
-          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1)"
-          echo 'Caregiver EAS upload package excludes build-only sharp dependency.'
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (!p.scripts?.['eas-build-pre-install']) process.exit(1)"
+          echo 'Caregiver EAS upload package is clean and contains the CocoaPods PATH repair hook.'
 
       - name: Prepare Apple API key
         shell: bash
@@ -92,7 +107,7 @@ jobs:
         run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
 
   employer:
-    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer') }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -135,7 +150,6 @@ jobs:
           NODE
           pnpm install --lockfile-only --no-frozen-lockfile
           node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1)"
-          echo 'Employer EAS upload package excludes build-only sharp dependency.'
 
       - name: Prepare Apple API key
         shell: bash
