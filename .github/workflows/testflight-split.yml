@@ -12,6 +12,10 @@ on:
           - both
           - caregiver
           - employer
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/testflight-split.yml'
 
 permissions:
   contents: read
@@ -22,7 +26,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -54,6 +58,19 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
+      - name: Remove build-only image tooling from EAS upload
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.devDependencies) delete pkg.devDependencies.sharp;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1)"
+          echo 'Caregiver EAS upload package excludes build-only sharp dependency.'
+
       - name: Prepare Apple API key
         shell: bash
         env:
@@ -75,7 +92,7 @@ jobs:
         run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
 
   employer:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -106,6 +123,19 @@ jobs:
 
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
+
+      - name: Remove build-only image tooling from EAS upload
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.devDependencies) delete pkg.devDependencies.sharp;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1)"
+          echo 'Employer EAS upload package excludes build-only sharp dependency.'
 
       - name: Prepare Apple API key
         shell: bash
