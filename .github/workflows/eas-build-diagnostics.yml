@@ -11,9 +11,9 @@ permissions:
   contents: read
 
 jobs:
-  caregiver-eas-logs:
+  inspect-eas-builds:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout split branch
         uses: actions/checkout@v5
@@ -28,91 +28,92 @@ jobs:
       - name: Set up pnpm
         run: npm install --global pnpm@9.12.0
 
-      - name: Install caregiver dependencies
+      - name: Install caregiver dependencies for EAS CLI config resolution
         working-directory: elitebridge-mobile
         run: pnpm install --no-frozen-lockfile
 
-      - name: Fetch EAS build metadata and logs
+      - name: Install employer dependencies for EAS CLI config resolution
+        working-directory: elitebridge-employer
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Fetch and decode caregiver EAS logs
         working-directory: elitebridge-mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         shell: bash
         run: |
-          mkdir -p /tmp/eas-caregiver-logs
-          npx eas-cli@latest build:view c0764102-e6d1-4c71-aeae-d3df2f333220 --json > /tmp/eas-caregiver-build.json
-          python3 - <<'PY'
-          import json, pathlib, urllib.request
-          data=json.loads(pathlib.Path('/tmp/eas-caregiver-build.json').read_text())
-          print('Caregiver EAS status:', data.get('status'))
-          print('Caregiver EAS error:', data.get('error'))
-          urls=[]
-          def walk(value, path='root'):
-              if isinstance(value, dict):
-                  for k,v in value.items(): walk(v, f'{path}.{k}')
-              elif isinstance(value, list):
-                  for i,v in enumerate(value): walk(v, f'{path}[{i}]')
-              elif isinstance(value, str) and value.startswith(('https://','http://')) and 'log' in path.lower():
-                  urls.append((path,value))
-          walk(data)
-          print('Log URL count:', len(urls))
-          out=pathlib.Path('/tmp/eas-caregiver-logs')
-          for i,(path,url) in enumerate(urls):
-              try:
-                  body=urllib.request.urlopen(url, timeout=45).read()
-                  (out/f'log-{i}.txt').write_bytes(body)
-                  print(f'Downloaded log {i} from {path} ({len(body)} bytes)')
-              except Exception as exc:
-                  print(f'Could not download log {i} from {path}: {type(exc).__name__}')
-          PY
-          echo '=== Caregiver EAS likely pod errors ==='
-          grep -RniE 'error|failed|failure|pod install|cocoapods|autolink|react-native|expo|No such file|incompatible|Unable to find|Invalid|syntax|duplicate' /tmp/eas-caregiver-logs 2>/dev/null | tail -n 500 || true
+          mkdir -p /tmp/eas-current/caregiver
+          npx eas-cli@latest build:view a82b3fe2-5fd5-4170-9f44-e767bb86f67b --json > /tmp/caregiver-build.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const https = require('https');
+          const http = require('http');
+          const zlib = require('zlib');
+          const data = JSON.parse(fs.readFileSync('/tmp/caregiver-build.json','utf8'));
+          console.log('CAREGIVER STATUS:', data.status);
+          console.log('CAREGIVER ERROR:', JSON.stringify(data.error || null));
+          const urls=[];
+          function walk(v,p='root') {
+            if (Array.isArray(v)) return v.forEach((x,i)=>walk(x,`${p}[${i}]`));
+            if (v && typeof v === 'object') return Object.entries(v).forEach(([k,x])=>walk(x,`${p}.${k}`));
+            if (typeof v === 'string' && /^https?:/.test(v) && p.toLowerCase().includes('log')) urls.push([p,v]);
+          }
+          walk(data);
+          function fetch(url) { return new Promise((resolve,reject)=>{ const lib=url.startsWith('https:')?https:http; lib.get(url,r=>{ if(r.statusCode>=300&&r.statusCode<400&&r.headers.location) return fetch(r.headers.location).then(resolve,reject); const chunks=[]; r.on('data',c=>chunks.push(c)); r.on('end',()=>resolve(Buffer.concat(chunks))); r.on('error',reject); }).on('error',reject); }); }
+          (async()=>{
+            for (let i=0;i<urls.length;i++) {
+              const [path,url]=urls[i];
+              let body=await fetch(url);
+              try { body=zlib.brotliDecompressSync(body); } catch {}
+              fs.writeFileSync(`/tmp/eas-current/caregiver/log-${i}.txt`, body);
+              console.log(`Downloaded caregiver log ${i} from ${path}: ${body.length} bytes decoded`);
+            }
+          })().catch(e=>{ console.error(e); process.exit(1); });
+          NODE
+          echo '=== CAREGIVER DEPENDENCY ERROR RECORDS ==='
+          grep -RniE 'INSTALL_DEPENDENCIES|Install dependencies|ERR_|ELIFECYCLE|error|failed|failure|pnpm|corepack|node_modules|lockfile|packageManager|Unsupported|Cannot|ENOENT' /tmp/eas-current/caregiver | tail -n 350 || true
 
-      - name: Upload caregiver EAS logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: caregiver-eas-pod-logs
-          path: /tmp/eas-caregiver-logs
-          if-no-files-found: warn
-          retention-days: 2
-
-  employer-macos-signing:
-    runs-on: macos-latest
-    timeout-minutes: 20
-    steps:
-      - name: Checkout split branch
-        uses: actions/checkout@v5
-        with:
-          ref: elitebridge-split-ai-ma
-
-      - name: Prepare Apple credentials
+      - name: Fetch and decode employer EAS logs
         working-directory: elitebridge-employer
         env:
-          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
-          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
-          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         shell: bash
         run: |
-          test -n "$ASC_API_KEY_P8"
-          test -n "$BUILD_CERTIFICATE_BASE64"
-          test -n "$P12_PASSWORD"
-          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
-          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
-          chmod 600 /tmp/AuthKey.p8 /tmp/elitebridge-dist.p12
-          python3 -m venv /tmp/elitebridge-python
-          /tmp/elitebridge-python/bin/pip install --quiet pyjwt cryptography
-          /tmp/elitebridge-python/bin/python scripts/prepare-ios-credentials.py
+          mkdir -p /tmp/eas-current/employer
+          npx eas-cli@latest build:view 03f54d4e-43f9-44ba-87f2-46b3e464e8f1 --json > /tmp/employer-build.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const https = require('https');
+          const http = require('http');
+          const zlib = require('zlib');
+          const data = JSON.parse(fs.readFileSync('/tmp/employer-build.json','utf8'));
+          console.log('EMPLOYER STATUS:', data.status);
+          console.log('EMPLOYER ERROR:', JSON.stringify(data.error || null));
+          const urls=[];
+          function walk(v,p='root') {
+            if (Array.isArray(v)) return v.forEach((x,i)=>walk(x,`${p}[${i}]`));
+            if (v && typeof v === 'object') return Object.entries(v).forEach(([k,x])=>walk(x,`${p}.${k}`));
+            if (typeof v === 'string' && /^https?:/.test(v) && p.toLowerCase().includes('log')) urls.push([p,v]);
+          }
+          walk(data);
+          function fetch(url) { return new Promise((resolve,reject)=>{ const lib=url.startsWith('https:')?https:http; lib.get(url,r=>{ if(r.statusCode>=300&&r.statusCode<400&&r.headers.location) return fetch(r.headers.location).then(resolve,reject); const chunks=[]; r.on('data',c=>chunks.push(c)); r.on('end',()=>resolve(Buffer.concat(chunks))); r.on('error',reject); }).on('error',reject); }); }
+          (async()=>{
+            for (let i=0;i<urls.length;i++) {
+              const [path,url]=urls[i];
+              let body=await fetch(url);
+              try { body=zlib.brotliDecompressSync(body); } catch {}
+              fs.writeFileSync(`/tmp/eas-current/employer/log-${i}.txt`, body);
+              console.log(`Downloaded employer log ${i} from ${path}: ${body.length} bytes decoded`);
+            }
+          })().catch(e=>{ console.error(e); process.exit(1); });
+          NODE
+          echo '=== EMPLOYER DEPENDENCY ERROR RECORDS ==='
+          grep -RniE 'INSTALL_DEPENDENCIES|Install dependencies|ERR_|ELIFECYCLE|error|failed|failure|pnpm|corepack|node_modules|lockfile|packageManager|Unsupported|Cannot|ENOENT' /tmp/eas-current/employer | tail -n 350 || true
 
-      - name: Verify repacked Employer identity imports into macOS keychain
-        env:
-          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
-        shell: bash
-        run: |
-          KEYCHAIN=/tmp/elitebridge-test.keychain-db
-          security create-keychain -p temporary-password "$KEYCHAIN"
-          security unlock-keychain -p temporary-password "$KEYCHAIN"
-          security import /tmp/elitebridge-dist-compatible.p12 -k "$KEYCHAIN" -P "$P12_PASSWORD" -T /usr/bin/codesign
-          security find-identity -v -p codesigning "$KEYCHAIN" | grep -q '1 valid identities found'
-          echo 'Employer repacked distribution identity imports successfully on macOS ✅'
-          security delete-keychain "$KEYCHAIN" || true
+      - name: Upload decoded logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: current-eas-dependency-logs
+          path: /tmp/eas-current
+          if-no-files-found: warn
+          retention-days: 2
