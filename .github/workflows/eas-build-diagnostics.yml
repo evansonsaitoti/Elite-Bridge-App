@@ -1,0 +1,55 @@
+name: EAS Failed Build Diagnostics
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/eas-build-diagnostics.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Download caregiver failed-build artifacts
+        continue-on-error: true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          mkdir -p /tmp/eas-diag/caregiver
+          cd /tmp/eas-diag/caregiver
+          npx eas-cli@latest build:download --build-id 32de35d4-4acd-4ad5-aa9c-014d08361a23 --all-artifacts --non-interactive || true
+
+      - name: Download employer failed-build artifacts
+        continue-on-error: true
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          mkdir -p /tmp/eas-diag/employer
+          cd /tmp/eas-diag/employer
+          npx eas-cli@latest build:download --build-id 8de3463a-4e1e-4c16-9f02-99556c11ffc6 --all-artifacts --non-interactive || true
+
+      - name: Summarize downloaded diagnostics
+        shell: bash
+        run: |
+          echo '=== downloaded files ==='
+          find /tmp/eas-diag -type f -maxdepth 5 -print || true
+          echo '=== likely errors ==='
+          grep -RniE 'error|failed|failure|ERR_|ELIFECYCLE|frozen|lockfile|certificate|provision|security import' /tmp/eas-diag 2>/dev/null | tail -n 300 || true
+
+      - name: Upload diagnostics
+        uses: actions/upload-artifact@v4
+        with:
+          name: eas-failed-build-diagnostics
+          path: /tmp/eas-diag
+          if-no-files-found: warn
+          retention-days: 2
