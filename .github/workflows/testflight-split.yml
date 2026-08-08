@@ -65,11 +65,17 @@ jobs:
           #!/usr/bin/env bash
           set -euo pipefail
           if [ "${EAS_BUILD_PLATFORM:-}" = "ios" ]; then
-            BIN_DIR="${EAS_BUILD_WORKINGDIR:-/Users/expo/workingdir}/bin"
+            WORKING_ROOT="$(dirname "${EAS_BUILD_WORKINGDIR:-/Users/expo/workingdir/build}")"
+            BIN_DIR="$WORKING_ROOT/bin"
             mkdir -p "$BIN_DIR"
-            echo "Ensuring CocoaPods executable is available at $BIN_DIR/pod"
-            gem install cocoapods -v 1.16.2 --no-document --bindir "$BIN_DIR"
-            test -x "$BIN_DIR/pod"
+            POD_SOURCE="$(ruby -e 'require "rubygems"; spec = Gem::Specification.find_by_name("cocoapods", "1.16.2"); puts File.join(spec.full_gem_path, "bin", "pod")')"
+            echo "Linking existing CocoaPods executable into EAS PATH: $BIN_DIR/pod"
+            test -f "$POD_SOURCE"
+            {
+              printf '%s\n' '#!/usr/bin/env bash'
+              printf 'exec ruby "%s" "$@"\n' "$POD_SOURCE"
+            } > "$BIN_DIR/pod"
+            chmod +x "$BIN_DIR/pod"
             "$BIN_DIR/pod" --version
           fi
           SH
