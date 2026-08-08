@@ -39,7 +39,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p /tmp/eas-caregiver-hook
-          npx eas-cli@latest build:view c1ee57de-cf0c-429a-8aed-30f6542cecc0 --json > /tmp/caregiver-build.json
+          npx eas-cli@latest build:view 436fa0cf-0ae4-4440-8f6d-3bfc84a3e6b4 --json > /tmp/caregiver-build.json
           node - <<'NODE'
           const fs=require('fs'), https=require('https'), http=require('http'), zlib=require('zlib');
           const data=JSON.parse(fs.readFileSync('/tmp/caregiver-build.json','utf8'));
@@ -49,4 +49,4 @@ jobs:
           (async()=>{for(let i=0;i<urls.length;i++){const [path,url]=urls[i];let body=await fetch(url);try{body=zlib.brotliDecompressSync(body);}catch{}fs.writeFileSync(`/tmp/eas-caregiver-hook/log-${i}.txt`,body);console.log(`Downloaded ${i} ${path}: ${body.length}`);}})().catch(e=>{console.error(e);process.exit(1);});
           NODE
           echo '=== PRE-INSTALL FAILURE ==='
-          grep -RniE 'PRE_INSTALL|Pre-install|eas-build-pre-install|Ensuring CocoaPods|gem install|bindir|pod|ERROR|Error|error|failed|failure|permission|Gem::|Ruby|ENOENT|No such file' /tmp/eas-caregiver-hook | tail -n 500 || true
+          grep -RniE 'PRE_INSTALL|Pre-install|eas-build-pre-install|Linking existing|CocoaPods|pod|ERROR|Error|error|failed|failure|Gem::|Ruby|ENOENT|No such file|find_by_name|workingdir/bin|Permission' /tmp/eas-caregiver-hook | tail -n 500 || true
