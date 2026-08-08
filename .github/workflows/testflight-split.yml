@@ -73,6 +73,8 @@ jobs:
             test -f "$POD_SOURCE"
             {
               printf '%s\n' '#!/usr/bin/env bash'
+              printf '%s\n' 'export COCOAPODS_NO_BUNDLER=1'
+              printf '%s\n' 'unset BUNDLE_GEMFILE BUNDLE_BIN_PATH RUBYOPT RUBYLIB 2>/dev/null || true'
               printf 'exec ruby "%s" "$@"\n' "$POD_SOURCE"
             } > "$BIN_DIR/pod"
             chmod +x "$BIN_DIR/pod"
