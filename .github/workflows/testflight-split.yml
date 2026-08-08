@@ -69,7 +69,7 @@ jobs:
             BIN_DIR="$WORKING_ROOT/bin"
             mkdir -p "$BIN_DIR"
             POD_SOURCE="$(ruby -e 'require "rubygems"; spec = Gem::Specification.find_by_name("cocoapods", "1.16.2"); puts File.join(spec.full_gem_path, "bin", "pod")')"
-            echo "Linking existing CocoaPods executable into EAS PATH: $BIN_DIR/pod"
+            echo "Restoring CocoaPods executable after dependency install: $BIN_DIR/pod"
             test -f "$POD_SOURCE"
             {
               printf '%s\n' '#!/usr/bin/env bash'
@@ -87,12 +87,13 @@ jobs:
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           if (pkg.devDependencies) delete pkg.devDependencies.sharp;
           pkg.scripts = pkg.scripts || {};
-          pkg.scripts['eas-build-pre-install'] = 'bash scripts/eas-fix-pod-path.sh';
+          delete pkg.scripts['eas-build-pre-install'];
+          pkg.scripts['postinstall'] = 'bash scripts/eas-fix-pod-path.sh';
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
           pnpm install --lockfile-only --no-frozen-lockfile
-          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (!p.scripts?.['eas-build-pre-install']) process.exit(1)"
-          echo 'Caregiver EAS upload package is clean and contains the CocoaPods PATH repair hook.'
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.postinstall !== 'bash scripts/eas-fix-pod-path.sh') process.exit(1)"
+          echo 'Caregiver EAS upload package will restore CocoaPods at the end of dependency installation.'
 
       - name: Prepare Apple API key
         shell: bash
