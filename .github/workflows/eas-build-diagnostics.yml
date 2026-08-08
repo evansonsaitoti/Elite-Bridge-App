@@ -11,9 +11,9 @@ permissions:
   contents: read
 
 jobs:
-  inspect-eas-builds:
+  caregiver-pods:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 20
     steps:
       - name: Checkout split branch
         uses: actions/checkout@v5
@@ -28,48 +28,25 @@ jobs:
       - name: Set up pnpm
         run: npm install --global pnpm@9.12.0
 
-      - name: Install caregiver dependencies for EAS CLI config resolution
+      - name: Install caregiver dependencies for EAS config
         working-directory: elitebridge-mobile
         run: pnpm install --no-frozen-lockfile
 
-      - name: Install employer dependencies for EAS CLI config resolution
-        working-directory: elitebridge-employer
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Fetch and decode caregiver EAS logs
+      - name: Fetch and decode latest caregiver EAS logs
         working-directory: elitebridge-mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         shell: bash
         run: |
-          mkdir -p /tmp/eas-current/caregiver
-          npx eas-cli@latest build:view 2a9e8f5c-b045-45a6-a797-08319d1de34f --json > /tmp/caregiver-build.json
+          mkdir -p /tmp/eas-caregiver-pods
+          npx eas-cli@latest build:view d4163a41-f678-4e0c-bad7-9219451a2469 --json > /tmp/caregiver-build.json
           node - <<'NODE'
-          const fs = require('fs'), https = require('https'), http = require('http'), zlib = require('zlib');
-          const data = JSON.parse(fs.readFileSync('/tmp/caregiver-build.json','utf8'));
-          console.log('CAREGIVER STATUS:', data.status); console.log('CAREGIVER ERROR:', JSON.stringify(data.error || null));
-          const urls=[]; function walk(v,p='root'){ if(Array.isArray(v))return v.forEach((x,i)=>walk(x,`${p}[${i}]`)); if(v&&typeof v==='object')return Object.entries(v).forEach(([k,x])=>walk(x,`${p}.${k}`)); if(typeof v==='string'&&/^https?:/.test(v)&&p.toLowerCase().includes('log'))urls.push([p,v]); } walk(data);
+          const fs=require('fs'), https=require('https'), http=require('http'), zlib=require('zlib');
+          const data=JSON.parse(fs.readFileSync('/tmp/caregiver-build.json','utf8'));
+          console.log('STATUS:',data.status); console.log('ERROR:',JSON.stringify(data.error||null));
+          const urls=[]; function walk(v,p='root'){if(Array.isArray(v))return v.forEach((x,i)=>walk(x,`${p}[${i}]`));if(v&&typeof v==='object')return Object.entries(v).forEach(([k,x])=>walk(x,`${p}.${k}`));if(typeof v==='string'&&/^https?:/.test(v)&&p.toLowerCase().includes('log'))urls.push([p,v]);} walk(data);
           function fetch(url){return new Promise((resolve,reject)=>{const lib=url.startsWith('https:')?https:http;lib.get(url,r=>{if(r.statusCode>=300&&r.statusCode<400&&r.headers.location)return fetch(r.headers.location).then(resolve,reject);const chunks=[];r.on('data',c=>chunks.push(c));r.on('end',()=>resolve(Buffer.concat(chunks)));r.on('error',reject);}).on('error',reject);});}
-          (async()=>{for(let i=0;i<urls.length;i++){const [path,url]=urls[i];let body=await fetch(url);try{body=zlib.brotliDecompressSync(body);}catch{}fs.writeFileSync(`/tmp/eas-current/caregiver/log-${i}.txt`,body);console.log(`Downloaded caregiver log ${i} from ${path}: ${body.length} bytes decoded`);}})().catch(e=>{console.error(e);process.exit(1);});
+          (async()=>{for(let i=0;i<urls.length;i++){const [path,url]=urls[i];let body=await fetch(url);try{body=zlib.brotliDecompressSync(body);}catch{}fs.writeFileSync(`/tmp/eas-caregiver-pods/log-${i}.txt`,body);console.log(`Downloaded ${i} ${path}: ${body.length}`);}})().catch(e=>{console.error(e);process.exit(1);});
           NODE
-          echo '=== CAREGIVER ERROR RECORDS ==='
-          grep -RniE 'INSTALL_DEPENDENCIES|ERR_|ELIFECYCLE|sharp|node-addon-api|pnpm|corepack|Failed|error|ENOENT' /tmp/eas-current/caregiver | tail -n 220 || true
-
-      - name: Fetch and decode employer EAS logs
-        working-directory: elitebridge-employer
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        shell: bash
-        run: |
-          mkdir -p /tmp/eas-current/employer
-          npx eas-cli@latest build:view 1ff969d1-256f-4b9c-87df-615108bb7a6c --json > /tmp/employer-build.json
-          node - <<'NODE'
-          const fs = require('fs'), https = require('https'), http = require('http'), zlib = require('zlib');
-          const data = JSON.parse(fs.readFileSync('/tmp/employer-build.json','utf8'));
-          console.log('EMPLOYER STATUS:', data.status); console.log('EMPLOYER ERROR:', JSON.stringify(data.error || null));
-          const urls=[]; function walk(v,p='root'){ if(Array.isArray(v))return v.forEach((x,i)=>walk(x,`${p}[${i}]`)); if(v&&typeof v==='object')return Object.entries(v).forEach(([k,x])=>walk(x,`${p}.${k}`)); if(typeof v==='string'&&/^https?:/.test(v)&&p.toLowerCase().includes('log'))urls.push([p,v]); } walk(data);
-          function fetch(url){return new Promise((resolve,reject)=>{const lib=url.startsWith('https:')?https:http;lib.get(url,r=>{if(r.statusCode>=300&&r.statusCode<400&&r.headers.location)return fetch(r.headers.location).then(resolve,reject);const chunks=[];r.on('data',c=>chunks.push(c));r.on('end',()=>resolve(Buffer.concat(chunks)));r.on('error',reject);}).on('error',reject);});}
-          (async()=>{for(let i=0;i<urls.length;i++){const [path,url]=urls[i];let body=await fetch(url);try{body=zlib.brotliDecompressSync(body);}catch{}fs.writeFileSync(`/tmp/eas-current/employer/log-${i}.txt`,body);console.log(`Downloaded employer log ${i} from ${path}: ${body.length} bytes decoded`);}})().catch(e=>{console.error(e);process.exit(1);});
-          NODE
-          echo '=== EMPLOYER ERROR RECORDS ==='
-          grep -RniE 'INSTALL_DEPENDENCIES|ERR_|ELIFECYCLE|sharp|node-addon-api|pnpm|corepack|Failed|error|ENOENT' /tmp/eas-current/employer | tail -n 220 || true
+          echo '=== POD FAILURE ==='
+          grep -RniE 'INSTALL_PODS|pod install|CocoaPods|pod:|spawn pod|ENOENT|error|failed|failure|Unable|No such file|incompatible|Ruby|Gem|Hermes|React|ExpoModules|modular|static|deployment target' /tmp/eas-caregiver-pods | tail -n 500 || true
