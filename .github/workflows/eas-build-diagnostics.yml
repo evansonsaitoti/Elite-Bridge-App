@@ -15,6 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
+      - name: Checkout split branch
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
       - name: Set up Node
         uses: actions/setup-node@v5
         with:
@@ -26,8 +31,9 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           mkdir -p /tmp/eas-diag/caregiver
-          cd /tmp/eas-diag/caregiver
+          cd elitebridge-mobile
           npx eas-cli@latest build:download --build-id 32de35d4-4acd-4ad5-aa9c-014d08361a23 --all-artifacts --non-interactive || true
+          find . -maxdepth 2 -type f \( -name '*.zip' -o -name '*.log' -o -name '*.txt' -o -name '*.json' \) -mmin -5 -exec cp -f '{}' /tmp/eas-diag/caregiver/ \; || true
 
       - name: Download employer failed-build artifacts
         continue-on-error: true
@@ -35,16 +41,27 @@ jobs:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: |
           mkdir -p /tmp/eas-diag/employer
-          cd /tmp/eas-diag/employer
+          cd elitebridge-employer
           npx eas-cli@latest build:download --build-id 8de3463a-4e1e-4c16-9f02-99556c11ffc6 --all-artifacts --non-interactive || true
+          find . -maxdepth 2 -type f \( -name '*.zip' -o -name '*.log' -o -name '*.txt' -o -name '*.json' \) -mmin -5 -exec cp -f '{}' /tmp/eas-diag/employer/ \; || true
+
+      - name: Expand downloaded archives
+        shell: bash
+        run: |
+          for d in caregiver employer; do
+            mkdir -p "/tmp/eas-diag/$d/unpacked"
+            find "/tmp/eas-diag/$d" -maxdepth 1 -type f -name '*.zip' -print0 | while IFS= read -r -d '' f; do
+              unzip -oq "$f" -d "/tmp/eas-diag/$d/unpacked" || true
+            done
+          done
 
       - name: Summarize downloaded diagnostics
         shell: bash
         run: |
           echo '=== downloaded files ==='
-          find /tmp/eas-diag -type f -maxdepth 5 -print || true
+          find /tmp/eas-diag -type f -maxdepth 8 -print || true
           echo '=== likely errors ==='
-          grep -RniE 'error|failed|failure|ERR_|ELIFECYCLE|frozen|lockfile|certificate|provision|security import' /tmp/eas-diag 2>/dev/null | tail -n 300 || true
+          grep -RniE 'error|failed|failure|ERR_|ELIFECYCLE|frozen|lockfile|certificate|provision|security import|pnpm|npm' /tmp/eas-diag 2>/dev/null | tail -n 500 || true
 
       - name: Upload diagnostics
         uses: actions/upload-artifact@v4
