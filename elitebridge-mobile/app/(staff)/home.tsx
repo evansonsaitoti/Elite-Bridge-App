@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   ActivityIndicator,
   Alert,
@@ -41,6 +42,40 @@ function applicationColor(status?: string) {
   return "#B54708";
 }
 
+const demoShift: CaregiverShift = {
+  id: 9001,
+  employerId: 1,
+  employerName: "Elite Bridge Demo Agency",
+  title: "Priority evening care",
+  serviceType: "Companionship + meal prep",
+  caregiverType: "HHA / PCA",
+  careRecipientName: "Mrs. A.",
+  startTime: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(),
+  endTime: new Date(Date.now() + 1000 * 60 * 60 * 9).toISOString(),
+  location: { type: "client_home", address: "Lowell", city: "Lowell", state: "MA", zipCode: "01852" },
+  hourlyRate: 35,
+  requirements: ["Reliable transportation", "Comfortable with meal prep"],
+  responsibilities: "Companionship, light meal preparation, safety check and family update.",
+  urgency: "urgent",
+  status: "open",
+};
+
+const demoApplication: CaregiverApplication = {
+  id: 9101,
+  status: "approved",
+  appliedAt: new Date().toISOString(),
+  shift: { ...demoShift, id: 9002, urgency: "standard", status: "assigned", serviceType: "Respite care", careRecipientName: "Troy", startTime: new Date(Date.now() + 1000 * 60 * 60 * 28).toISOString(), endTime: new Date(Date.now() + 1000 * 60 * 60 * 32).toISOString() },
+};
+
+const demoOffer: RescueOffer = {
+  id: 9201,
+  score: 94,
+  rationale: "Care Radar matched you because you are nearby, available this evening and have similar care experience.",
+  status: "offered",
+  offeredAt: new Date().toISOString(),
+  shift: demoShift,
+};
+
 export default function StaffHome() {
   const colors = useColors();
   const [expandedSection, setExpandedSection] = useState<string | null>("shifts");
@@ -53,8 +88,20 @@ export default function StaffHome() {
   const [respondingOfferId, setRespondingOfferId] = useState<number | null>(null);
   const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting to secure agency sync…" : "Secure local preview");
+  const [demoMode, setDemoMode] = useState(false);
 
   const refreshFeed = async () => {
+    const stored = await AsyncStorage.getItem("elitebridge-session");
+    const isDemo = stored ? Boolean(JSON.parse(stored)?.demo) : false;
+    if (isDemo || !sharedApiConfigured) {
+      setDemoMode(true);
+      setAvailableShifts([demoShift]);
+      setApplications([demoApplication]);
+      setOffers([demoOffer]);
+      setSyncMessage("Care Radar demo mode");
+      setRefreshing(false);
+      return;
+    }
     if (!sharedApiConfigured) return;
     try {
       setRefreshing(true);
@@ -95,6 +142,11 @@ export default function StaffHome() {
 
   const apply = async (shift: CaregiverShift) => {
     if (shift.applicationStatus) return;
+    if (demoMode) {
+      setAvailableShifts((items) => items.map((item) => item.id === shift.id ? { ...item, applicationStatus: "pending" } : item));
+      Alert.alert("Demo application sent", "In the live platform, the agency would see your interest immediately.");
+      return;
+    }
     if (!sharedApiConfigured) {
       Alert.alert("Agency sync required", "Connect to the shared agency service before applying to a shift.");
       return;
@@ -113,6 +165,13 @@ export default function StaffHome() {
 
   const respondToOffer = async (offer: RescueOffer, status: "accepted" | "declined") => {
     if (!sharedApiConfigured) return;
+    if (demoMode) {
+      setOffers((items) => status === "accepted"
+        ? items.map((item) => item.id === offer.id ? { ...item, status: "accepted" } : item)
+        : items.filter((item) => item.id !== offer.id));
+      Alert.alert(status === "accepted" ? "Demo offer accepted" : "Demo offer declined", "Care Radar updated the agency view.");
+      return;
+    }
     try {
       setRespondingOfferId(offer.id);
       const result = await respondToRescueOffer(offer.id, status);

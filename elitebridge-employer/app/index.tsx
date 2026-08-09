@@ -3,6 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, Toucha
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { getEmployerSession } from "../lib/employer-storage";
 import {
   fetchEmployerApplications,
   fetchEmployerCallouts,
@@ -26,6 +27,80 @@ function greeting() {
   return "Good evening";
 }
 
+const demoShift: SharedShift = {
+  id: 8001,
+  employerId: 1,
+  employerName: "Elite Bridge Demo Agency",
+  title: "Companionship + meal prep · Mrs. A.",
+  serviceType: "Companionship + meal prep",
+  caregiverType: "HHA / PCA",
+  careRecipientName: "Mrs. A.",
+  startTime: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(),
+  endTime: new Date(Date.now() + 1000 * 60 * 60 * 9).toISOString(),
+  location: { type: "client_home", address: "Lowell", city: "Lowell", state: "MA", zipCode: "01852" },
+  hourlyRate: 35,
+  requirements: [],
+  responsibilities: "Companionship, light meal preparation, safety check and family update.",
+  urgency: "urgent",
+  status: "open",
+};
+
+const demoAssignedShift: SharedShift = {
+  ...demoShift,
+  id: 8002,
+  title: "Respite care · Troy",
+  serviceType: "Respite care",
+  careRecipientName: "Troy",
+  urgency: "standard",
+  status: "assigned",
+  startTime: new Date(Date.now() + 1000 * 60 * 60 * 28).toISOString(),
+  endTime: new Date(Date.now() + 1000 * 60 * 60 * 32).toISOString(),
+};
+
+const demoApplication: EmployerApplication = {
+  id: 8101,
+  shift_id: demoShift.id,
+  caregiver_id: 22,
+  status: "pending",
+  note: "Available and nearby.",
+  created_at: new Date().toISOString(),
+  shift_title: demoShift.title,
+  service_type: demoShift.serviceType,
+  start_time: demoShift.startTime,
+  end_time: demoShift.endTime,
+  city: "Lowell",
+  state: "MA",
+  caregiver_user_id: 22,
+  first_name: "Demo",
+  last_name: "Caregiver",
+  email: "caregiver@elitebridge.test",
+  rating: "4.9",
+  total_hours: "124",
+  certifications: ["HHA", "CPR"],
+};
+
+const demoCallout: EmployerCallout = {
+  id: 8201,
+  shift_id: demoShift.id,
+  reason: "transportation",
+  note: "Original caregiver may be delayed.",
+  status: "open",
+  created_at: new Date().toISOString(),
+  title: demoShift.title,
+  service_type: demoShift.serviceType,
+  care_recipient_name: demoShift.careRecipientName,
+  start_time: demoShift.startTime,
+  end_time: demoShift.endTime,
+  city: "Lowell",
+  state: "MA",
+  hourly_rate: demoShift.hourlyRate,
+  urgency: "urgent",
+  first_name: "Demo",
+  last_name: "Caregiver",
+  offers_sent: 3,
+  offers_accepted: 1,
+};
+
 export default function EmployerHome() {
   const router = useRouter();
   const [shifts, setShifts] = useState<SharedShift[]>([]);
@@ -36,9 +111,14 @@ export default function EmployerHome() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const refresh = async () => {
-    if (!sharedApiConfigured) {
+    const session = await getEmployerSession();
+    const isDemo = session?.email.endsWith("@elitebridge.test");
+    if (isDemo || !sharedApiConfigured) {
+      setShifts([demoShift, demoAssignedShift]);
+      setApplications([demoApplication]);
+      setCallouts([demoCallout]);
       setLoading(false);
-      setSyncError("Secure agency sync is unavailable in this local preview.");
+      setSyncError(null);
       return;
     }
     try {
