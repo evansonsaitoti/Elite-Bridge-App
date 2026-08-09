@@ -1,0 +1,188 @@
+name: Elite Bridge Split TestFlight
+
+on:
+  push:
+    branches:
+      - elitebridge-split-ai-ma
+    paths:
+      - "elitebridge-mobile/**"
+      - "elitebridge-employer/**"
+      - ".github/workflows/testflight-split.yml"
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which app should be built and submitted to TestFlight?"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - caregiver
+          - employer
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elite-bridge-split-testflight
+  cancel-in-progress: false
+
+jobs:
+  caregiver:
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout split branch
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized caregiver icon and build number
+        run: pnpm prepare:icons
+
+      - name: Type check caregiver app
+        run: pnpm check
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
+
+      - name: Prepare managed EAS upload package without push entitlement
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.devDependencies) delete pkg.devDependencies.sharp;
+          if (pkg.dependencies) delete pkg.dependencies['expo-notifications'];
+          pkg.scripts = pkg.scripts || {};
+          delete pkg.scripts['eas-build-pre-install'];
+          delete pkg.scripts['eas-build-post-install'];
+          if (pkg.scripts.postinstall === 'bash scripts/eas-fix-pod-path.sh') delete pkg.scripts.postinstall;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          rm -rf ios
+          pnpm install --lockfile-only --no-frozen-lockfile
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp || p.dependencies?.['expo-notifications']) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.['eas-build-post-install']) process.exit(1)"
+          test ! -d ios
+          echo 'Caregiver EAS upload package is managed Expo and excludes expo-notifications so no push entitlement is requested.'
+
+      - name: Prepare Apple API key
+        shell: bash
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+        run: |
+          test -n "$ASC_API_KEY_P8"
+          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
+          chmod 600 /tmp/AuthKey.p8
+
+      - name: Build caregiver iOS app and submit to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: /tmp/AuthKey.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: F42HSPN3W4
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
+          CI: "1"
+        run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
+
+  employer:
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout split branch
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized employer icon
+        run: pnpm prepare:icons
+
+      - name: Type check employer app
+        run: pnpm check
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json
+
+      - name: Remove build-only image tooling from EAS upload
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          if (pkg.devDependencies) delete pkg.devDependencies.sharp;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1)"
+
+      - name: Prepare Apple API key
+        shell: bash
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+        run: |
+          test -n "$ASC_API_KEY_P8"
+          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
+          chmod 600 /tmp/AuthKey.p8
+
+      - name: Prepare Employer App Store signing credentials
+        shell: bash
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+        run: |
+          test -n "$BUILD_CERTIFICATE_BASE64"
+          test -n "$P12_PASSWORD"
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
+          chmod 600 /tmp/elitebridge-dist.p12
+          python3 -m pip install --quiet pyjwt cryptography
+          python3 scripts/prepare-ios-credentials.py
+          node - <<'NODE'
+          const fs = require('fs');
+          const eas = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+          eas.build.production.credentialsSource = 'local';
+          fs.writeFileSync('eas.json', JSON.stringify(eas, null, 2) + '\n');
+          NODE
+
+      - name: Build employer iOS app and submit to TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: /tmp/AuthKey.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: F42HSPN3W4
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
+          CI: "1"
+        run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
