@@ -54,36 +54,24 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
-      - name: Prepare clean EAS upload and CocoaPods install hook
+      - name: Prepare managed EAS upload package
         shell: bash
         run: |
-          cat > scripts/eas-ensure-cocoapods.sh <<'SH'
-          #!/usr/bin/env bash
-          set -euo pipefail
-          if [ "${EAS_BUILD_PLATFORM:-}" = "ios" ]; then
-            if command -v pod >/dev/null 2>&1; then
-              pod --version
-              exit 0
-            fi
-            echo "CocoaPods executable not found; installing CocoaPods for EAS iOS build."
-            sudo gem install cocoapods -v 1.16.2 --no-document
-            pod --version
-          fi
-          SH
-          chmod +x scripts/eas-ensure-cocoapods.sh
           node - <<'NODE'
           const fs = require('fs');
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           if (pkg.devDependencies) delete pkg.devDependencies.sharp;
           pkg.scripts = pkg.scripts || {};
-          pkg.scripts['eas-build-pre-install'] = 'bash scripts/eas-ensure-cocoapods.sh';
-          pkg.scripts['eas-build-post-install'] = 'bash scripts/eas-ensure-cocoapods.sh';
+          delete pkg.scripts['eas-build-pre-install'];
+          delete pkg.scripts['eas-build-post-install'];
           if (pkg.scripts.postinstall === 'bash scripts/eas-fix-pod-path.sh') delete pkg.scripts.postinstall;
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
+          rm -rf ios
           pnpm install --lockfile-only --no-frozen-lockfile
-          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] !== 'bash scripts/eas-ensure-cocoapods.sh') process.exit(1); if (p.scripts?.['eas-build-post-install'] !== 'bash scripts/eas-ensure-cocoapods.sh') process.exit(1)"
-          echo 'Caregiver EAS upload package will install CocoaPods before pod install.'
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.['eas-build-post-install']) process.exit(1)"
+          test ! -d ios
+          echo 'Caregiver EAS upload package is managed Expo; native ios directory removed for this CI upload only.'
 
       - name: Prepare Apple API key
         shell: bash
