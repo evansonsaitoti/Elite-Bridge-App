@@ -16,7 +16,7 @@ export default function RootLayout() {
     Promise.all([getEmployerSession(), getAgencyProfile()])
       .then(([session, agency]) => {
         if (!active) return;
-        if (!session) {
+        if (!session && pathname !== "/setup") {
           if (pathname !== "/login") router.replace("/login");
         } else if (!agency && pathname !== "/setup") {
           router.replace("/setup");

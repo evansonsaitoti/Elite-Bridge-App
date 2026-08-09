@@ -42,6 +42,17 @@ export default function LoginScreen() {
     }
   };
 
+  const continueDemo = async () => {
+    await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
+      role: "staff",
+      email: "caregiver@elitebridge.test",
+      name: "Demo Caregiver",
+      demo: true,
+      signedInAt: new Date().toISOString(),
+    }));
+    router.replace("/(staff)/home");
+  };
+
   return (
     <ScreenContainer>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
@@ -75,6 +86,10 @@ export default function LoginScreen() {
 
             <TouchableOpacity style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} onPress={handleLogin} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in to Caregiver</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity style={styles.demoButton} onPress={continueDemo} disabled={isLoading}>
+              <Text style={styles.demoButtonText}>Continue as demo caregiver</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.signupButton} onPress={() => router.push("/(onboarding)/welcome")} disabled={isLoading}>
@@ -122,6 +137,8 @@ const styles = StyleSheet.create({
   loginButton: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
+  demoButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#EAF4EF", marginTop: 10 },
+  demoButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   signupButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 1, borderColor: "#D0D5DD", marginTop: 10 },
   signupButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   securityHint: { marginTop: 20, color: "#667085", fontSize: 11, textAlign: "center" },

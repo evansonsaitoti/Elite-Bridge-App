@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { getAgencyProfile, saveEmployerSession } from "../lib/employer-storage";
+import { getAgencyProfile, saveAgencyProfile, saveEmployerSession } from "../lib/employer-storage";
 import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
 export default function EmployerLogin() {
@@ -47,6 +47,33 @@ export default function EmployerLogin() {
     } finally {
       setBusy(false);
     }
+  };
+
+  const continueDemo = async () => {
+    await saveEmployerSession({
+      email: "employer@elitebridge.test",
+      name: "Demo Agency Administrator",
+      role: "administrator",
+    });
+    await saveAgencyProfile({
+      agencyName: "Elite Bridge Demo Agency",
+      agencyType: "Home Care Agency",
+      city: "Lowell",
+      state: "MA",
+      employeeCount: "11–25",
+      medicaidPrograms: false,
+      evvRequired: true,
+    });
+    router.replace("/");
+  };
+
+  const startAgencySetup = async () => {
+    await saveEmployerSession({
+      email: "newagency@elitebridge.test",
+      name: "New Agency Owner",
+      role: "owner",
+    });
+    router.push("/setup");
   };
 
   return (
@@ -111,7 +138,11 @@ export default function EmployerLogin() {
               {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Sign in to Employer</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity disabled={busy} onPress={() => router.push("/setup")} style={styles.secondary}>
+            <TouchableOpacity disabled={busy} onPress={continueDemo} style={styles.demoButton}>
+              <Text style={styles.demoButtonText}>Continue as demo employer</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity disabled={busy} onPress={startAgencySetup} style={styles.secondary}>
               <Text style={styles.secondaryText}>New agency? Complete setup</Text>
             </TouchableOpacity>
           </View>
@@ -155,6 +186,8 @@ const styles = StyleSheet.create({
   primary: { alignItems: "center", backgroundColor: "#0A4A35", borderRadius: 14, justifyContent: "center", marginTop: 18, minHeight: 52 },
   disabled: { opacity: 0.65 },
   primaryText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
+  demoButton: { alignItems: "center", backgroundColor: "#EAF4EF", borderRadius: 14, justifyContent: "center", marginTop: 10, minHeight: 50 },
+  demoButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   secondary: { alignItems: "center", borderColor: "#D0D5DD", borderRadius: 14, borderWidth: 1, marginTop: 10, padding: 14 },
   secondaryText: { color: "#0A4A35", fontWeight: "900" },
   accessBox: { backgroundColor: "#EAF4EF", borderRadius: 18, marginTop: 16, padding: 14 },
