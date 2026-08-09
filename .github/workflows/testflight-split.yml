@@ -54,42 +54,36 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
-      - name: Prepare clean EAS upload and CocoaPods PATH workaround
+      - name: Prepare clean EAS upload and CocoaPods install hook
         shell: bash
         run: |
-          cat > scripts/eas-fix-pod-path.sh <<'SH'
+          cat > scripts/eas-ensure-cocoapods.sh <<'SH'
           #!/usr/bin/env bash
           set -euo pipefail
           if [ "${EAS_BUILD_PLATFORM:-}" = "ios" ]; then
-            WORKING_ROOT="$(dirname "${EAS_BUILD_WORKINGDIR:-/Users/expo/workingdir/build}")"
-            BIN_DIR="$WORKING_ROOT/bin"
-            mkdir -p "$BIN_DIR"
-            POD_SOURCE="$(ruby -e 'require "rubygems"; spec = Gem::Specification.find_by_name("cocoapods", "1.16.2"); puts File.join(spec.full_gem_path, "bin", "pod")')"
-            echo "Restoring CocoaPods executable after dependency install: $BIN_DIR/pod"
-            test -f "$POD_SOURCE"
-            {
-              printf '%s\n' '#!/usr/bin/env bash'
-              printf '%s\n' 'export COCOAPODS_NO_BUNDLER=1'
-              printf '%s\n' 'unset BUNDLE_GEMFILE BUNDLE_BIN_PATH RUBYOPT RUBYLIB 2>/dev/null || true'
-              printf 'exec ruby "%s" "$@"\n' "$POD_SOURCE"
-            } > "$BIN_DIR/pod"
-            chmod +x "$BIN_DIR/pod"
-            "$BIN_DIR/pod" --version
+            if command -v pod >/dev/null 2>&1; then
+              pod --version
+              exit 0
+            fi
+            echo "CocoaPods executable not found; installing CocoaPods for EAS iOS build."
+            sudo gem install cocoapods -v 1.16.2 --no-document
+            pod --version
           fi
           SH
-          chmod +x scripts/eas-fix-pod-path.sh
+          chmod +x scripts/eas-ensure-cocoapods.sh
           node - <<'NODE'
           const fs = require('fs');
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           if (pkg.devDependencies) delete pkg.devDependencies.sharp;
           pkg.scripts = pkg.scripts || {};
-          delete pkg.scripts['eas-build-pre-install'];
-          pkg.scripts['postinstall'] = 'bash scripts/eas-fix-pod-path.sh';
+          pkg.scripts['eas-build-pre-install'] = 'bash scripts/eas-ensure-cocoapods.sh';
+          pkg.scripts['eas-build-post-install'] = 'bash scripts/eas-ensure-cocoapods.sh';
+          if (pkg.scripts.postinstall === 'bash scripts/eas-fix-pod-path.sh') delete pkg.scripts.postinstall;
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
           pnpm install --lockfile-only --no-frozen-lockfile
-          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.postinstall !== 'bash scripts/eas-fix-pod-path.sh') process.exit(1)"
-          echo 'Caregiver EAS upload package will restore CocoaPods at the end of dependency installation.'
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] !== 'bash scripts/eas-ensure-cocoapods.sh') process.exit(1); if (p.scripts?.['eas-build-post-install'] !== 'bash scripts/eas-ensure-cocoapods.sh') process.exit(1)"
+          echo 'Caregiver EAS upload package will install CocoaPods before pod install.'
 
       - name: Prepare Apple API key
         shell: bash
