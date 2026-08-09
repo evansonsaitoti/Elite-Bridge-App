@@ -38,11 +38,20 @@ export default function AgencySetup() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={styles.eyebrow}>{editing ? "AGENCY PROFILE" : "ONE-TIME SETUP"}</Text>
-        <Text style={styles.title}>{editing ? "Keep your agency profile current." : "Teach Elite how your agency operates."}</Text>
-        <Text style={styles.sub}>This profile tailors staffing and compliance prompts to your agency. You can update it whenever your programs or workforce change.</Text>
+        <View style={styles.hero}>
+          <Text style={styles.eyebrow}>{editing ? "AGENCY PROFILE" : "EMPLOYER SIGN UP"}</Text>
+          <Text style={styles.title}>{editing ? "Keep your agency profile current." : "Set up your care agency workspace."}</Text>
+          <Text style={styles.sub}>Create a professional employer profile so Elite Bridge can tailor scheduling, staffing and compliance tools to your agency.</Text>
+        </View>
+
+        <View style={styles.progressCard}>
+          <Text style={styles.progressTitle}>Setup takes about 2 minutes</Text>
+          <Text style={styles.progressText}>Add agency basics now. You can update programs, team size and EVV requirements later.</Text>
+        </View>
 
         <View style={styles.card}>
+          <Text style={styles.cardTitle}>Agency details</Text>
+          <Text style={styles.cardSub}>Use the name clients and caregivers recognize.</Text>
           <Text style={styles.label}>Agency name</Text>
           <TextInput style={styles.input} value={profile.agencyName} onChangeText={(agencyName) => setProfile({ ...profile, agencyName })} placeholder="Your agency name" placeholderTextColor="#98A2B3" />
           <Text style={styles.label}>Agency type</Text>
@@ -75,14 +84,22 @@ function Toggle({ label, value, onPress }: { label: string; value: boolean; onPr
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F7F9F8" }, content: { padding: 20, paddingBottom: 48 }, eyebrow: { color: "#C58A24", fontWeight: "900", letterSpacing: 1.5, fontSize: 10 },
-  title: { color: "#101828", fontSize: 30, lineHeight: 36, fontWeight: "900", marginTop: 8 }, sub: { color: "#667085", lineHeight: 21, marginTop: 8, marginBottom: 18 },
-  card: { backgroundColor: "white", borderWidth: 1, borderColor: "#E4E7EC", borderRadius: 18, padding: 16, marginBottom: 14 }, label: { color: "#344054", fontWeight: "800", marginTop: 7, marginBottom: 6 },
-  input: { borderWidth: 1, borderColor: "#D0D5DD", borderRadius: 11, padding: 12, color: "#101828", backgroundColor: "#F9FAFB" }, chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
+  safe: { flex: 1, backgroundColor: "#F3F7F5" }, content: { padding: 20, paddingBottom: 48 },
+  hero: { backgroundColor: "#0A4A35", borderRadius: 24, marginBottom: 14, padding: 20 },
+  eyebrow: { color: "#EBCB8B", fontWeight: "900", letterSpacing: 1.5, fontSize: 10 },
+  title: { color: "#FFFFFF", fontSize: 30, lineHeight: 36, fontWeight: "900", marginTop: 8 }, sub: { color: "#D9E9E2", lineHeight: 21, marginTop: 8 },
+  progressCard: { backgroundColor: "#FFFFFF", borderColor: "#E4E7EC", borderRadius: 18, borderWidth: 1, marginBottom: 14, padding: 14 },
+  progressTitle: { color: "#101828", fontSize: 15, fontWeight: "900" },
+  progressText: { color: "#667085", fontSize: 13, lineHeight: 19, marginTop: 4 },
+  card: { backgroundColor: "white", borderWidth: 1, borderColor: "#E4E7EC", borderRadius: 22, padding: 18, marginBottom: 14 },
+  cardTitle: { color: "#101828", fontSize: 20, fontWeight: "900" },
+  cardSub: { color: "#667085", lineHeight: 20, marginTop: 4, marginBottom: 8 },
+  label: { color: "#344054", fontWeight: "800", marginTop: 7, marginBottom: 6 },
+  input: { borderWidth: 1, borderColor: "#D0D5DD", borderRadius: 14, padding: 13, color: "#101828", backgroundColor: "#F9FAFB" }, chips: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 4 },
   chip: { borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", borderRadius: 999, paddingHorizontal: 11, paddingVertical: 8 }, chipActive: { backgroundColor: "#EAF4EF", borderColor: "#0A4A35" },
   chipText: { color: "#475467", fontWeight: "700", fontSize: 12 }, chipTextActive: { color: "#0A4A35" }, sectionTitle: { color: "#101828", fontWeight: "900", fontSize: 18 }, sectionSub: { color: "#667085", lineHeight: 19, marginTop: 5, marginBottom: 8 },
   toggleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 13, borderTopWidth: 1, borderTopColor: "#F2F4F7" }, toggleLabel: { color: "#344054", fontWeight: "700", flex: 1, paddingRight: 12 },
   toggle: { width: 48, height: 28, borderRadius: 999, backgroundColor: "#D0D5DD", padding: 3 }, toggleOn: { backgroundColor: "#0A4A35" }, knob: { width: 22, height: 22, borderRadius: 11, backgroundColor: "white" }, knobOn: { marginLeft: 20 },
   aiBox: { backgroundColor: "#0A4A35", borderRadius: 18, padding: 16, marginBottom: 14 }, aiEyebrow: { color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }, aiText: { color: "white", marginTop: 7, lineHeight: 21 },
-  primary: { backgroundColor: "#0A4A35", borderRadius: 12, padding: 15, alignItems: "center" }, primaryText: { color: "white", fontWeight: "900", fontSize: 15 },
+  primary: { backgroundColor: "#0A4A35", borderRadius: 14, padding: 16, alignItems: "center" }, primaryText: { color: "white", fontWeight: "900", fontSize: 16 },
 });

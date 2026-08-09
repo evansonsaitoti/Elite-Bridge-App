@@ -1,5 +1,16 @@
 import { useState } from "react";
-import { Alert, KeyboardAvoidingView, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  ActivityIndicator,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
@@ -10,11 +21,16 @@ export default function EmployerLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const signIn = async () => {
-    if (!email.trim() || !password) return Alert.alert("Missing information", "Enter your email and password.");
-    if (!sharedApiConfigured) return Alert.alert("Service unavailable", "Elite Bridge Employer cannot reach the secure agency service in this build.");
+    if (!email.trim() || !password) {
+      return Alert.alert("Missing information", "Enter your work email and password.");
+    }
+    if (!sharedApiConfigured) {
+      return Alert.alert("Service unavailable", "Elite Bridge Employer cannot reach the secure agency service in this build.");
+    }
 
     setBusy(true);
     try {
@@ -36,45 +52,113 @@ export default function EmployerLogin() {
   return (
     <SafeAreaView style={styles.safe}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.content}>
-          <View style={styles.logoMark}><Text style={styles.logoText}>EB</Text></View>
-          <Text style={styles.brand}>ELITE BRIDGE</Text>
-          <Text style={styles.brandSub}>EMPLOYER</Text>
-          <Text style={styles.title}>Run your care workforce with confidence.</Text>
-          <Text style={styles.subtitle}>Scheduling, staffing, compliance signals and AI-assisted operations for care agencies.</Text>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          <View style={styles.brandRow}>
+            <View style={styles.logoMark}>
+              <Text style={styles.logoText}>EB</Text>
+            </View>
+            <View>
+              <Text style={styles.brand}>ELITE BRIDGE</Text>
+              <Text style={styles.brandSub}>EMPLOYER PORTAL</Text>
+            </View>
+          </View>
+
+          <View style={styles.hero}>
+            <Text style={styles.heroEyebrow}>CARE OPERATIONS HQ</Text>
+            <Text style={styles.title}>Sign in to manage your agency.</Text>
+            <Text style={styles.subtitle}>
+              Schedule caregivers, review coverage, track timesheets and keep your care operations organized.
+            </Text>
+          </View>
 
           <View style={styles.card}>
-            <Text style={styles.label}>Work email</Text>
-            <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="email-address" textContentType="username" value={email} onChangeText={setEmail} style={styles.input} placeholder="you@agency.com" placeholderTextColor="#98A2B3" />
-            <Text style={styles.label}>Password</Text>
-            <TextInput secureTextEntry textContentType="password" value={password} onChangeText={setPassword} style={styles.input} placeholder="Password" placeholderTextColor="#98A2B3" onSubmitEditing={() => void signIn()} />
+            <Text style={styles.cardTitle}>Welcome back</Text>
+            <Text style={styles.cardSub}>Use your administrator account to continue.</Text>
 
-            <View style={styles.accessBox}>
-              <Text style={styles.accessTitle}>Employer access</Text>
-              <Text style={styles.accessText}>Sign in with an employer or agency administrator account. Caregivers use the separate Elite Bridge caregiver app.</Text>
+            <Text style={styles.label}>Work email</Text>
+            <TextInput
+              autoCapitalize="none"
+              autoCorrect={false}
+              editable={!busy}
+              keyboardType="email-address"
+              onChangeText={setEmail}
+              placeholder="you@agency.com"
+              placeholderTextColor="#98A2B3"
+              style={styles.input}
+              textContentType="username"
+              value={email}
+            />
+
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.passwordRow}>
+              <TextInput
+                editable={!busy}
+                onChangeText={setPassword}
+                onSubmitEditing={() => void signIn()}
+                placeholder="Enter password"
+                placeholderTextColor="#98A2B3"
+                secureTextEntry={!showPassword}
+                style={styles.passwordInput}
+                textContentType="password"
+                value={password}
+              />
+              <TouchableOpacity onPress={() => setShowPassword((value) => !value)} style={styles.showButton}>
+                <Text style={styles.showText}>{showPassword ? "Hide" : "Show"}</Text>
+              </TouchableOpacity>
             </View>
 
-            <TouchableOpacity disabled={busy} onPress={signIn} style={[styles.primary, busy && { opacity: 0.65 }]}>
-              <Text style={styles.primaryText}>{busy ? "Signing in…" : "Sign in to Employer"}</Text>
+            <TouchableOpacity disabled={busy} onPress={signIn} style={[styles.primary, busy && styles.disabled]}>
+              {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Sign in to Employer</Text>}
+            </TouchableOpacity>
+
+            <TouchableOpacity disabled={busy} onPress={() => router.push("/setup")} style={styles.secondary}>
+              <Text style={styles.secondaryText}>New agency? Complete setup</Text>
             </TouchableOpacity>
           </View>
-          <Text style={styles.footer}>Massachusetts operations · Employer access only</Text>
-        </View>
+
+          <View style={styles.accessBox}>
+            <Text style={styles.accessTitle}>Employer access only</Text>
+            <Text style={styles.accessText}>
+              Caregivers should use the separate Elite Bridge caregiver app to view shifts and assignments.
+            </Text>
+          </View>
+
+          <Text style={styles.footer}>Secure agency sync · Massachusetts operations</Text>
+        </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F7F9F8" }, fill: { flex: 1 }, content: { flex: 1, padding: 22, justifyContent: "center" },
-  logoMark: { width: 58, height: 58, borderRadius: 18, alignItems: "center", justifyContent: "center", backgroundColor: "#0A4A35", marginBottom: 14 },
-  logoText: { color: "#EBCB8B", fontSize: 20, fontWeight: "900" }, brand: { color: "#0A4A35", fontSize: 15, fontWeight: "900", letterSpacing: 1.4 },
+  safe: { flex: 1, backgroundColor: "#F3F7F5" },
+  fill: { flex: 1 },
+  content: { flexGrow: 1, justifyContent: "center", padding: 22, paddingBottom: 34 },
+  brandRow: { alignItems: "center", flexDirection: "row", gap: 12, marginBottom: 24 },
+  logoMark: { alignItems: "center", backgroundColor: "#0A4A35", borderRadius: 18, height: 58, justifyContent: "center", width: 58 },
+  logoText: { color: "#EBCB8B", fontSize: 20, fontWeight: "900" },
+  brand: { color: "#0A4A35", fontSize: 15, fontWeight: "900", letterSpacing: 1.4 },
   brandSub: { color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 2.2, marginTop: 2 },
-  title: { fontSize: 31, lineHeight: 37, fontWeight: "900", color: "#101828", marginTop: 18 }, subtitle: { color: "#667085", lineHeight: 21, marginTop: 8, marginBottom: 20 },
-  card: { backgroundColor: "white", borderWidth: 1, borderColor: "#E4E7EC", borderRadius: 20, padding: 18 },
-  label: { color: "#344054", fontWeight: "800", marginBottom: 6, marginTop: 6 },
-  input: { borderWidth: 1, borderColor: "#D0D5DD", backgroundColor: "#F9FAFB", color: "#101828", borderRadius: 12, padding: 13, marginBottom: 10 },
-  accessBox: { backgroundColor: "#F2F4F7", borderRadius: 12, padding: 12, marginVertical: 8 }, accessTitle: { color: "#344054", fontWeight: "900", marginBottom: 5 }, accessText: { color: "#667085", lineHeight: 19, fontSize: 12 },
-  primary: { backgroundColor: "#0A4A35", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 10 }, primaryText: { color: "white", fontWeight: "900", fontSize: 15 },
-  footer: { textAlign: "center", color: "#98A2B3", fontSize: 11, marginTop: 18 },
+  hero: { marginBottom: 18 },
+  heroEyebrow: { color: "#C58A24", fontSize: 11, fontWeight: "900", letterSpacing: 1.6, marginBottom: 8 },
+  title: { color: "#101828", fontSize: 32, fontWeight: "900", lineHeight: 38 },
+  subtitle: { color: "#667085", fontSize: 15, lineHeight: 22, marginTop: 10 },
+  card: { backgroundColor: "#FFFFFF", borderColor: "#E4E7EC", borderRadius: 24, borderWidth: 1, padding: 18, shadowColor: "#101828", shadowOpacity: 0.08, shadowRadius: 18 },
+  cardTitle: { color: "#101828", fontSize: 22, fontWeight: "900" },
+  cardSub: { color: "#667085", lineHeight: 20, marginBottom: 14, marginTop: 5 },
+  label: { color: "#344054", fontSize: 13, fontWeight: "800", marginBottom: 7, marginTop: 8 },
+  input: { backgroundColor: "#F9FAFB", borderColor: "#D0D5DD", borderRadius: 14, borderWidth: 1, color: "#101828", minHeight: 50, paddingHorizontal: 14 },
+  passwordRow: { alignItems: "center", backgroundColor: "#F9FAFB", borderColor: "#D0D5DD", borderRadius: 14, borderWidth: 1, flexDirection: "row", minHeight: 50, overflow: "hidden" },
+  passwordInput: { color: "#101828", flex: 1, paddingHorizontal: 14 },
+  showButton: { alignItems: "center", height: 50, justifyContent: "center", width: 70 },
+  showText: { color: "#0A4A35", fontWeight: "800" },
+  primary: { alignItems: "center", backgroundColor: "#0A4A35", borderRadius: 14, justifyContent: "center", marginTop: 18, minHeight: 52 },
+  disabled: { opacity: 0.65 },
+  primaryText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
+  secondary: { alignItems: "center", borderColor: "#D0D5DD", borderRadius: 14, borderWidth: 1, marginTop: 10, padding: 14 },
+  secondaryText: { color: "#0A4A35", fontWeight: "900" },
+  accessBox: { backgroundColor: "#EAF4EF", borderRadius: 18, marginTop: 16, padding: 14 },
+  accessTitle: { color: "#0A4A35", fontWeight: "900", marginBottom: 5 },
+  accessText: { color: "#475467", fontSize: 12, lineHeight: 18 },
+  footer: { color: "#98A2B3", fontSize: 11, marginTop: 18, textAlign: "center" },
 });
