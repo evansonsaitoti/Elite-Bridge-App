@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Elite Bridge Employer",
+    "slug": "elitebridge-employer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "elitebridgeemployer",
+    "userInterfaceStyle": "light",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.app.elitebridgeemployer",
+      "buildNumber": "2",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.app.elitebridgeemployer"
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "adc69871-8e95-4fa7-baca-4c3e757d04f6"
+      }
+    }
+  }
+}

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
@@ -74,28 +74,29 @@ export default function OnboardingWelcome() {
     error?: string,
     keyboardType: "default" | "phone-pad" | "email-address" = "default"
   ) => (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
+    <View style={{ marginBottom: 15 }}>
+      <Text style={{ fontSize: 13, fontWeight: "800", color: "#344054", marginBottom: 7 }}>
         {label}
       </Text>
       <TextInput
         style={{
-          backgroundColor: colors.surface,
-          borderRadius: 8,
-          padding: 12,
-          fontSize: 14,
-          color: colors.foreground,
+          backgroundColor: "#F9FAFB",
+          borderRadius: 14,
+          minHeight: 50,
+          paddingHorizontal: 14,
+          fontSize: 15,
+          color: "#101828",
           borderWidth: 1,
-          borderColor: error ? "#E74C3C" : colors.border,
+          borderColor: error ? "#D92D20" : "#D0D5DD",
         }}
         placeholder={placeholder}
-        placeholderTextColor={colors.muted}
+        placeholderTextColor="#98A2B3"
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
       />
       {error && (
-        <Text style={{ fontSize: 12, color: "#E74C3C", marginTop: 4 }}>
+        <Text style={{ fontSize: 12, color: "#D92D20", marginTop: 5 }}>
           {error}
         </Text>
       )}
@@ -103,15 +104,20 @@ export default function OnboardingWelcome() {
   );
 
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-      }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-    >
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F7FAF8" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 36 }} keyboardShouldPersistTaps="handled">
+      <View style={{ backgroundColor: "#0A4A35", borderRadius: 24, padding: 20, marginBottom: 18 }}>
+        <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }}>CAREGIVER APPLICATION</Text>
+        <Text style={{ color: "#FFFFFF", fontSize: 28, lineHeight: 34, fontWeight: "900", marginTop: 8 }}>
+          Create your caregiver profile.
+        </Text>
+        <Text style={{ color: "#D9E9E2", fontSize: 14, lineHeight: 21, marginTop: 8 }}>
+          Tell us who you are so Elite Bridge can match you with the right care assignments.
+        </Text>
+      </View>
+
       {/* Progress Bar */}
-      <View style={{ marginBottom: 24 }}>
+      <View style={{ marginBottom: 18, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#EAECF0" }}>
         <View
           style={{
             flexDirection: "row",
@@ -121,14 +127,14 @@ export default function OnboardingWelcome() {
           }}
         >
           <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-            Step 1 of 5
+            Step 1 of 5 · Personal details
           </Text>
-          <Text style={{ fontSize: 14, color: colors.muted }}>20% Complete</Text>
+          <Text style={{ fontSize: 13, color: "#667085", fontWeight: "700" }}>20% Complete</Text>
         </View>
         <View
           style={{
             height: 6,
-            backgroundColor: colors.surface,
+            backgroundColor: "#EAECF0",
             borderRadius: 3,
             overflow: "hidden",
           }}
@@ -144,17 +150,17 @@ export default function OnboardingWelcome() {
       </View>
 
       {/* Header */}
-      <View style={{ marginBottom: 24 }}>
-        <Text style={{ fontSize: 28, fontWeight: "bold", color: colors.foreground, marginBottom: 8 }}>
-          Welcome to Elite Bridge
+      <View style={{ marginBottom: 18 }}>
+        <Text style={{ fontSize: 22, fontWeight: "900", color: "#101828", marginBottom: 7 }}>
+          Basic information
         </Text>
-        <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20 }}>
-          Let's get you set up to start working. We'll collect some basic information to complete your profile.
+        <Text style={{ fontSize: 14, color: "#667085", lineHeight: 21 }}>
+          Use your legal name and current contact information. You can review everything before submitting.
         </Text>
       </View>
 
       {/* Form */}
-      <View style={{ marginBottom: 24 }}>
+      <View style={{ marginBottom: 20, backgroundColor: "#FFFFFF", borderRadius: 22, padding: 18, borderWidth: 1, borderColor: "#EAECF0" }}>
         {renderInput(
           "Full Name",
           fullName,
@@ -221,32 +227,33 @@ export default function OnboardingWelcome() {
           onPress={handleNext}
           style={{
             backgroundColor: "#1B5E3F",
-            borderRadius: 8,
-            paddingVertical: 14,
+            borderRadius: 14,
+            paddingVertical: 15,
             alignItems: "center",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-            Next
+          <Text style={{ fontSize: 16, fontWeight: "900", color: "#fff" }}>
+            Continue
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleSkip}
           style={{
-            backgroundColor: colors.surface,
-            borderRadius: 8,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 14,
             paddingVertical: 14,
             alignItems: "center",
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: "#D0D5DD",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground }}>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: "#344054" }}>
             Skip for Now
           </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

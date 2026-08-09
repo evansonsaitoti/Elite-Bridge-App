@@ -1,35 +1,37 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Redirect } from "expo-router";
-import { useAuth } from "@/hooks/use-auth";
+import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
+
 import { useColors } from "@/hooks/use-colors";
 
-/** Root role-based routing for the legacy auth context. */
 export default function RootIndex() {
-  const { user, loading, isAuthenticated } = useAuth();
   const colors = useColors();
+  const [destination, setDestination] = useState<"login" | "staff" | null>(null);
 
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}>
-        <ActivityIndicator size="large" color={colors.primary} />
-      </View>
-    );
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem("elitebridge-session")
+      .then((stored) => {
+        if (!active) return;
+        if (!stored) {
+          setDestination("login");
+          return;
+        }
+        try {
+          const session = JSON.parse(stored) as { role?: string };
+          setDestination(session.role === "staff" ? "staff" : "login");
+        } catch {
+          setDestination("login");
+        }
+      })
+      .catch(() => active && setDestination("login"));
+    return () => { active = false; };
+  }, []);
+
+  if (!destination) {
+    return <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
   }
 
-  if (!isAuthenticated) {
-    return <Redirect href="/(auth)/login" />;
-  }
-
-  const role = user?.role || "user";
-  const onboardingCompleted = user?.onboardingCompleted || false;
-
-  if (role === "admin") {
-    return <Redirect href="/(admin)/home" />;
-  }
-
-  if (!onboardingCompleted) {
-    return <Redirect href="/(onboarding)/welcome" />;
-  }
-
-  return <Redirect href="/(staff)/home" />;
+  return <Redirect href={destination === "staff" ? "/(staff)/home" : "/(auth)/login"} />;
 }
