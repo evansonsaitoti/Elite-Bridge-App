@@ -27,6 +27,33 @@ function greeting() {
   return "Good evening";
 }
 
+function hoursUntil(value: string) {
+  return (new Date(value).getTime() - Date.now()) / 3_600_000;
+}
+
+function getCareRadarScore(shift: SharedShift, pendingApplications: number, openCallouts: number) {
+  if (shift.status === "assigned") {
+    return { score: 18, label: "Covered", reason: "Assigned shift. Monitor EVV and clock-in status." };
+  }
+  const startsIn = hoursUntil(shift.startTime);
+  let score = shift.urgency === "urgent" ? 62 : 38;
+  if (startsIn <= 4) score += 25;
+  else if (startsIn <= 12) score += 16;
+  else if (startsIn <= 24) score += 8;
+  if (openCallouts > 0) score += 12;
+  if (pendingApplications > 0) score -= 10;
+  const capped = Math.max(0, Math.min(99, Math.round(score)));
+  const label = capped >= 80 ? "Critical" : capped >= 60 ? "High" : capped >= 35 ? "Watch" : "Stable";
+  const reason = pendingApplications > 0
+    ? "Applications are waiting; approve one before the shift becomes a coverage emergency."
+    : startsIn <= 4
+      ? "Shift starts soon and is still open. Launch priority outreach now."
+      : shift.urgency === "urgent"
+        ? "Urgent open shift. Care Radar should rank available caregivers."
+        : "Open shift. Keep monitoring caregiver responses.";
+  return { score: capped, label, reason };
+}
+
 const demoShift: SharedShift = {
   id: 8001,
   employerId: 1,
@@ -170,6 +197,10 @@ export default function EmployerHome() {
   const pendingApplications = applications.filter((item) => item.status === "pending");
   const openCallouts = callouts.filter((item) => item.status === "open");
   const urgentOpen = openShifts.filter((item) => item.urgency === "urgent");
+  const careRadarBoard = openShifts
+    .map((shift) => ({ shift, radar: getCareRadarScore(shift, pendingApplications.length, openCallouts.length) }))
+    .sort((a, b) => b.radar.score - a.radar.score)
+    .slice(0, 3);
 
   const nextShifts = useMemo(
     () => shifts
@@ -218,6 +249,27 @@ export default function EmployerHome() {
 
         <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Operations priority</Text><TouchableOpacity onPress={() => router.push("/operations")}><Text style={styles.sectionLink}>Operations</Text></TouchableOpacity></View>
         <View style={styles.aiCard}><Text style={styles.aiEyebrow}>{priority.eyebrow}</Text><Text style={styles.aiTitle}>{priority.title}</Text><Text style={styles.aiBody}>{priority.body}</Text><TouchableOpacity style={styles.aiButton} onPress={() => router.push(priority.route)}><Text style={styles.aiButtonText}>{priority.action}</Text></TouchableOpacity></View>
+
+        <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Care Radar</Text><TouchableOpacity onPress={() => router.push("/coverage")}><Text style={styles.sectionLink}>Open Copilot</Text></TouchableOpacity></View>
+        <View style={{ backgroundColor: "#101828", borderRadius: 20, padding: 16, marginBottom: 24 }}>
+          <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }}>PREDICTIVE COVERAGE RISK</Text>
+          <Text style={{ color: "#FFFFFF", fontSize: 19, fontWeight: "900", marginTop: 6 }}>Stop missed visits before they happen.</Text>
+          {careRadarBoard.length === 0 ? (
+            <Text style={{ color: "#D0D5DD", fontSize: 12, lineHeight: 18, marginTop: 8 }}>No open shifts need rescue right now. Assigned visits should be monitored through EVV clock-in status.</Text>
+          ) : careRadarBoard.map(({ shift, radar }) => (
+            <TouchableOpacity key={shift.id} onPress={() => router.push("/coverage")} style={{ marginTop: 12, borderRadius: 14, backgroundColor: "#1D2939", padding: 13, flexDirection: "row", gap: 12, alignItems: "center" }}>
+              <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: radar.score >= 80 ? "#FEE4E2" : radar.score >= 60 ? "#FFF6E6" : "#EAF7EF", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: radar.score >= 80 ? "#B42318" : radar.score >= 60 ? "#B54708" : "#087443", fontSize: 18, fontWeight: "900" }}>{radar.score}</Text>
+                <Text style={{ color: "#667085", fontSize: 8, fontWeight: "900" }}>{radar.label}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "900" }}>{shift.serviceType}{shift.careRecipientName ? ` · ${shift.careRecipientName}` : ""}</Text>
+                <Text style={{ color: "#D0D5DD", fontSize: 11, lineHeight: 16, marginTop: 4 }}>{formatTime(shift.startTime)} · {shift.location.city}, {shift.location.state}</Text>
+                <Text style={{ color: "#98A2B3", fontSize: 11, lineHeight: 16, marginTop: 4 }}>{radar.reason}</Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Next shifts</Text><TouchableOpacity onPress={() => router.push("/schedule")}><Text style={styles.sectionLink}>Schedule</Text></TouchableOpacity></View>
         <View style={styles.scheduleCard}>

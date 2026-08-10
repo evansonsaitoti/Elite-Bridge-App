@@ -80,6 +80,34 @@ function getStatusLabel(entry: TimeEntry): string {
   }
 }
 
+function minutesUntil(value: string): number {
+  return Math.round((new Date(value).getTime() - Date.now()) / 60000);
+}
+
+function getClockWindowStatus(shift: ScheduledShift): { label: string; tone: "good" | "warn" | "risk"; detail: string } {
+  const minutesToStart = minutesUntil(shift.scheduledStart);
+  const minutesToEnd = minutesUntil(shift.scheduledEnd);
+  if (minutesToStart > 30) {
+    return { label: "Early", tone: "warn", detail: `Shift starts in ${minutesToStart} min. Clock in closer to start time unless approved.` };
+  }
+  if (minutesToEnd < 0) {
+    return { label: "Past shift", tone: "risk", detail: "This scheduled visit has ended. Add a note if this is a correction." };
+  }
+  if (minutesToStart < -15) {
+    return { label: "Late start", tone: "risk", detail: `${Math.abs(minutesToStart)} min after scheduled start. Agency may review this EVV record.` };
+  }
+  return { label: "On time", tone: "good", detail: "You are inside the expected clock-in window." };
+}
+
+function getEvvScore(entry: TimeEntry | null, locationMessage: string, notes: string): number {
+  let score = entry ? 72 : 58;
+  if (entry?.clockInLocation) score += 10;
+  if (entry?.clockOutLocation) score += 10;
+  if (notes.trim()) score += 8;
+  if (locationMessage.toLowerCase().includes("verified")) score += 8;
+  return Math.min(100, score);
+}
+
 export default function StaffClock() {
   const colors = useColors();
   const { user } = useAuth();
@@ -154,6 +182,15 @@ export default function StaffClock() {
   const selectedShift =
     shifts.find((shift) => shift.id === selectedShiftId) ?? shifts[0];
   const openBreak = activeEntry ? hasOpenBreak(activeEntry) : false;
+  const clockWindow = getClockWindowStatus(selectedShift);
+  const evvScore = getEvvScore(activeEntry, locationMessage, notes);
+  const evvChecklist = [
+    { label: "Caregiver identity", done: Boolean(resolvedStaffKey) },
+    { label: "Service selected", done: Boolean(activeEntry || selectedShift) },
+    { label: "Start time captured", done: Boolean(activeEntry?.clockInAt) },
+    { label: "Location captured", done: Boolean(activeEntry?.clockInLocation || locationMessage.toLowerCase().includes("verified")) },
+    { label: "Visit notes ready", done: Boolean(notes.trim()) },
+  ];
   const recentEntries = entries
     .filter((entry) => entry.staffKey === resolvedStaffKey && entry.status !== "in_progress")
     .sort(
@@ -463,6 +500,52 @@ export default function StaffClock() {
               )}
             </TouchableOpacity>
           )}
+        </View>
+
+        <View
+          style={{
+            borderRadius: 18,
+            padding: 16,
+            backgroundColor: colors.surface,
+            borderWidth: 1,
+            borderColor: colors.border,
+            marginBottom: 16,
+          }}
+        >
+          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+            <View style={{ flex: 1 }}>
+              <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }}>
+                EVV INTELLIGENCE
+              </Text>
+              <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900", marginTop: 5 }}>
+                {activeEntry ? "Visit verification in progress" : "Ready to verify this visit"}
+              </Text>
+              <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>
+                Elite checks time, location, caregiver identity, service and notes before the timesheet reaches the agency.
+              </Text>
+            </View>
+            <View style={{ width: 62, height: 62, borderRadius: 20, backgroundColor: evvScore >= 85 ? "#EAF7EF" : "#FFF6E6", alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: evvScore >= 85 ? "#087443" : "#B54708", fontSize: 19, fontWeight: "900" }}>{evvScore}</Text>
+              <Text style={{ color: "#667085", fontSize: 9, fontWeight: "800" }}>EVV</Text>
+            </View>
+          </View>
+
+          <View style={{ marginTop: 13, borderRadius: 13, padding: 12, backgroundColor: clockWindow.tone === "good" ? "#EAF7EF" : clockWindow.tone === "warn" ? "#FFF6E6" : "#FEE4E2" }}>
+            <Text style={{ color: clockWindow.tone === "good" ? "#087443" : clockWindow.tone === "warn" ? "#B54708" : "#B42318", fontSize: 12, fontWeight: "900" }}>
+              {clockWindow.label}
+            </Text>
+            <Text style={{ color: "#475467", fontSize: 11, lineHeight: 16, marginTop: 3 }}>{clockWindow.detail}</Text>
+          </View>
+
+          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+            {evvChecklist.map((item) => (
+              <View key={item.label} style={{ borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: item.done ? "#ECFDF3" : "#F2F4F7" }}>
+                <Text style={{ color: item.done ? "#067647" : "#667085", fontSize: 11, fontWeight: "800" }}>
+                  {item.done ? "✓ " : "○ "}{item.label}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         <View
