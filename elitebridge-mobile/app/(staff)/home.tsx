@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { defaultCaregiverPreferences, getCaregiverPreferences, type CaregiverPreferences } from "@/lib/caregiver-preferences";
 import {
   applyToShift,
   callOutOfShift,
@@ -89,8 +90,11 @@ export default function StaffHome() {
   const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting to secure agency sync…" : "Secure local preview");
   const [demoMode, setDemoMode] = useState(false);
+  const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
 
   const refreshFeed = async () => {
+    const savedPreferences = await getCaregiverPreferences();
+    setPreferences(savedPreferences);
     const stored = await AsyncStorage.getItem("elitebridge-session");
     const isDemo = stored ? Boolean(JSON.parse(stored)?.demo) : false;
     if (isDemo || !sharedApiConfigured) {
@@ -139,6 +143,7 @@ export default function StaffHome() {
 
   const approvedApplications = applications.filter((item) => item.status === "approved");
   const openOffers = offers.filter((item) => item.status === "offered");
+  const matchStrength = Math.min(98, 68 + preferences.availability.length * 4 + preferences.preferredServices.length * 3 + (preferences.instantOffers ? 8 : 0));
 
   const apply = async (shift: CaregiverShift) => {
     if (shift.applicationStatus) return;
@@ -257,6 +262,23 @@ export default function StaffHome() {
       <View style={{ flexDirection: "row", marginBottom: 20 }}>
         {renderStatCard("Upcoming", approvedApplications.length, "#27AE60")}
         {renderStatCard("Priority offers", openOffers.length, "#B54708")}
+      </View>
+
+      <View style={{ backgroundColor: "#0A4A35", borderRadius: 18, padding: 16, marginBottom: 20 }}>
+        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }}>CARE MATCH PASSPORT</Text>
+            <Text style={{ color: "#FFFFFF", fontSize: 19, lineHeight: 25, fontWeight: "900", marginTop: 6 }}>Your profile is ready for better-fit shifts.</Text>
+            <Text style={{ color: "#D9E9E2", fontSize: 12, lineHeight: 18, marginTop: 6 }}>
+              {preferences.availability.slice(0, 2).join(" + ") || "Availability"} · {preferences.preferredServices.slice(0, 2).join(" + ") || "Preferred care"} · {preferences.maxDistanceMiles} mi
+            </Text>
+          </View>
+          <View style={{ width: 62, height: 62, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
+            <Text style={{ color: "#0A4A35", fontSize: 19, fontWeight: "900" }}>{matchStrength}</Text>
+            <Text style={{ color: "#667085", fontSize: 9, fontWeight: "800" }}>MATCH</Text>
+          </View>
+        </View>
+        <Text style={{ color: "#BFE4D4", fontSize: 11, lineHeight: 16, marginTop: 10 }}>Update this in Account. In live mode, this becomes the caregiver intelligence layer for offers, continuity and replacement coverage.</Text>
       </View>
 
       {openOffers.length > 0 ? (

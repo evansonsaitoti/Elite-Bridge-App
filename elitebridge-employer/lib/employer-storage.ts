@@ -19,6 +19,19 @@ export type AgencyProfile = {
 const SESSION_KEY = "elitebridge-employer-session-v1";
 const AGENCY_KEY = "elitebridge-employer-agency-v1";
 const COMPLIANCE_KEY = "elitebridge-employer-compliance-v1";
+const LOCAL_SHIFTS_KEY = "elitebridge-employer-local-shifts-v1";
+
+export type EmployerScheduleShift = {
+  id: string;
+  client: string;
+  service: string;
+  time: string;
+  location: string;
+  status: "Covered" | "Open" | "At risk";
+  caregiver?: string;
+  hourlyRate?: number;
+  createdAt: string;
+};
 
 export const DEMO_EMPLOYER = {
   email: "employer@elitebridge.com",
@@ -70,4 +83,22 @@ export async function getComplianceState(): Promise<Record<string, "open" | "rev
 
 export async function saveComplianceState(state: Record<string, "open" | "reviewing" | "resolved">): Promise<void> {
   await AsyncStorage.setItem(COMPLIANCE_KEY, JSON.stringify(state));
+}
+
+export async function getLocalScheduleShifts(): Promise<EmployerScheduleShift[]> {
+  const raw = await AsyncStorage.getItem(LOCAL_SHIFTS_KEY);
+  if (!raw) return [];
+  try {
+    const shifts = JSON.parse(raw) as EmployerScheduleShift[];
+    return Array.isArray(shifts) ? shifts : [];
+  } catch {
+    return [];
+  }
+}
+
+export async function saveLocalScheduleShift(shift: EmployerScheduleShift): Promise<EmployerScheduleShift[]> {
+  const current = await getLocalScheduleShifts();
+  const next = [shift, ...current.filter((item) => item.id !== shift.id)];
+  await AsyncStorage.setItem(LOCAL_SHIFTS_KEY, JSON.stringify(next));
+  return next;
 }

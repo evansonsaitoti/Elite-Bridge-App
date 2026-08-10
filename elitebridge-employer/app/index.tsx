@@ -3,7 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, Toucha
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { getEmployerSession } from "../lib/employer-storage";
+import { getEmployerSession, getLocalScheduleShifts, type EmployerScheduleShift } from "../lib/employer-storage";
 import {
   fetchEmployerApplications,
   fetchEmployerCallouts,
@@ -101,6 +101,28 @@ const demoCallout: EmployerCallout = {
   offers_accepted: 1,
 };
 
+function localShiftToShared(shift: EmployerScheduleShift): SharedShift {
+  const [city = "Lowell", state = "MA"] = shift.location.split(",").map((item) => item.trim());
+  const urgent = shift.status === "At risk";
+  return {
+    id: Number(shift.id) || Date.now(),
+    employerId: 1,
+    employerName: "Elite Bridge Local Agency",
+    title: `${shift.service} · ${shift.client}`,
+    serviceType: shift.service,
+    caregiverType: "Caregiver",
+    careRecipientName: shift.client,
+    startTime: shift.createdAt,
+    endTime: new Date(new Date(shift.createdAt).getTime() + 1000 * 60 * 60 * 4).toISOString(),
+    location: { type: "client_home", address: shift.location, city, state, zipCode: "01852" },
+    hourlyRate: shift.hourlyRate || 35,
+    requirements: [],
+    responsibilities: "Local preview shift created in Schedule.",
+    urgency: urgent ? "urgent" : "standard",
+    status: shift.status === "Covered" ? "assigned" : "open",
+  };
+}
+
 export default function EmployerHome() {
   const router = useRouter();
   const [shifts, setShifts] = useState<SharedShift[]>([]);
@@ -114,7 +136,8 @@ export default function EmployerHome() {
     const session = await getEmployerSession();
     const isDemo = session?.email.endsWith("@elitebridge.test");
     if (isDemo || !sharedApiConfigured) {
-      setShifts([demoShift, demoAssignedShift]);
+      const local = await getLocalScheduleShifts();
+      setShifts(local.length > 0 ? local.map(localShiftToShared) : [demoShift, demoAssignedShift]);
       setApplications([demoApplication]);
       setCallouts([demoCallout]);
       setLoading(false);

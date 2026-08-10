@@ -3,18 +3,10 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, Touchab
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { getLocalScheduleShifts, saveLocalScheduleShift, type EmployerScheduleShift } from "../lib/employer-storage";
 import { createEmployerShift, fetchEmployerShifts, sharedApiConfigured, type SharedShift } from "../lib/shared-api";
 
-type Shift = {
-  id: string;
-  client: string;
-  service: string;
-  time: string;
-  location: string;
-  status: "Covered" | "Open" | "At risk";
-  caregiver?: string;
-  remoteId?: number;
-};
+type Shift = EmployerScheduleShift & { remoteId?: number };
 
 const emptyDraft = {
   client: "",
@@ -41,7 +33,7 @@ function formatRemoteShift(shift: SharedShift): Shift {
   const startTime = Number.isNaN(start.getTime()) ? "" : start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const endTime = Number.isNaN(end.getTime()) ? "" : end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
   const status: Shift["status"] = shift.status === "assigned" ? "Covered" : shift.urgency === "urgent" ? "At risk" : "Open";
-  return { id: `remote-${shift.id}`, remoteId: shift.id, client: shift.careRecipientName || "Client", service: shift.serviceType, time: `${date} · ${startTime}–${endTime}`, location: `${shift.location.city}, ${shift.location.state}`, status };
+  return { id: `remote-${shift.id}`, remoteId: shift.id, client: shift.careRecipientName || "Client", service: shift.serviceType, time: `${date} · ${startTime}–${endTime}`, location: `${shift.location.city}, ${shift.location.state}`, status, hourlyRate: shift.hourlyRate, createdAt: shift.startTime };
 }
 
 export default function ScheduleScreen() {
@@ -53,7 +45,12 @@ export default function ScheduleScreen() {
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting secure shared schedule…" : "Secure local preview");
 
   const loadShifts = async () => {
-    if (!sharedApiConfigured) return;
+    if (!sharedApiConfigured) {
+      const local = await getLocalScheduleShifts();
+      setShifts(local);
+      setSyncMessage(local.length > 0 ? "Saved local preview schedule" : "Secure local preview");
+      return;
+    }
     try {
       setRefreshing(true);
       const remote = await fetchEmployerShifts();
@@ -79,8 +76,19 @@ export default function ScheduleScreen() {
         setShifts((current) => [formatRemoteShift(created), ...current]);
         setSyncMessage("Posted to the caregiver shift feed");
       } else {
-        const local: Shift = { id: String(Date.now()), client: draft.client, service: draft.service, time: `${draft.startDate} · ${draft.startTime}–${draft.endTime}`, location: `${draft.city}, ${draft.state}`, status: draft.urgency === "urgent" ? "At risk" : "Open" };
-        setShifts((current) => [local, ...current]);
+        const local: Shift = {
+          id: String(Date.now()),
+          client: draft.client,
+          service: draft.service,
+          time: `${draft.startDate} · ${draft.startTime}–${draft.endTime}`,
+          location: `${draft.city}, ${draft.state}`,
+          status: draft.urgency === "urgent" ? "At risk" : "Open",
+          hourlyRate: rate,
+          createdAt: new Date().toISOString(),
+        };
+        const saved = await saveLocalScheduleShift(local);
+        setShifts(saved);
+        setSyncMessage("Saved local preview schedule");
       }
       setDraft(emptyDraft);
       setShowForm(false);

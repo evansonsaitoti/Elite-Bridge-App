@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { getLocalScheduleShifts, type EmployerScheduleShift } from "../lib/employer-storage";
 import {
   fetchEmployerCallouts,
   fetchEmployerShifts,
@@ -29,6 +30,27 @@ function readableReason(reason: string) {
   return reason.replace(/_/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+function localShiftToShared(shift: EmployerScheduleShift): SharedShift {
+  const [city = "Lowell", state = "MA"] = shift.location.split(",").map((item) => item.trim());
+  return {
+    id: Number(shift.id) || Date.now(),
+    employerId: 1,
+    employerName: "Elite Bridge Local Agency",
+    title: `${shift.service} · ${shift.client}`,
+    serviceType: shift.service,
+    caregiverType: "Caregiver",
+    careRecipientName: shift.client,
+    startTime: shift.createdAt,
+    endTime: new Date(new Date(shift.createdAt).getTime() + 1000 * 60 * 60 * 4).toISOString(),
+    location: { type: "client_home", address: shift.location, city, state, zipCode: "01852" },
+    hourlyRate: shift.hourlyRate || 35,
+    requirements: [],
+    responsibilities: "Local preview shift created in Schedule.",
+    urgency: shift.status === "At risk" ? "urgent" : "standard",
+    status: shift.status === "Covered" ? "assigned" : "open",
+  };
+}
+
 export default function CoverageCopilotScreen() {
   const router = useRouter();
   const [callouts, setCallouts] = useState<EmployerCallout[]>([]);
@@ -41,8 +63,11 @@ export default function CoverageCopilotScreen() {
 
   const refresh = async () => {
     if (!sharedApiConfigured) {
+      const local = await getLocalScheduleShifts();
+      setCallouts([]);
+      setShifts(local.map(localShiftToShared));
       setLoading(false);
-      setSyncError("The secure shared service is not configured for this build.");
+      setSyncError(null);
       return;
     }
     try {
