@@ -11,7 +11,8 @@ const STAFF_TABS = [
   { label: "Work", route: "/(staff)/home", match: "/home", icon: "briefcase.fill" },
   { label: "Match", route: "/(staff)/match", match: "/match", icon: "sparkles" },
   { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
-  { label: "Account", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
+  { label: "Chat", route: "/(staff)/chat", match: "/chat", icon: "message.fill" },
+  { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
 ] as const;
 
 export default function StaffLayout() {
@@ -42,8 +43,10 @@ export default function StaffLayout() {
 
   if (!ready) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
+  const needsTopInset = pathname.includes("/home");
+
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <View style={{ flex: 1 }}><Slot /></View>
+    <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
     <View style={{
       flexDirection: "row",
       minHeight: 76 + Math.max(insets.bottom, 8),

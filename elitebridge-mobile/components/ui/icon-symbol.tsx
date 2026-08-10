@@ -21,6 +21,7 @@ const MAPPING = {
   "sparkles": "auto-awesome",
   "person.fill": "person",
   "person.crop.circle.fill": "account-circle",
+  "message.fill": "chat",
   "paperplane.fill": "send",
   "dollarsign.circle.fill": "paid",
   "chevron.left.forwardslash.chevron.right": "code",

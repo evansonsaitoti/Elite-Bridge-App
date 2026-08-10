@@ -9,6 +9,7 @@ const TAB_ICONS: Record<string, string> = {
   index: "⌂",
   schedule: "◫",
   operations: "◎",
+  chat: "◉",
   "ask-elite": "✦",
 };
 
@@ -93,6 +94,7 @@ export default function RootLayout() {
         <Tabs.Screen name="index" options={{ title: "Home", tabBarIcon: ({ focused, color }) => <TabIcon route="index" focused={focused} color={color} /> }} />
         <Tabs.Screen name="schedule" options={{ title: "Schedule", tabBarIcon: ({ focused, color }) => <TabIcon route="schedule" focused={focused} color={color} /> }} />
         <Tabs.Screen name="operations" options={{ title: "Ops", tabBarIcon: ({ focused, color }) => <TabIcon route="operations" focused={focused} color={color} /> }} />
+        <Tabs.Screen name="chat" options={{ title: "Chat", tabBarIcon: ({ focused, color }) => <TabIcon route="chat" focused={focused} color={color} /> }} />
         <Tabs.Screen name="ask-elite" options={{ title: "Elite", tabBarIcon: ({ focused, color }) => <TabIcon route="ask-elite" focused={focused} color={color} /> }} />
         <Tabs.Screen name="clients" options={{ href: null }} />
         <Tabs.Screen name="workforce" options={{ href: null }} />
