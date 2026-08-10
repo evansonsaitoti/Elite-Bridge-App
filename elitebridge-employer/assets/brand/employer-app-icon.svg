@@ -1,25 +1,22 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#FFFDF8"/>
-      <stop offset="1" stop-color="#F3EEE3"/>
+      <stop offset="1" stop-color="#EEF6F1"/>
     </linearGradient>
     <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0B5C43"/>
       <stop offset="1" stop-color="#063B2E"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E4B54E"/>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E8C36A"/>
       <stop offset="1" stop-color="#B97A16"/>
     </linearGradient>
   </defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-  <!-- Bridge: the shared Elite Bridge brand -->
-  <path fill="url(#green)" d="M145 702V574l128-90 107-75 132-92 132 92 107 75 128 90v128H749V596l-105-74v180H380V522l-105 74v106H145zm307 0V477l60-42 60 42v225H452z"/>
-  <path fill="#083F31" d="M205 702c43-156 154-248 307-248s264 92 307 248H700c-36-93-101-140-188-140s-152 47-188 140H205z"/>
-  <!-- Briefcase: agency operations, staffing and management -->
-  <path fill="url(#gold)" d="M340 276h344c25 0 46 21 46 46v151c0 25-21 46-46 46H340c-25 0-46-21-46-46V322c0-25 21-46 46-46z"/>
-  <path fill="none" stroke="#B97A16" stroke-width="34" stroke-linecap="round" d="M432 276v-42c0-24 19-43 43-43h74c24 0 43 19 43 43v42"/>
-  <path fill="#FFFDF8" d="M294 384h436v44H294z" opacity=".92"/>
-  <rect x="472" y="362" width="80" height="88" rx="14" fill="#0B5C43"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="360" fill="#FFFFFF" opacity=".72"/>
+  <path fill="url(#green)" d="M178 704 512 244l334 460H684L512 466 340 704H178Z"/>
+  <path fill="#0A4A35" d="M364 704c36-91 89-155 148-155s112 64 148 155H548c-13-30-24-45-36-45s-23 15-36 45H364Z"/>
+  <rect x="418" y="646" width="188" height="126" rx="30" fill="url(#gold)"/>
+  <path d="M452 646v-36c0-30 24-54 54-54h12c30 0 54 24 54 54v36" fill="none" stroke="#B97A16" stroke-width="34" stroke-linecap="round"/>
 </svg>

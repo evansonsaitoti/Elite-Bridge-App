@@ -1,23 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#FFFDF8"/>
-      <stop offset="1" stop-color="#F3EEE3"/>
-    </linearGradient>
-    <linearGradient id="green" x1="0" y1="0" x2="1" y2="1">
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
       <stop offset="0" stop-color="#0B5C43"/>
-      <stop offset="1" stop-color="#063B2E"/>
+      <stop offset="1" stop-color="#032C23"/>
     </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#E4B54E"/>
-      <stop offset="1" stop-color="#B97A16"/>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#D8E9E2"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F2D78C"/>
+      <stop offset="1" stop-color="#C58A24"/>
     </linearGradient>
   </defs>
-  <rect width="1024" height="1024" fill="url(#bg)"/>
-  <!-- Bridge: connection, continuity and dependable access to care -->
-  <path fill="url(#green)" d="M158 690V565l126-89 104-72 124-86 124 86 104 72 126 89v125H738V585l-102-73v178H388V512l-102 73v105H158zm300 0V478l54-38 54 38v212H458z"/>
-  <path fill="#083F31" d="M218 690c42-150 150-238 294-238s252 88 294 238H690c-35-89-98-134-178-134s-143 45-178 134H218z"/>
-  <!-- Upward path/person: caregiver growth and assignment readiness -->
-  <path fill="url(#gold)" d="M458 690c0-86 4-146 28-201l-57 52-47-51 130-123 130 123-47 51-57-52c24 55 28 115 28 201H458z"/>
-  <circle cx="512" cy="284" r="57" fill="url(#gold)"/>
+  <rect width="1024" height="1024" rx="220" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="358" fill="#FFFFFF" opacity=".06"/>
+  <path fill="url(#mark)" d="M178 704 512 244l334 460H684L512 466 340 704H178Z"/>
+  <path fill="#FFFFFF" opacity=".88" d="M364 704c36-91 89-155 148-155s112 64 148 155H548c-13-30-24-45-36-45s-23 15-36 45H364Z"/>
+  <path fill="url(#gold)" d="M512 758c-75-50-140-101-140-177 0-51 39-91 90-91 27 0 45 10 50 18 5-8 23-18 50-18 51 0 90 40 90 91 0 76-65 127-140 177Z"/>
 </svg>

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
+const appJsonPath = fileURLToPath(new URL("../app.json", import.meta.url));
 const source = fileURLToPath(new URL("../assets/brand/caregiver-app-icon.svg", import.meta.url));
 const expoIcon = fileURLToPath(new URL("../assets/images/icon.png", import.meta.url));
 const brandLogo = fileURLToPath(new URL("../assets/images/elitebridge-logo.png", import.meta.url));
@@ -10,7 +11,12 @@ const expoDir = fileURLToPath(new URL("../assets/images/", import.meta.url));
 const nativeDir = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Images.xcassets/AppIcon.appiconset/", import.meta.url));
 const xcodeProject = fileURLToPath(new URL("../ios/EliteBridgeAdmin.xcodeproj/project.pbxproj", import.meta.url));
 const infoPlist = fileURLToPath(new URL("../ios/EliteBridgeAdmin/Info.plist", import.meta.url));
-const buildNumber = "20";
+const appJson = JSON.parse(await readFile(appJsonPath, "utf8"));
+const buildNumber = appJson.expo?.ios?.buildNumber;
+
+if (!buildNumber) {
+  throw new Error("Could not read expo.ios.buildNumber from app.json.");
+}
 
 await mkdir(expoDir, { recursive: true });
 await mkdir(nativeDir, { recursive: true });
