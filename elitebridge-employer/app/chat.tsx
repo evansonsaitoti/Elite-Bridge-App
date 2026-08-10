@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useEffect, useMemo, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -11,25 +12,43 @@ type Message = {
 };
 
 const quickActions = ["Broadcast open shift", "Ask for ETA", "Send clock reminder", "Check client update"];
+const EMPLOYER_CHAT_KEY = "elitebridge-employer-chat-v1";
+const initialMessages: Message[] = [
+  {
+    id: 1,
+    from: "caregiver",
+    sender: "Caregiver channel",
+    body: "Chat centralizes caregiver updates, shift questions, clock issues and agency broadcasts.",
+    time: "Now",
+  },
+  {
+    id: 2,
+    from: "agency",
+    sender: "Elite Bridge Employer",
+    body: "Use quick actions to send structured messages caregivers can respond to from their app.",
+    time: "Now",
+  },
+];
 
 export default function EmployerChat() {
   const [draft, setDraft] = useState("");
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      from: "caregiver",
-      sender: "Caregiver channel",
-      body: "Chat centralizes caregiver updates, shift questions, clock issues and agency broadcasts.",
-      time: "Now",
-    },
-    {
-      id: 2,
-      from: "agency",
-      sender: "Elite Bridge Employer",
-      body: "Use quick actions to send structured messages caregivers can respond to from their app.",
-      time: "Now",
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
+
+  useEffect(() => {
+    AsyncStorage.getItem(EMPLOYER_CHAT_KEY).then((raw) => {
+      if (!raw) return;
+      try {
+        const saved = JSON.parse(raw) as Message[];
+        if (Array.isArray(saved) && saved.length > 0) setMessages(saved);
+      } catch {
+        setMessages(initialMessages);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    void AsyncStorage.setItem(EMPLOYER_CHAT_KEY, JSON.stringify(messages));
+  }, [messages]);
 
   const canSend = draft.trim().length > 0;
   const openThreads = useMemo(() => messages.filter((message) => message.from === "caregiver").length, [messages]);
@@ -54,7 +73,7 @@ export default function EmployerChat() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.brandRow}>
             <View>
               <Text style={styles.brand}>ELITE BRIDGE</Text>
