@@ -9,6 +9,7 @@ import { useColors } from "@/hooks/use-colors";
 
 const STAFF_TABS = [
   { label: "Work", route: "/(staff)/home", match: "/home", icon: "house.fill" },
+  { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
   { label: "Account", route: "/(staff)/profile", match: "/profile", icon: "person.fill" },
 ] as const;
 

@@ -1,5 +1,6 @@
 import * as Haptics from "expo-haptics";
 import * as Location from "expo-location";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -109,11 +110,12 @@ export default function StaffClock() {
     [],
   );
 
-  const staffKey = (user?.email || user?.openId || `staff-${user?.id ?? "local"}`)
+  const [localSession, setLocalSession] = useState<{ email?: string; name?: string }>({});
+  const resolvedStaffKey = (localSession.email || user?.email || user?.openId || `staff-${user?.id ?? "local"}`)
     .trim()
     .toLowerCase();
-  const staffName = user?.name?.trim() || "Staff Member";
-  const activeEntry = getActiveForStaff(staffKey);
+  const resolvedStaffName = localSession.name || user?.name?.trim() || "Caregiver";
+  const activeEntry = getActiveForStaff(resolvedStaffKey);
 
   const [selectedShiftId, setSelectedShiftId] = useState(shifts[0].id);
   const [notes, setNotes] = useState("");
@@ -133,6 +135,17 @@ export default function StaffClock() {
   }, [activeEntry]);
 
   useEffect(() => {
+    AsyncStorage.getItem("elitebridge-session").then((stored) => {
+      if (!stored) return;
+      try {
+        setLocalSession(JSON.parse(stored) as { email?: string; name?: string });
+      } catch {
+        setLocalSession({});
+      }
+    });
+  }, []);
+
+  useEffect(() => {
     if (activeEntry) {
       setNotes(activeEntry.notes);
     }
@@ -142,7 +155,7 @@ export default function StaffClock() {
     shifts.find((shift) => shift.id === selectedShiftId) ?? shifts[0];
   const openBreak = activeEntry ? hasOpenBreak(activeEntry) : false;
   const recentEntries = entries
-    .filter((entry) => entry.staffKey === staffKey && entry.status !== "in_progress")
+    .filter((entry) => entry.staffKey === resolvedStaffKey && entry.status !== "in_progress")
     .sort(
       (left, right) =>
         new Date(right.clockInAt).getTime() - new Date(left.clockInAt).getTime(),
@@ -177,7 +190,7 @@ export default function StaffClock() {
     setBusy(true);
     try {
       const location = await captureLocation();
-      clockIn(selectedShift, { key: staffKey, name: staffName }, location);
+      clockIn(selectedShift, { key: resolvedStaffKey, name: resolvedStaffName }, location);
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       Alert.alert(
         "Clocked in",

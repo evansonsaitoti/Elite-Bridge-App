@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
@@ -79,6 +80,7 @@ const demoOffer: RescueOffer = {
 
 export default function StaffHome() {
   const colors = useColors();
+  const router = useRouter();
   const [expandedSection, setExpandedSection] = useState<string | null>("shifts");
   const [searchQuery, setSearchQuery] = useState("");
   const [availableShifts, setAvailableShifts] = useState<CaregiverShift[]>([]);
@@ -263,6 +265,20 @@ export default function StaffHome() {
         {renderStatCard("Upcoming", approvedApplications.length, "#27AE60")}
         {renderStatCard("Priority offers", openOffers.length, "#B54708")}
       </View>
+
+      <TouchableOpacity
+        onPress={() => router.push("/(staff)/clock")}
+        style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 16, marginBottom: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+      >
+        <View style={{ flex: 1 }}>
+          <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }}>TIME CLOCK</Text>
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900", marginTop: 5 }}>Clock in or out of today’s visit</Text>
+          <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>Capture time, location, breaks and visit notes for approval.</Text>
+        </View>
+        <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center" }}>
+          <Text style={{ color: "#0A4A35", fontSize: 24, fontWeight: "900" }}>⏰</Text>
+        </View>
+      </TouchableOpacity>
 
       <View style={{ backgroundColor: "#0A4A35", borderRadius: 18, padding: 16, marginBottom: 20 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
