@@ -45,8 +45,8 @@ export default function LoginScreen() {
   const continueDemo = async () => {
     await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
       role: "staff",
-      email: "caregiver@elitebridge.test",
-      name: "Demo Caregiver",
+      email: "appreview-caregiver@elitebridge.test",
+      name: "Caregiver Review Account",
       demo: true,
       signedInAt: new Date().toISOString(),
     }));
@@ -89,7 +89,7 @@ export default function LoginScreen() {
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.demoButton} onPress={continueDemo} disabled={isLoading}>
-              <Text style={styles.demoButtonText}>Continue as demo caregiver</Text>
+              <Text style={styles.demoButtonText}>Continue with review access</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.signupButton} onPress={() => router.push("/(onboarding)/welcome")} disabled={isLoading}>

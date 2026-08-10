@@ -51,12 +51,12 @@ export default function EmployerLogin() {
 
   const continueDemo = async () => {
     await saveEmployerSession({
-      email: "employer@elitebridge.test",
-      name: "Demo Agency Administrator",
+      email: "appreview-employer@elitebridge.test",
+      name: "Agency Review Administrator",
       role: "administrator",
     });
     await saveAgencyProfile({
-      agencyName: "Elite Bridge Demo Agency",
+      agencyName: "Elite Bridge Review Agency",
       agencyType: "Home Care Agency",
       city: "Lowell",
       state: "MA",
@@ -139,7 +139,7 @@ export default function EmployerLogin() {
             </TouchableOpacity>
 
             <TouchableOpacity disabled={busy} onPress={continueDemo} style={styles.demoButton}>
-              <Text style={styles.demoButtonText}>Continue as demo employer</Text>
+              <Text style={styles.demoButtonText}>Continue with review access</Text>
             </TouchableOpacity>
 
             <TouchableOpacity disabled={busy} onPress={startAgencySetup} style={styles.secondary}>

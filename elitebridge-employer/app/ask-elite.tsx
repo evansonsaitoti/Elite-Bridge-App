@@ -32,7 +32,7 @@ export default function AskEliteScreen() {
     if (!value) return Alert.alert("Ask Elite", "Type an operations request first.");
     if (!sharedApiConfigured) {
       setPlan(EMPTY);
-      setError("Secure agency sync is unavailable in this local preview.");
+      setError("Secure agency sync is unavailable.");
       return;
     }
     try {

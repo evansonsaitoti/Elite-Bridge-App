@@ -57,7 +57,7 @@ function getCareRadarScore(shift: SharedShift, pendingApplications: number, open
 const demoShift: SharedShift = {
   id: 8001,
   employerId: 1,
-  employerName: "Elite Bridge Demo Agency",
+  employerName: "Elite Bridge Review Agency",
   title: "Companionship + meal prep · Mrs. A.",
   serviceType: "Companionship + meal prep",
   caregiverType: "HHA / PCA",
@@ -98,9 +98,9 @@ const demoApplication: EmployerApplication = {
   city: "Lowell",
   state: "MA",
   caregiver_user_id: 22,
-  first_name: "Demo",
+  first_name: "Review",
   last_name: "Caregiver",
-  email: "caregiver@elitebridge.test",
+  email: "appreview-caregiver@elitebridge.test",
   rating: "4.9",
   total_hours: "124",
   certifications: ["HHA", "CPR"],
@@ -122,7 +122,7 @@ const demoCallout: EmployerCallout = {
   state: "MA",
   hourly_rate: demoShift.hourlyRate,
   urgency: "urgent",
-  first_name: "Demo",
+  first_name: "Review",
   last_name: "Caregiver",
   offers_sent: 3,
   offers_accepted: 1,
@@ -161,7 +161,7 @@ export default function EmployerHome() {
 
   const refresh = async () => {
     const session = await getEmployerSession();
-    const isDemo = session?.email.endsWith("@elitebridge.test");
+    const isDemo = session?.email.includes("appreview") || session?.email.endsWith("@elitebridge.test");
     if (isDemo || !sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setShifts(local.length > 0 ? local.map(localShiftToShared) : [demoShift, demoAssignedShift]);

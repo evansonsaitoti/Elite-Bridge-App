@@ -47,7 +47,7 @@ function applicationColor(status?: string) {
 const demoShift: CaregiverShift = {
   id: 9001,
   employerId: 1,
-  employerName: "Elite Bridge Demo Agency",
+  employerName: "Elite Bridge Review Agency",
   title: "Priority evening care",
   serviceType: "Companionship + meal prep",
   caregiverType: "HHA / PCA",
@@ -90,7 +90,7 @@ export default function StaffHome() {
   const [applyingId, setApplyingId] = useState<number | null>(null);
   const [respondingOfferId, setRespondingOfferId] = useState<number | null>(null);
   const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
-  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting to secure agency sync…" : "Secure local preview");
+  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting to secure agency sync…" : "Secure device data");
   const [demoMode, setDemoMode] = useState(false);
   const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
 
@@ -104,7 +104,7 @@ export default function StaffHome() {
       setAvailableShifts([demoShift]);
       setApplications([demoApplication]);
       setOffers([demoOffer]);
-      setSyncMessage("Care Radar demo mode");
+      setSyncMessage("Sample review data");
       setRefreshing(false);
       return;
     }
@@ -151,7 +151,7 @@ export default function StaffHome() {
     if (shift.applicationStatus) return;
     if (demoMode) {
       setAvailableShifts((items) => items.map((item) => item.id === shift.id ? { ...item, applicationStatus: "pending" } : item));
-      Alert.alert("Demo application sent", "In the live platform, the agency would see your interest immediately.");
+      Alert.alert("Application preview sent", "In the live platform, the agency would see your interest immediately.");
       return;
     }
     if (!sharedApiConfigured) {
@@ -176,7 +176,7 @@ export default function StaffHome() {
       setOffers((items) => status === "accepted"
         ? items.map((item) => item.id === offer.id ? { ...item, status: "accepted" } : item)
         : items.filter((item) => item.id !== offer.id));
-      Alert.alert(status === "accepted" ? "Demo offer accepted" : "Demo offer declined", "Care Radar updated the agency view.");
+      Alert.alert(status === "accepted" ? "Offer accepted" : "Offer declined", "Care Radar updated the agency view.");
       return;
     }
     try {

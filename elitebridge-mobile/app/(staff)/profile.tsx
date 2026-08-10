@@ -1,13 +1,14 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Linking, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { useColors } from "@/hooks/use-colors";
 import { defaultCaregiverPreferences, getCaregiverPreferences, saveCaregiverPreferences, type CaregiverPreferences } from "@/lib/caregiver-preferences";
 import { clearCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
 type LocalSession = { email?: string; name?: string };
+const SUPPORT_EMAIL = "admin@elitebridge.com";
 
 export default function StaffProfile() {
   const colors = useColors();
@@ -59,6 +60,21 @@ export default function StaffProfile() {
     ]);
   };
 
+  const requestDeletion = () => {
+    const address = encodeURIComponent(SUPPORT_EMAIL);
+    const subject = encodeURIComponent("Elite Bridge account deletion request");
+    const body = encodeURIComponent(
+      `Please delete my Elite Bridge account and associated personal data, subject to legally required record retention.\n\nAccount email: ${session.email || ""}\nName: ${session.name || ""}`,
+    );
+    void Linking.openURL(`mailto:${address}?subject=${subject}&body=${body}`);
+  };
+
+  const openPrivacyPolicy = () => {
+    const address = encodeURIComponent(SUPPORT_EMAIL);
+    const subject = encodeURIComponent("Elite Bridge privacy policy request");
+    void Linking.openURL(`mailto:${address}?subject=${subject}`);
+  };
+
   return (
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18, paddingBottom: 36 }}>
       <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>ELITE BRIDGE CAREGIVER</Text>
@@ -83,7 +99,7 @@ export default function StaffProfile() {
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>
         <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "900" }}>Care Match preferences</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>Tell Elite what work fits you best. These settings are saved on this device and used to personalize the demo shift feed.</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>Tell Elite what work fits you best. These settings are saved on this device and used to personalize the shift feed.</Text>
 
         <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900", marginTop: 14, marginBottom: 8 }}>Availability</Text>
         <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
@@ -137,6 +153,17 @@ export default function StaffProfile() {
       <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
         <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Privacy & location</Text>
         <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Elite Bridge only requests device permissions when a feature needs them. Operational data is exchanged through the authenticated shared service; database connection details are never stored in this app.</Text>
+        <TouchableOpacity onPress={openPrivacyPolicy} style={{ marginTop: 12, borderRadius: 12, backgroundColor: "#EAF4EF", padding: 12, alignItems: "center" }}>
+          <Text style={{ color: "#0A4A35", fontWeight: "900", fontSize: 13 }}>Open privacy policy</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
+        <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Account support</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>You can request full account deletion from inside the app. Elite Bridge will remove account data unless retention is legally required for staffing, payroll, safety or compliance records.</Text>
+        <TouchableOpacity onPress={requestDeletion} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center" }}>
+          <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>Request account deletion</Text>
+        </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={handleLogout} style={{ borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 12, padding: 14, alignItems: "center" }}>

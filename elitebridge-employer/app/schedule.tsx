@@ -42,13 +42,13 @@ export default function ScheduleScreen() {
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
   const [refreshing, setRefreshing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting secure shared schedule…" : "Secure local preview");
+  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting secure shared schedule…" : "Secure device schedule");
 
   const loadShifts = async () => {
     if (!sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setShifts(local);
-      setSyncMessage(local.length > 0 ? "Saved local preview schedule" : "Secure local preview");
+      setSyncMessage(local.length > 0 ? "Saved on this device" : "Secure device schedule");
       return;
     }
     try {
@@ -88,11 +88,11 @@ export default function ScheduleScreen() {
         };
         const saved = await saveLocalScheduleShift(local);
         setShifts(saved);
-        setSyncMessage("Saved local preview schedule");
+        setSyncMessage("Saved on this device");
       }
       setDraft(emptyDraft);
       setShowForm(false);
-      Alert.alert("Shift posted", sharedApiConfigured ? "The shift is now available in Elite Bridge for caregivers." : "The shift was saved in this local preview.");
+      Alert.alert("Shift posted", sharedApiConfigured ? "The shift is now available in Elite Bridge for caregivers." : "The shift was saved on this device.");
     } catch (error) { Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again."); }
   };
 

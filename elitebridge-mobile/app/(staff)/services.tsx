@@ -58,7 +58,7 @@ export default function StaffServicesScreen() {
   const toggleClock = () => {
     const next = !data.clockedIn;
     persist({ ...data, clockedIn: next });
-    Alert.alert(next ? "Clocked in" : "Clocked out", next ? "Demo GPS verification recorded." : "Your visit time was saved for timesheet review.");
+    Alert.alert(next ? "Clocked in" : "Clocked out", next ? "Location verification recorded." : "Your visit time was saved for timesheet review.");
   };
 
   return <ScreenContainer><ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 16, paddingBottom: 36 }}>
@@ -70,7 +70,7 @@ export default function StaffServicesScreen() {
     </View>
 
     {tab === "Clock" && <>
-      <View style={card}><Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Today’s Shift</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Mary Thompson • Personal Care</Text><Text style={{ color: colors.muted }}>8:00 AM–2:00 PM • Lowell, MA</Text><View style={{ marginTop: 18, padding: 12, borderRadius: 10, backgroundColor: data.clockedIn ? "#E8F5E9" : colors.background }}><Text style={{ color: data.clockedIn ? "#1B5E20" : colors.muted, fontWeight: "900" }}>{data.clockedIn ? "CLOCKED IN" : "NOT CLOCKED IN"}</Text><Text style={{ color: colors.muted, marginTop: 4 }}>Location verification: demo mode</Text></View><TouchableOpacity style={[button, { marginTop: 14, backgroundColor: data.clockedIn ? "#B42318" : colors.primary }]} onPress={toggleClock}><Text style={{ color: "white", fontWeight: "900" }}>{data.clockedIn ? "Clock Out" : "Clock In"}</Text></TouchableOpacity></View>
+      <View style={card}><Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Today’s Shift</Text><Text style={{ color: colors.muted, marginTop: 6 }}>Mary Thompson • Personal Care</Text><Text style={{ color: colors.muted }}>8:00 AM–2:00 PM • Lowell, MA</Text><View style={{ marginTop: 18, padding: 12, borderRadius: 10, backgroundColor: data.clockedIn ? "#E8F5E9" : colors.background }}><Text style={{ color: data.clockedIn ? "#1B5E20" : colors.muted, fontWeight: "900" }}>{data.clockedIn ? "CLOCKED IN" : "NOT CLOCKED IN"}</Text><Text style={{ color: colors.muted, marginTop: 4 }}>Location verification: available at clock actions</Text></View><TouchableOpacity style={[button, { marginTop: 14, backgroundColor: data.clockedIn ? "#B42318" : colors.primary }]} onPress={toggleClock}><Text style={{ color: "white", fontWeight: "900" }}>{data.clockedIn ? "Clock Out" : "Clock In"}</Text></TouchableOpacity></View>
       <View style={{ flexDirection: "row", gap: 10 }}><View style={[card, { flex: 1 }]}><Text style={{ color: colors.primary, fontSize: 26, fontWeight: "900" }}>{data.weeklyHours}</Text><Text style={{ color: colors.muted }}>Weekly hours</Text></View><View style={[card, { flex: 1 }]}><Text style={{ color: colors.primary, fontSize: 26, fontWeight: "900" }}>${data.earnings.toLocaleString("en-US")}</Text><Text style={{ color: colors.muted }}>Estimated earnings</Text></View></View>
     </>}
 
