@@ -1,17 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { clearEmployerSession, getEmployerSession, type EmployerSession } from "../lib/employer-storage";
-import { clearEmployerBackendSession, fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
+import { fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
 
-type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule" | "/setup";
-const SUPPORT_EMAIL = "admin@elitebridge.com";
+type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule" | "/profile";
 
 export default function OperationsScreen() {
   const router = useRouter();
-  const [session, setSession] = useState<EmployerSession | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [openShifts, setOpenShifts] = useState(0);
@@ -29,13 +26,11 @@ export default function OperationsScreen() {
     try {
       setRefreshing(true);
       setSyncError(null);
-      const [account, shifts, applications, callouts] = await Promise.all([
-        getEmployerSession(),
+      const [shifts, applications, callouts] = await Promise.all([
         fetchEmployerShifts(),
         fetchEmployerApplications(),
         fetchEmployerCallouts(),
       ]);
-      setSession(account);
       const open = shifts.filter((item) => item.status === "open");
       setOpenShifts(open.length);
       setUrgentShifts(open.filter((item) => item.urgency === "urgent").length);
@@ -66,35 +61,6 @@ export default function OperationsScreen() {
     { title: "Ask Elite", detail: "Live operations briefing from agency data", action: "Ask", route: "/ask-elite" },
   ];
 
-  const signOut = () => {
-    Alert.alert("Sign out", "Sign out of Elite Bridge Employer on this device?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Sign out",
-        style: "destructive",
-        onPress: async () => {
-          await Promise.all([clearEmployerSession(), clearEmployerBackendSession()]);
-          router.replace("/login");
-        },
-      },
-    ]);
-  };
-
-  const requestDeletion = () => {
-    const address = encodeURIComponent(SUPPORT_EMAIL);
-    const subject = encodeURIComponent("Elite Bridge Employer account deletion request");
-    const body = encodeURIComponent(
-      `Please delete my Elite Bridge Employer account and associated agency user data, subject to legally required record retention.\n\nAccount email: ${session?.email || ""}\nName: ${session?.name || ""}`,
-    );
-    void Linking.openURL(`mailto:${address}?subject=${subject}&body=${body}`);
-  };
-
-  const openPrivacyPolicy = () => {
-    const address = encodeURIComponent(SUPPORT_EMAIL);
-    const subject = encodeURIComponent("Elite Bridge privacy policy request");
-    void Linking.openURL(`mailto:${address}?subject=${subject}`);
-  };
-
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
     <Text style={s.eye}>ELITE BRIDGE EMPLOYER</Text><Text style={s.title}>Operations</Text><Text style={s.sub}>One operational inbox for coverage, applications, schedule risk, compliance and AI-assisted prioritization.</Text>
 
@@ -112,22 +78,11 @@ export default function OperationsScreen() {
     {items.map(i=><View key={i.title} style={s.card}><View style={{flex:1}}><Text style={s.cardTitle}>{i.title}</Text><Text style={s.meta}>{i.detail}</Text></View><TouchableOpacity style={s.button} onPress={()=>router.push(i.route)}><Text style={s.buttonText}>{i.action}</Text></TouchableOpacity></View>)}
 
     <View style={s.accountCard}>
-      <Text style={s.accountEyebrow}>ACCOUNT</Text>
-      <Text style={s.accountName}>{session?.name || "Agency administrator"}</Text>
-      {session?.email ? <Text style={s.meta}>{session.email}</Text> : null}
+      <Text style={s.accountEyebrow}>PROFILE</Text>
+      <Text style={s.accountName}>Manage agency settings</Text>
+      <Text style={s.meta}>Company logo, payroll connection preferences, privacy links and sign out live in Profile.</Text>
       <View style={s.accountActions}>
-        <TouchableOpacity style={s.accountButton} onPress={() => router.push("/setup")}><Text style={s.accountButtonText}>Edit agency setup</Text></TouchableOpacity>
-        <TouchableOpacity style={s.signOutButton} onPress={signOut}><Text style={s.signOutText}>Sign out</Text></TouchableOpacity>
-      </View>
-    </View>
-
-    <View style={s.accountCard}>
-      <Text style={s.accountEyebrow}>PRIVACY & SUPPORT</Text>
-      <Text style={s.accountName}>Account controls</Text>
-      <Text style={s.meta}>Request account deletion from inside the app. Elite Bridge will remove account data unless retention is legally required for staffing, payroll, safety or compliance records.</Text>
-      <View style={s.accountActions}>
-        <TouchableOpacity style={s.accountButton} onPress={openPrivacyPolicy}><Text style={s.accountButtonText}>Privacy policy</Text></TouchableOpacity>
-        <TouchableOpacity style={s.deleteButton} onPress={requestDeletion}><Text style={s.deleteText}>Request deletion</Text></TouchableOpacity>
+        <TouchableOpacity style={s.accountButton} onPress={() => router.push("/profile")}><Text style={s.accountButtonText}>Open Profile</Text></TouchableOpacity>
       </View>
     </View>
   </ScrollView></SafeAreaView>;
