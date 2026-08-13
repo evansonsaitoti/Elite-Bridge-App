@@ -14,6 +14,10 @@ export type AgencyProfile = {
   employeeCount: string;
   medicaidPrograms: boolean;
   evvRequired: boolean;
+  logoUri?: string;
+  contactName?: string;
+  phone?: string;
+  payrollProvider?: "Gusto" | "ADP" | "QuickBooks" | "";
 };
 
 const SESSION_KEY = "elitebridge-employer-session-v1";
