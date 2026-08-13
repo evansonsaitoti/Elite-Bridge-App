@@ -8,12 +8,14 @@ import { useColors } from "@/hooks/use-colors";
 import { clearCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
 type LocalSession = { email?: string; name?: string };
-const SUPPORT_EMAIL = "admin@elitebridge.com";
+const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
+const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 
 export default function StaffProfile() {
   const colors = useColors();
   const router = useRouter();
   const [session, setSession] = useState<LocalSession>({});
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   useEffect(() => {
     AsyncStorage.getItem("elitebridge-session").then((raw) => {
@@ -49,9 +51,7 @@ export default function StaffProfile() {
   };
 
   const openPrivacyPolicy = () => {
-    const address = encodeURIComponent(SUPPORT_EMAIL);
-    const subject = encodeURIComponent("Elite Bridge privacy policy request");
-    void Linking.openURL(`mailto:${address}?subject=${subject}`);
+    void Linking.openURL(PRIVACY_URL);
   };
 
   const storedName = session.name?.trim();
@@ -146,15 +146,30 @@ export default function StaffProfile() {
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
         <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Account support</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>You can request full account deletion from inside the app. Elite Bridge will remove account data unless retention is legally required for staffing, payroll, safety or compliance records.</Text>
-        <TouchableOpacity onPress={requestDeletion} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center" }}>
-          <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>Request account deletion</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Need help with profile access, documents, shifts, clock records or privacy questions? Contact Elite Bridge support.</Text>
+        <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Elite Bridge caregiver support")}`)} style={{ marginTop: 12, borderRadius: 12, backgroundColor: "#EAF4EF", padding: 12, alignItems: "center" }}>
+          <Text style={{ color: "#0A4A35", fontWeight: "900", fontSize: 13 }}>Contact support</Text>
         </TouchableOpacity>
       </View>
 
       <TouchableOpacity onPress={handleLogout} style={{ borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 12, padding: 14, alignItems: "center" }}>
         <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 14 }}>Sign out</Text>
       </TouchableOpacity>
+
+      <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
+        <TouchableOpacity onPress={() => setAdvancedOpen((open) => !open)} style={{ padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+          <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900" }}>Advanced account controls</Text>
+          <Text style={{ color: colors.muted, fontSize: 18, fontWeight: "900" }}>{advancedOpen ? "⌃" : "⌄"}</Text>
+        </TouchableOpacity>
+        {advancedOpen ? (
+          <View style={{ borderTopWidth: 1, borderTopColor: colors.border, padding: 14 }}>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19 }}>Account deletion is intentionally separated from sign out to prevent accidental requests. Elite Bridge will remove account data unless retention is legally required for staffing, payroll, safety or compliance records.</Text>
+            <TouchableOpacity onPress={requestDeletion} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center" }}>
+              <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>Request account deletion</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
+      </View>
     </ScrollView>
     </ScreenContainer>
   );
