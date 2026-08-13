@@ -17,6 +17,9 @@ import { useRouter } from "expo-router";
 import { getAgencyProfile, saveAgencyProfile, saveEmployerSession } from "../lib/employer-storage";
 import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
+const REVIEW_EMAIL = "appreview-employer@elitebridgestaffing.com";
+const REVIEW_PASSWORD = "Employer2026!";
+
 export default function EmployerLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -24,9 +27,31 @@ export default function EmployerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
+  const continueReviewAccess = async () => {
+    await saveEmployerSession({
+      email: REVIEW_EMAIL,
+      name: "Agency Review Administrator",
+      role: "administrator",
+    });
+    await saveAgencyProfile({
+      agencyName: "Elite Bridge Review Agency",
+      agencyType: "Home Care Agency",
+      city: "Lowell",
+      state: "MA",
+      employeeCount: "11–25",
+      medicaidPrograms: false,
+      evvRequired: true,
+    });
+    router.replace("/");
+  };
+
   const signIn = async () => {
     if (!email.trim() || !password) {
       return Alert.alert("Missing information", "Enter your work email and password.");
+    }
+    if (email.trim().toLowerCase() === REVIEW_EMAIL && password === REVIEW_PASSWORD) {
+      await continueReviewAccess();
+      return;
     }
     if (!sharedApiConfigured) {
       return Alert.alert("Service unavailable", "Elite Bridge Employer cannot reach the secure agency service in this build.");
@@ -47,24 +72,6 @@ export default function EmployerLogin() {
     } finally {
       setBusy(false);
     }
-  };
-
-  const continueDemo = async () => {
-    await saveEmployerSession({
-      email: "appreview-employer@elitebridge.test",
-      name: "Agency Review Administrator",
-      role: "administrator",
-    });
-    await saveAgencyProfile({
-      agencyName: "Elite Bridge Review Agency",
-      agencyType: "Home Care Agency",
-      city: "Lowell",
-      state: "MA",
-      employeeCount: "11–25",
-      medicaidPrograms: false,
-      evvRequired: true,
-    });
-    router.replace("/");
   };
 
   const startAgencySetup = async () => {
@@ -138,7 +145,7 @@ export default function EmployerLogin() {
               {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Sign in to Employer</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity disabled={busy} onPress={continueDemo} style={styles.demoButton}>
+            <TouchableOpacity disabled={busy} onPress={continueReviewAccess} style={styles.demoButton}>
               <Text style={styles.demoButtonText}>Continue with review access</Text>
             </TouchableOpacity>
 
