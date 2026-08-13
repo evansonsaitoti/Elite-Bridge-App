@@ -6,6 +6,9 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, S
 import { ScreenContainer } from "@/components/screen-container";
 import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
+const REVIEW_EMAIL = "appreview-caregiver@elitebridgestaffing.com";
+const REVIEW_PASSWORD = "Caregiver2026!";
+
 export default function LoginScreen() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -14,10 +17,25 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  const continueReviewAccess = async () => {
+    await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
+      role: "staff",
+      email: REVIEW_EMAIL,
+      name: "Caregiver Review Account",
+      demo: true,
+      signedInAt: new Date().toISOString(),
+    }));
+    router.replace("/(staff)/home");
+  };
+
   const handleLogin = async () => {
     setError("");
     if (!email.trim() || !password) {
       setError("Enter both your email address and password.");
+      return;
+    }
+    if (email.trim().toLowerCase() === REVIEW_EMAIL && password === REVIEW_PASSWORD) {
+      await continueReviewAccess();
       return;
     }
     if (!sharedApiConfigured) {
@@ -40,17 +58,6 @@ export default function LoginScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const continueDemo = async () => {
-    await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
-      role: "staff",
-      email: "appreview-caregiver@elitebridge.test",
-      name: "Caregiver Review Account",
-      demo: true,
-      signedInAt: new Date().toISOString(),
-    }));
-    router.replace("/(staff)/home");
   };
 
   return (
@@ -88,7 +95,7 @@ export default function LoginScreen() {
               {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in to Caregiver</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.demoButton} onPress={continueDemo} disabled={isLoading}>
+            <TouchableOpacity style={styles.demoButton} onPress={continueReviewAccess} disabled={isLoading}>
               <Text style={styles.demoButtonText}>Continue with review access</Text>
             </TouchableOpacity>
 
