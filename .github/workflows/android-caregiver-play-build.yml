@@ -48,7 +48,7 @@ jobs:
           const config = require('./app.json').expo;
           if (config.name !== 'BridgeCare') throw new Error('Unexpected Android app name');
           if (config.android?.package !== 'com.elitebridgestaffing.caregiver') throw new Error('Unexpected Android package');
-          if (config.android?.versionCode !== 40) throw new Error('Unexpected Android version code');
+          if (config.android?.versionCode !== 41) throw new Error('Unexpected Android version code');
           if (config.ios?.bundleIdentifier !== 'com.app.elitebridgemobile') throw new Error('iOS bundle identifier was changed');
           if (config.ios?.buildNumber !== '39') throw new Error('iOS build number was changed');
           console.log('BridgeCare Android configuration verified without changing iOS.');
