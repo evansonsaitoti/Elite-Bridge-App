@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Elite Bridge Employer",
+    "name": "BridgeDesk",
     "slug": "elitebridge-employer",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -17,7 +17,7 @@
     },
     "android": {
       "package": "com.elitebridgestaffing.employer",
-      "versionCode": 18
+      "versionCode": 19
     },
     "web": {
       "bundler": "metro",

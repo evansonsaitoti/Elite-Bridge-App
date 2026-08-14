@@ -46,19 +46,12 @@ jobs:
         run: |
           node - <<'NODE'
           const config = require('./app.json').expo;
-          if (config.android?.package !== 'com.elitebridgestaffing.employer') {
-            throw new Error('Unexpected Android package');
-          }
-          if (config.android?.versionCode !== 18) {
-            throw new Error('Unexpected Android version code');
-          }
-          if (config.ios?.bundleIdentifier !== 'com.app.elitebridgeemployer') {
-            throw new Error('iOS bundle identifier was changed');
-          }
-          if (config.ios?.buildNumber !== '18') {
-            throw new Error('iOS build number was changed');
-          }
-          console.log('Android Employer configuration verified without changing iOS.');
+          if (config.name !== 'BridgeDesk') throw new Error('Unexpected Android app name');
+          if (config.android?.package !== 'com.elitebridgestaffing.employer') throw new Error('Unexpected Android package');
+          if (config.android?.versionCode !== 19) throw new Error('Unexpected Android version code');
+          if (config.ios?.bundleIdentifier !== 'com.app.elitebridgeemployer') throw new Error('iOS bundle identifier was changed');
+          if (config.ios?.buildNumber !== '18') throw new Error('iOS build number was changed');
+          console.log('BridgeDesk Android configuration verified without changing iOS.');
           NODE
           npx expo config --type public > /tmp/elitebridge-employer-android-config.json
 
@@ -80,13 +73,13 @@ jobs:
           process.stdout.write(url);
           NODE
           )"
-          curl --location --fail --retry 3 "$BUILD_URL" --output ../elite-bridge-employer.aab
-          test -s ../elite-bridge-employer.aab
+          curl --location --fail --retry 3 "$BUILD_URL" --output ../bridge-desk.aab
+          test -s ../bridge-desk.aab
 
       - name: Upload Android App Bundle
         uses: actions/upload-artifact@v4
         with:
-          name: elite-bridge-employer-aab
-          path: elite-bridge-employer.aab
+          name: bridge-desk-aab
+          path: bridge-desk.aab
           if-no-files-found: error
           retention-days: 30
