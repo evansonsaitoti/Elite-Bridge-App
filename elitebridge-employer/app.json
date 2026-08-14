@@ -16,7 +16,8 @@
       }
     },
     "android": {
-      "package": "com.app.elitebridgeemployer"
+      "package": "com.elitebridgestaffing.employer",
+      "versionCode": 18
     },
     "web": {
       "bundler": "metro",
