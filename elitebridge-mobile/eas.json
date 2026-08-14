@@ -7,6 +7,9 @@
     "production": {
       "distribution": "store",
       "corepack": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
       "ios": {
         "resourceClass": "m-medium",
         "cocoapods": "1.16.2"
