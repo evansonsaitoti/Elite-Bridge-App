@@ -1,0 +1,92 @@
+name: Employer Android Play Build
+
+on:
+  push:
+    branches:
+      - agent/android-employer-play-build
+    paths:
+      - "elitebridge-employer/**"
+      - ".github/workflows/android-employer-play-build.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: employer-android-play-build
+  cancel-in-progress: false
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+
+    steps:
+      - name: Checkout Android release branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Type check employer app
+        run: pnpm check
+
+      - name: Verify Android-only release configuration
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const config = require('./app.json').expo;
+          if (config.android?.package !== 'com.elitebridgestaffing.employer') {
+            throw new Error('Unexpected Android package');
+          }
+          if (config.android?.versionCode !== 18) {
+            throw new Error('Unexpected Android version code');
+          }
+          if (config.ios?.bundleIdentifier !== 'com.app.elitebridgeemployer') {
+            throw new Error('iOS bundle identifier was changed');
+          }
+          if (config.ios?.buildNumber !== '18') {
+            throw new Error('iOS build number was changed');
+          }
+          console.log('Android Employer configuration verified without changing iOS.');
+          NODE
+          npx expo config --type public > /tmp/elitebridge-employer-android-config.json
+
+      - name: Build signed Android App Bundle
+        id: eas
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        shell: bash
+        run: |
+          test -n "$EXPO_TOKEN"
+          npx eas-cli@latest build --platform android --profile production --non-interactive --wait --json > /tmp/employer-android-build.json
+          BUILD_URL="$(node - <<'NODE'
+          const fs = require('fs');
+          const parsed = JSON.parse(fs.readFileSync('/tmp/employer-android-build.json', 'utf8'));
+          const build = Array.isArray(parsed) ? parsed[0] : parsed;
+          const url = build?.artifacts?.buildUrl || build?.artifacts?.applicationArchiveUrl;
+          if (!url) process.exit(1);
+          process.stdout.write(url);
+          NODE
+          )"
+          curl --location --fail --retry 3 "$BUILD_URL" --output ../elite-bridge-employer.aab
+          test -s ../elite-bridge-employer.aab
+
+      - name: Upload Android App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: elite-bridge-employer-aab
+          path: elite-bridge-employer.aab
+          if-no-files-found: error
+          retention-days: 30
