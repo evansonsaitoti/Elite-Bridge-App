@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Elite Bridge",
+    "name": "BridgeCare",
     "slug": "elitebridge-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
     },
     "android": {
       "package": "com.elitebridgestaffing.caregiver",
-      "versionCode": 39,
+      "versionCode": 40,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
