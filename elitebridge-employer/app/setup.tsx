@@ -31,7 +31,12 @@ export default function AgencySetup() {
 
   const save = async () => {
     if (!profile.agencyName.trim() || !profile.city.trim()) return Alert.alert("Missing information", "Enter the agency name and primary city.");
-    await saveAgencyProfile({ ...profile, agencyName: profile.agencyName.trim(), city: profile.city.trim(), state: "MA" });
+    await saveAgencyProfile({
+      ...profile,
+      agencyName: profile.agencyName.trim(),
+      city: profile.city.trim(),
+      state: profile.state.trim().toUpperCase() || "MA",
+    });
     router.replace("/");
   };
 
@@ -41,7 +46,7 @@ export default function AgencySetup() {
         <View style={styles.hero}>
           <Text style={styles.eyebrow}>{editing ? "AGENCY PROFILE" : "EMPLOYER SIGN UP"}</Text>
           <Text style={styles.title}>{editing ? "Keep your agency profile current." : "Set up your care agency workspace."}</Text>
-          <Text style={styles.sub}>Create a professional employer profile so Elite Bridge can tailor scheduling, staffing and compliance tools to your agency.</Text>
+          <Text style={styles.sub}>Create a professional employer profile so Elite Bridge can tailor scheduling, staffing and operations tools to your care organization.</Text>
         </View>
 
         <View style={styles.progressCard}>
@@ -59,19 +64,19 @@ export default function AgencySetup() {
           <Text style={styles.label}>Primary city</Text>
           <TextInput style={styles.input} value={profile.city} onChangeText={(city) => setProfile({ ...profile, city })} placeholder="City" placeholderTextColor="#98A2B3" />
           <Text style={styles.label}>State</Text>
-          <TextInput editable={false} style={[styles.input, { color: "#667085" }]} value="Massachusetts (MA)" />
+          <TextInput style={styles.input} value={profile.state} onChangeText={(state) => setProfile({ ...profile, state })} placeholder="MA" placeholderTextColor="#98A2B3" autoCapitalize="characters" maxLength={2} />
           <Text style={styles.label}>Team size</Text>
           <View style={styles.chips}>{["1–10", "11–25", "26–50", "51+"].map((count) => <TouchableOpacity key={count} onPress={() => setProfile({ ...profile, employeeCount: count })} style={[styles.chip, profile.employeeCount === count && styles.chipActive]}><Text style={[styles.chipText, profile.employeeCount === count && styles.chipTextActive]}>{count}</Text></TouchableOpacity>)}</View>
         </View>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Programs & visit verification</Text>
-          <Text style={styles.sectionSub}>These answers change which compliance and EVV prompts Elite surfaces.</Text>
+          <Text style={styles.sectionSub}>These answers change which operational, compliance and EVV prompts Elite surfaces.</Text>
           <Toggle label="We serve Medicaid-funded programs" value={profile.medicaidPrograms} onPress={() => setProfile({ ...profile, medicaidPrograms: !profile.medicaidPrograms })} />
           <Toggle label="Our services require EVV" value={profile.evvRequired} onPress={() => setProfile({ ...profile, evvRequired: !profile.evvRequired })} />
         </View>
 
-        <View style={styles.aiBox}><Text style={styles.aiEyebrow}>WHY THIS MATTERS</Text><Text style={styles.aiText}>A staffing agency, home-care agency and Medicaid provider can have different operational obligations. Elite uses your profile to surface relevant review items instead of one generic checklist.</Text></View>
+        <View style={styles.aiBox}><Text style={styles.aiEyebrow}>WHY THIS MATTERS</Text><Text style={styles.aiText}>Different care organizations manage different staffing, scheduling and documentation needs. Elite uses your profile to surface relevant review items instead of one generic checklist.</Text></View>
 
         <TouchableOpacity onPress={save} style={styles.primary}><Text style={styles.primaryText}>{editing ? "Save agency profile" : "Finish agency setup"}</Text></TouchableOpacity>
       </ScrollView>
