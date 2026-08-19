@@ -34,7 +34,7 @@ export default function EmployerLogin() {
       role: "administrator",
     });
     await saveAgencyProfile({
-      agencyName: "Elite Bridge Review Agency",
+      agencyName: "Sample Care Agency",
       agencyType: "Home Care Agency",
       city: "Lowell",
       state: "MA",
@@ -76,7 +76,7 @@ export default function EmployerLogin() {
 
   const startAgencySetup = async () => {
     await saveEmployerSession({
-      email: "newagency@elitebridge.test",
+      email: "newagency@example.com",
       name: "New Agency Owner",
       role: "owner",
     });
@@ -101,7 +101,7 @@ export default function EmployerLogin() {
             <Text style={styles.heroEyebrow}>CARE OPERATIONS HQ</Text>
             <Text style={styles.title}>Sign in to manage your agency.</Text>
             <Text style={styles.subtitle}>
-              Schedule caregivers, review coverage, track timesheets and keep your care operations organized.
+              Schedule caregivers, review coverage, track timesheets and keep care operations organized for any eligible care organization.
             </Text>
           </View>
 
@@ -155,13 +155,13 @@ export default function EmployerLogin() {
           </View>
 
           <View style={styles.accessBox}>
-            <Text style={styles.accessTitle}>Employer access only</Text>
+            <Text style={styles.accessTitle}>Built for care employers</Text>
             <Text style={styles.accessText}>
-              Caregivers should use the separate Elite Bridge caregiver app to view shifts and assignments.
+              Any eligible care agency, staffing organization or facility operator can request access and use this employer workspace.
             </Text>
           </View>
 
-          <Text style={styles.footer}>Secure agency sync · Massachusetts operations</Text>
+          <Text style={styles.footer}>Secure agency sync · Public B2B care operations platform</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
