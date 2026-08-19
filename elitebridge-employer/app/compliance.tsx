@@ -105,16 +105,16 @@ export default function ComplianceCopilot() {
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>‹ Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>MA COPILOT</Text></View></View>
+        <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>‹ Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>COMPLIANCE COPILOT</Text></View></View>
         <Text style={styles.title}>Compliance Copilot</Text>
-        <Text style={styles.sub}>A prioritized agency checklist that turns Massachusetts-related operational rules into reviewable tasks. Elite flags areas to verify; your agency makes the final compliance decision.</Text>
+        <Text style={styles.sub}>A prioritized agency checklist that turns region-specific operational rules into reviewable tasks. Elite flags areas to verify; your agency makes the final compliance decision.</Text>
 
         <View style={styles.stats}><View style={styles.stat}><Text style={styles.statValue}>{openCount}</Text><Text style={styles.statLabel}>Need review</Text></View><View style={[styles.stat,{backgroundColor:"#FEF3F2"}]}><Text style={[styles.statValue,{color:"#B42318"}]}>{highCount}</Text><Text style={styles.statLabel}>High priority</Text></View></View>
 
         <View style={styles.aiCard}>
           <Text style={styles.aiEyebrow}>PROFILE-AWARE SUMMARY</Text>
           <Text style={styles.aiTitle}>{highCount ? `${highCount} high-priority checklist item${highCount === 1 ? "" : "s"} should be verified for this agency profile.` : "No high-priority checklist items are open."}</Text>
-          <Text style={styles.aiBody}>Agency profile: {profile?.agencyName ?? "Not configured"} · {profile?.agencyType ?? "Unknown type"} · {profile?.city ?? "Massachusetts"}</Text>
+          <Text style={styles.aiBody}>Agency profile: {profile?.agencyName ?? "Not configured"} · {profile?.agencyType ?? "Unknown type"} · {profile?.city ?? "City not configured"}{profile?.state ? `, ${profile.state}` : ""}</Text>
           <TouchableOpacity onPress={() => router.push("/setup")} style={styles.aiAction}><Text style={styles.aiActionText}>Edit agency profile</Text></TouchableOpacity>
         </View>
 
