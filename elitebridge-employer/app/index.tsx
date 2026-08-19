@@ -57,7 +57,7 @@ function getCareRadarScore(shift: SharedShift, pendingApplications: number, open
 const demoShift: SharedShift = {
   id: 8001,
   employerId: 1,
-  employerName: "Elite Bridge Review Agency",
+  employerName: "Sample Care Agency",
   title: "Companionship + meal prep · Mrs. A.",
   serviceType: "Companionship + meal prep",
   caregiverType: "HHA / PCA",
@@ -100,7 +100,7 @@ const demoApplication: EmployerApplication = {
   caregiver_user_id: 22,
   first_name: "Review",
   last_name: "Caregiver",
-  email: "appreview-caregiver@elitebridge.test",
+  email: "review-caregiver@example.com",
   rating: "4.9",
   total_hours: "124",
   certifications: ["HHA", "CPR"],
@@ -161,7 +161,7 @@ export default function EmployerHome() {
 
   const refresh = async () => {
     const session = await getEmployerSession();
-    const isDemo = session?.email.includes("appreview") || session?.email.endsWith("@elitebridge.test");
+    const isDemo = session?.email.includes("appreview") || session?.email.endsWith("@example.com");
     if (isDemo || !sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setShifts(local.length > 0 ? local.map(localShiftToShared) : [demoShift, demoAssignedShift]);
@@ -230,7 +230,7 @@ export default function EmployerHome() {
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
         <View style={styles.brandRow}>
           <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.brandSub}>EMPLOYER</Text></View>
-          <View style={styles.maBadge}><Text style={styles.maBadgeText}>MASSACHUSETTS</Text></View>
+          <View style={styles.maBadge}><Text style={styles.maBadgeText}>LIVE WORKSPACE</Text></View>
         </View>
 
         <Text style={styles.heading}>{greeting()}</Text>
@@ -277,7 +277,7 @@ export default function EmployerHome() {
           {nextShifts.length === 0 ? <Text style={styles.empty}>No upcoming shifts yet. Create a shift in Schedule to publish it to caregivers.</Text> : null}
         </View>
 
-        <Text style={styles.footerNote}>Massachusetts-first workforce operations for care agencies.</Text>
+        <Text style={styles.footerNote}>Workforce operations for care agencies and staffing teams.</Text>
       </ScrollView>
     </SafeAreaView>
   );
