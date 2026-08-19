@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, TextInput } from "react-native";
+import { Alert, ScrollView, View, Text, TouchableOpacity, TextInput } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 
 /**
@@ -98,6 +98,10 @@ export default function StaffSwapShifts() {
       default:
         return "#3498DB";
     }
+  };
+
+  const confirmAction = (title: string, message: string) => {
+    Alert.alert(title, message, [{ text: "OK" }]);
   };
 
   return (
@@ -227,6 +231,8 @@ export default function StaffSwapShifts() {
                   </Text>
                 </View>
                 <TouchableOpacity
+                  accessibilityRole="button"
+                  onPress={() => confirmAction("Swap offer created", `${shift.facility} on ${shift.date} is now marked for agency swap review.`)}
                   style={{
                     backgroundColor: "#1B5E3F",
                     borderRadius: 6,
@@ -308,6 +314,8 @@ export default function StaffSwapShifts() {
 
                 <View style={{ flexDirection: "row", gap: 8 }}>
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    onPress={() => confirmAction("Swap accepted", `${request.fromStaff}'s swap request has been sent to the agency for final approval.`)}
                     style={{
                       flex: 1,
                       backgroundColor: "#27AE60",
@@ -321,6 +329,8 @@ export default function StaffSwapShifts() {
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
+                    accessibilityRole="button"
+                    onPress={() => confirmAction("Swap declined", `${request.fromStaff}'s swap request has been declined for this review account.`)}
                     style={{
                       flex: 1,
                       backgroundColor: colors.border,
@@ -395,6 +405,8 @@ export default function StaffSwapShifts() {
                 </Text>
               </View>
               <TouchableOpacity
+                accessibilityRole="button"
+                onPress={() => confirmAction("Pickup request sent", `${shift.facility} will receive your pickup request for ${shift.date}.`)}
                 style={{
                   backgroundColor: "#1B5E3F",
                   borderRadius: 6,
