@@ -9,7 +9,9 @@ import { clearCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-
 
 type LocalSession = { email?: string; name?: string };
 const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
+const SUPPORT_URL = "https://elitebridgestaffing.com/contact/";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
+const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 
 export default function StaffProfile() {
   const colors = useColors();
@@ -41,17 +43,61 @@ export default function StaffProfile() {
     ]);
   };
 
+  const showFeature = (title: string, message: string) => {
+    Alert.alert(title, message, [{ text: "OK" }]);
+  };
+
+  const openUrl = async (url: string, fallbackTitle = "Unable to open link") => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        showFeature(fallbackTitle, url);
+        return;
+      }
+      await Linking.openURL(url);
+    } catch {
+      showFeature(fallbackTitle, url);
+    }
+  };
+
+  const contactSupport = () => {
+    Alert.alert("Contact support", "Choose how you want to contact Elite Bridge support.", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Email",
+        onPress: () => {
+          const subject = encodeURIComponent("Elite Bridge caregiver support");
+          void openUrl(`mailto:${SUPPORT_EMAIL}?subject=${subject}`);
+        },
+      },
+      { text: "Open support page", onPress: () => void openUrl(SUPPORT_URL) },
+    ]);
+  };
+
   const requestDeletion = () => {
-    const address = encodeURIComponent(SUPPORT_EMAIL);
-    const subject = encodeURIComponent("Elite Bridge account deletion request");
-    const body = encodeURIComponent(
-      `Please delete my Elite Bridge account and associated personal data, subject to legally required record retention.\n\nAccount email: ${displayEmail || ""}\nName: ${displayName}`,
+    Alert.alert(
+      "Request account deletion",
+      "This will open a prepared email to Elite Bridge support. Your account is not deleted until support verifies and processes the request.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Continue",
+          style: "destructive",
+          onPress: () => {
+            const address = encodeURIComponent(SUPPORT_EMAIL);
+            const subject = encodeURIComponent("Elite Bridge account deletion request");
+            const body = encodeURIComponent(
+              `Please delete my Elite Bridge account and associated personal data, subject to legally required record retention.\n\nAccount email: ${displayEmail || ""}\nName: ${displayName}`,
+            );
+            void openUrl(`mailto:${address}?subject=${subject}&body=${body}`);
+          },
+        },
+      ],
     );
-    void Linking.openURL(`mailto:${address}?subject=${subject}&body=${body}`);
   };
 
   const openPrivacyPolicy = () => {
-    void Linking.openURL(PRIVACY_URL);
+    void openUrl(PRIVACY_URL);
   };
 
   const storedName = session.name?.trim();
@@ -85,7 +131,12 @@ export default function StaffProfile() {
       <View style={{ marginBottom: 18 }}>
         <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
           <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Time off</Text>
-          <TouchableOpacity><Text style={{ color: "#0A4A35", fontSize: 13, fontWeight: "900" }}>View requests</Text></TouchableOpacity>
+          <TouchableOpacity
+            accessibilityRole="button"
+            onPress={() => showFeature("Time off requests", "There are no pending time off requests for this review account. Future requests submitted from Services will appear here.")}
+          >
+            <Text style={{ color: "#0A4A35", fontSize: 13, fontWeight: "900" }}>View requests</Text>
+          </TouchableOpacity>
         </View>
         <View style={{ flexDirection: "row", gap: 9 }}>
           {[
@@ -107,7 +158,12 @@ export default function StaffProfile() {
           { icon: "↺", label: "My submissions", detail: "Visit notes, clock corrections and requests" },
           { icon: "↓", label: "Shared with me", detail: "Agency documents and care instructions" },
         ].map((item, index) => (
-          <TouchableOpacity key={item.label} style={{ flexDirection: "row", alignItems: "center", gap: 13, padding: 15, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: colors.border }}>
+          <TouchableOpacity
+            key={item.label}
+            accessibilityRole="button"
+            onPress={() => showFeature(item.label, `${item.detail}. No additional ${item.label.toLowerCase()} are available for this review account.`)}
+            style={{ flexDirection: "row", alignItems: "center", gap: 13, padding: 15, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: colors.border }}
+          >
             <Text style={{ width: 28, color: index === 0 ? "#7F56D9" : "#06AED4", fontSize: 22, fontWeight: "900" }}>{item.icon}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "900" }}>{item.label}</Text>
@@ -125,7 +181,22 @@ export default function StaffProfile() {
           { icon: "◎", label: "Personal information", detail: displayEmail },
           { icon: "⚙", label: "Settings", detail: "Notifications, language and app preferences" },
         ].map((item, index) => (
-          <TouchableOpacity key={item.label} style={{ flexDirection: "row", alignItems: "center", gap: 13, padding: 15, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: colors.border }}>
+          <TouchableOpacity
+            key={item.label}
+            accessibilityRole="button"
+            onPress={() => {
+              if (item.label === "My activity") {
+                showFeature("My activity", "Applications, accepted offers, clock events and call-outs are visible from the Work, Clock and Services tabs.");
+                return;
+              }
+              if (item.label === "Personal information") {
+                showFeature("Personal information", `Name: ${displayName}\nEmail: ${displayEmail}\nRole: Caregiver\nStatus: Active review account`);
+                return;
+              }
+              showFeature("Settings", "Notification, language and app preference controls are enabled for production accounts. This review account uses default settings.");
+            }}
+            style={{ flexDirection: "row", alignItems: "center", gap: 13, padding: 15, borderTopWidth: index === 0 ? 0 : 1, borderTopColor: colors.border }}
+          >
             <Text style={{ width: 28, color: "#2F9BFF", fontSize: 22, fontWeight: "900" }}>{item.icon}</Text>
             <View style={{ flex: 1 }}>
               <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "900" }}>{item.label}</Text>
@@ -147,9 +218,22 @@ export default function StaffProfile() {
       <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
         <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Account support</Text>
         <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Need help with profile access, documents, shifts, clock records or privacy questions? Contact Elite Bridge support.</Text>
-        <TouchableOpacity onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Elite Bridge caregiver support")}`)} style={{ marginTop: 12, borderRadius: 12, backgroundColor: "#EAF4EF", padding: 12, alignItems: "center" }}>
+        <TouchableOpacity onPress={contactSupport} style={{ marginTop: 12, borderRadius: 12, backgroundColor: "#EAF4EF", padding: 12, alignItems: "center" }}>
           <Text style={{ color: "#0A4A35", fontWeight: "900", fontSize: 13 }}>Contact support</Text>
         </TouchableOpacity>
+      </View>
+
+      <View style={{ backgroundColor: colors.surface, borderRadius: 16, padding: 15, borderWidth: 1, borderColor: colors.border, marginBottom: 18 }}>
+        <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>Legal</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Review privacy, terms and caregiver support information.</Text>
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
+          <TouchableOpacity onPress={() => void openUrl(TERMS_URL)} style={{ flex: 1, borderRadius: 12, backgroundColor: "#F8F4EA", padding: 12, alignItems: "center" }}>
+            <Text style={{ color: "#8A5A00", fontWeight: "900", fontSize: 13 }}>Terms</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={() => void openUrl(SUPPORT_URL)} style={{ flex: 1, borderRadius: 12, backgroundColor: "#EAF4EF", padding: 12, alignItems: "center" }}>
+            <Text style={{ color: "#0A4A35", fontWeight: "900", fontSize: 13 }}>Support page</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <TouchableOpacity onPress={handleLogout} style={{ borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 12, padding: 14, alignItems: "center" }}>
