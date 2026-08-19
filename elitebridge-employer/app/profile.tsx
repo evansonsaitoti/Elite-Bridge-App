@@ -25,7 +25,7 @@ const PAYROLL_OPTIONS: Array<{ name: Exclude<PayrollProvider, "">; detail: strin
 ];
 
 const emptyProfile: AgencyProfile = {
-  agencyName: "Elite Bridge Review Agency",
+  agencyName: "Sample Care Agency",
   agencyType: "Home Care Agency",
   city: "Lowell",
   state: "MA",
@@ -61,7 +61,7 @@ export default function EmployerProfile() {
       ...profile,
       agencyName: profile.agencyName.trim() || emptyProfile.agencyName,
       city: profile.city.trim() || emptyProfile.city,
-      state: "MA",
+      state: profile.state.trim().toUpperCase() || emptyProfile.state,
       logoUri: profile.logoUri?.trim(),
       contactName: profile.contactName?.trim(),
       phone: profile.phone?.trim(),
@@ -96,6 +96,22 @@ export default function EmployerProfile() {
     void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}`);
   };
 
+  const openSummary = (label: string) => {
+    if (label === "Time off") {
+      Alert.alert("Time off", "No pending time-off requests are waiting in this workspace. Future requests from staff will appear here for employer review.");
+      return;
+    }
+    if (label === "Sick leave") {
+      Alert.alert("Sick leave", "No sick-leave requests are pending. When caregivers submit sick leave, employers can review status and coverage impact here.");
+      return;
+    }
+    if (label === "Submissions") {
+      Alert.alert("Submissions", "No open form submissions are pending. Staff forms, visit notes and correction requests will appear here.");
+      return;
+    }
+    router.push("/setup");
+  };
+
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
@@ -111,7 +127,7 @@ export default function EmployerProfile() {
           )}
           <View style={{ flex: 1 }}>
             <Text style={styles.agency}>{profile.agencyName}</Text>
-            <Text style={styles.meta}>{profile.city || "Lowell"}, MA · {profile.agencyType}</Text>
+            <Text style={styles.meta}>{profile.city || "Lowell"}, {profile.state || "MA"} · {profile.agencyType}</Text>
             <Text style={styles.badge}>Employer workspace active</Text>
           </View>
         </View>
@@ -136,6 +152,7 @@ export default function EmployerProfile() {
           <Field label="Email" value={session?.email ?? ""} editable={false} />
           <Field label="Phone" value={profile.phone ?? ""} onChangeText={(phone) => setProfile({ ...profile, phone })} keyboardType="phone-pad" />
           <Field label="Primary city" value={profile.city} onChangeText={(city) => setProfile({ ...profile, city })} />
+          <Field label="State" value={profile.state} onChangeText={(state) => setProfile({ ...profile, state })} autoCapitalize="characters" maxLength={2} />
           <TouchableOpacity style={styles.primary} onPress={save}><Text style={styles.primaryText}>Save profile</Text></TouchableOpacity>
         </View>
 
@@ -146,7 +163,7 @@ export default function EmployerProfile() {
             { label: "Submissions", value: "0", detail: "Forms shared" },
             { label: "Settings", value: "MA", detail: "Agency region" },
           ].map((item) => (
-            <TouchableOpacity key={item.label} style={styles.quickCard}>
+            <TouchableOpacity key={item.label} accessibilityRole="button" style={styles.quickCard} onPress={() => openSummary(item.label)}>
               <Text style={styles.quickValue}>{item.value}</Text>
               <Text style={styles.quickLabel}>{item.label}</Text>
               <Text style={styles.quickDetail}>{item.detail}</Text>
