@@ -27,11 +27,9 @@ export default function OnboardingWelcome() {
 
     if (!fullName.trim()) newErrors.fullName = "Full name is required";
     if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
-    if (!dateOfBirth.trim()) newErrors.dateOfBirth = "Date of birth is required";
     if (!address.trim()) newErrors.address = "Address is required";
     if (!city.trim()) newErrors.city = "City is required";
     if (!state.trim()) newErrors.state = "State is required";
-    if (!zip.trim()) newErrors.zip = "ZIP code is required";
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -177,7 +175,7 @@ export default function OnboardingWelcome() {
           "phone-pad"
         )}
         {renderInput(
-          "Date of Birth",
+          "Date of Birth (Optional)",
           dateOfBirth,
           setDateOfBirth,
           "MM/DD/YYYY",
@@ -213,7 +211,7 @@ export default function OnboardingWelcome() {
         </View>
 
         {renderInput(
-          "ZIP Code",
+          "ZIP Code (Optional)",
           zip,
           setZip,
           "12345",
