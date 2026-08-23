@@ -58,8 +58,8 @@ Access by logging in with staff credentials or selecting staff role
 
 #### 1. **Onboarding Flow** (First Time Only)
 - [ ] **Step 1 - Welcome**: Enter personal information
-  - Full name, phone number, date of birth
-  - Address, city, state, ZIP code
+  - Full name and phone number; date of birth is optional
+  - Address, city, and state; ZIP code is optional
   - [ ] Proceed to next step
 
 - [ ] **Step 2 - Experience**: Add certifications
