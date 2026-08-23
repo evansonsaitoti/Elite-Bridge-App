@@ -6,13 +6,14 @@ import { useRouter } from "expo-router";
 
 import {
   clearEmployerSession,
+  clearAllEmployerData,
   getAgencyProfile,
   getEmployerSession,
   saveAgencyProfile,
   type AgencyProfile,
   type EmployerSession,
 } from "../lib/employer-storage";
-import { clearEmployerBackendSession } from "../lib/shared-api";
+import { clearEmployerBackendSession, deleteEmployerBackendAccount } from "../lib/shared-api";
 
 type PayrollProvider = NonNullable<AgencyProfile["payrollProvider"]>;
 
@@ -42,7 +43,7 @@ export default function EmployerProfile() {
   const router = useRouter();
   const [session, setSession] = useState<EmployerSession | null>(null);
   const [profile, setProfile] = useState<AgencyProfile>(emptyProfile);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     Promise.all([getEmployerSession(), getAgencyProfile()]).then(([savedSession, savedProfile]) => {
@@ -83,12 +84,32 @@ export default function EmployerProfile() {
     ]);
   };
 
-  const requestDeletion = () => {
-    const subject = encodeURIComponent("Elite Bridge Employer account deletion request");
-    const body = encodeURIComponent(
-      `Please delete my Elite Bridge Employer account and associated agency user data, subject to legally required record retention.\n\nAgency: ${profile.agencyName}\nAccount email: ${session?.email || ""}\nName: ${session?.name || profile.contactName || ""}`,
+  const deleteAccount = () => {
+    Alert.alert(
+      "Permanently delete account?",
+      "This permanently deletes your Elite Bridge Employer login and agency profile. This cannot be undone. Records that must be retained for legal, payroll, safety, or compliance obligations may be preserved as required by law.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete Account",
+          style: "destructive",
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteEmployerBackendAccount();
+              await clearAllEmployerData();
+              Alert.alert("Account deleted", "Your Elite Bridge Employer account and local agency data have been deleted.", [
+                { text: "Done", onPress: () => router.replace("/login") },
+              ]);
+            } catch (error) {
+              Alert.alert("Unable to delete account", error instanceof Error ? error.message : "Please try again.");
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ],
     );
-    void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}&body=${body}`);
   };
 
   const openSupport = () => {
@@ -207,17 +228,12 @@ export default function EmployerProfile() {
 
         <TouchableOpacity style={styles.signOut} onPress={signOut}><Text style={styles.signOutText}>Sign out</Text></TouchableOpacity>
 
-        <View style={styles.advanced}>
-          <TouchableOpacity onPress={() => setAdvancedOpen((open) => !open)} style={styles.advancedHeader}>
-            <Text style={styles.advancedTitle}>Advanced account controls</Text>
-            <Text style={styles.chevron}>{advancedOpen ? "⌃" : "⌄"}</Text>
+        <View style={styles.dangerZone}>
+          <Text style={styles.dangerTitle}>Delete account</Text>
+          <Text style={styles.help}>Permanently delete your employer login and agency profile directly in the app. This action cannot be undone.</Text>
+          <TouchableOpacity disabled={deleting} style={[styles.deleteButton, deleting && styles.deleteDisabled]} onPress={deleteAccount}>
+            <Text style={styles.deleteText}>{deleting ? "Deleting account…" : "Delete account permanently"}</Text>
           </TouchableOpacity>
-          {advancedOpen ? (
-            <View style={styles.advancedBody}>
-              <Text style={styles.help}>Account deletion is intentionally separated from sign out to prevent accidental requests. Elite Bridge may retain legally required staffing, payroll, safety and compliance records.</Text>
-              <TouchableOpacity style={styles.deleteButton} onPress={requestDeletion}><Text style={styles.deleteText}>Request account deletion</Text></TouchableOpacity>
-            </View>
-          ) : null}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -275,10 +291,9 @@ const styles = StyleSheet.create({
   chevron: { color: "#98A2B3", fontSize: 22, fontWeight: "900" },
   signOut: { alignItems: "center", backgroundColor: "#FFF5F4", borderColor: "#FDA29B", borderRadius: 14, borderWidth: 1, marginBottom: 14, padding: 14 },
   signOutText: { color: "#B42318", fontSize: 14, fontWeight: "900" },
-  advanced: { backgroundColor: "#FFFFFF", borderColor: "#E4E7EC", borderRadius: 16, borderWidth: 1, overflow: "hidden" },
-  advancedHeader: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", padding: 14 },
-  advancedTitle: { color: "#344054", fontSize: 13, fontWeight: "900" },
-  advancedBody: { borderTopColor: "#F2F4F7", borderTopWidth: 1, padding: 14 },
+  dangerZone: { backgroundColor: "#FFFFFF", borderColor: "#FDA29B", borderRadius: 16, borderWidth: 1, padding: 14 },
+  dangerTitle: { color: "#B42318", fontSize: 16, fontWeight: "900" },
   deleteButton: { alignItems: "center", backgroundColor: "#FFF5F4", borderColor: "#FDA29B", borderRadius: 12, borderWidth: 1, marginTop: 12, padding: 12 },
   deleteText: { color: "#B42318", fontSize: 13, fontWeight: "900" },
+  deleteDisabled: { opacity: 0.55 },
 });

@@ -61,6 +61,15 @@ export async function clearEmployerSession(): Promise<void> {
   await AsyncStorage.removeItem(SESSION_KEY);
 }
 
+export async function clearAllEmployerData(): Promise<void> {
+  await AsyncStorage.multiRemove([
+    SESSION_KEY,
+    AGENCY_KEY,
+    COMPLIANCE_KEY,
+    LOCAL_SHIFTS_KEY,
+  ]);
+}
+
 export async function getAgencyProfile(): Promise<AgencyProfile | null> {
   const raw = await AsyncStorage.getItem(AGENCY_KEY);
   if (!raw) return null;

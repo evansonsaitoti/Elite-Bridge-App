@@ -161,4 +161,27 @@ router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
   }
 });
 
+router.delete("/account", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+
+    if (!req.user) {
+      throw new AppError(401, "User not authenticated");
+    }
+
+    const userList = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
+    if (userList.length === 0) {
+      throw new AppError(404, "User not found");
+    }
+    if (userList[0].role !== "employer") {
+      throw new AppError(403, "Only employer accounts can be deleted from this app");
+    }
+
+    await db.delete(users).where(eq(users.id, req.user.id));
+    res.status(204).send();
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;

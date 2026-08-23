@@ -155,6 +155,14 @@ export async function clearEmployerBackendSession() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
 
+export async function deleteEmployerBackendAccount(): Promise<"deleted" | "local-only"> {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) return "local-only";
+  await request<void>("/api/auth/account", { method: "DELETE" });
+  await AsyncStorage.removeItem(TOKEN_KEY);
+  return "deleted";
+}
+
 export async function fetchEmployerShifts(): Promise<SharedShift[]> {
   const result = await request<{ shifts: SharedShift[] }>("/api/bookings/employer/my");
   return result.shifts;
