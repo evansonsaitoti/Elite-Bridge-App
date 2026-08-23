@@ -134,8 +134,13 @@ export default function OnboardingReview() {
       {renderInfoSection("👤 Personal Information", [
         { label: "Full Name", value: data.fullName },
         { label: "Phone", value: data.phoneNumber },
-        { label: "Date of Birth", value: data.dateOfBirth },
-        { label: "Address", value: `${data.address}, ${data.city}, ${data.state} ${data.zip}` },
+        ...(data.dateOfBirth
+          ? [{ label: "Date of Birth", value: data.dateOfBirth }]
+          : []),
+        {
+          label: "Address",
+          value: `${data.address}, ${data.city}, ${data.state}${data.zip ? ` ${data.zip}` : ""}`,
+        },
       ])}
 
       {/* Experience & Skills */}
