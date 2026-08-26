@@ -3,6 +3,7 @@ import { ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 /**
  * Onboarding Step 5: Review & Complete
@@ -13,20 +14,39 @@ export default function OnboardingReview() {
   const { data, completeOnboarding, prevStep } = useOnboarding();
   const router = useRouter();
 
-  const handleCompleteOnboarding = () => {
-    completeOnboarding();
-    Alert.alert(
-      "Welcome to Elite Bridge! 🎉",
-      "Your onboarding is complete. You're ready to start working!",
-      [
-        {
-          text: "Go to Home",
-          onPress: () => {
-            router.replace("/(staff)/home");
+  const handleCompleteOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
+        role: "staff",
+        name: data.fullName,
+        demo: true,
+        profileStatus: "submitted",
+        signedInAt: new Date().toISOString(),
+      }));
+      completeOnboarding();
+      Alert.alert(
+        "Welcome to Elite Bridge! 🎉",
+        "Your onboarding is complete. You're ready to start working!",
+        [
+          {
+            text: "Go to Home",
+            onPress: () => {
+              router.replace("/(staff)/home");
+            },
           },
-        },
-      ]
-    );
+        ],
+      );
+    } catch {
+      Alert.alert(
+        "Could not finish setup",
+        "Your information is still on this screen. Please tap Start Working again.",
+      );
+    }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderInfoSection = (title: string, items: { label: string; value: string }[]) => (
@@ -301,7 +321,8 @@ export default function OnboardingReview() {
       {/* Buttons */}
       <View style={{ gap: 12 }}>
         <TouchableOpacity
-          onPress={handleCompleteOnboarding}
+          onPress={() => void handleCompleteOnboarding()}
+          accessibilityRole="button"
           style={{
             backgroundColor: "#1B5E3F",
             borderRadius: 8,
@@ -315,7 +336,8 @@ export default function OnboardingReview() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           style={{
             backgroundColor: colors.surface,
             borderRadius: 8,

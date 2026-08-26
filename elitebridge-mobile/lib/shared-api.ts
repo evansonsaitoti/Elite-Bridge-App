@@ -92,6 +92,14 @@ export async function clearCaregiverBackendSession() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
 
+export async function deleteCaregiverBackendAccount(): Promise<"deleted" | "local-only"> {
+  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  if (!token) return "local-only";
+  await request<void>("/api/auth/account", { method: "DELETE" });
+  await AsyncStorage.removeItem(TOKEN_KEY);
+  return "deleted";
+}
+
 export async function fetchOpenShifts(): Promise<CaregiverShift[]> {
   const result = await request<{ shifts: CaregiverShift[] }>("/api/bookings/open");
   return result.shifts;

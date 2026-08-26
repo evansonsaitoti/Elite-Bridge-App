@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver') }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 44') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -57,6 +57,9 @@ jobs:
 
       - name: Type check caregiver app
         run: pnpm check
+
+      - name: Audit caregiver interactions and routes
+        run: pnpm audit:release
 
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json

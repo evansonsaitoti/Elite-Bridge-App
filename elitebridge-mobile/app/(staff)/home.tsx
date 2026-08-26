@@ -171,12 +171,15 @@ export default function StaffHome() {
   };
 
   const respondToOffer = async (offer: RescueOffer, status: "accepted" | "declined") => {
-    if (!sharedApiConfigured) return;
     if (demoMode) {
       setOffers((items) => status === "accepted"
         ? items.map((item) => item.id === offer.id ? { ...item, status: "accepted" } : item)
         : items.filter((item) => item.id !== offer.id));
       Alert.alert(status === "accepted" ? "Offer accepted" : "Offer declined", "Care Radar updated the agency view.");
+      return;
+    }
+    if (!sharedApiConfigured) {
+      Alert.alert("Agency sync required", "Connect to the shared agency service before responding to an offer.");
       return;
     }
     try {
@@ -197,7 +200,15 @@ export default function StaffHome() {
   };
 
   const submitCallout = async (application: CaregiverApplication, reason: CalloutReason) => {
-    if (!sharedApiConfigured) return;
+    if (demoMode) {
+      setApplications((items) => items.map((item) => item.id === application.id ? { ...item, status: "callout" } : item));
+      Alert.alert("Call-out preview recorded", "The review account now shows how the agency is alerted and the assignment is reopened for coverage.");
+      return;
+    }
+    if (!sharedApiConfigured) {
+      Alert.alert("Agency sync required", "Connect to the shared agency service before reporting a call-out.");
+      return;
+    }
     try {
       setCallingOutShiftId(application.shift.id);
       await callOutOfShift(application.shift.id, reason);

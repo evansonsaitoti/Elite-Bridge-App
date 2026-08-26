@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, Alert, ActivityIndicator } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
+import { useRouter } from "expo-router";
 
 /**
  * Onboarding Step 3: Background Check Submission
@@ -10,6 +11,7 @@ import { useOnboarding } from "@/lib/onboarding-context";
 export default function OnboardingBackgroundCheck() {
   const colors = useColors();
   const { data, updateData, nextStep, prevStep } = useOnboarding();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [hasConsented, setHasConsented] = useState(data.backgroundCheckConsent);
 
@@ -49,6 +51,7 @@ export default function OnboardingBackgroundCheck() {
             text: "Continue",
             onPress: () => {
               nextStep();
+              router.push("/(onboarding)/bank-account");
             },
           },
         ]
@@ -61,6 +64,11 @@ export default function OnboardingBackgroundCheck() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderChecklistItem = (item: string, index: number) => (
@@ -230,6 +238,7 @@ export default function OnboardingBackgroundCheck() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleSubmitBackgroundCheck}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: "#1B5E3F",
@@ -249,7 +258,8 @@ export default function OnboardingBackgroundCheck() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: colors.surface,

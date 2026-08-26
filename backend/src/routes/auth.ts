@@ -173,8 +173,8 @@ router.delete("/account", authMiddleware, async (req: AuthRequest, res, next) =>
     if (userList.length === 0) {
       throw new AppError(404, "User not found");
     }
-    if (userList[0].role !== "employer") {
-      throw new AppError(403, "Only employer accounts can be deleted from this app");
+    if (userList[0].role !== "caregiver" && userList[0].role !== "employer") {
+      throw new AppError(403, "This account cannot be deleted from the mobile app");
     }
 
     await db.delete(users).where(eq(users.id, req.user.id));

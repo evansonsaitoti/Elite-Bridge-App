@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
+import { useRouter } from "expo-router";
 
 /**
  * Onboarding Step 4: Bank Account Setup
@@ -10,6 +11,7 @@ import { useOnboarding } from "@/lib/onboarding-context";
 export default function OnboardingBankAccount() {
   const colors = useColors();
   const { data, updateData, nextStep, prevStep } = useOnboarding();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const [bankName, setBankName] = useState(data.bankName);
@@ -31,6 +33,12 @@ export default function OnboardingBankAccount() {
     if (accountNumber !== confirmAccountNumber) newErrors.confirmAccountNumber = "Account numbers do not match";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Alert.alert(
+        "Check your bank details",
+        "Complete every field, use a 9-digit routing number and make sure both account numbers match.",
+      );
+    }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -64,6 +72,7 @@ export default function OnboardingBankAccount() {
             text: "Continue",
             onPress: () => {
               nextStep();
+              router.push("/(onboarding)/review");
             },
           },
         ]
@@ -73,6 +82,11 @@ export default function OnboardingBankAccount() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderInput = (
@@ -287,6 +301,7 @@ export default function OnboardingBankAccount() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleVerifyAccount}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: "#1B5E3F",
@@ -306,7 +321,8 @@ export default function OnboardingBankAccount() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: colors.surface,

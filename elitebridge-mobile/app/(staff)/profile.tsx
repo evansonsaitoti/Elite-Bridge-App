@@ -5,7 +5,7 @@ import { Alert, Linking, ScrollView, Switch, Text, TextInput, TouchableOpacity, 
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { clearCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
+import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, sharedApiConfigured } from "@/lib/shared-api";
 
 type LocalSession = { email?: string; name?: string };
 type ProfilePanel = "timeOff" | "submissions" | "shared" | "activity" | "personal" | "settings" | null;
@@ -13,12 +13,14 @@ const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
 const SUPPORT_URL = "https://elitebridgestaffing.com/contact/";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
+const PROFILE_DRAFT_KEY = "elitebridge-caregiver-profile-draft-v1";
+const SETTINGS_KEY = "elitebridge-caregiver-settings-v1";
 
 export default function StaffProfile() {
   const colors = useColors();
   const router = useRouter();
   const [session, setSession] = useState<LocalSession>({});
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [activePanel, setActivePanel] = useState<ProfilePanel>(null);
   const [profileDraft, setProfileDraft] = useState({
     phone: "(508) 251-9346",
@@ -34,9 +36,22 @@ export default function StaffProfile() {
   });
 
   useEffect(() => {
-    AsyncStorage.getItem("elitebridge-session").then((raw) => {
-      if (!raw) return;
-      try { setSession(JSON.parse(raw) as LocalSession); } catch { setSession({}); }
+    Promise.all([
+      AsyncStorage.getItem("elitebridge-session"),
+      AsyncStorage.getItem(PROFILE_DRAFT_KEY),
+      AsyncStorage.getItem(SETTINGS_KEY),
+    ]).then(([rawSession, rawProfile, rawSettings]) => {
+      if (rawSession) {
+        try { setSession(JSON.parse(rawSession) as LocalSession); } catch { setSession({}); }
+      }
+      if (rawProfile) {
+        try { setProfileDraft((current) => ({ ...current, ...JSON.parse(rawProfile) })); } catch { /* Keep safe defaults. */ }
+      }
+      if (rawSettings) {
+        try { setSettings((current) => ({ ...current, ...JSON.parse(rawSettings) })); } catch { /* Keep safe defaults. */ }
+      }
+    }).catch(() => {
+      Alert.alert("Could not load profile", "Your saved profile details could not be loaded on this device.");
     });
   }, []);
 
@@ -92,22 +107,34 @@ export default function StaffProfile() {
     ]);
   };
 
-  const requestDeletion = () => {
+  const deleteAccount = () => {
     Alert.alert(
-      "Request account deletion",
-      "This will open a prepared email to Elite Bridge support. Your account is not deleted until support verifies and processes the request.",
+      "Permanently delete account?",
+      "This permanently deletes your Elite Bridge login and caregiver profile. This cannot be undone. Records that must be retained for legal, payroll, safety or compliance obligations may be preserved as required by law.",
       [
         { text: "Cancel", style: "cancel" },
         {
-          text: "Continue",
+          text: "Delete Account",
           style: "destructive",
-          onPress: () => {
-            const address = encodeURIComponent(SUPPORT_EMAIL);
-            const subject = encodeURIComponent("Elite Bridge account deletion request");
-            const body = encodeURIComponent(
-              `Please delete my Elite Bridge account and associated personal data, subject to legally required record retention.\n\nAccount email: ${displayEmail || ""}\nName: ${displayName}`,
-            );
-            void openUrl(`mailto:${address}?subject=${subject}&body=${body}`);
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await deleteCaregiverBackendAccount();
+              await AsyncStorage.multiRemove([
+                "elitebridge-session",
+                PROFILE_DRAFT_KEY,
+                SETTINGS_KEY,
+                "elitebridge-caregiver-preferences-v1",
+                "elitebridge-staff-services-v1",
+              ]);
+              Alert.alert("Account deleted", "Your Elite Bridge account and local caregiver data have been deleted.", [
+                { text: "Done", onPress: () => router.replace("/(auth)/login") },
+              ]);
+            } catch (error) {
+              Alert.alert("Unable to delete account", error instanceof Error ? error.message : "Please try again.");
+            } finally {
+              setDeleting(false);
+            }
           },
         },
       ],
@@ -124,11 +151,21 @@ export default function StaffProfile() {
   const displayEmail = storedEmail && !storedEmail.endsWith("@elitebridge.test") ? storedEmail : "appreview-caregiver@elitebridge.test";
   const panelCard = { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 15, marginBottom: 18 } as const;
   const inputStyle = { borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, marginTop: 8 } as const;
-  const saveProfile = () => {
-    Alert.alert("Personal information saved", "Your profile updates are saved on this device and ready to sync with the agency workspace.");
+  const saveProfile = async () => {
+    try {
+      await AsyncStorage.setItem(PROFILE_DRAFT_KEY, JSON.stringify(profileDraft));
+      Alert.alert("Personal information saved", "Your profile updates were saved on this device.");
+    } catch {
+      Alert.alert("Could not save profile", "Please try again.");
+    }
   };
-  const saveSettings = () => {
-    Alert.alert("Settings saved", "Your notification and privacy preferences have been saved.");
+  const saveSettings = async () => {
+    try {
+      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
+      Alert.alert("Settings saved", "Your notification and privacy preferences were saved.");
+    } catch {
+      Alert.alert("Could not save settings", "Please try again.");
+    }
   };
 
   const renderActivePanel = () => {
@@ -151,7 +188,7 @@ export default function StaffProfile() {
               <Text style={{ color: "#0A4A35", marginTop: 6, fontWeight: "800" }}>{item.status}</Text>
             </View>
           ))}
-          <TouchableOpacity accessibilityRole="button" onPress={() => showFeature("New time off request", "Use the Services tab to submit time off, sick leave or shift-swap requests to the agency.")} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/services")} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
             <Text style={{ color: "white", fontWeight: "900" }}>Create request</Text>
           </TouchableOpacity>
         </View>
@@ -242,7 +279,7 @@ export default function StaffProfile() {
           <TextInput accessibilityLabel="Service area" value={profileDraft.address} onChangeText={(address) => setProfileDraft((draft) => ({ ...draft, address }))} style={inputStyle} />
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 12 }}>Emergency contact</Text>
           <TextInput accessibilityLabel="Emergency contact" value={profileDraft.emergencyContact} onChangeText={(emergencyContact) => setProfileDraft((draft) => ({ ...draft, emergencyContact }))} style={inputStyle} />
-          <TouchableOpacity accessibilityRole="button" onPress={saveProfile} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 14 }}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => void saveProfile()} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 14 }}>
             <Text style={{ color: "white", fontWeight: "900" }}>Save personal information</Text>
           </TouchableOpacity>
         </View>
@@ -269,7 +306,7 @@ export default function StaffProfile() {
             <Switch value={settings[item.key]} onValueChange={(value) => setSettings((current) => ({ ...current, [item.key]: value }))} />
           </View>
         ))}
-        <TouchableOpacity accessibilityRole="button" onPress={saveSettings} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
+        <TouchableOpacity accessibilityRole="button" onPress={() => void saveSettings()} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
           <Text style={{ color: "white", fontWeight: "900" }}>Save settings</Text>
         </TouchableOpacity>
       </View>
@@ -413,19 +450,12 @@ export default function StaffProfile() {
         <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 14 }}>Sign out</Text>
       </TouchableOpacity>
 
-      <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, overflow: "hidden" }}>
-        <TouchableOpacity onPress={() => setAdvancedOpen((open) => !open)} style={{ padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-          <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900" }}>Advanced account controls</Text>
-          <Text style={{ color: colors.muted, fontSize: 18, fontWeight: "900" }}>{advancedOpen ? "⌃" : "⌄"}</Text>
+      <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: "#FDA29B", padding: 14 }}>
+        <Text style={{ color: "#B42318", fontSize: 16, fontWeight: "900" }}>Delete account</Text>
+        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Permanently delete your caregiver login and local profile directly in the app. This action cannot be undone.</Text>
+        <TouchableOpacity disabled={deleting} onPress={deleteAccount} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center", opacity: deleting ? 0.55 : 1 }}>
+          <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>{deleting ? "Deleting account…" : "Delete account permanently"}</Text>
         </TouchableOpacity>
-        {advancedOpen ? (
-          <View style={{ borderTopWidth: 1, borderTopColor: colors.border, padding: 14 }}>
-            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19 }}>Account deletion is intentionally separated from sign out to prevent accidental requests. Elite Bridge will remove account data unless retention is legally required for staffing, payroll, safety or compliance records.</Text>
-            <TouchableOpacity onPress={requestDeletion} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center" }}>
-              <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>Request account deletion</Text>
-            </TouchableOpacity>
-          </View>
-        ) : null}
       </View>
     </ScrollView>
     </ScreenContainer>

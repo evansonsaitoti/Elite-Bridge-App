@@ -32,21 +32,28 @@ export default function OnboardingWelcome() {
     if (!state.trim()) newErrors.state = "State is required";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Alert.alert(
+        "Complete required fields",
+        "Enter your full name, phone number, street address, city and state to continue.",
+      );
+    }
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep()) {
       updateData({
-        fullName,
-        phoneNumber,
-        dateOfBirth,
-        address,
-        city,
-        state,
-        zip,
+        fullName: fullName.trim(),
+        phoneNumber: phoneNumber.trim(),
+        dateOfBirth: dateOfBirth.trim(),
+        address: address.trim(),
+        city: city.trim(),
+        state: state.trim().toUpperCase(),
+        zip: zip.trim(),
       });
       nextStep();
+      router.push("/(onboarding)/experience");
     }
   };
 
@@ -223,6 +230,9 @@ export default function OnboardingWelcome() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleNext}
+          testID="caregiver-profile-continue"
+          accessibilityRole="button"
+          accessibilityLabel="Continue to caregiver experience"
           style={{
             backgroundColor: "#1B5E3F",
             borderRadius: 14,
