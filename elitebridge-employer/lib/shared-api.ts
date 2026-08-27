@@ -102,16 +102,6 @@ export type RescueCandidate = {
   rationale: string;
 };
 
-export type AskEliteResponse = {
-  intent: string;
-  answer: string;
-  evidence: string[];
-  actionLabel?: string;
-  route?: "/coverage" | "/compliance" | "/schedule" | "/applications" | "/operations";
-  confirmation?: string;
-  generatedAt: string;
-};
-
 export const sharedApiConfigured = Boolean(API_BASE_URL);
 
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
@@ -214,11 +204,4 @@ export async function launchCalloutRescue(calloutId: number) {
     `/api/bookings/employer/callouts/${calloutId}/launch-rescue`,
     { method: "POST" },
   );
-}
-
-export async function askElite(command: string): Promise<AskEliteResponse> {
-  return request<AskEliteResponse>("/api/ai/ask", {
-    method: "POST",
-    body: JSON.stringify({ command }),
-  });
 }

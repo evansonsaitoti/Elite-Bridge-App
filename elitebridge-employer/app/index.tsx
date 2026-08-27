@@ -3,7 +3,7 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, Toucha
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { getEmployerSession, getLocalScheduleShifts, type EmployerScheduleShift } from "../lib/employer-storage";
+import { getEmployerSession, getLocalScheduleShifts, isDemoEmployerSession, type EmployerScheduleShift } from "../lib/employer-storage";
 import {
   fetchEmployerApplications,
   fetchEmployerCallouts,
@@ -158,10 +158,12 @@ export default function EmployerHome() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [syncError, setSyncError] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   const refresh = async () => {
     const session = await getEmployerSession();
-    const isDemo = session?.email.includes("appreview") || session?.email.endsWith("@example.com");
+    const isDemo = isDemoEmployerSession(session);
+    setDemoMode(isDemo);
     if (isDemo || !sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setShifts(local.length > 0 ? local.map(localShiftToShared) : [demoShift, demoAssignedShift]);
@@ -216,7 +218,7 @@ export default function EmployerHome() {
       ? { eyebrow: "COVERAGE COPILOT", title: `${urgentOpen.length} urgent shift${urgentOpen.length === 1 ? " needs" : "s need"} coverage`, body: pendingApplications.length > 0 ? `${pendingApplications.length} caregiver application${pendingApplications.length === 1 ? " is" : "s are"} ready for agency review.` : "Keep the shift visible while caregivers respond to the live feed.", action: "Review coverage", route: "/coverage" as const }
       : pendingApplications.length > 0
         ? { eyebrow: "APPLICATIONS", title: `${pendingApplications.length} caregiver application${pendingApplications.length === 1 ? " is" : "s are"} waiting`, body: "Review worker details and confirm or reject each application. Elite never makes the hiring decision automatically.", action: "Review applications", route: "/applications" as const }
-        : { eyebrow: "ASK ELITE", title: "Agency operations are synchronized", body: "Ask Elite for a live briefing across coverage, applications, workforce availability and upcoming assignments.", action: "Ask Elite", route: "/ask-elite" as const };
+        : { eyebrow: "SCHEDULE", title: "Agency operations are synchronized", body: "Review the upcoming schedule and confirm that every visit has appropriate coverage.", action: "Open schedule", route: "/schedule" as const };
 
   const stats = [
     { value: openShifts.length, label: "Open shifts", tone: "#FDECEC", valueColor: "#B42318" },
@@ -230,7 +232,7 @@ export default function EmployerHome() {
       <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
         <View style={styles.brandRow}>
           <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.brandSub}>EMPLOYER</Text></View>
-          <View style={styles.maBadge}><Text style={styles.maBadgeText}>LIVE WORKSPACE</Text></View>
+          <View style={styles.maBadge}><Text style={styles.maBadgeText}>{demoMode ? "DEMO WORKSPACE" : "LIVE WORKSPACE"}</Text></View>
         </View>
 
         <Text style={styles.heading}>{greeting()}</Text>
@@ -240,12 +242,6 @@ export default function EmployerHome() {
         {syncError ? <View style={styles.error}><Text style={styles.errorTitle}>Agency sync needs attention</Text><Text style={styles.errorText}>{syncError}</Text><TouchableOpacity style={styles.retry} onPress={() => void refresh()}><Text style={styles.retryText}>Try again</Text></TouchableOpacity></View> : null}
 
         <View style={styles.statGrid}>{stats.map((stat) => <View key={stat.label} style={[styles.statCard,{backgroundColor:stat.tone}]}><Text style={[styles.statValue,{color:stat.valueColor}]}>{stat.value}</Text><Text style={styles.statLabel}>{stat.label}</Text></View>)}</View>
-
-        <View style={styles.commandCard}>
-          <Text style={styles.commandEyebrow}>ASK ELITE</Text><Text style={styles.commandTitle}>What do you want to get done?</Text>
-          <TouchableOpacity style={styles.commandInput} onPress={() => router.push("/ask-elite")}><Text style={styles.commandPlaceholder}>“What needs my attention before tomorrow?”</Text></TouchableOpacity>
-          <View style={styles.promptRow}><TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Coverage risks</Text></TouchableOpacity><TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Overtime risk</Text></TouchableOpacity><TouchableOpacity onPress={() => router.push("/ask-elite")}><Text style={styles.promptChip}>Applications</Text></TouchableOpacity></View>
-        </View>
 
         <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Operations priority</Text><TouchableOpacity onPress={() => router.push("/operations")}><Text style={styles.sectionLink}>Operations</Text></TouchableOpacity></View>
         <View style={styles.aiCard}><Text style={styles.aiEyebrow}>{priority.eyebrow}</Text><Text style={styles.aiTitle}>{priority.title}</Text><Text style={styles.aiBody}>{priority.body}</Text><TouchableOpacity style={styles.aiButton} onPress={() => router.push(priority.route)}><Text style={styles.aiButtonText}>{priority.action}</Text></TouchableOpacity></View>

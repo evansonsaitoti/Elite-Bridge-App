@@ -9,21 +9,15 @@ import {
   clearAllEmployerData,
   getAgencyProfile,
   getEmployerSession,
+  isDemoEmployerSession,
   saveAgencyProfile,
   type AgencyProfile,
   type EmployerSession,
 } from "../lib/employer-storage";
 import { clearEmployerBackendSession, deleteEmployerBackendAccount } from "../lib/shared-api";
 
-type PayrollProvider = NonNullable<AgencyProfile["payrollProvider"]>;
-
 const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
-const PAYROLL_OPTIONS: Array<{ name: Exclude<PayrollProvider, "">; detail: string }> = [
-  { name: "Gusto", detail: "Payroll and contractor payment connection" },
-  { name: "ADP", detail: "Workforce payroll sync for agency teams" },
-  { name: "QuickBooks", detail: "Accounting-ready payroll export" },
-];
 
 const emptyProfile: AgencyProfile = {
   agencyName: "Sample Care Agency",
@@ -36,7 +30,6 @@ const emptyProfile: AgencyProfile = {
   logoUri: "",
   contactName: "Agency Administrator",
   phone: "(508) 251-9346",
-  payrollProvider: "",
 };
 
 export default function EmployerProfile() {
@@ -67,7 +60,7 @@ export default function EmployerProfile() {
       contactName: profile.contactName?.trim(),
       phone: profile.phone?.trim(),
     });
-    Alert.alert("Profile saved", "Your employer profile, logo and payroll preferences were updated.");
+    Alert.alert("Profile saved", "Your employer profile was updated.");
   };
 
   const signOut = () => {
@@ -96,7 +89,7 @@ export default function EmployerProfile() {
           onPress: async () => {
             setDeleting(true);
             try {
-              await deleteEmployerBackendAccount();
+              if (!isDemoEmployerSession(session)) await deleteEmployerBackendAccount();
               await clearAllEmployerData();
               Alert.alert("Account deleted", "Your Elite Bridge Employer account and local agency data have been deleted.", [
                 { text: "Done", onPress: () => router.replace("/login") },
@@ -117,28 +110,12 @@ export default function EmployerProfile() {
     void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=${subject}`);
   };
 
-  const openSummary = (label: string) => {
-    if (label === "Time off") {
-      Alert.alert("Time off", "No pending time-off requests are waiting in this workspace. Future requests from staff will appear here for employer review.");
-      return;
-    }
-    if (label === "Sick leave") {
-      Alert.alert("Sick leave", "No sick-leave requests are pending. When caregivers submit sick leave, employers can review status and coverage impact here.");
-      return;
-    }
-    if (label === "Submissions") {
-      Alert.alert("Submissions", "No open form submissions are pending. Staff forms, visit notes and correction requests will appear here.");
-      return;
-    }
-    router.push("/setup");
-  };
-
   return (
     <SafeAreaView style={styles.safe}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <Text style={styles.eye}>ELITE BRIDGE EMPLOYER</Text>
         <Text style={styles.title}>Profile</Text>
-        <Text style={styles.sub}>Company identity, payroll connections, submissions and account settings.</Text>
+        <Text style={styles.sub}>Company identity, support, privacy and account settings.</Text>
 
         <View style={styles.profileCard}>
           {profile.logoUri ? (
@@ -155,7 +132,7 @@ export default function EmployerProfile() {
 
         <View style={styles.card}>
           <Text style={styles.cardTitle}>Company logo</Text>
-          <Text style={styles.help}>Paste a secure logo image URL. When backend file storage is enabled, this field becomes the upload target.</Text>
+          <Text style={styles.help}>Paste a secure, publicly accessible image URL for your agency logo.</Text>
           <TextInput
             value={profile.logoUri}
             onChangeText={(logoUri) => setProfile({ ...profile, logoUri })}
@@ -175,39 +152,6 @@ export default function EmployerProfile() {
           <Field label="Primary city" value={profile.city} onChangeText={(city) => setProfile({ ...profile, city })} />
           <Field label="State" value={profile.state} onChangeText={(state) => setProfile({ ...profile, state })} autoCapitalize="characters" maxLength={2} />
           <TouchableOpacity style={styles.primary} onPress={save}><Text style={styles.primaryText}>Save profile</Text></TouchableOpacity>
-        </View>
-
-        <View style={styles.quickGrid}>
-          {[
-            { label: "Time off", value: "0", detail: "Open requests" },
-            { label: "Sick leave", value: "0", detail: "Pending review" },
-            { label: "Submissions", value: "0", detail: "Forms shared" },
-            { label: "Settings", value: "MA", detail: "Agency region" },
-          ].map((item) => (
-            <TouchableOpacity key={item.label} accessibilityRole="button" style={styles.quickCard} onPress={() => openSummary(item.label)}>
-              <Text style={styles.quickValue}>{item.value}</Text>
-              <Text style={styles.quickLabel}>{item.label}</Text>
-              <Text style={styles.quickDetail}>{item.detail}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Payroll integrations</Text>
-          <Text style={styles.help}>Choose the payroll provider Elite Bridge should connect with when production OAuth keys are enabled.</Text>
-          {PAYROLL_OPTIONS.map((option) => {
-            const selected = profile.payrollProvider === option.name;
-            return (
-              <TouchableOpacity key={option.name} style={[styles.integration, selected && styles.integrationActive]} onPress={() => setProfile({ ...profile, payrollProvider: option.name })}>
-                <View style={styles.integrationMark}><Text style={styles.integrationMarkText}>{option.name[0]}</Text></View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.integrationTitle}>{option.name}</Text>
-                  <Text style={styles.integrationDetail}>{option.detail}</Text>
-                </View>
-                <Text style={[styles.integrationStatus, selected && styles.integrationStatusActive]}>{selected ? "Linked" : "Link"}</Text>
-              </TouchableOpacity>
-            );
-          })}
         </View>
 
         <View style={styles.listCard}>

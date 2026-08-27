@@ -3,9 +3,10 @@ import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, Toucha
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { getEmployerSession, getLocalScheduleShifts, isDemoEmployerSession } from "../lib/employer-storage";
 import { fetchEmployerApplications, fetchEmployerCallouts, fetchEmployerShifts, sharedApiConfigured } from "../lib/shared-api";
 
-type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/ask-elite" | "/schedule" | "/profile";
+type OpsRoute = "/coverage" | "/compliance" | "/applications" | "/schedule" | "/profile";
 
 export default function OperationsScreen() {
   const router = useRouter();
@@ -18,6 +19,19 @@ export default function OperationsScreen() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const refresh = async () => {
+    const session = await getEmployerSession();
+    if (isDemoEmployerSession(session)) {
+      const local = await getLocalScheduleShifts();
+      const open = local.filter((item) => item.status !== "Covered");
+      setOpenShifts(open.length || 1);
+      setUrgentShifts(open.filter((item) => item.status === "At risk").length || 1);
+      setPendingApplications(1);
+      setOpenCallouts(1);
+      setSyncError(null);
+      setRefreshing(false);
+      setLoading(false);
+      return;
+    }
     if (!sharedApiConfigured) {
       setLoading(false);
       setSyncError("Secure agency sync is unavailable in this build.");
@@ -50,7 +64,7 @@ export default function OperationsScreen() {
     if (openCallouts > 0) return { title: "Resolve active caregiver call-outs.", body: `${openCallouts} assigned shift${openCallouts === 1 ? " has" : "s have"} reopened for urgent replacement coverage.`, route: "/coverage" as OpsRoute, label: "Open Coverage Copilot" };
     if (urgentShifts > 0) return { title: "Urgent open shifts need coverage.", body: `${urgentShifts} urgent shift${urgentShifts === 1 ? " is" : "s are"} currently unassigned.`, route: "/coverage" as OpsRoute, label: "Review coverage" };
     if (pendingApplications > 0) return { title: "Caregiver applications are waiting.", body: `${pendingApplications} application${pendingApplications === 1 ? " needs" : "s need"} an agency decision.`, route: "/applications" as OpsRoute, label: "Review applications" };
-    return { title: "No urgent staffing exception is open.", body: "Use Ask Elite for a live briefing across coverage, applications and schedule risk.", route: "/ask-elite" as OpsRoute, label: "Ask Elite" };
+    return { title: "No urgent staffing exception is open.", body: "Review the schedule to confirm upcoming visits remain appropriately covered.", route: "/schedule" as OpsRoute, label: "Open schedule" };
   }, [openCallouts, urgentShifts, pendingApplications]);
 
   const items: Array<{ title: string; detail: string; action: string; route: OpsRoute }> = [
@@ -58,7 +72,6 @@ export default function OperationsScreen() {
     { title: "Applications", detail: `${pendingApplications} pending caregiver decisions`, action: "Review", route: "/applications" },
     { title: "Schedule", detail: `${openShifts} open shifts currently published`, action: "Open", route: "/schedule" },
     { title: "Compliance", detail: "Massachusetts-aware agency checks and reminders", action: "Open", route: "/compliance" },
-    { title: "Ask Elite", detail: "Live operations briefing from agency data", action: "Ask", route: "/ask-elite" },
   ];
 
   return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
@@ -80,7 +93,7 @@ export default function OperationsScreen() {
     <View style={s.accountCard}>
       <Text style={s.accountEyebrow}>PROFILE</Text>
       <Text style={s.accountName}>Manage agency settings</Text>
-      <Text style={s.meta}>Company logo, payroll connection preferences, privacy links and sign out live in Profile.</Text>
+      <Text style={s.meta}>Company identity, privacy, support, account deletion and sign out are available in Profile.</Text>
       <View style={s.accountActions}>
         <TouchableOpacity style={s.accountButton} onPress={() => router.push("/profile")}><Text style={s.accountButtonText}>Open Profile</Text></TouchableOpacity>
       </View>

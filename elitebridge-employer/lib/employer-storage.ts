@@ -4,6 +4,7 @@ export type EmployerSession = {
   email: string;
   name: string;
   role: "owner" | "administrator" | "scheduler";
+  mode: "live" | "demo";
 };
 
 export type AgencyProfile = {
@@ -17,7 +18,6 @@ export type AgencyProfile = {
   logoUri?: string;
   contactName?: string;
   phone?: string;
-  payrollProvider?: "Gusto" | "ADP" | "QuickBooks" | "";
 };
 
 const SESSION_KEY = "elitebridge-employer-session-v1";
@@ -55,6 +55,10 @@ export async function getEmployerSession(): Promise<EmployerSession | null> {
 
 export async function saveEmployerSession(session: EmployerSession): Promise<void> {
   await AsyncStorage.setItem(SESSION_KEY, JSON.stringify(session));
+}
+
+export function isDemoEmployerSession(session: EmployerSession | null): boolean {
+  return session?.mode === "demo";
 }
 
 export async function clearEmployerSession(): Promise<void> {

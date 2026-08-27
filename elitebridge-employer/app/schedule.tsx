@@ -3,7 +3,7 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, Touchab
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { getLocalScheduleShifts, saveLocalScheduleShift, type EmployerScheduleShift } from "../lib/employer-storage";
+import { getEmployerSession, getLocalScheduleShifts, isDemoEmployerSession, saveLocalScheduleShift, type EmployerScheduleShift } from "../lib/employer-storage";
 import { createEmployerShift, fetchEmployerShifts, sharedApiConfigured, type SharedShift } from "../lib/shared-api";
 
 type Shift = EmployerScheduleShift & { remoteId?: number };
@@ -42,13 +42,17 @@ export default function ScheduleScreen() {
   const [showForm, setShowForm] = useState(false);
   const [draft, setDraft] = useState(emptyDraft);
   const [refreshing, setRefreshing] = useState(false);
+  const [demoMode, setDemoMode] = useState(false);
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting secure shared schedule…" : "Secure device schedule");
 
   const loadShifts = async () => {
-    if (!sharedApiConfigured) {
+    const session = await getEmployerSession();
+    const demo = isDemoEmployerSession(session);
+    setDemoMode(demo);
+    if (demo || !sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setShifts(local);
-      setSyncMessage(local.length > 0 ? "Saved on this device" : "Secure device schedule");
+      setSyncMessage(demo ? "Demo schedule · saved only on this device" : local.length > 0 ? "Saved on this device" : "Secure device schedule");
       return;
     }
     try {
@@ -71,7 +75,7 @@ export default function ScheduleScreen() {
     if (!draft.contactPhone.trim()) return Alert.alert("Missing contact", "Add the scheduler contact phone number.");
 
     try {
-      if (sharedApiConfigured) {
+      if (sharedApiConfigured && !demoMode) {
         const created = await createEmployerShift({ ...draft, hourlyRate: rate });
         setShifts((current) => [formatRemoteShift(created), ...current]);
         setSyncMessage("Posted to the caregiver shift feed");
@@ -92,14 +96,14 @@ export default function ScheduleScreen() {
       }
       setDraft(emptyDraft);
       setShowForm(false);
-      Alert.alert("Shift posted", sharedApiConfigured ? "The shift is now available in Elite Bridge for caregivers." : "The shift was saved on this device.");
+      Alert.alert("Shift posted", sharedApiConfigured && !demoMode ? "The shift is now available in Elite Bridge for caregivers." : "The demo shift was saved only on this device.");
     } catch (error) { Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again."); }
   };
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={loadShifts} />}>
     <View style={styles.headerRow}><View><Text style={styles.eyebrow}>ELITE BRIDGE EMPLOYER</Text><Text style={styles.title}>Schedule</Text></View><TouchableOpacity style={styles.primary} onPress={() => setShowForm(!showForm)}><Text style={styles.primaryText}>{showForm ? "Cancel" : "+ New shift"}</Text></TouchableOpacity></View>
     <Text style={styles.sub}>One schedule for coverage, risk, continuity and overtime.</Text>
-    <View style={[styles.syncPill, sharedApiConfigured ? styles.syncPillOn : styles.syncPillOff]}><Text style={styles.syncText}>{syncMessage}</Text></View>
+    <View style={[styles.syncPill, sharedApiConfigured && !demoMode ? styles.syncPillOn : styles.syncPillOff]}><Text style={styles.syncText}>{syncMessage}</Text></View>
 
     {showForm && <View style={styles.card}>
       <Text style={styles.cardTitle}>Post a shift</Text>

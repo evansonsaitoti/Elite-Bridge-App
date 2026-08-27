@@ -17,9 +17,6 @@ import { useRouter } from "expo-router";
 import { getAgencyProfile, saveAgencyProfile, saveEmployerSession } from "../lib/employer-storage";
 import { ensureEmployerBackendSession, sharedApiConfigured } from "../lib/shared-api";
 
-const REVIEW_EMAIL = "appreview-employer@elitebridgestaffing.com";
-const REVIEW_PASSWORD = "Employer2026!";
-
 export default function EmployerLogin() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -27,11 +24,12 @@ export default function EmployerLogin() {
   const [showPassword, setShowPassword] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const continueReviewAccess = async () => {
+  const exploreDemoWorkspace = async () => {
     await saveEmployerSession({
-      email: REVIEW_EMAIL,
-      name: "Agency Review Administrator",
+      email: "demo@elitebridgestaffing.com",
+      name: "Demo Agency Administrator",
       role: "administrator",
+      mode: "demo",
     });
     await saveAgencyProfile({
       agencyName: "Sample Care Agency",
@@ -49,10 +47,6 @@ export default function EmployerLogin() {
     if (!email.trim() || !password) {
       return Alert.alert("Missing information", "Enter your work email and password.");
     }
-    if (email.trim().toLowerCase() === REVIEW_EMAIL && password === REVIEW_PASSWORD) {
-      await continueReviewAccess();
-      return;
-    }
     if (!sharedApiConfigured) {
       return Alert.alert("Service unavailable", "Elite Bridge Employer cannot reach the secure agency service in this build.");
     }
@@ -64,6 +58,7 @@ export default function EmployerLogin() {
         email: user.email,
         name: `${user.firstName} ${user.lastName}`.trim() || user.email,
         role: "administrator",
+        mode: "live",
       });
       const agency = await getAgencyProfile();
       router.replace(agency ? "/" : "/setup");
@@ -79,6 +74,7 @@ export default function EmployerLogin() {
       email: "newagency@example.com",
       name: "New Agency Owner",
       role: "owner",
+      mode: "demo",
     });
     router.push("/setup");
   };
@@ -145,9 +141,13 @@ export default function EmployerLogin() {
               {busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Sign in to Employer</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity disabled={busy} onPress={continueReviewAccess} style={styles.demoButton}>
-              <Text style={styles.demoButtonText}>Continue with review access</Text>
+            <TouchableOpacity disabled={busy} onPress={exploreDemoWorkspace} style={styles.demoButton}>
+              <Text style={styles.demoButtonText}>Explore complete demo</Text>
             </TouchableOpacity>
+
+            <Text style={styles.demoDisclosure}>
+              Demo mode is available to everyone. It uses clearly identified sample agency data and exposes the complete employer feature set without changing behavior for App Review.
+            </Text>
 
             <TouchableOpacity disabled={busy} onPress={startAgencySetup} style={styles.secondary}>
               <Text style={styles.secondaryText}>New agency? Complete setup</Text>
@@ -195,6 +195,7 @@ const styles = StyleSheet.create({
   primaryText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
   demoButton: { alignItems: "center", backgroundColor: "#EAF4EF", borderRadius: 14, justifyContent: "center", marginTop: 10, minHeight: 50 },
   demoButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
+  demoDisclosure: { color: "#667085", fontSize: 11, lineHeight: 16, marginTop: 8, textAlign: "center" },
   secondary: { alignItems: "center", borderColor: "#D0D5DD", borderRadius: 14, borderWidth: 1, marginTop: 10, padding: 14 },
   secondaryText: { color: "#0A4A35", fontWeight: "900" },
   accessBox: { backgroundColor: "#EAF4EF", borderRadius: 18, marginTop: 16, padding: 14 },

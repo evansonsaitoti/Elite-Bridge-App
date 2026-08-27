@@ -3,7 +3,30 @@ import { Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, 
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
+import { getEmployerSession, isDemoEmployerSession } from "../lib/employer-storage";
 import { fetchEmployerApplications, sharedApiConfigured, updateEmployerApplication, type EmployerApplication } from "../lib/shared-api";
+
+const DEMO_APPLICATION: EmployerApplication = {
+  id: 8101,
+  shift_id: 8001,
+  caregiver_id: 22,
+  status: "pending",
+  note: "Available and nearby.",
+  created_at: new Date().toISOString(),
+  shift_title: "Companionship + meal prep",
+  service_type: "Companionship + meal prep",
+  start_time: new Date(Date.now() + 18_000_000).toISOString(),
+  end_time: new Date(Date.now() + 32_400_000).toISOString(),
+  city: "Lowell",
+  state: "MA",
+  caregiver_user_id: 22,
+  first_name: "Demo",
+  last_name: "Caregiver",
+  email: "demo-caregiver@example.com",
+  rating: "4.9",
+  total_hours: "124",
+  certifications: ["HHA", "CPR"],
+};
 
 function fitScore(item: EmployerApplication) {
   const rating = Number(item.rating || 0);
@@ -25,8 +48,16 @@ export default function ApplicationsScreen() {
   const [items, setItems] = useState<EmployerApplication[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [workingId, setWorkingId] = useState<number | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
 
   const load = async () => {
+    const session = await getEmployerSession();
+    const demo = isDemoEmployerSession(session);
+    setDemoMode(demo);
+    if (demo) {
+      setItems((current) => current.length > 0 ? current : [DEMO_APPLICATION]);
+      return;
+    }
     if (!sharedApiConfigured) return;
     try {
       setRefreshing(true);
@@ -45,6 +76,11 @@ export default function ApplicationsScreen() {
   const update = async (item: EmployerApplication, status: "approved" | "rejected") => {
     try {
       setWorkingId(item.id);
+      if (demoMode) {
+        setItems((current) => current.map((entry) => entry.id === item.id ? { ...entry, status } : entry));
+        Alert.alert(status === "approved" ? "Demo caregiver assigned" : "Demo application declined", "This change is stored only in the demo workspace on this device.");
+        return;
+      }
       if (!sharedApiConfigured) {
         Alert.alert("Agency sync required", "Connect to the shared agency service before making assignment decisions.");
         return;
@@ -60,7 +96,7 @@ export default function ApplicationsScreen() {
   };
 
   return <SafeAreaView style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={load} />}>
-    <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>← Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>{sharedApiConfigured ? "LIVE SYNC" : "LOCAL PREVIEW"}</Text></View></View>
+    <View style={styles.topRow}><TouchableOpacity onPress={() => router.back()}><Text style={styles.back}>← Back</Text></TouchableOpacity><View style={styles.badge}><Text style={styles.badgeText}>{demoMode ? "DEMO DATA" : sharedApiConfigured ? "LIVE SYNC" : "LOCAL PREVIEW"}</Text></View></View>
     <Text style={styles.eyebrow}>WORKFORCE MATCHING</Text>
     <Text style={styles.title}>Shift Applications</Text>
     <Text style={styles.subtitle}>Review applicants with decision support, then keep the final assignment human-approved.</Text>

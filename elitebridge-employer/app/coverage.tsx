@@ -3,7 +3,7 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
-import { getLocalScheduleShifts, type EmployerScheduleShift } from "../lib/employer-storage";
+import { getEmployerSession, getLocalScheduleShifts, isDemoEmployerSession, type EmployerScheduleShift } from "../lib/employer-storage";
 import {
   fetchEmployerCallouts,
   fetchEmployerShifts,
@@ -62,7 +62,8 @@ export default function CoverageCopilotScreen() {
   const [syncError, setSyncError] = useState<string | null>(null);
 
   const refresh = async () => {
-    if (!sharedApiConfigured) {
+    const session = await getEmployerSession();
+    if (isDemoEmployerSession(session) || !sharedApiConfigured) {
       const local = await getLocalScheduleShifts();
       setCallouts([]);
       setShifts(local.map(localShiftToShared));
