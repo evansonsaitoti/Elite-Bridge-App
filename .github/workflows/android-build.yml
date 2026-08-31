@@ -1,0 +1,130 @@
+name: Elite Bridge Android Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which Android app should be built?"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - caregiver
+          - employer
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elite-bridge-android-builds
+  cancel-in-progress: false
+
+jobs:
+  caregiver:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout exact source used by latest iOS split build
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized caregiver icon
+        run: pnpm prepare:icons
+
+      - name: Type check caregiver app
+        run: pnpm check
+
+      - name: Validate Android package
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const app = require('./app.json').expo;
+          if (app.android?.package !== 'com.app.elitebridgemobile') {
+            throw new Error(`Unexpected caregiver Android package: ${app.android?.package}`);
+          }
+          console.log(`Caregiver Android package: ${app.android.package}`);
+          NODE
+
+      - name: Remove iOS-only EAS hooks from Android upload package
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.scripts = pkg.scripts || {};
+          delete pkg.scripts['eas-build-pre-install'];
+          delete pkg.scripts['eas-build-post-install'];
+          if (pkg.scripts.postinstall === 'bash scripts/eas-fix-pod-path.sh') delete pkg.scripts.postinstall;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
+
+      - name: Build caregiver Android App Bundle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
+
+  employer:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout exact source used by latest iOS split build
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized employer icon
+        run: pnpm prepare:icons
+
+      - name: Type check employer app
+        run: pnpm check
+
+      - name: Validate Android package
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const app = require('./app.json').expo;
+          if (app.android?.package !== 'com.app.elitebridgeemployer') {
+            throw new Error(`Unexpected employer Android package: ${app.android?.package}`);
+          }
+          console.log(`Employer Android package: ${app.android.package}`);
+          NODE
+
+      - name: Build employer Android App Bundle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
