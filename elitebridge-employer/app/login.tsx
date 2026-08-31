@@ -69,15 +69,6 @@ export default function EmployerLogin() {
     }
   };
 
-  const startAgencySetup = async () => {
-    await saveEmployerSession({
-      email: "newagency@example.com",
-      name: "New Agency Owner",
-      role: "owner",
-      mode: "demo",
-    });
-    router.push("/setup");
-  };
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -146,12 +137,8 @@ export default function EmployerLogin() {
             </TouchableOpacity>
 
             <Text style={styles.demoDisclosure}>
-              Demo mode is available to everyone. It uses clearly identified sample agency data and exposes the complete employer feature set without changing behavior for App Review.
+              Preview the complete employer workspace using clearly identified sample agency data. Demo actions remain on this device and do not affect a live agency account.
             </Text>
-
-            <TouchableOpacity disabled={busy} onPress={startAgencySetup} style={styles.secondary}>
-              <Text style={styles.secondaryText}>New agency? Complete setup</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.accessBox}>

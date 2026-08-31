@@ -37,11 +37,6 @@ export type EmployerScheduleShift = {
   createdAt: string;
 };
 
-export const DEMO_EMPLOYER = {
-  email: "employer@elitebridge.com",
-  password: "Employer123!",
-  name: "Agency Administrator",
-} as const;
 
 export async function getEmployerSession(): Promise<EmployerSession | null> {
   const raw = await AsyncStorage.getItem(SESSION_KEY);

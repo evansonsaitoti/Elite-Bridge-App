@@ -1,30 +1,23 @@
-# Elite Bridge Employer — App Review Notes (Build 21)
+# Elite Bridge Employer — App Review Notes (Build 22)
 
-## Review access
+## Complete review access
 
-On the sign-in screen, tap **Explore complete demo**. No credentials are required.
+On the sign-in screen, tap **Explore complete demo**. No credentials or authentication code are required.
 
-Demo mode is visible and available to every user. It is not activated by reviewer identity, email address, device, location, date, IP address, build channel, or remote configuration. A **DEMO WORKSPACE** badge identifies sample data in the app.
+This visible demo option is available to every user. It uses clearly identified sample agency data, displays a **DEMO WORKSPACE** badge, and keeps demo actions on the device. It is not activated by identity, email address, device, location, date, IP address, build channel, or remote configuration.
 
-## Complete feature map
+## Feature map
 
 - **Home:** staffing overview, open shifts, applications, call-outs, Care Radar, and upcoming schedule.
-- **Schedule:** view and create shifts and open Coverage Copilot.
+- **Schedule:** view and create demo shifts and open Coverage Copilot.
 - **Ops:** Coverage, Applications, Schedule, Compliance, and Profile.
 - **Profile:** agency details, support, privacy policy, sign out, and account deletion.
+- Secondary screens accessible from these areas: Clients, Workforce, Coverage Copilot, Timesheets, Applications, Compliance, and Agency setup.
 
-The following secondary screens are intentionally reached from the documented primary screens rather than displayed as bottom tabs:
+## Build 22 compliance changes
 
-- Clients
-- Workforce
-- Coverage Copilot
-- Timesheets
-- Applications
-- Compliance
-- Agency setup
-
-## Build 21 transparency correction
-
-Build 20 contained a reviewer-named demo account and selected sample dashboard data by matching the account email. This was intended only to provide review access, but it created different code behavior for a reviewer-labeled identity. Build 21 removes that behavior completely.
-
-Build 21 uses an explicit `live` or `demo` session mode. Demo mode is selected only through the public **Explore complete demo** button and provides the same documented navigation and features to Apple and all other users.
+- Removed all reviewer-labelled sample names and reviewer-specific language from the application.
+- Removed the unused embedded demo credential constant.
+- Removed the local-only "New agency" action because it could be mistaken for production account registration.
+- Retained one public, clearly disclosed demo workspace that is available identically to Apple and all users.
+- Live employer accounts use the production sign-in path and backend services.
