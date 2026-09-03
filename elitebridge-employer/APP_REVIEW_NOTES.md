@@ -1,23 +1,59 @@
-# Elite Bridge Employer — App Review Notes (Build 22)
+# Elite Bridge Employer — App Review Notes (Build 23)
+
+## Purpose and companion-app relationship
+
+Elite Bridge is a two-sided care staffing marketplace delivered through two distinct companion apps:
+
+- **Elite Bridge Employer** is exclusively for care organizations. Employers register, sign in, post shifts, view their own postings, review caregiver applications, and approve or decline applicants.
+- **Elite Bridge Caregiver** is separately listed for care professionals. Caregivers discover shifts posted by employers, submit applications, and manage assigned work.
+
+The apps use the same production service so an employer action in this app can produce a corresponding opportunity in the Caregiver app. The two apps have different users, permissions, workflows, navigation, and bundle identifiers. A caregiver account is rejected by Employer authentication.
+
+### Distinct functionality
+
+| Elite Bridge Employer | Elite Bridge Caregiver |
+| --- | --- |
+| Organization account and employer registration | Individual caregiver profile and onboarding |
+| Creates and publishes care shifts | Discovers eligible open shifts |
+| Receives caregiver applications | Submits applications to employers |
+| Approves or declines applicants | Tracks application decisions and assignments |
+| Manages the organization’s postings | Manages the caregiver’s workday, visits, and earnings |
+
+The apps are intentionally intertwined, not duplicates: actions performed by one audience create the work items used by the other audience. This is the core two-sided marketplace function.
 
 ## Complete review access
 
-On the sign-in screen, tap **Explore complete demo**. No credentials or authentication code are required.
+Before submission, create a normal employer account in the production service and enter its current credentials in **App Store Connect → App Review Information**. The review account must use the same authentication endpoint, authorization checks, and data store as every other employer.
 
-This visible demo option is available to every user. It uses clearly identified sample agency data, displays a **DEMO WORKSPACE** badge, and keeps demo actions on the device. It is not activated by identity, email address, device, location, date, IP address, build channel, or remote configuration.
+Do not add review credentials, email recognition, password bypasses, device checks, secret gestures, local sessions, remote feature flags, or reviewer-specific data to the application binary.
 
-## Feature map
+Reviewers may also select **Create employer account** on the first screen. Registration is public and creates a real employer account using the same process available to every care organization.
 
-- **Home:** staffing overview, open shifts, applications, call-outs, Care Radar, and upcoming schedule.
-- **Schedule:** view and create demo shifts and open Coverage Copilot.
-- **Ops:** Coverage, Applications, Schedule, Compliance, and Profile.
-- **Profile:** agency details, support, privacy policy, sign out, and account deletion.
-- Secondary screens accessible from these areas: Clients, Workforce, Coverage Copilot, Timesheets, Applications, Compliance, and Agency setup.
+## Preloaded cross-app verification
 
-## Build 22 compliance changes
+The production review accounts listed privately in App Store Connect contain a connected scenario:
 
-- Removed all reviewer-labelled sample names and reviewer-specific language from the application.
-- Removed the unused embedded demo credential constant.
-- Removed the local-only "New agency" action because it could be mistaken for production account registration.
-- Retained one public, clearly disclosed demo workspace that is available identically to Apple and all users.
-- Live employer accounts use the production sign-in path and backend services.
+1. Sign in to **Elite Bridge Employer** and open **Posted shifts**. The employer account contains **Companion App Review Flow**.
+2. Open **Applications**. A pending application from **Jordan Caregiver** is attached to that shift.
+3. Sign in to the separately listed **Elite Bridge Caregiver** app (App Store Connect ID `6770962152`) using the caregiver credentials supplied privately in the Notes field.
+4. The caregiver Home screen displays the same opportunity and the submitted application.
+5. Return to Employer to approve or decline it. This decision is written to the shared production service and is reflected for the caregiver.
+
+These are ordinary production accounts. They do not activate different code, screens, data sources, or functionality based on identity.
+
+## Visible feature map
+
+1. **Welcome:** explains the employer-only purpose and the separately listed Caregiver companion app.
+2. **Create employer account:** public employer registration.
+3. **Employer sign in:** accepts only employer accounts. An organization’s authorized administrator uses an employer account to manage its workspace.
+4. **Dashboard:** displays open shifts, assigned shifts, and caregiver application totals.
+5. **Posted shifts:** displays opportunities created by the signed-in employer.
+6. **Post a shift:** publishes a shift through the production API for eligible users of Elite Bridge Caregiver.
+7. **Applications:** displays caregiver applications and allows the employer to approve or decline them.
+8. **Account:** support, Privacy Policy, Terms of Use, sign out, and permanent in-app account deletion.
+
+## Rebuild disclosure
+
+Build 23 is a clean employer-only rebuild. It contains no demonstration session, local sample workspace, dormant AI or compliance features, reviewer-specific code path, or caregiver interface. All working data comes from the production Elite Bridge service.
+
+No purchase or subscription is required to review the app.
