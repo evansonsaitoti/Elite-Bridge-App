@@ -11,7 +11,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgeemployer",
-      "buildNumber": "24",
+      "buildNumber": "25",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
