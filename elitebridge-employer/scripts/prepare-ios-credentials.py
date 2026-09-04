@@ -137,7 +137,7 @@ def make_macos_compatible_p12(password: str) -> None:
 
 
 def ensure_push_capability(token: str, bundle_id: str) -> None:
-    capability_path = f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities?limit=100"
+    capability_path = f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities"
     capabilities = api_request(token, "GET", capability_path).get("data", [])
     if any(item.get("attributes", {}).get("capabilityType") == "PUSH_NOTIFICATIONS" for item in capabilities):
         return
