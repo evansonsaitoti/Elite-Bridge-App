@@ -1,4 +1,4 @@
-# Elite Bridge Employer — App Review Notes (Version 1.2.0, Build 26)
+# Elite Bridge Employer — App Review Notes (Version 1.2.0, Build 27)
 
 ## Purpose and companion-app relationship
 
@@ -59,6 +59,6 @@ After a normal sign-in or registration, the app requests notification permission
 
 ## Rebuild disclosure
 
-Build 26 is a complete employer-only companion app. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
+Build 27 is a complete employer-only companion app. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
 
 No purchase or subscription is required to review the app.

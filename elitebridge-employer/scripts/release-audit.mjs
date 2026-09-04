@@ -9,6 +9,8 @@ const sourceRoots = [appDir, path.join(root, "lib"), path.join(root, "components
 const walk = (directory) => fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? walk(path.join(directory, entry.name)) : /\.(?:ts|tsx)$/.test(entry.name) ? [path.join(directory, entry.name)] : []);
 const source = sourceRoots.flatMap(walk).map((name) => fs.readFileSync(name, "utf8")).join("\n");
 const failures = [];
+const welcomeImages = ["employer-welcome-hero.jpg", "employer-welcome-matches.jpg", "employer-welcome-review.jpg", "employer-welcome-operations.jpg"];
+for (const image of welcomeImages) if (!fs.existsSync(path.join(root, "assets", "images", image))) failures.push(`Missing Employer welcome image: ${image}`);
 
 const expectedRoutes = ["index.tsx", "sign-in.tsx", "register.tsx", "dashboard.tsx", "shifts.tsx", "post-shift.tsx", "applications.tsx", "account.tsx", "profile.tsx", "notifications.tsx"];
 for (const route of expectedRoutes) if (!files.includes(route)) failures.push(`Missing declared route: ${route}`);
@@ -28,7 +30,7 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
 if (appConfig.expo.version !== "1.2.0") failures.push("Employer release version must be 1.2.0.");
-if (appConfig.expo.ios.buildNumber !== "26") failures.push("Employer iOS build number must be 26.");
+if (appConfig.expo.ios.buildNumber !== "27") failures.push("Employer iOS build number must be 27.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
