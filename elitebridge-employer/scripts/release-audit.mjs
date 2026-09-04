@@ -28,7 +28,7 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
 if (appConfig.expo.version !== "1.2.0") failures.push("Employer release version must be 1.2.0.");
-if (appConfig.expo.ios.buildNumber !== "25") failures.push("Employer iOS build number must be 25.");
+if (appConfig.expo.ios.buildNumber !== "26") failures.push("Employer iOS build number must be 26.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

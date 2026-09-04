@@ -59,4 +59,4 @@ Business
 7. Edit organization profile
 8. Employer account, Privacy Policy, sign out, support, and deletion
 
-Every screenshot must come from Build 25 and must not show features absent from the submitted binary.
+Every screenshot must come from Build 26 and must not show features absent from the submitted binary.
