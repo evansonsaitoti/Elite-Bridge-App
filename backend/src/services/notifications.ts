@@ -15,8 +15,44 @@ type SignupDetails = {
 };
 
 export async function sendSignupAlert(details: SignupDetails): Promise<boolean> {
+  const roleLabel = details.role === "employer" ? "Employer" : "Caregiver";
+  const subject = `New Elite Bridge ${roleLabel} signup`;
+  const text = [
+    `A new ${roleLabel.toLowerCase()} registered on Elite Bridge.`,
+    "",
+    `Name: ${details.firstName} ${details.lastName}`,
+    `Email: ${details.email}`,
+    `Phone: ${details.phone || "Not provided"}`,
+    ...(details.role === "employer" ? [`Organization: ${details.companyName || "Not provided"}`] : []),
+    `Registered: ${new Date().toISOString()}`,
+    "",
+    `Source app: Elite Bridge ${roleLabel}`,
+  ].join("\n");
+
+  if (config.RESEND_API_KEY && config.RESEND_FROM) {
+    try {
+      await axios.post("https://api.resend.com/emails", {
+        from: config.RESEND_FROM,
+        to: [config.SIGNUP_ALERT_EMAIL],
+        subject,
+        text,
+      }, {
+        headers: {
+          Authorization: `Bearer ${config.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 15_000,
+      });
+      console.info("Signup alert email sent with Resend");
+      return true;
+    } catch (error) {
+      console.error("Resend signup alert email failed", error);
+      return false;
+    }
+  }
+
   if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || !config.SMTP_FROM) {
-    console.warn("Signup alert email skipped: SMTP is not fully configured");
+    console.warn("Signup alert email skipped: Resend and SMTP are not fully configured");
     return false;
   }
 
@@ -30,22 +66,11 @@ export async function sendSignupAlert(details: SignupDetails): Promise<boolean> 
       greetingTimeout: 10_000,
       socketTimeout: 15_000,
     });
-    const roleLabel = details.role === "employer" ? "Employer" : "Caregiver";
     await transport.sendMail({
       from: config.SMTP_FROM,
       to: config.SIGNUP_ALERT_EMAIL,
-      subject: `New Elite Bridge ${roleLabel} signup`,
-      text: [
-        `A new ${roleLabel.toLowerCase()} registered on Elite Bridge.`,
-        "",
-        `Name: ${details.firstName} ${details.lastName}`,
-        `Email: ${details.email}`,
-        `Phone: ${details.phone || "Not provided"}`,
-        ...(details.role === "employer" ? [`Organization: ${details.companyName || "Not provided"}`] : []),
-        `Registered: ${new Date().toISOString()}`,
-        "",
-        `Source app: Elite Bridge ${roleLabel}`,
-      ].join("\n"),
+      subject,
+      text,
     });
     return true;
   } catch (error) {
