@@ -1,1 +1,1 @@
-Employer TestFlight version 1.2.0 build 27 triggered with message-matched welcome slide imagery.
+Employer TestFlight version 1.2.0 build 28 triggered with faster registration, email activation, safer account controls, and workforce management tools.
