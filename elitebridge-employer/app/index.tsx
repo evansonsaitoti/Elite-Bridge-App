@@ -9,10 +9,10 @@ import { colors } from "../lib/theme";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 const slides = [
-  { eyebrow: "SMARTER CARE STAFFING", title: "Fill the right shift—faster.", body: "Create an opportunity once and reach active caregivers whose profile matches your care needs." },
-  { eyebrow: "MATCHED SHIFT OFFERS", title: "Post once. Notify every qualified match.", body: "Schedule, location, pay and responsibilities arrive together in Elite Bridge Caregiver." },
-  { eyebrow: "YOUR WORKFORCE, YOUR RULES", title: "Choose speed or hands-on approval.", body: "Use Instant claim for urgent coverage or Review first when you want to select the caregiver." },
-  { eyebrow: "CONNECTED OPERATIONS", title: "Stay informed from post to placement.", body: "Track applicants, claimed shifts, call-outs and staffing notifications from one employer workspace." },
+  { image: require("../assets/images/employer-welcome-hero.jpg"), eyebrow: "SMARTER CARE STAFFING", title: "Fill the right shift—faster.", body: "Create an opportunity once and reach active caregivers whose profile matches your care needs." },
+  { image: require("../assets/images/employer-welcome-matches.jpg"), eyebrow: "MATCHED SHIFT OFFERS", title: "Post once. Notify every qualified match.", body: "Schedule, location, pay and responsibilities arrive together in Elite Bridge Caregiver." },
+  { image: require("../assets/images/employer-welcome-review.jpg"), eyebrow: "YOUR WORKFORCE, YOUR RULES", title: "Choose speed or hands-on approval.", body: "Use Instant claim for urgent coverage or Review first when you want to select the caregiver." },
+  { image: require("../assets/images/employer-welcome-operations.jpg"), eyebrow: "CONNECTED OPERATIONS", title: "Stay informed from post to placement.", body: "Track applicants, claimed shifts, call-outs and staffing notifications from one employer workspace." },
 ];
 
 export default function EmployerWelcomeScreen() {
@@ -28,7 +28,7 @@ export default function EmployerWelcomeScreen() {
   return (
     <View style={styles.screen}>
       <StatusBar style="light" />
-      <ImageBackground source={require("../assets/images/employer-welcome-hero.jpg")} resizeMode="cover" style={styles.hero}>
+      <ImageBackground source={slide.image} resizeMode="cover" style={styles.hero}>
         <View style={styles.scrim} />
         <SafeAreaView style={styles.safe}>
           <View style={styles.brandRow}>
