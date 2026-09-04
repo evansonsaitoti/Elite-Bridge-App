@@ -54,7 +54,8 @@ requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/home.tsx", "Call-out preview recorded");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.ios.buildNumber !== "45") throw new Error("Caregiver iOS build number must be 45");
+if (config.expo.version !== "1.0.1") throw new Error("Caregiver release version must be 1.0.1");
+if (config.expo.ios.buildNumber !== "46") throw new Error("Caregiver iOS build number must be 46");
 
 const loginSource = fs.readFileSync(path.join(root, "app/(auth)/login.tsx"), "utf8");
 if (/review access|REVIEW_PASSWORD|demo:\s*true/i.test(loginSource)) {
