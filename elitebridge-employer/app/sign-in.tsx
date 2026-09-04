@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { signInEmployer } from "../lib/api";
+import { enableEmployerPushNotifications } from "../lib/push-notifications";
 import { cardShadow, colors } from "../lib/theme";
 
 export default function SignInScreen() {
@@ -17,6 +18,7 @@ export default function SignInScreen() {
     setBusy(true);
     try {
       await signInEmployer(email, password);
+      await enableEmployerPushNotifications().catch(() => false);
       router.replace("/dashboard");
     } catch (error) {
       Alert.alert("Unable to sign in", error instanceof Error ? error.message : "Please try again.");

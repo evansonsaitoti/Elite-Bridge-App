@@ -2,6 +2,7 @@ import base64
 import json
 import os
 import pathlib
+import plistlib
 import subprocess
 import sys
 import time
@@ -134,6 +135,40 @@ def make_macos_compatible_p12(password: str) -> None:
     )
 
 
+def ensure_push_capability(token: str, bundle_id: str) -> None:
+    capability_path = f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities?limit=100"
+    capabilities = api_request(token, "GET", capability_path).get("data", [])
+    if any(item.get("attributes", {}).get("capabilityType") == "PUSH_NOTIFICATIONS" for item in capabilities):
+        return
+
+    payload = {
+        "data": {
+            "type": "bundleIdCapabilities",
+            "attributes": {"capabilityType": "PUSH_NOTIFICATIONS"},
+            "relationships": {
+                "bundleId": {"data": {"type": "bundleIds", "id": bundle_id}}
+            },
+        }
+    }
+    api_request(token, "POST", "/v1/bundleIdCapabilities", payload)
+    print("Enabled Push Notifications for the Employer bundle identifier.")
+
+
+def verify_push_entitlement(profile_path: str) -> None:
+    decoded_path = "/tmp/elitebridge-employer-profile.plist"
+    subprocess.check_call(
+        [
+            "openssl", "smime", "-verify", "-inform", "DER", "-noverify",
+            "-in", profile_path, "-out", decoded_path,
+        ],
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    profile = plistlib.loads(pathlib.Path(decoded_path).read_bytes())
+    if "aps-environment" not in profile.get("Entitlements", {}):
+        raise RuntimeError("Apple provisioning profile is missing the aps-environment push entitlement.")
+
+
 def main():
     issuer_id = required("EXPO_ASC_ISSUER_ID")
     key_id = required("EXPO_ASC_KEY_ID")
@@ -189,6 +224,7 @@ def main():
             f"Apple Developer does not have the registered bundle identifier {BUNDLE_IDENTIFIER}."
         )
     bundle_id = bundle_data[0]["id"]
+    ensure_push_capability(token, bundle_id)
 
     profile_name = f"Elite Bridge Employer App Store {int(time.time())}"
     payload = {
@@ -208,6 +244,7 @@ def main():
     if not profile_content:
         raise RuntimeError("Apple created the profile but did not return profileContent.")
     pathlib.Path(PROFILE_PATH).write_bytes(base64.b64decode(profile_content))
+    verify_push_entitlement(PROFILE_PATH)
 
     credentials = {
         "ios": {

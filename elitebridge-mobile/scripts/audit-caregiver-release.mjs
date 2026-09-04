@@ -54,6 +54,12 @@ requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/home.tsx", "Call-out preview recorded");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.ios.buildNumber !== "44") throw new Error("Caregiver iOS build number must be 44");
+if (config.expo.ios.buildNumber !== "45") throw new Error("Caregiver iOS build number must be 45");
+
+const loginSource = fs.readFileSync(path.join(root, "app/(auth)/login.tsx"), "utf8");
+if (/review access|REVIEW_PASSWORD|demo:\s*true/i.test(loginSource)) {
+  throw new Error("Caregiver login contains review-only or demo access");
+}
+requireSource("app/(onboarding)/review.tsx", "registerCaregiverAccount(");
 
 console.log(`Caregiver release audit passed: ${interactiveCount} interactive controls, all declared routes, complete onboarding chain, profile persistence, review call-out and account deletion.`);

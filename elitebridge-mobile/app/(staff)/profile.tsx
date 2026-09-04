@@ -6,6 +6,7 @@ import { Alert, Linking, ScrollView, Switch, Text, TextInput, TouchableOpacity, 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, sharedApiConfigured } from "@/lib/shared-api";
+import { disableCaregiverPushNotifications, enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 type LocalSession = { email?: string; name?: string };
 type ProfilePanel = "timeOff" | "submissions" | "shared" | "activity" | "personal" | "settings" | null;
@@ -62,6 +63,7 @@ export default function StaffProfile() {
         text: "Sign out",
         style: "destructive",
         onPress: async () => {
+          await disableCaregiverPushNotifications().catch(() => undefined);
           await Promise.all([
             AsyncStorage.removeItem("elitebridge-session"),
             clearCaregiverBackendSession(),
@@ -147,8 +149,8 @@ export default function StaffProfile() {
 
   const storedName = session.name?.trim();
   const storedEmail = session.email?.trim();
-  const displayName = storedName && !storedName.toLowerCase().includes("demo") ? storedName : "Caregiver Review Account";
-  const displayEmail = storedEmail && !storedEmail.endsWith("@elitebridge.test") ? storedEmail : "appreview-caregiver@elitebridge.test";
+  const displayName = storedName || "Caregiver";
+  const displayEmail = storedEmail || "No email saved";
   const panelCard = { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 15, marginBottom: 18 } as const;
   const inputStyle = { borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, marginTop: 8 } as const;
   const saveProfile = async () => {
@@ -166,6 +168,25 @@ export default function StaffProfile() {
     } catch {
       Alert.alert("Could not save settings", "Please try again.");
     }
+  };
+  const updateSetting = async (key: keyof typeof settings, value: boolean) => {
+    if (key === "pushAlerts") {
+      try {
+        if (value) {
+          const enabled = await enableCaregiverPushNotifications();
+          if (!enabled) {
+            Alert.alert("Notifications are off", "Allow notifications in your device settings to receive shift updates.");
+            return;
+          }
+        } else {
+          await disableCaregiverPushNotifications();
+        }
+      } catch {
+        Alert.alert("Notification setting unavailable", "Please try again when your device is online.");
+        return;
+      }
+    }
+    setSettings((current) => ({ ...current, [key]: value }));
   };
 
   const renderActivePanel = () => {
@@ -303,7 +324,7 @@ export default function StaffProfile() {
               <Text style={{ color: colors.foreground, fontWeight: "900" }}>{item.label}</Text>
               <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 2 }}>{item.detail}</Text>
             </View>
-            <Switch value={settings[item.key]} onValueChange={(value) => setSettings((current) => ({ ...current, [item.key]: value }))} />
+            <Switch value={settings[item.key]} onValueChange={(value) => void updateSetting(item.key, value)} />
           </View>
         ))}
         <TouchableOpacity accessibilityRole="button" onPress={() => void saveSettings()} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>

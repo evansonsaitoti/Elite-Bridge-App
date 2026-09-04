@@ -14,6 +14,8 @@ export default function OnboardingWelcome() {
   const router = useRouter();
 
   const [fullName, setFullName] = useState(data.fullName);
+  const [email, setEmail] = useState(data.email);
+  const [password, setPassword] = useState(data.password);
   const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
   const [dateOfBirth, setDateOfBirth] = useState(data.dateOfBirth);
   const [address, setAddress] = useState(data.address);
@@ -26,6 +28,8 @@ export default function OnboardingWelcome() {
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) newErrors.email = "Enter a valid email address";
+    if (password.length < 8) newErrors.password = "Use at least 8 characters";
     if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
     if (!address.trim()) newErrors.address = "Address is required";
     if (!city.trim()) newErrors.city = "City is required";
@@ -35,7 +39,7 @@ export default function OnboardingWelcome() {
     if (Object.keys(newErrors).length > 0) {
       Alert.alert(
         "Complete required fields",
-        "Enter your full name, phone number, street address, city and state to continue.",
+        "Enter valid account, contact and address information to continue.",
       );
     }
     return Object.keys(newErrors).length === 0;
@@ -45,6 +49,8 @@ export default function OnboardingWelcome() {
     if (validateStep()) {
       updateData({
         fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
         phoneNumber: phoneNumber.trim(),
         dateOfBirth: dateOfBirth.trim(),
         address: address.trim(),
@@ -77,7 +83,8 @@ export default function OnboardingWelcome() {
     onChangeText: (text: string) => void,
     placeholder: string,
     error?: string,
-    keyboardType: "default" | "phone-pad" | "email-address" = "default"
+    keyboardType: "default" | "phone-pad" | "email-address" = "default",
+    secureTextEntry = false,
   ) => (
     <View style={{ marginBottom: 15 }}>
       <Text style={{ fontSize: 13, fontWeight: "800", color: "#344054", marginBottom: 7 }}>
@@ -99,6 +106,9 @@ export default function OnboardingWelcome() {
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
+        autoCorrect={false}
       />
       {error && (
         <Text style={{ fontSize: 12, color: "#D92D20", marginTop: 5 }}>
@@ -172,6 +182,23 @@ export default function OnboardingWelcome() {
           setFullName,
           "Enter your full name",
           errors.fullName
+        )}
+        {renderInput(
+          "Email Address",
+          email,
+          setEmail,
+          "you@example.com",
+          errors.email,
+          "email-address"
+        )}
+        {renderInput(
+          "Create Password",
+          password,
+          setPassword,
+          "At least 8 characters",
+          errors.password,
+          "default",
+          true
         )}
         {renderInput(
           "Phone Number",

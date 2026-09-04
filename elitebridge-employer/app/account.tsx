@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 
 import { deleteEmployerAccount, EmployerUser, getStoredEmployer, signOutEmployer } from "../lib/api";
+import { unregisterEmployerPushNotifications } from "../lib/push-notifications";
 import { colors } from "../lib/theme";
 
 const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
@@ -16,7 +17,7 @@ export default function AccountScreen() {
   const [deleting, setDeleting] = useState(false);
   useFocusEffect(useCallback(() => { getStoredEmployer().then((stored) => stored ? setUser(stored) : router.replace("/sign-in")); }, [router]));
 
-  const signOut = () => Alert.alert("Sign out?", "You can sign in again using your employer credentials.", [{ text: "Cancel", style: "cancel" }, { text: "Sign out", onPress: async () => { await signOutEmployer(); router.dismissAll(); router.replace("/"); } }]);
+  const signOut = () => Alert.alert("Sign out?", "You can sign in again using your employer credentials.", [{ text: "Cancel", style: "cancel" }, { text: "Sign out", onPress: async () => { await unregisterEmployerPushNotifications().catch(() => undefined); await signOutEmployer(); router.dismissAll(); router.replace("/"); } }]);
   const remove = () => Alert.alert("Permanently delete account?", "This deletes your employer login and organization profile. Records that must be retained for legal, payroll or safety obligations may be preserved as required by law.", [{ text: "Cancel", style: "cancel" }, { text: "Delete account", style: "destructive", onPress: async () => {
     setDeleting(true);
     try { await deleteEmployerAccount(); router.dismissAll(); router.replace("/"); }

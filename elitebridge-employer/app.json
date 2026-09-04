@@ -19,6 +19,7 @@
     "android": {
       "package": "com.app.elitebridgeemployer"
     },
+    "plugins": ["expo-notifications"],
     "extra": {
       "eas": {
         "projectId": "adc69871-8e95-4fa7-baca-4c3e757d04f6"

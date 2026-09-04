@@ -24,6 +24,7 @@ Use Elite Bridge Employer to:
 - Receive applications from Elite Bridge caregivers
 - Review caregiver-submitted profile information
 - Approve or decline applications
+- Receive push alerts for caregiver applications and urgent call-outs
 - Manage employer account access and support
 - Delete your account directly in the app
 

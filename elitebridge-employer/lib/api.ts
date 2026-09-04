@@ -148,6 +148,20 @@ export async function signOutEmployer() {
   await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
 }
 
+export async function registerEmployerDevice(token: string, platform: "ios" | "android") {
+  await request<void>("/api/notifications/device", {
+    method: "POST",
+    body: JSON.stringify({ token, platform, app: "employer" }),
+  });
+}
+
+export async function removeEmployerDevice(token: string) {
+  await request<void>("/api/notifications/device", {
+    method: "DELETE",
+    body: JSON.stringify({ token }),
+  });
+}
+
 export async function deleteEmployerAccount() {
   await request<void>("/api/auth/account", { method: "DELETE" });
   await signOutEmployer();

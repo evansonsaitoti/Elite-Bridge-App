@@ -1,9 +1,11 @@
-import React from "react";
-import { ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerCaregiverAccount, sharedApiConfigured } from "@/lib/shared-api";
+import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 /**
  * Onboarding Step 5: Review & Complete
@@ -13,16 +15,34 @@ export default function OnboardingReview() {
   const colors = useColors();
   const { data, completeOnboarding, prevStep } = useOnboarding();
   const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
   const handleCompleteOnboarding = async () => {
+    if (submitting) return;
+    if (!sharedApiConfigured) {
+      Alert.alert("Service unavailable", "Elite Bridge cannot reach the secure agency service in this build.");
+      return;
+    }
     try {
+      setSubmitting(true);
+      const names = data.fullName.trim().split(/\s+/);
+      const firstName = names.shift() || "Caregiver";
+      const lastName = names.join(" ") || "Applicant";
+      const user = await registerCaregiverAccount({
+        firstName,
+        lastName,
+        phone: data.phoneNumber,
+        email: data.email,
+        password: data.password,
+      });
       await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
         role: "staff",
-        name: data.fullName,
-        demo: true,
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`.trim(),
         profileStatus: "submitted",
         signedInAt: new Date().toISOString(),
       }));
+      await enableCaregiverPushNotifications().catch(() => false);
       completeOnboarding();
       Alert.alert(
         "Welcome to Elite Bridge! 🎉",
@@ -36,11 +56,13 @@ export default function OnboardingReview() {
           },
         ],
       );
-    } catch {
+    } catch (error) {
       Alert.alert(
         "Could not finish setup",
-        "Your information is still on this screen. Please tap Start Working again.",
+        error instanceof Error ? error.message : "Your information is still on this screen. Please try again.",
       );
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -153,6 +175,7 @@ export default function OnboardingReview() {
       {/* Personal Information */}
       {renderInfoSection("👤 Personal Information", [
         { label: "Full Name", value: data.fullName },
+        { label: "Email", value: data.email },
         { label: "Phone", value: data.phoneNumber },
         ...(data.dateOfBirth
           ? [{ label: "Date of Birth", value: data.dateOfBirth }]
@@ -322,6 +345,7 @@ export default function OnboardingReview() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={() => void handleCompleteOnboarding()}
+          disabled={submitting}
           accessibilityRole="button"
           style={{
             backgroundColor: "#1B5E3F",
@@ -330,9 +354,11 @@ export default function OnboardingReview() {
             alignItems: "center",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-            🎉 Start Working
-          </Text>
+          {submitting ? <ActivityIndicator color="#FFFFFF" /> : (
+            <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
+              Create Account &amp; Start Working
+            </Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity

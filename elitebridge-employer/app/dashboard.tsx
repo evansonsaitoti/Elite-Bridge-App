@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 
 import { Application, EmployerUser, getEmployerApplications, getEmployerShifts, getStoredEmployer, Shift } from "../lib/api";
 import { cardShadow, colors } from "../lib/theme";
+import { enableEmployerPushNotifications } from "../lib/push-notifications";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -20,6 +21,7 @@ export default function DashboardScreen() {
       const stored = await getStoredEmployer();
       if (!stored) return router.replace("/sign-in");
       setUser(stored);
+      void enableEmployerPushNotifications().catch(() => false);
       const [nextShifts, nextApplications] = await Promise.all([getEmployerShifts(), getEmployerApplications()]);
       setShifts(nextShifts);
       setApplications(nextApplications);

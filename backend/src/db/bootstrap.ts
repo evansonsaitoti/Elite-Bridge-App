@@ -128,6 +128,18 @@ export async function ensureCoreTables() {
     )
   `);
 
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS push_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      expo_push_token VARCHAR(255) NOT NULL UNIQUE,
+      platform VARCHAR(20) NOT NULL,
+      app VARCHAR(20) NOT NULL,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS email_idx ON users(email)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS role_idx ON users(role)`);
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS caregiver_user_unique_idx ON caregivers(user_id)`);
@@ -138,6 +150,7 @@ export async function ensureCoreTables() {
   await db.execute(sql`CREATE INDEX IF NOT EXISTS booking_employer_id_idx ON bookings(employer_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS booking_status_idx ON bookings(status)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS notification_user_id_idx ON notifications(user_id)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS push_tokens_user_id_idx ON push_tokens(user_id)`);
 
   coreTablesReady = true;
 }

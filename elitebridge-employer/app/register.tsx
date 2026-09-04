@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 
 import { registerEmployer } from "../lib/api";
+import { enableEmployerPushNotifications } from "../lib/push-notifications";
 import { colors } from "../lib/theme";
 
 type Field = "firstName" | "lastName" | "companyName" | "phone" | "email" | "password";
@@ -20,6 +21,7 @@ export default function RegisterScreen() {
     setBusy(true);
     try {
       await registerEmployer(form);
+      await enableEmployerPushNotifications().catch(() => false);
       router.replace("/dashboard");
     } catch (error) {
       Alert.alert("Account could not be created", error instanceof Error ? error.message : "Please try again.");
