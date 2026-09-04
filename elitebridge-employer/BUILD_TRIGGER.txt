@@ -1,1 +1,1 @@
-Employer TestFlight version 1.2.0 build 25 triggered with interactive welcome experience.
+Employer TestFlight version 1.2.0 build 26 triggered with the branded welcome controls and safe-area spacing.
