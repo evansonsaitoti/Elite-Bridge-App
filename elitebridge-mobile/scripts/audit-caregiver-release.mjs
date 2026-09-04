@@ -51,7 +51,7 @@ requireSource("app/(onboarding)/bank-account.tsx", 'router.push("/(onboarding)/r
 requireSource("app/(onboarding)/review.tsx", 'router.replace("/(staff)/home")');
 requireSource("app/(staff)/profile.tsx", 'router.push("/(staff)/services")');
 requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
-requireSource("app/(staff)/home.tsx", "Call-out preview recorded");
+requireSource("app/(staff)/home.tsx", "Call-out reported");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
 if (config.expo.version !== "1.0.2") throw new Error("Caregiver release version must be 1.0.2");
@@ -61,6 +61,13 @@ const loginSource = fs.readFileSync(path.join(root, "app/(auth)/login.tsx"), "ut
 if (/review access|REVIEW_PASSWORD|demo:\s*true/i.test(loginSource)) {
   throw new Error("Caregiver login contains review-only or demo access");
 }
+
+for (const relativeFile of ["app/(staff)/home.tsx", "app/(auth)/login.tsx", "lib/shared-api.ts"]) {
+  const source = fs.readFileSync(path.join(root, relativeFile), "utf8");
+  if (/demoMode|demoShift|demoApplication|demoOffer|sample review data|review account/i.test(source)) {
+    throw new Error(`${relativeFile} contains a dormant demo or review-only behavior path`);
+  }
+}
 requireSource("app/(onboarding)/review.tsx", "registerCaregiverAccount(");
 
-console.log(`Caregiver release audit passed: ${interactiveCount} interactive controls, all declared routes, complete onboarding chain, profile persistence, review call-out and account deletion.`);
+console.log(`Caregiver release audit passed: ${interactiveCount} interactive controls, all declared routes, complete onboarding chain, live profile persistence, call-out reporting, account deletion, and no demo or review-only behavior paths.`);

@@ -294,6 +294,7 @@ router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
       SELECT sp.*, e.company_name, sa.status AS application_status
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
+      JOIN caregivers c ON c.id = ${caregiver.id}
       LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
       WHERE sp.status = 'open'
         AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
