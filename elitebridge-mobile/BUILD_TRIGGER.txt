@@ -1,1 +1,1 @@
-Caregiver TestFlight version 1.0.1 build 46 triggered on 2026-09-04.
+Caregiver TestFlight version 1.0.2 build 47 triggered after live matched-shift verification.
