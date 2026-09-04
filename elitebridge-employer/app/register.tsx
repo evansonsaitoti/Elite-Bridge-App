@@ -1,28 +1,34 @@
-import { useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity } from "react-native";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { registerEmployer } from "../lib/api";
+import { registerEmployer, warmEmployerService } from "../lib/api";
 import { enableEmployerPushNotifications } from "../lib/push-notifications";
 import { colors } from "../lib/theme";
 
-type Field = "firstName" | "lastName" | "companyName" | "phone" | "email" | "password";
+type Field = "firstName" | "lastName" | "companyName" | "phone" | "email" | "password" | "confirmPassword";
 
 export default function RegisterScreen() {
   const router = useRouter();
-  const [form, setForm] = useState<Record<Field, string>>({ firstName: "", lastName: "", companyName: "", phone: "", email: "", password: "" });
+  const [form, setForm] = useState<Record<Field, string>>({ firstName: "", lastName: "", companyName: "", phone: "", email: "", password: "", confirmPassword: "" });
   const [busy, setBusy] = useState(false);
   const set = (field: Field, value: string) => setForm((current) => ({ ...current, [field]: value }));
+
+  useEffect(() => { void warmEmployerService(); }, []);
 
   const submit = async () => {
     if (Object.values(form).some((value) => !value.trim())) return Alert.alert("Complete your account", "All fields are required.");
     if (form.password.length < 8) return Alert.alert("Choose a stronger password", "Your password must contain at least 8 characters.");
+    if (form.password !== form.confirmPassword) return Alert.alert("Passwords do not match", "Enter the same password in both password fields.");
     setBusy(true);
     try {
       await registerEmployer(form);
-      await enableEmployerPushNotifications().catch(() => false);
-      router.replace("/dashboard");
+      void enableEmployerPushNotifications().catch(() => false);
+      Alert.alert("Check your email", `We sent an activation link to ${form.email.trim().toLowerCase()}.`, [
+        { text: "Continue", onPress: () => router.replace("/dashboard") },
+      ]);
     } catch (error) {
       Alert.alert("Account could not be created", error instanceof Error ? error.message : "Please try again.");
     } finally {
@@ -41,7 +47,8 @@ export default function RegisterScreen() {
           <FieldInput label="Organization name" value={form.companyName} onChangeText={(v) => set("companyName", v)} content="organizationName" />
           <FieldInput label="Phone" value={form.phone} onChangeText={(v) => set("phone", v)} keyboardType="phone-pad" content="telephoneNumber" />
           <FieldInput label="Work email" value={form.email} onChangeText={(v) => set("email", v)} keyboardType="email-address" content="emailAddress" autoCapitalize="none" />
-          <FieldInput label="Password" value={form.password} onChangeText={(v) => set("password", v)} secureTextEntry content="newPassword" helper="At least 8 characters" />
+          <FieldInput label="Password" value={form.password} onChangeText={(v) => set("password", v)} password content="newPassword" helper="At least 8 characters" />
+          <FieldInput label="Confirm password" value={form.confirmPassword} onChangeText={(v) => set("confirmPassword", v)} password content="newPassword" helper="Enter the same password again" />
           <TouchableOpacity disabled={busy} onPress={() => void submit()} style={[styles.primary, busy && styles.disabled]}>{busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Create employer account</Text>}</TouchableOpacity>
           <Text style={styles.consent}>By creating an account, you agree to Elite Bridge’s Terms of Use and acknowledge its Privacy Policy.</Text>
         </ScrollView>
@@ -50,15 +57,18 @@ export default function RegisterScreen() {
   );
 }
 
-function FieldInput({ label, helper, content, ...props }: { label: string; helper?: string; content: React.ComponentProps<typeof TextInput>["textContentType"] } & React.ComponentProps<typeof TextInput>) {
-  return <><Text style={styles.label}>{label}</Text><TextInput {...props} autoCorrect={false} placeholderTextColor="#8A9790" style={styles.input} textContentType={content} />{helper ? <Text style={styles.helper}>{helper}</Text> : null}</>;
+function FieldInput({ label, helper, content, password = false, ...props }: { label: string; helper?: string; content: React.ComponentProps<typeof TextInput>["textContentType"]; password?: boolean } & React.ComponentProps<typeof TextInput>) {
+  const [visible, setVisible] = useState(false);
+  return <><Text style={styles.label}>{label}<Text style={styles.required}> *</Text></Text>{password ? <View style={styles.passwordWrap}><TextInput {...props} autoCorrect={false} placeholderTextColor="#8A9790" secureTextEntry={!visible} style={styles.passwordInput} textContentType={content} /><TouchableOpacity accessibilityLabel={visible ? "Hide password" : "Show password"} onPress={() => setVisible((current) => !current)} style={styles.eye}><Ionicons color={colors.green} name={visible ? "eye-off-outline" : "eye-outline"} size={22} /></TouchableOpacity></View> : <TextInput {...props} autoCorrect={false} placeholderTextColor="#8A9790" style={styles.input} textContentType={content} />}{helper ? <Text style={styles.helper}>{helper}</Text> : null}</>;
 }
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background }, fill: { flex: 1 }, content: { padding: 22, paddingBottom: 42 },
   title: { color: colors.ink, fontSize: 30, fontWeight: "900" }, subtitle: { color: colors.muted, fontSize: 14, lineHeight: 21, marginBottom: 18, marginTop: 8 },
   label: { color: colors.ink, fontSize: 13, fontWeight: "800", marginBottom: 7, marginTop: 12 },
+  required: { color: colors.danger },
   input: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 13, borderWidth: 1, color: colors.ink, fontSize: 15, minHeight: 52, paddingHorizontal: 14 },
+  passwordWrap: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 13, borderWidth: 1, flexDirection: "row", minHeight: 52 }, passwordInput: { color: colors.ink, flex: 1, fontSize: 15, minHeight: 52, paddingLeft: 14 }, eye: { alignItems: "center", height: 52, justifyContent: "center", width: 50 },
   helper: { color: colors.muted, fontSize: 11, marginTop: 5 }, primary: { alignItems: "center", backgroundColor: colors.green, borderRadius: 13, justifyContent: "center", marginTop: 24, minHeight: 54 },
   primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, disabled: { opacity: 0.6 }, consent: { color: colors.muted, fontSize: 11, lineHeight: 17, marginTop: 12, textAlign: "center" },
 });

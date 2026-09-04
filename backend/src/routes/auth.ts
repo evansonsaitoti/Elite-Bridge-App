@@ -1,13 +1,15 @@
 import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import { db } from "../db";
 import { ensureCoreTables } from "../db/bootstrap";
 import { users, employers } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import { sendSignupAlert } from "../services/notifications";
+import { sendEmailVerification, sendSignupAlert } from "../services/notifications";
+import { config } from "../config/env";
 
 const router = Router();
 
@@ -25,6 +27,24 @@ const loginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
+
+const verificationPayloadSchema = z.object({
+  id: z.number().int().positive(),
+  email: z.string().email(),
+  purpose: z.literal("verify-email"),
+});
+
+function createVerificationUrl(user: { id: number; email: string }) {
+  const token = jwt.sign(
+    { id: user.id, email: user.email, purpose: "verify-email" },
+    config.JWT_SECRET,
+    { expiresIn: "24h" },
+  );
+  const publicApiUrl = config.NODE_ENV === "production"
+    ? "https://elite-bridge-shared-api.onrender.com"
+    : `http://localhost:${config.PORT}`;
+  return `${publicApiUrl}/api/auth/verify-email?token=${encodeURIComponent(token)}`;
+}
 
 router.post("/register", async (req, res, next) => {
   try {
@@ -62,15 +82,6 @@ router.post("/register", async (req, res, next) => {
       });
     }
 
-    await sendSignupAlert({
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      role: data.role,
-      phone: data.phone,
-      companyName: data.companyName,
-    });
-
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
     res.status(201).json({
@@ -88,8 +99,41 @@ router.post("/register", async (req, res, next) => {
         emailVerified: user.emailVerified,
       },
     });
+
+    // Administrative email delivery must never hold the new user on the
+    // registration spinner. Send it after the account response is complete.
+    void sendSignupAlert({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: data.role,
+      phone: data.phone,
+      companyName: data.companyName,
+    });
+    void sendEmailVerification({
+      email: user.email,
+      firstName: user.firstName,
+      verificationUrl: createVerificationUrl(user),
+    });
   } catch (error) {
     next(error);
+  }
+});
+
+router.get("/verify-email", async (req, res) => {
+  try {
+    await ensureCoreTables();
+    const token = z.string().min(1).parse(req.query.token);
+    const payload = verificationPayloadSchema.parse(jwt.verify(token, config.JWT_SECRET));
+
+    await db
+      .update(users)
+      .set({ emailVerified: true, updatedAt: new Date() })
+      .where(and(eq(users.id, payload.id), eq(users.email, payload.email)));
+
+    res.type("html").send("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Email confirmed</title></head><body><main><h1>Email confirmed</h1><p>Your Elite Bridge email has been verified. You may return to the app and sign in.</p></main></body></html>");
+  } catch {
+    res.status(400).type("html").send("<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>Link unavailable</title></head><body><main><h1>This link is invalid or expired</h1><p>Please request a new verification email from Elite Bridge support.</p></main></body></html>");
   }
 });
 

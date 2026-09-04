@@ -5,6 +5,7 @@ import { useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 
 import { colors } from "../lib/theme";
+import { warmEmployerService } from "../lib/api";
 
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
@@ -20,6 +21,7 @@ export default function EmployerWelcomeScreen() {
   const [activeSlide, setActiveSlide] = useState(0);
 
   useEffect(() => {
+    void warmEmployerService();
     const timer = setInterval(() => setActiveSlide((current) => (current + 1) % slides.length), 5200);
     return () => clearInterval(timer);
   }, []);
