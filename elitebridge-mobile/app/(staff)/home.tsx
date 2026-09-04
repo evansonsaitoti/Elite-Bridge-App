@@ -16,6 +16,7 @@ import { defaultCaregiverPreferences, getCaregiverPreferences, type CaregiverPre
 import {
   applyToShift,
   callOutOfShift,
+  claimMatchedShift,
   fetchMyApplications,
   fetchOpenShifts,
   fetchRescueOffers,
@@ -160,11 +161,12 @@ export default function StaffHome() {
     }
     try {
       setApplyingId(shift.id);
-      await applyToShift(shift.id, "Available and interested in this assignment.");
+      if (shift.assignmentMode === "instant") await claimMatchedShift(shift.id);
+      else await applyToShift(shift.id, "Available and interested in this assignment.");
       await refreshFeed();
-      Alert.alert("Application sent", "The agency can now review your application in Elite Bridge Employer.");
+      Alert.alert(shift.assignmentMode === "instant" ? "Shift claimed" : "Application sent", shift.assignmentMode === "instant" ? "You are assigned. The employer has been notified immediately." : "The agency can now review your application in Elite Bridge Employer.");
     } catch (error) {
-      Alert.alert("Could not apply", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert(shift.assignmentMode === "instant" ? "Could not claim shift" : "Could not apply", error instanceof Error ? error.message : "Please try again.");
     } finally {
       setApplyingId(null);
     }
@@ -366,7 +368,7 @@ export default function StaffHome() {
                   onPress={() => void apply(shift)}
                   style={{ backgroundColor: shift.applicationStatus ? "#D0D5DD" : "#1B5E3F", borderRadius: 7, paddingHorizontal: 14, paddingVertical: 8, minWidth: 92, alignItems: "center" }}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: shift.applicationStatus ? "#475467" : "#fff" }}>{applyingId === shift.id ? "Sending…" : shift.applicationStatus ? "Applied" : "Apply Now"}</Text>
+                  <Text style={{ fontSize: 12, fontWeight: "700", color: shift.applicationStatus ? "#475467" : "#fff" }}>{applyingId === shift.id ? "Sending…" : shift.applicationStatus ? (shift.applicationStatus === "approved" ? "Assigned" : "Applied") : shift.assignmentMode === "instant" ? "Claim Shift" : "Apply Now"}</Text>
                 </TouchableOpacity>
               </View>
             </View>

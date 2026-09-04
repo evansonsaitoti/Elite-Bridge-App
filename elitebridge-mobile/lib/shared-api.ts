@@ -26,6 +26,7 @@ export type CaregiverShift = {
   requirements: string[];
   responsibilities: string;
   urgency: "standard" | "urgent";
+  assignmentMode?: "instant" | "review";
   status: string;
   applicationStatus?: "pending" | "approved" | "rejected" | "callout";
 };
@@ -139,6 +140,19 @@ export async function applyToShift(shiftId: number, note = "") {
   return request<{ application: { id: number; status: string } }>(`/api/bookings/${shiftId}/apply`, {
     method: "POST",
     body: JSON.stringify({ note }),
+  });
+}
+
+export async function claimMatchedShift(shiftId: number) {
+  return request<{ application: { id: number; status: "approved" }; shift: { id: number; status: "assigned" } }>(`/api/bookings/${shiftId}/claim`, {
+    method: "POST",
+  });
+}
+
+export async function syncCaregiverMatchingProfile(input: { availability: string[]; preferredServices: string[]; maxDistanceMiles: string; instantOffers: boolean }) {
+  await request<{ message: string }>("/api/caregivers/me/matching", {
+    method: "PUT",
+    body: JSON.stringify({ ...input, maxDistanceMiles: Number(input.maxDistanceMiles) }),
   });
 }
 

@@ -1,11 +1,11 @@
-# Elite Bridge Employer — App Review Notes (Build 23)
+# Elite Bridge Employer — App Review Notes (Version 1.2.0, Build 24)
 
 ## Purpose and companion-app relationship
 
 Elite Bridge is a two-sided care staffing marketplace delivered through two distinct companion apps:
 
-- **Elite Bridge Employer** is exclusively for care organizations. Employers register, sign in, post shifts, view their own postings, review caregiver applications, and approve or decline applicants.
-- **Elite Bridge Caregiver** is separately listed for care professionals. Caregivers discover shifts posted by employers, submit applications, and manage assigned work.
+- **Elite Bridge Employer** is exclusively for care organizations. Employers register, maintain an organization profile, publish matched shift offers, manage postings, review applications when approval is required, and receive staffing notifications.
+- **Elite Bridge Caregiver** is separately listed for care professionals. Caregivers maintain their matching preferences, receive eligible shift offers, claim instant shifts or request approval, and manage assigned work.
 
 The apps use the same production service so an employer action in this app can produce a corresponding opportunity in the Caregiver app. The two apps have different users, permissions, workflows, navigation, and bundle identifiers. A caregiver account is rejected by Employer authentication.
 
@@ -14,9 +14,9 @@ The apps use the same production service so an employer action in this app can p
 | Elite Bridge Employer | Elite Bridge Caregiver |
 | --- | --- |
 | Organization account and employer registration | Individual caregiver profile and onboarding |
-| Creates and publishes care shifts | Discovers eligible open shifts |
-| Receives caregiver applications | Submits applications to employers |
-| Approves or declines applicants | Tracks application decisions and assignments |
+| Creates and publishes matched care Shift Offers | Receives eligible Shift Offers based on the caregiver profile |
+| Selects instant claim or employer approval per shift | Claims an instant shift or requests employer approval |
+| Approves or declines approval-required applicants | Tracks application decisions and confirmed assignments |
 | Receives application and call-out push alerts | Receives new-shift, decision, and urgent-offer push alerts |
 | Manages the organization’s postings | Manages the caregiver’s workday, visits, and earnings |
 
@@ -34,11 +34,11 @@ Reviewers may also select **Create employer account** on the first screen. Regis
 
 The production review accounts listed privately in App Store Connect contain a connected scenario:
 
-1. Sign in to **Elite Bridge Employer** and open **Posted shifts**. The employer account contains **Companion App Review Flow**.
-2. Open **Applications**. A pending application from **Jordan Caregiver** is attached to that shift.
+1. Sign in to **Elite Bridge Employer** and open **Shifts**. The employer account contains a connected care shift.
+2. Open **Applicants** to view any approval-required requests attached to that shift.
 3. Sign in to the separately listed **Elite Bridge Caregiver** app (App Store Connect ID `6770962152`) using the caregiver credentials supplied privately in the Notes field.
-4. The caregiver Home screen displays the same opportunity and the submitted application.
-5. Return to Employer to approve or decline it. This decision is written to the shared production service and is reflected for the caregiver.
+4. The caregiver Work screen displays opportunities published by Employer that match the caregiver profile.
+5. For **Instant claim**, the first eligible caregiver who accepts is assigned and Employer receives a notification. For **Review first**, the caregiver sends a request and Employer approves or declines it.
 
 These are ordinary production accounts. They do not activate different code, screens, data sources, or functionality based on identity.
 
@@ -47,16 +47,18 @@ These are ordinary production accounts. They do not activate different code, scr
 1. **Welcome:** explains the employer-only purpose and the separately listed Caregiver companion app.
 2. **Create employer account:** public employer registration.
 3. **Employer sign in:** accepts only employer accounts. An organization’s authorized administrator uses an employer account to manage its workspace.
-4. **Dashboard:** displays open shifts, assigned shifts, and caregiver application totals.
-5. **Posted shifts:** displays opportunities created by the signed-in employer.
-6. **Post a shift:** publishes a shift through the production API for eligible users of Elite Bridge Caregiver.
-7. **Applications:** displays caregiver applications and allows the employer to approve or decline them.
-8. **Account:** support, Privacy Policy, Terms of Use, sign out, and permanent in-app account deletion.
+4. **Home:** displays open shifts, assigned shifts, applicant totals, a visible notification entry point, and the primary Publish Shift action.
+5. **Shifts:** displays opportunities created by the signed-in employer, their assignment method and status, and a functional cancellation action.
+6. **Post a shift:** publishes through the production API, targets active/available caregivers whose profile matches the role or service, and reports the number matched. Employers visibly choose **Instant claim** or **Review first**.
+7. **Applicants:** displays approval-required caregiver requests and allows the employer to approve or decline them.
+8. **Notifications:** displays persistent application, claim, call-out, and account activity and supports read/unread state.
+9. **Organization profile:** edits the employer’s real production organization name, contact information, services and service address.
+10. **Account:** visibly exposes organization profile, notifications, push settings, support, Privacy Policy, Terms of Use, sign out, and permanent in-app account deletion.
 
 After a normal sign-in or registration, the app requests notification permission. Permission is optional; declining it does not hide or change any feature. If granted, Employer receives application and call-out updates generated by activity in the Caregiver companion app.
 
 ## Rebuild disclosure
 
-Build 23 is a clean employer-only rebuild. It contains no demonstration session, local sample workspace, dormant AI or compliance features, reviewer-specific code path, or caregiver interface. All working data comes from the production Elite Bridge service.
+Build 24 is a complete employer-only companion app. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
 
 No purchase or subscription is required to review the app.

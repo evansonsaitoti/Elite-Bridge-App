@@ -27,6 +27,7 @@ export type Shift = {
   hourlyRate: number;
   responsibilities: string;
   urgency: "standard" | "urgent";
+  assignmentMode: "instant" | "review";
   status: string;
 };
 
@@ -46,6 +47,32 @@ export type ShiftInput = {
   contactName: string;
   contactPhone: string;
   urgency: "standard" | "urgent";
+  assignmentMode: "instant" | "review";
+};
+
+export type EmployerProfile = {
+  id: number;
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  companyName: string;
+  companyDescription: string;
+  website: string;
+  servicesOffered: string[];
+  billingAddress: { address?: string; city?: string; state?: string; zipCode?: string };
+  verificationStatus: string;
+};
+
+export type EmployerNotification = {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  related_id?: number;
+  is_read: boolean;
+  created_at: string;
 };
 
 export type Application = {
@@ -172,8 +199,8 @@ export async function getEmployerShifts(): Promise<Shift[]> {
   return result.shifts;
 }
 
-export async function createEmployerShift(input: ShiftInput): Promise<Shift> {
-  const result = await request<{ shift: Shift }>("/api/bookings", {
+export async function createEmployerShift(input: ShiftInput): Promise<{ shift: Shift; matchedCaregivers: number }> {
+  return request<{ shift: Shift; matchedCaregivers: number }>("/api/bookings", {
     method: "POST",
     body: JSON.stringify({
       title: `${input.serviceType} · ${input.careRecipientName}`,
@@ -197,9 +224,9 @@ export async function createEmployerShift(input: ShiftInput): Promise<Shift> {
       responsibilities: input.responsibilities,
       contact: { name: input.contactName, phone: input.contactPhone },
       urgency: input.urgency,
+      assignmentMode: input.assignmentMode,
     }),
   });
-  return result.shift;
 }
 
 export async function getEmployerApplications(): Promise<Application[]> {
@@ -212,4 +239,48 @@ export async function updateApplication(id: number, status: "approved" | "reject
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
+}
+
+export async function cancelEmployerShift(id: number) {
+  await request<void>(`/api/bookings/employer/${id}/cancel`, { method: "PATCH" });
+}
+
+export async function getEmployerProfile(): Promise<EmployerProfile> {
+  const result = await request<{ profile: EmployerProfile }>("/api/employers/me");
+  return result.profile;
+}
+
+export async function updateEmployerProfile(input: Partial<EmployerProfile>): Promise<EmployerProfile> {
+  const result = await request<{ profile: EmployerProfile }>("/api/employers/me", {
+    method: "PUT",
+    body: JSON.stringify({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      companyName: input.companyName,
+      phone: input.phone,
+      companyDescription: input.companyDescription,
+      website: input.website,
+      servicesOffered: input.servicesOffered,
+      address: input.billingAddress?.address,
+      city: input.billingAddress?.city,
+      state: input.billingAddress?.state,
+      zipCode: input.billingAddress?.zipCode,
+    }),
+  });
+  const user: EmployerUser = { id: result.profile.userId, email: result.profile.email, firstName: result.profile.firstName, lastName: result.profile.lastName, role: "employer", companyName: result.profile.companyName };
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  return result.profile;
+}
+
+export async function getEmployerNotifications(): Promise<EmployerNotification[]> {
+  const result = await request<{ notifications: EmployerNotification[] }>("/api/notifications");
+  return result.notifications;
+}
+
+export async function markEmployerNotificationRead(id: number) {
+  await request<void>(`/api/notifications/${id}/read`, { method: "PATCH" });
+}
+
+export async function markAllEmployerNotificationsRead() {
+  await request<void>("/api/notifications/read-all", { method: "POST" });
 }

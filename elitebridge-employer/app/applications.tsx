@@ -5,6 +5,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 
 import { Application, getEmployerApplications, getStoredEmployer, updateApplication } from "../lib/api";
 import { colors } from "../lib/theme";
+import { EmployerTabBar } from "../components/employer-tab-bar";
 
 export default function ApplicationsScreen() {
   const router = useRouter();
@@ -41,7 +42,7 @@ export default function ApplicationsScreen() {
       {loading ? <ActivityIndicator color={colors.green} size="large" style={styles.loader} /> : null}
       {!loading && items.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No applications yet</Text><Text style={styles.emptyBody}>Applications from the Elite Bridge Caregiver app will appear here.</Text></View> : null}
       {items.map((item) => <View key={item.id} style={styles.card}><View style={styles.row}><Text style={styles.name}>{item.first_name} {item.last_name}</Text><Text style={[styles.status, item.status === "approved" ? styles.approved : item.status === "rejected" ? styles.rejected : styles.pending]}>{item.status.toUpperCase()}</Text></View><Text style={styles.shift}>{item.shift_title}</Text><Text style={styles.meta}>{new Date(item.start_time).toLocaleString()} · {item.city}, {item.state}</Text><Text style={styles.meta}>{item.email}</Text>{item.certifications?.length ? <Text style={styles.credentials}>Credentials: {item.certifications.join(", ")}</Text> : null}{item.note ? <Text style={styles.note}>“{item.note}”</Text> : null}{item.status === "pending" ? <View style={styles.actions}><TouchableOpacity disabled={updating === item.id} onPress={() => decide(item, "rejected")} style={styles.decline}><Text style={styles.declineText}>Decline</Text></TouchableOpacity><TouchableOpacity disabled={updating === item.id} onPress={() => decide(item, "approved")} style={styles.approve}>{updating === item.id ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.approveText}>Approve</Text>}</TouchableOpacity></View> : null}</View>)}
-    </ScrollView></SafeAreaView>
+    </ScrollView><EmployerTabBar /></SafeAreaView>
   );
 }
 

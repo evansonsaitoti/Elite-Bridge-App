@@ -16,6 +16,28 @@ const updateProfileSchema = z.object({
   certifications: z.array(z.string()).optional(),
 });
 
+const matchingProfileSchema = z.object({
+  availability: z.array(z.string()).min(1),
+  preferredServices: z.array(z.string()).min(1),
+  maxDistanceMiles: z.number().positive().max(250),
+  instantOffers: z.boolean(),
+});
+
+router.put("/me/matching", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const data = matchingProfileSchema.parse(req.body);
+    const existing = await db.select().from(caregivers).where(eq(caregivers.userId, req.user.id)).limit(1);
+    const availability = { windows: data.availability, maxDistanceMiles: [String(data.maxDistanceMiles)], instantOffers: [String(data.instantOffers)] };
+    if (existing[0]) {
+      await db.update(caregivers).set({ specialties: data.preferredServices, availability, isAvailable: true, updatedAt: new Date() }).where(eq(caregivers.userId, req.user.id));
+    } else {
+      await db.insert(caregivers).values({ userId: req.user.id, hourlyRate: "0", specialties: data.preferredServices, certifications: [], availability, isAvailable: true });
+    }
+    res.json({ message: "Matching profile updated" });
+  } catch (error) { next(error); }
+});
+
 // List all caregivers (for employer discovery)
 router.get("/", authMiddleware, async (req, res, next) => {
   try {
