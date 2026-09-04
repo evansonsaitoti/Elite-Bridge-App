@@ -1,4 +1,4 @@
-# Elite Bridge Employer — App Review Notes (Version 1.2.0, Build 24)
+# Elite Bridge Employer — App Review Notes (Version 1.2.0, Build 25)
 
 ## Purpose and companion-app relationship
 
@@ -44,7 +44,7 @@ These are ordinary production accounts. They do not activate different code, scr
 
 ## Visible feature map
 
-1. **Welcome:** explains the employer-only purpose and the separately listed Caregiver companion app.
+1. **Welcome:** an interactive, public feature carousel explains the employer-only purpose, care services, matched Shift Offers and the separately listed Caregiver companion app before registration or sign-in.
 2. **Create employer account:** public employer registration.
 3. **Employer sign in:** accepts only employer accounts. An organization’s authorized administrator uses an employer account to manage its workspace.
 4. **Home:** displays open shifts, assigned shifts, applicant totals, a visible notification entry point, and the primary Publish Shift action.
@@ -59,6 +59,6 @@ After a normal sign-in or registration, the app requests notification permission
 
 ## Rebuild disclosure
 
-Build 24 is a complete employer-only companion app. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
+Build 25 is a complete employer-only companion app. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
 
 No purchase or subscription is required to review the app.
