@@ -1,1 +1,1 @@
-Caregiver TestFlight build 45 retried after Apple API compatibility fix on 2026-09-04.
+Caregiver TestFlight version 1.0.1 build 46 triggered on 2026-09-04.
