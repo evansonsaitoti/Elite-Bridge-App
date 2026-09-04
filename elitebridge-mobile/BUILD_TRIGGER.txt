@@ -1,1 +1,1 @@
-Caregiver TestFlight build 45 triggered on 2026-09-04.
+Caregiver TestFlight build 45 retried with push-capable provisioning on 2026-09-04.
