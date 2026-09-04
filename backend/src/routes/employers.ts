@@ -9,6 +9,9 @@ import { AppError } from "../middleware/errorHandler";
 const router = Router();
 
 const updateProfileSchema = z.object({
+  firstName: z.string().min(2).optional(),
+  lastName: z.string().min(2).optional(),
+  companyName: z.string().min(2).optional(),
   companyDescription: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -17,6 +20,61 @@ const updateProfileSchema = z.object({
   phone: z.string().optional(),
   website: z.string().optional(),
   servicesOffered: z.array(z.string()).optional(),
+});
+
+function mapEmployerProfile(employer: any, user: any) {
+  return {
+    id: employer.id,
+    userId: employer.userId ?? employer.user_id,
+    companyName: employer.companyName ?? employer.company_name,
+    companyDescription: employer.companyDescription ?? employer.company_description ?? "",
+    website: employer.website ?? "",
+    servicesOffered: employer.serviceArea ?? employer.service_area ?? [],
+    billingAddress: employer.billingAddress ?? employer.billing_address ?? {},
+    verificationStatus: employer.verificationStatus ?? employer.verification_status,
+    firstName: user.firstName ?? user.first_name,
+    lastName: user.lastName ?? user.last_name,
+    email: user.email,
+    phone: user.phone ?? "",
+  };
+}
+
+// The signed-in employer's own organization profile. Keeping this route explicit
+// avoids asking the mobile client to discover internal employer IDs.
+router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
+    const employerList = await db.select().from(employers).where(eq(employers.userId, req.user.id)).limit(1);
+    const userList = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
+    if (!employerList[0] || !userList[0]) throw new AppError(404, "Employer profile not found");
+    res.json({ profile: mapEmployerProfile(employerList[0], userList[0]) });
+  } catch (error) { next(error); }
+});
+
+router.put("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
+    const data = updateProfileSchema.parse(req.body);
+    const userUpdate: any = { updatedAt: new Date() };
+    if (data.firstName !== undefined) userUpdate.firstName = data.firstName;
+    if (data.lastName !== undefined) userUpdate.lastName = data.lastName;
+    if (data.phone !== undefined) userUpdate.phone = data.phone;
+    await db.update(users).set(userUpdate).where(eq(users.id, req.user.id));
+
+    const employerUpdate: any = { updatedAt: new Date() };
+    if (data.companyName !== undefined) employerUpdate.companyName = data.companyName;
+    if (data.companyDescription !== undefined) employerUpdate.companyDescription = data.companyDescription;
+    if (data.website !== undefined) employerUpdate.website = data.website;
+    if (data.servicesOffered !== undefined) employerUpdate.serviceArea = data.servicesOffered;
+    if (data.address !== undefined || data.city !== undefined || data.state !== undefined || data.zipCode !== undefined) {
+      employerUpdate.billingAddress = { address: data.address || "", city: data.city || "", state: data.state || "", zipCode: data.zipCode || "" };
+    }
+    await db.update(employers).set(employerUpdate).where(eq(employers.userId, req.user.id));
+
+    const employerList = await db.select().from(employers).where(eq(employers.userId, req.user.id)).limit(1);
+    const userList = await db.select().from(users).where(eq(users.id, req.user.id)).limit(1);
+    res.json({ profile: mapEmployerProfile(employerList[0], userList[0]) });
+  } catch (error) { next(error); }
 });
 
 // Get employer profile

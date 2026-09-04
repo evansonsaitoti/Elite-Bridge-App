@@ -6,6 +6,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { deleteEmployerAccount, EmployerUser, getStoredEmployer, signOutEmployer } from "../lib/api";
 import { unregisterEmployerPushNotifications } from "../lib/push-notifications";
 import { colors } from "../lib/theme";
+import { EmployerTabBar } from "../components/employer-tab-bar";
 
 const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
@@ -29,6 +30,9 @@ export default function AccountScreen() {
     <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
       <View style={styles.profile}><View style={styles.avatar}><Text style={styles.avatarText}>{user?.firstName?.slice(0, 1).toUpperCase() || "E"}</Text></View><Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : "Employer"}</Text><Text style={styles.email}>{user?.email}</Text><Text style={styles.badge}>EMPLOYER ACCOUNT</Text></View>
       <Text style={styles.section}>Account</Text>
+      <Row title="Organization profile" detail="Edit contact, services and service area" onPress={() => router.push("/profile")} />
+      <Row title="Notifications" detail="Review staffing and account updates" onPress={() => router.push("/notifications")} />
+      <Row title="Push notification settings" detail="Manage permissions in device settings" onPress={() => void Linking.openSettings()} />
       <Row title="Sign out" detail="Remove employer access from this device" onPress={signOut} />
       <Text style={styles.section}>Help and legal</Text>
       <Row title="Contact support" detail={SUPPORT_EMAIL} onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Elite%20Bridge%20Employer%20support`)} />
@@ -37,7 +41,7 @@ export default function AccountScreen() {
       <Text style={styles.section}>Account deletion</Text>
       <View style={styles.dangerCard}><Text style={styles.dangerTitle}>Delete employer account</Text><Text style={styles.dangerBody}>Permanently remove your employer login and organization profile directly from the app.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Delete account</Text>}</TouchableOpacity></View>
       <Text style={styles.footer}>Elite Bridge Employer and Elite Bridge Caregiver are separate applications connected through the same care marketplace.</Text>
-    </ScrollView></SafeAreaView>
+    </ScrollView><EmployerTabBar /></SafeAreaView>
   );
 }
 

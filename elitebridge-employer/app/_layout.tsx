@@ -35,6 +35,8 @@ export default function RootLayout() {
         <Stack.Screen name="post-shift" options={{ title: "Post a shift" }} />
         <Stack.Screen name="applications" options={{ title: "Applications" }} />
         <Stack.Screen name="account" options={{ title: "Employer account" }} />
+        <Stack.Screen name="profile" options={{ title: "Organization profile" }} />
+        <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
       </Stack>
     </>
   );

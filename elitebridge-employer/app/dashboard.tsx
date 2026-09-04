@@ -6,6 +6,7 @@ import { useFocusEffect, useRouter } from "expo-router";
 import { Application, EmployerUser, getEmployerApplications, getEmployerShifts, getStoredEmployer, Shift } from "../lib/api";
 import { cardShadow, colors } from "../lib/theme";
 import { enableEmployerPushNotifications } from "../lib/push-notifications";
+import { EmployerTabBar } from "../components/employer-tab-bar";
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -41,10 +42,10 @@ export default function DashboardScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
+      <ScrollView style={styles.fill} contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
         <View style={styles.header}>
           <View><Text style={styles.brand}>ELITE BRIDGE EMPLOYER</Text><Text style={styles.greeting}>Hello{user?.firstName ? `, ${user.firstName}` : ""}</Text></View>
-          <TouchableOpacity accessibilityLabel="Employer account" onPress={() => router.push("/account")} style={styles.account}><Text style={styles.accountText}>{user?.firstName?.slice(0, 1).toUpperCase() || "E"}</Text></TouchableOpacity>
+          <View style={styles.headerActions}><TouchableOpacity accessibilityLabel="Notifications" onPress={() => router.push("/notifications")} style={styles.bell}><Text style={styles.bellText}>●</Text></TouchableOpacity><TouchableOpacity accessibilityLabel="Employer account" onPress={() => router.push("/account")} style={styles.account}><Text style={styles.accountText}>{user?.firstName?.slice(0, 1).toUpperCase() || "E"}</Text></TouchableOpacity></View>
         </View>
 
         <View style={styles.connected}><Text style={styles.connectedTitle}>Connected to Elite Bridge Caregiver</Text><Text style={styles.connectedBody}>Shifts posted here become available to eligible caregivers in the separate Caregiver app.</Text></View>
@@ -65,7 +66,7 @@ export default function DashboardScreen() {
             <NavCard title="Account and support" detail="Manage access, privacy, support and account deletion." onPress={() => router.push("/account")} />
           </>
         )}
-      </ScrollView>
+      </ScrollView><EmployerTabBar />
     </SafeAreaView>
   );
 }
@@ -79,9 +80,10 @@ function NavCard({ title, detail, value, onPress }: { title: string; detail: str
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: colors.background }, content: { padding: 20, paddingBottom: 44 },
+  safe: { flex: 1, backgroundColor: colors.background }, fill: { flex: 1 }, content: { padding: 20, paddingBottom: 28 },
   header: { alignItems: "center", flexDirection: "row", justifyContent: "space-between", marginBottom: 22 }, brand: { color: colors.gold, fontSize: 10, fontWeight: "900", letterSpacing: 1.6 }, greeting: { color: colors.ink, fontSize: 29, fontWeight: "900", marginTop: 5 },
   account: { alignItems: "center", backgroundColor: colors.green, borderRadius: 22, height: 44, justifyContent: "center", width: 44 }, accountText: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" },
+  headerActions: { alignItems: "center", flexDirection: "row", gap: 9 }, bell: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 20, borderWidth: 1, height: 40, justifyContent: "center", width: 40 }, bellText: { color: colors.gold, fontSize: 16 },
   connected: { backgroundColor: colors.greenDark, borderRadius: 18, marginBottom: 18, padding: 16 }, connectedTitle: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, connectedBody: { color: "#CEE2D8", fontSize: 12, lineHeight: 18, marginTop: 5 },
   loader: { marginVertical: 50 }, stats: { flexDirection: "row", gap: 9, marginBottom: 16 }, stat: { ...cardShadow, alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, flex: 1, paddingHorizontal: 6, paddingVertical: 16 }, statValue: { color: colors.green, fontSize: 25, fontWeight: "900" }, statLabel: { color: colors.muted, fontSize: 10, fontWeight: "700", marginTop: 4, textAlign: "center" },
   primary: { alignItems: "center", backgroundColor: colors.green, borderRadius: 14, justifyContent: "center", minHeight: 54 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" },

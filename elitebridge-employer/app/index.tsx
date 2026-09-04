@@ -54,9 +54,9 @@ export default function WelcomeScreen() {
           <Text style={styles.relationshipTitle}>Two apps. One connected marketplace.</Text>
           <View style={styles.flowRow}><Text style={styles.step}>1</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Employers post shifts here</Text><Text style={styles.flowBody}>Create care opportunities with schedule, location, requirements and pay.</Text></View></View>
           <View style={styles.line} />
-          <View style={styles.flowRow}><Text style={styles.step}>2</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Caregivers apply separately</Text><Text style={styles.flowBody}>Eligible workers discover the opportunities in the Elite Bridge Caregiver app.</Text></View></View>
+          <View style={styles.flowRow}><Text style={styles.step}>2</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Matched caregivers are notified</Text><Text style={styles.flowBody}>Eligible workers receive the Shift Offer in the separately listed Elite Bridge Caregiver app.</Text></View></View>
           <View style={styles.line} />
-          <View style={styles.flowRow}><Text style={styles.step}>3</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Employers make the decision</Text><Text style={styles.flowBody}>Review applications and select the right caregiver for each shift.</Text></View></View>
+          <View style={styles.flowRow}><Text style={styles.step}>3</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Choose the assignment method</Text><Text style={styles.flowBody}>Allow the first qualified caregiver to claim, or review applicants before assigning.</Text></View></View>
         </View>
 
         <View style={styles.disclosure}>

@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 46') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 47') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -128,7 +128,7 @@ jobs:
         run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
 
   employer:
-    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger employer build 23') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer')) }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger employer build 24') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:

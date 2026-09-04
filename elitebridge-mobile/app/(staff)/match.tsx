@@ -9,6 +9,7 @@ import {
   saveCaregiverPreferences,
   type CaregiverPreferences,
 } from "@/lib/caregiver-preferences";
+import { sharedApiConfigured, syncCaregiverMatchingProfile } from "@/lib/shared-api";
 
 const availabilityOptions = ["Mornings", "Afternoons", "Evenings", "Overnights", "Weekends"];
 const serviceOptions = ["Personal care", "Companionship", "Meal prep", "Respite", "Dementia care"];
@@ -46,8 +47,13 @@ export default function StaffMatch() {
       Alert.alert("Check travel distance", "Enter a valid maximum travel distance.");
       return;
     }
-    await saveCaregiverPreferences(preferences);
-    Alert.alert("Care Match saved", "Your work feed will prioritize shifts that fit these preferences.");
+    try {
+      await saveCaregiverPreferences(preferences);
+      if (sharedApiConfigured) await syncCaregiverMatchingProfile(preferences);
+      Alert.alert("Care Match saved", "Your matching profile is active. Eligible employer shift offers will be sent to this app.");
+    } catch (error) {
+      Alert.alert("Care Match not synced", error instanceof Error ? error.message : "Please try again when you are online.");
+    }
   };
 
   const primaryServices = preferences.preferredServices.length ? preferences.preferredServices : ["Companionship", "Respite"];
@@ -64,7 +70,7 @@ export default function StaffMatch() {
         </Text>
         <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>Care Match</Text>
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>
-          Control what work appears first. These settings stay on this device and help Elite rank better-fit shifts.
+          Control which employer Shift Offers match your profile and appear in this app.
         </Text>
 
         <View style={{ backgroundColor: "#0B1220", borderRadius: 22, padding: 18, marginBottom: 14 }}>
@@ -90,7 +96,7 @@ export default function StaffMatch() {
         <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border }}>
           <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "900" }}>Care Match preferences</Text>
           <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>
-            Choose your preferred hours, care categories and travel range. Agencies still approve final assignments.
+            Choose your preferred hours, care categories and travel range. Employers can publish either instant-claim or approval-required shifts.
           </Text>
 
           <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900", marginTop: 14, marginBottom: 8 }}>

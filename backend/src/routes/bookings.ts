@@ -6,7 +6,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { caregivers, employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import { sendPushToRole, sendPushToUsers } from "../services/notifications";
+import { sendPushToUsers } from "../services/notifications";
 
 const router = Router();
 
@@ -39,6 +39,7 @@ const shiftSchema = z.object({
     phone: z.string().min(1),
   }),
   urgency: z.enum(["standard", "urgent"]).default("standard"),
+  assignmentMode: z.enum(["instant", "review"]).default("instant"),
 });
 
 const applicationActionSchema = z.object({ status: z.enum(["approved", "rejected"]) });
@@ -78,11 +79,14 @@ async function ensureShiftPostsTable() {
       contact_name VARCHAR(255) NOT NULL,
       contact_phone VARCHAR(50) NOT NULL,
       urgency VARCHAR(50) NOT NULL DEFAULT 'standard',
+      assignment_mode VARCHAR(20) NOT NULL DEFAULT 'instant',
       status VARCHAR(50) NOT NULL DEFAULT 'open',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS assignment_mode VARCHAR(20) NOT NULL DEFAULT 'instant'`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_activities (
@@ -206,6 +210,7 @@ function mapShift(row: any) {
     notes: row.notes,
     contact: { name: row.contact_name, phone: row.contact_phone },
     urgency: row.urgency,
+    assignmentMode: row.assignment_mode || "instant",
     status: row.status,
     applicationStatus: row.application_status || undefined,
     createdAt: row.created_at,
@@ -227,23 +232,42 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
         employer_id, title, service_type, caregiver_type, care_recipient_name,
         schedule_type, start_time, end_time, location_type, address, city, state,
         zip_code, hourly_rate, number_of_caregivers, requirements, responsibilities,
-        notes, contact_name, contact_phone, urgency, status
+        notes, contact_name, contact_phone, urgency, assignment_mode, status
       ) VALUES (
         ${employer.id}, ${data.title}, ${data.serviceType}, ${data.caregiverType}, ${data.careRecipientName || null},
         ${data.scheduleType}, ${startDateTime}, ${endDateTime}, ${data.location.type}, ${data.location.address},
         ${data.location.city}, ${data.location.state.toUpperCase()}, ${data.location.zipCode}, ${data.pay.hourlyRate.toString()},
         ${data.numberOfCaregivers}, ${JSON.stringify(data.requirements)}, ${data.responsibilities},
-        ${data.notes || null}, ${data.contact.name}, ${data.contact.phone}, ${data.urgency}, 'open'
+        ${data.notes || null}, ${data.contact.name}, ${data.contact.phone}, ${data.urgency}, ${data.assignmentMode}, 'open'
       )
       RETURNING *
     `);
     const createdShift = (result as any).rows[0];
-    void sendPushToRole("caregiver", {
-      title: data.urgency === "urgent" ? "Urgent care shift available" : "New care shift available",
+    const matches = await db.execute(sql`
+      SELECT c.user_id
+      FROM caregivers c JOIN users u ON u.id = c.user_id
+      WHERE c.is_available = true AND u.is_active = true
+        AND (
+          COALESCE(json_array_length(c.certifications), 0) = 0
+          OR LOWER(c.certifications::text) LIKE ${`%${data.caregiverType.toLowerCase()}%`}
+          OR LOWER(c.specialties::text) LIKE ${`%${data.serviceType.toLowerCase()}%`}
+        )
+      LIMIT 100
+    `);
+    const matchedUserIds = (matches as any).rows.map((row: any) => row.user_id);
+    for (const userId of matchedUserIds) {
+      await db.execute(sql`
+        INSERT INTO notifications (user_id, type, title, message, related_id)
+        VALUES (${userId}, 'shift_offer', ${data.urgency === "urgent" ? "Urgent matched shift" : "New matched shift"},
+          ${`${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()} · $${data.pay.hourlyRate}/hr`}, ${createdShift.id})
+      `);
+    }
+    void sendPushToUsers(matchedUserIds, {
+      title: data.urgency === "urgent" ? "Urgent matched shift" : "New matched shift",
       body: `${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()} · $${data.pay.hourlyRate}/hr`,
-      data: { type: "new_shift", shiftId: createdShift.id },
+      data: { type: "new_shift_offer", shiftId: createdShift.id, assignmentMode: data.assignmentMode },
     });
-    res.status(201).json({ shift: mapShift(createdShift) });
+    res.status(201).json({ shift: mapShift(createdShift), matchedCaregivers: matchedUserIds.length });
   } catch (error) { next(error); }
 });
 
@@ -273,10 +297,99 @@ router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
       LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
       WHERE sp.status = 'open'
         AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
+        AND c.is_available = true
+        AND (
+          COALESCE(json_array_length(c.certifications), 0) = 0
+          OR LOWER(c.certifications::text) LIKE '%' || LOWER(sp.caregiver_type) || '%'
+          OR LOWER(c.specialties::text) LIKE '%' || LOWER(sp.service_type) || '%'
+        )
       ORDER BY CASE WHEN sp.urgency = 'urgent' THEN 0 ELSE 1 END, sp.start_time ASC
       LIMIT 100
     `);
     res.json({ shifts: (result as any).rows.map(mapShift) });
+  } catch (error) { next(error); }
+});
+
+// Qualified caregivers can claim instant-assignment shifts. The conditional
+// status update is the concurrency guard: only the first eligible claimant wins.
+router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const shiftId = Number(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+
+    const eligibility = await db.execute(sql`
+      SELECT sp.*, e.user_id AS employer_user_id
+      FROM shift_posts sp
+      JOIN employers e ON e.id = sp.employer_id
+      JOIN caregivers c ON c.id = ${caregiver.id}
+      WHERE sp.id = ${shiftId} AND sp.status = 'open' AND sp.assignment_mode = 'instant'
+        AND c.is_available = true
+        AND (
+          COALESCE(json_array_length(c.certifications), 0) = 0
+          OR LOWER(c.certifications::text) LIKE '%' || LOWER(sp.caregiver_type) || '%'
+          OR LOWER(c.specialties::text) LIKE '%' || LOWER(sp.service_type) || '%'
+        )
+      LIMIT 1
+    `);
+    const shift = (eligibility as any).rows[0];
+    if (!shift) throw new AppError(409, "This shift is unavailable or does not match your current qualifications");
+
+    const claimed = await db.execute(sql`
+      UPDATE shift_posts SET status = 'assigned', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${shiftId} AND status = 'open' RETURNING id
+    `);
+    if (!(claimed as any).rows[0]) throw new AppError(409, "Another caregiver already claimed this shift");
+
+    const application = await db.execute(sql`
+      INSERT INTO shift_applications (shift_id, caregiver_id, status, note)
+      VALUES (${shiftId}, ${caregiver.id}, 'approved', 'Claimed a matched instant shift offer.')
+      ON CONFLICT (shift_id, caregiver_id)
+      DO UPDATE SET status = 'approved', note = EXCLUDED.note, updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `);
+    await db.execute(sql`
+      UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
+      WHERE shift_id = ${shiftId} AND caregiver_id <> ${caregiver.id} AND status = 'pending'
+    `);
+    const start = new Date(shift.start_time);
+    const end = new Date(shift.end_time);
+    const hours = Math.max(0, (end.getTime() - start.getTime()) / 3_600_000);
+    const total = Number((hours * Number(shift.hourly_rate)).toFixed(2));
+    await db.execute(sql`
+      INSERT INTO bookings (caregiver_id, employer_id, start_time, end_time, service_type, status, hourly_rate, total_amount, notes)
+      VALUES (${caregiver.id}, ${shift.employer_id}, ${start}, ${end}, ${shift.service_type}, 'confirmed', ${String(shift.hourly_rate)}, ${String(total)}, ${shift.notes || null})
+    `);
+    await db.execute(sql`
+      INSERT INTO notifications (user_id, type, title, message, related_id)
+      VALUES (${shift.employer_user_id}, 'shift_claimed', 'Shift claimed', 'A qualified caregiver claimed your matched shift offer.', ${shiftId})
+    `);
+    void sendPushToUsers([shift.employer_user_id], {
+      title: "Shift claimed",
+      body: `A qualified caregiver claimed ${shift.title}.`,
+      data: { type: "shift_claimed", shiftId, applicationId: (application as any).rows[0].id },
+    });
+    res.json({ application: (application as any).rows[0], shift: { id: shiftId, status: "assigned" } });
+  } catch (error) { next(error); }
+});
+
+router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const shiftId = Number(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+    const updated = await db.execute(sql`
+      UPDATE shift_posts SET status = 'cancelled', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${shiftId} AND employer_id = ${employer.id} AND status IN ('open', 'assigned') RETURNING id
+    `);
+    if (!(updated as any).rows[0]) throw new AppError(409, "This shift cannot be cancelled");
+    await db.execute(sql`UPDATE bookings SET status = 'cancelled', cancellation_reason = 'Cancelled by employer', cancelled_by = 'employer', cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE employer_id = ${employer.id} AND status IN ('pending', 'confirmed') AND start_time = (SELECT start_time FROM shift_posts WHERE id = ${shiftId})`);
+    const caregiversResult = await db.execute(sql`SELECT c.user_id FROM shift_applications sa JOIN caregivers c ON c.id = sa.caregiver_id WHERE sa.shift_id = ${shiftId} AND sa.status = 'approved'`);
+    const caregiverUserIds = (caregiversResult as any).rows.map((row: any) => row.user_id);
+    void sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
+    res.status(204).send();
   } catch (error) { next(error); }
 });
 
