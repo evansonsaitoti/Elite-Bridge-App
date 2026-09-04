@@ -13,10 +13,11 @@ import urllib.request
 import jwt
 
 API_ROOT = "https://api.appstoreconnect.apple.com"
-BUNDLE_IDENTIFIER = "com.app.elitebridgeemployer"
+BUNDLE_IDENTIFIER = os.environ.get("IOS_BUNDLE_IDENTIFIER", "com.app.elitebridgeemployer")
+APP_LABEL = os.environ.get("IOS_APP_LABEL", "Employer")
 P12_PATH = "/tmp/elitebridge-dist.p12"
 COMPAT_P12_PATH = "/tmp/elitebridge-dist-compatible.p12"
-PROFILE_PATH = "/tmp/elitebridge-employer.mobileprovision"
+PROFILE_PATH = os.environ.get("IOS_PROFILE_PATH", "/tmp/elitebridge-employer.mobileprovision")
 KEY_PATH = "/tmp/AuthKey.p8"
 
 
@@ -151,11 +152,11 @@ def ensure_push_capability(token: str, bundle_id: str) -> None:
         }
     }
     api_request(token, "POST", "/v1/bundleIdCapabilities", payload)
-    print("Enabled Push Notifications for the Employer bundle identifier.")
+    print(f"Enabled Push Notifications for the {APP_LABEL} bundle identifier.")
 
 
 def verify_push_entitlement(profile_path: str) -> None:
-    decoded_path = "/tmp/elitebridge-employer-profile.plist"
+    decoded_path = "/tmp/elitebridge-profile.plist"
     subprocess.check_call(
         [
             "openssl", "smime", "-verify", "-inform", "DER", "-noverify",
@@ -226,7 +227,7 @@ def main():
     bundle_id = bundle_data[0]["id"]
     ensure_push_capability(token, bundle_id)
 
-    profile_name = f"Elite Bridge Employer App Store {int(time.time())}"
+    profile_name = f"Elite Bridge {APP_LABEL} App Store {int(time.time())}"
     payload = {
         "data": {
             "type": "profiles",
@@ -257,7 +258,7 @@ def main():
     }
     pathlib.Path("credentials.json").write_text(json.dumps(credentials), encoding="utf-8")
     print(
-        f"Prepared Employer App Store provisioning profile using Apple certificate serial {local_serial} and macOS-compatible PKCS#12 packaging."
+        f"Prepared {APP_LABEL} App Store provisioning profile using Apple certificate serial {local_serial} and macOS-compatible PKCS#12 packaging."
     )
 
 
