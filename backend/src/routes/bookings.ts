@@ -6,6 +6,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { caregivers, employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { sendPushToRole, sendPushToUsers } from "../services/notifications";
 
 const router = Router();
 
@@ -236,7 +237,13 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       )
       RETURNING *
     `);
-    res.status(201).json({ shift: mapShift((result as any).rows[0]) });
+    const createdShift = (result as any).rows[0];
+    void sendPushToRole("caregiver", {
+      title: data.urgency === "urgent" ? "Urgent care shift available" : "New care shift available",
+      body: `${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()} · $${data.pay.hourlyRate}/hr`,
+      data: { type: "new_shift", shiftId: createdShift.id },
+    });
+    res.status(201).json({ shift: mapShift(createdShift) });
   } catch (error) { next(error); }
 });
 
@@ -281,8 +288,15 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
     if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
     const note = typeof req.body?.note === "string" ? req.body.note.trim() : "";
 
-    const shiftResult = await db.execute(sql`SELECT * FROM shift_posts WHERE id = ${shiftId} AND status = 'open' LIMIT 1`);
-    if (!(shiftResult as any).rows[0]) throw new AppError(404, "Open shift not found");
+    const shiftResult = await db.execute(sql`
+      SELECT sp.*, e.user_id AS employer_user_id
+      FROM shift_posts sp
+      JOIN employers e ON e.id = sp.employer_id
+      WHERE sp.id = ${shiftId} AND sp.status = 'open'
+      LIMIT 1
+    `);
+    const shift = (shiftResult as any).rows[0];
+    if (!shift) throw new AppError(404, "Open shift not found");
 
     const result = await db.execute(sql`
       INSERT INTO shift_applications (shift_id, caregiver_id, status, note)
@@ -291,6 +305,11 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
       DO UPDATE SET status = 'pending', note = EXCLUDED.note, updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `);
+    void sendPushToUsers([shift.employer_user_id], {
+      title: "New caregiver application",
+      body: `A caregiver applied for ${shift.title}.`,
+      data: { type: "new_application", shiftId, applicationId: (result as any).rows[0].id },
+    });
     res.status(201).json({ application: (result as any).rows[0] });
   } catch (error) { next(error); }
 });
@@ -362,6 +381,13 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
     `);
 
     if (status === "approved") {
+      const competingResult = await db.execute(sql`
+        SELECT c.user_id
+        FROM shift_applications sa
+        JOIN caregivers c ON c.id = sa.caregiver_id
+        WHERE sa.shift_id = ${application.shift_id} AND sa.id <> ${applicationId} AND sa.status = 'pending'
+      `);
+      const competingUserIds = (competingResult as any).rows.map((row: any) => row.user_id);
       await db.execute(sql`
         UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
         WHERE shift_id = ${application.shift_id} AND id <> ${applicationId} AND status = 'pending'
@@ -404,6 +430,26 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
           'Your Elite Bridge shift application was approved. Open the caregiver app for the assignment details.',
           ${application.shift_id})
       `);
+      void sendPushToUsers([application.caregiver_user_id], {
+        title: "Shift approved",
+        body: "Your shift application was approved. Open Elite Bridge Caregiver for assignment details.",
+        data: { type: "application_approved", shiftId: application.shift_id },
+      });
+      if (competingUserIds.length) {
+        for (const userId of competingUserIds) {
+          await db.execute(sql`
+            INSERT INTO notifications (user_id, type, title, message, related_id)
+            VALUES (${userId}, 'shift_application', 'Application update',
+              'The agency selected another caregiver for this shift. New opportunities are available in Elite Bridge.',
+              ${application.shift_id})
+          `);
+        }
+        void sendPushToUsers(competingUserIds, {
+          title: "Application update",
+          body: "The agency selected another caregiver for this shift. New opportunities are available.",
+          data: { type: "application_rejected", shiftId: application.shift_id },
+        });
+      }
     } else {
       await db.execute(sql`
         INSERT INTO notifications (user_id, type, title, message, related_id)
@@ -411,6 +457,11 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
           'The agency selected another caregiver for this shift. New opportunities are available in Elite Bridge.',
           ${application.shift_id})
       `);
+      void sendPushToUsers([application.caregiver_user_id], {
+        title: "Application update",
+        body: "The agency selected another caregiver for this shift. New opportunities are available.",
+        data: { type: "application_rejected", shiftId: application.shift_id },
+      });
     }
 
     res.json({ application: (updated as any).rows[0] });
@@ -453,6 +504,11 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
       UPDATE shift_applications SET status = 'callout', updated_at = CURRENT_TIMESTAMP
       WHERE id = ${assignment.application_id}
     `);
+    void sendPushToUsers([assignment.employer_user_id], {
+      title: "Urgent shift call-out",
+      body: `A caregiver called out of ${assignment.title}. The shift has been reopened as urgent.`,
+      data: { type: "shift_callout", shiftId },
+    });
     await db.execute(sql`
       UPDATE shift_posts SET status = 'open', urgency = 'urgent', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}
     `);
@@ -554,6 +610,12 @@ router.post("/employer/callouts/:calloutId/launch-rescue", authMiddleware, async
           ${callout.shift_id})
       `);
     }
+
+    void sendPushToUsers(ranked.map((candidate: any) => candidate.user_id), {
+      title: "Priority shift offer",
+      body: `Urgent coverage is needed for ${callout.title}. Review the offer in Elite Bridge Caregiver.`,
+      data: { type: "replacement_offer", shiftId: callout.shift_id, calloutId },
+    });
 
     res.json({
       calloutId,

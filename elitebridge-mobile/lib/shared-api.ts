@@ -88,6 +88,36 @@ export async function ensureCaregiverBackendSession(email: string, password: str
   return result.user;
 }
 
+export async function registerCaregiverAccount(input: {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  password: string;
+}): Promise<AuthUser> {
+  const result = await request<{ token: string; user: AuthUser }>("/api/auth/register", {
+    method: "POST",
+    body: JSON.stringify({ ...input, email: input.email.trim().toLowerCase(), role: "caregiver" }),
+  }, false);
+  if (result.user.role !== "caregiver") throw new Error("The service did not create a caregiver account.");
+  await AsyncStorage.setItem(TOKEN_KEY, result.token);
+  return result.user;
+}
+
+export async function registerCaregiverDevice(token: string, platform: "ios" | "android") {
+  await request<void>("/api/notifications/device", {
+    method: "POST",
+    body: JSON.stringify({ token, platform, app: "caregiver" }),
+  });
+}
+
+export async function removeCaregiverDevice(token: string) {
+  await request<void>("/api/notifications/device", {
+    method: "DELETE",
+    body: JSON.stringify({ token }),
+  });
+}
+
 export async function clearCaregiverBackendSession() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }

@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 const STAFF_TABS = [
   { label: "Work", route: "/(staff)/home", match: "/home", icon: "briefcase.fill" },
@@ -34,6 +35,7 @@ export default function StaffLayout() {
             router.replace("/(auth)/login");
             return;
           }
+          void enableCaregiverPushNotifications().catch(() => false);
           setReady(true);
         } catch { router.replace("/(auth)/login"); }
       })

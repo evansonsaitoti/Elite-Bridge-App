@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 44') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 45') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -39,7 +39,7 @@ jobs:
       - name: Checkout split branch
         uses: actions/checkout@v5
         with:
-          ref: elitebridge-split-ai-ma
+          ref: ${{ github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -64,14 +64,13 @@ jobs:
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-caregiver-expo-config.json
 
-      - name: Prepare managed EAS upload package without push entitlement
+      - name: Prepare managed EAS upload package
         shell: bash
         run: |
           node - <<'NODE'
           const fs = require('fs');
           const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
           if (pkg.devDependencies) delete pkg.devDependencies.sharp;
-          if (pkg.dependencies) delete pkg.dependencies['expo-notifications'];
           pkg.scripts = pkg.scripts || {};
           delete pkg.scripts['eas-build-pre-install'];
           delete pkg.scripts['eas-build-post-install'];
@@ -80,9 +79,9 @@ jobs:
           NODE
           rm -rf ios
           pnpm install --lockfile-only --no-frozen-lockfile
-          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp || p.dependencies?.['expo-notifications']) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.['eas-build-post-install']) process.exit(1)"
+          node -e "const p=require('./package.json'); if (p.devDependencies?.sharp || p.dependencies?.sharp) process.exit(1); if (p.scripts?.['eas-build-pre-install'] || p.scripts?.['eas-build-post-install']) process.exit(1)"
           test ! -d ios
-          echo 'Caregiver EAS upload package is managed Expo and excludes expo-notifications so no push entitlement is requested.'
+          echo 'Caregiver EAS upload package is managed Expo with marketplace push notifications enabled.'
 
       - name: Prepare Apple API key
         shell: bash
@@ -105,7 +104,7 @@ jobs:
         run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
 
   employer:
-    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger employer build 22') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer')) }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger employer build 23') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -115,7 +114,7 @@ jobs:
       - name: Checkout split branch
         uses: actions/checkout@v5
         with:
-          ref: elitebridge-split-ai-ma
+          ref: ${{ github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -133,6 +132,9 @@ jobs:
 
       - name: Type check employer app
         run: pnpm check
+
+      - name: Audit employer routes and review transparency
+        run: pnpm audit:release
 
       - name: Validate Expo configuration
         run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json

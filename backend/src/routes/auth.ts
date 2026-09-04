@@ -7,6 +7,7 @@ import { users, employers } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { sendSignupAlert } from "../services/notifications";
 
 const router = Router();
 
@@ -60,6 +61,15 @@ router.post("/register", async (req, res, next) => {
         companyName: data.companyName || `${user.firstName} ${user.lastName}`,
       });
     }
+
+    await sendSignupAlert({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: data.role,
+      phone: data.phone,
+      companyName: data.companyName,
+    });
 
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
 

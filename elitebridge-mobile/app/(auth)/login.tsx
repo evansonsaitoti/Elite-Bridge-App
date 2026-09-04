@@ -5,9 +5,7 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, S
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
-
-const REVIEW_EMAIL = "appreview-caregiver@elitebridgestaffing.com";
-const REVIEW_PASSWORD = "Caregiver2026!";
+import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -17,25 +15,10 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const continueReviewAccess = async () => {
-    await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
-      role: "staff",
-      email: REVIEW_EMAIL,
-      name: "Caregiver Review Account",
-      demo: true,
-      signedInAt: new Date().toISOString(),
-    }));
-    router.replace("/(staff)/home");
-  };
-
   const handleLogin = async () => {
     setError("");
     if (!email.trim() || !password) {
       setError("Enter both your email address and password.");
-      return;
-    }
-    if (email.trim().toLowerCase() === REVIEW_EMAIL && password === REVIEW_PASSWORD) {
-      await continueReviewAccess();
       return;
     }
     if (!sharedApiConfigured) {
@@ -52,6 +35,7 @@ export default function LoginScreen() {
         name: `${user.firstName} ${user.lastName}`.trim(),
         signedInAt: new Date().toISOString(),
       }));
+      await enableCaregiverPushNotifications().catch(() => false);
       router.replace("/(staff)/home");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not sign you in.");
@@ -93,10 +77,6 @@ export default function LoginScreen() {
 
             <TouchableOpacity style={[styles.loginButton, isLoading && styles.loginButtonDisabled]} onPress={handleLogin} disabled={isLoading}>
               {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in to Caregiver</Text>}
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.demoButton} onPress={continueReviewAccess} disabled={isLoading}>
-              <Text style={styles.demoButtonText}>Continue with review access</Text>
             </TouchableOpacity>
 
             <TouchableOpacity style={styles.signupButton} onPress={() => router.push("/(onboarding)/welcome")} disabled={isLoading}>
@@ -144,8 +124,6 @@ const styles = StyleSheet.create({
   loginButton: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  demoButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#EAF4EF", marginTop: 10 },
-  demoButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   signupButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 1, borderColor: "#D0D5DD", marginTop: 10 },
   signupButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   securityHint: { marginTop: 20, color: "#667085", fontSize: 11, textAlign: "center" },

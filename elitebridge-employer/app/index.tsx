@@ -1,282 +1,107 @@
-import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useCallback, useState } from "react";
+import { Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
-import { getEmployerSession, getLocalScheduleShifts, isDemoEmployerSession, type EmployerScheduleShift } from "../lib/employer-storage";
-import {
-  fetchEmployerApplications,
-  fetchEmployerCallouts,
-  fetchEmployerShifts,
-  sharedApiConfigured,
-  type EmployerApplication,
-  type EmployerCallout,
-  type SharedShift,
-} from "../lib/shared-api";
+import { getStoredEmployer } from "../lib/api";
+import { cardShadow, colors } from "../lib/theme";
 
-function formatTime(value: string) {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Shift";
-  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-}
+const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
+const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 
-function greeting() {
-  const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 18) return "Good afternoon";
-  return "Good evening";
-}
-
-function hoursUntil(value: string) {
-  return (new Date(value).getTime() - Date.now()) / 3_600_000;
-}
-
-function getCareRadarScore(shift: SharedShift, pendingApplications: number, openCallouts: number) {
-  if (shift.status === "assigned") {
-    return { score: 18, label: "Covered", reason: "Assigned shift. Monitor EVV and clock-in status." };
-  }
-  const startsIn = hoursUntil(shift.startTime);
-  let score = shift.urgency === "urgent" ? 62 : 38;
-  if (startsIn <= 4) score += 25;
-  else if (startsIn <= 12) score += 16;
-  else if (startsIn <= 24) score += 8;
-  if (openCallouts > 0) score += 12;
-  if (pendingApplications > 0) score -= 10;
-  const capped = Math.max(0, Math.min(99, Math.round(score)));
-  const label = capped >= 80 ? "Critical" : capped >= 60 ? "High" : capped >= 35 ? "Watch" : "Stable";
-  const reason = pendingApplications > 0
-    ? "Applications are waiting; approve one before the shift becomes a coverage emergency."
-    : startsIn <= 4
-      ? "Shift starts soon and is still open. Launch priority outreach now."
-      : shift.urgency === "urgent"
-        ? "Urgent open shift. Care Radar should rank available caregivers."
-        : "Open shift. Keep monitoring caregiver responses.";
-  return { score: capped, label, reason };
-}
-
-const demoShift: SharedShift = {
-  id: 8001,
-  employerId: 1,
-  employerName: "Sample Care Agency",
-  title: "Companionship + meal prep · Mrs. A.",
-  serviceType: "Companionship + meal prep",
-  caregiverType: "HHA / PCA",
-  careRecipientName: "Mrs. A.",
-  startTime: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(),
-  endTime: new Date(Date.now() + 1000 * 60 * 60 * 9).toISOString(),
-  location: { type: "client_home", address: "Lowell", city: "Lowell", state: "MA", zipCode: "01852" },
-  hourlyRate: 35,
-  requirements: [],
-  responsibilities: "Companionship, light meal preparation, safety check and family update.",
-  urgency: "urgent",
-  status: "open",
-};
-
-const demoAssignedShift: SharedShift = {
-  ...demoShift,
-  id: 8002,
-  title: "Respite care · Troy",
-  serviceType: "Respite care",
-  careRecipientName: "Troy",
-  urgency: "standard",
-  status: "assigned",
-  startTime: new Date(Date.now() + 1000 * 60 * 60 * 28).toISOString(),
-  endTime: new Date(Date.now() + 1000 * 60 * 60 * 32).toISOString(),
-};
-
-const demoApplication: EmployerApplication = {
-  id: 8101,
-  shift_id: demoShift.id,
-  caregiver_id: 22,
-  status: "pending",
-  note: "Available and nearby.",
-  created_at: new Date().toISOString(),
-  shift_title: demoShift.title,
-  service_type: demoShift.serviceType,
-  start_time: demoShift.startTime,
-  end_time: demoShift.endTime,
-  city: "Lowell",
-  state: "MA",
-  caregiver_user_id: 22,
-  first_name: "Jordan",
-  last_name: "Sample",
-  email: "sample-caregiver@example.com",
-  rating: "4.9",
-  total_hours: "124",
-  certifications: ["HHA", "CPR"],
-};
-
-const demoCallout: EmployerCallout = {
-  id: 8201,
-  shift_id: demoShift.id,
-  reason: "transportation",
-  note: "Original caregiver may be delayed.",
-  status: "open",
-  created_at: new Date().toISOString(),
-  title: demoShift.title,
-  service_type: demoShift.serviceType,
-  care_recipient_name: demoShift.careRecipientName,
-  start_time: demoShift.startTime,
-  end_time: demoShift.endTime,
-  city: "Lowell",
-  state: "MA",
-  hourly_rate: demoShift.hourlyRate,
-  urgency: "urgent",
-  first_name: "Jordan",
-  last_name: "Sample",
-  offers_sent: 3,
-  offers_accepted: 1,
-};
-
-function localShiftToShared(shift: EmployerScheduleShift): SharedShift {
-  const [city = "Lowell", state = "MA"] = shift.location.split(",").map((item) => item.trim());
-  const urgent = shift.status === "At risk";
-  return {
-    id: Number(shift.id) || Date.now(),
-    employerId: 1,
-    employerName: "Elite Bridge Local Agency",
-    title: `${shift.service} · ${shift.client}`,
-    serviceType: shift.service,
-    caregiverType: "Caregiver",
-    careRecipientName: shift.client,
-    startTime: shift.createdAt,
-    endTime: new Date(new Date(shift.createdAt).getTime() + 1000 * 60 * 60 * 4).toISOString(),
-    location: { type: "client_home", address: shift.location, city, state, zipCode: "01852" },
-    hourlyRate: shift.hourlyRate || 35,
-    requirements: [],
-    responsibilities: "Local preview shift created in Schedule.",
-    urgency: urgent ? "urgent" : "standard",
-    status: shift.status === "Covered" ? "assigned" : "open",
-  };
-}
-
-export default function EmployerHome() {
+export default function WelcomeScreen() {
   const router = useRouter();
-  const [shifts, setShifts] = useState<SharedShift[]>([]);
-  const [applications, setApplications] = useState<EmployerApplication[]>([]);
-  const [callouts, setCallouts] = useState<EmployerCallout[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
-  const [demoMode, setDemoMode] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
 
-  const refresh = async () => {
-    const session = await getEmployerSession();
-    const isDemo = isDemoEmployerSession(session);
-    setDemoMode(isDemo);
-    if (isDemo || !sharedApiConfigured) {
-      const local = await getLocalScheduleShifts();
-      setShifts(local.length > 0 ? local.map(localShiftToShared) : [demoShift, demoAssignedShift]);
-      setApplications([demoApplication]);
-      setCallouts([demoCallout]);
-      setLoading(false);
-      setSyncError(null);
-      return;
-    }
-    try {
-      setRefreshing(true);
-      setSyncError(null);
-      const [liveShifts, liveApplications, liveCallouts] = await Promise.all([
-        fetchEmployerShifts(),
-        fetchEmployerApplications(),
-        fetchEmployerCallouts(),
-      ]);
-      setShifts(liveShifts);
-      setApplications(liveApplications);
-      setCallouts(liveCallouts);
-    } catch (error) {
-      setSyncError(error instanceof Error ? error.message : "Could not refresh agency operations.");
-    } finally {
-      setRefreshing(false);
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => { void refresh(); }, []);
-
-  const openShifts = shifts.filter((item) => item.status === "open");
-  const assignedShifts = shifts.filter((item) => item.status === "assigned");
-  const pendingApplications = applications.filter((item) => item.status === "pending");
-  const openCallouts = callouts.filter((item) => item.status === "open");
-  const urgentOpen = openShifts.filter((item) => item.urgency === "urgent");
-  const careRadarBoard = openShifts
-    .map((shift) => ({ shift, radar: getCareRadarScore(shift, pendingApplications.length, openCallouts.length) }))
-    .sort((a, b) => b.radar.score - a.radar.score)
-    .slice(0, 3);
-
-  const nextShifts = useMemo(
-    () => shifts
-      .filter((item) => new Date(item.endTime).getTime() >= Date.now())
-      .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
-      .slice(0, 3),
-    [shifts],
-  );
-
-  const priority = openCallouts.length > 0
-    ? { eyebrow: "COVERAGE COPILOT", title: `${openCallouts.length} caregiver call-out${openCallouts.length === 1 ? " needs" : "s need"} rescue`, body: "Elite can rank available caregivers and send priority offers. Final assignment remains with your scheduler.", action: "Open coverage", route: "/coverage" as const }
-    : urgentOpen.length > 0
-      ? { eyebrow: "COVERAGE COPILOT", title: `${urgentOpen.length} urgent shift${urgentOpen.length === 1 ? " needs" : "s need"} coverage`, body: pendingApplications.length > 0 ? `${pendingApplications.length} caregiver application${pendingApplications.length === 1 ? " is" : "s are"} ready for agency review.` : "Keep the shift visible while caregivers respond to the live feed.", action: "Review coverage", route: "/coverage" as const }
-      : pendingApplications.length > 0
-        ? { eyebrow: "APPLICATIONS", title: `${pendingApplications.length} caregiver application${pendingApplications.length === 1 ? " is" : "s are"} waiting`, body: "Review worker details and confirm or reject each application. Elite never makes the hiring decision automatically.", action: "Review applications", route: "/applications" as const }
-        : { eyebrow: "SCHEDULE", title: "Agency operations are synchronized", body: "Review the upcoming schedule and confirm that every visit has appropriate coverage.", action: "Open schedule", route: "/schedule" as const };
-
-  const stats = [
-    { value: openShifts.length, label: "Open shifts", tone: "#FDECEC", valueColor: "#B42318" },
-    { value: assignedShifts.length, label: "Assigned", tone: "#EAF7EF", valueColor: "#087443" },
-    { value: pendingApplications.length, label: "Applications", tone: "#EEF4FF", valueColor: "#175CD3" },
-    { value: openCallouts.length, label: "Call-outs", tone: "#FFF6E6", valueColor: "#B54708" },
-  ];
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    getStoredEmployer().then((user) => active && setSignedIn(Boolean(user)));
+    return () => { active = false; };
+  }, []));
 
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refresh} />}>
+    <SafeAreaView style={styles.safe}>
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.brandRow}>
-          <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.brandSub}>EMPLOYER</Text></View>
-          <View style={styles.maBadge}><Text style={styles.maBadgeText}>{demoMode ? "DEMO WORKSPACE" : "LIVE WORKSPACE"}</Text></View>
+          <View style={styles.mark}><Text style={styles.markText}>EB</Text></View>
+          <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.product}>EMPLOYER</Text></View>
         </View>
 
-        <Text style={styles.heading}>{greeting()}</Text>
-        <Text style={styles.subheading}>Here is the live agency picture and the next action that deserves attention.</Text>
+        <Text style={styles.eyebrow}>FOR CARE ORGANIZATIONS</Text>
+        <Text style={styles.title}>Post care opportunities. Build your workforce.</Text>
+        <Text style={styles.subtitle}>
+          A dedicated employer app for agencies and organizations that hire caregivers through the Elite Bridge marketplace.
+        </Text>
 
-        {loading ? <ActivityIndicator color="#0A4A35" style={{ marginVertical: 24 }} /> : null}
-        {syncError ? <View style={styles.error}><Text style={styles.errorTitle}>Agency sync needs attention</Text><Text style={styles.errorText}>{syncError}</Text><TouchableOpacity style={styles.retry} onPress={() => void refresh()}><Text style={styles.retryText}>Try again</Text></TouchableOpacity></View> : null}
-
-        <View style={styles.statGrid}>{stats.map((stat) => <View key={stat.label} style={[styles.statCard,{backgroundColor:stat.tone}]}><Text style={[styles.statValue,{color:stat.valueColor}]}>{stat.value}</Text><Text style={styles.statLabel}>{stat.label}</Text></View>)}</View>
-
-        <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Operations priority</Text><TouchableOpacity onPress={() => router.push("/operations")}><Text style={styles.sectionLink}>Operations</Text></TouchableOpacity></View>
-        <View style={styles.aiCard}><Text style={styles.aiEyebrow}>{priority.eyebrow}</Text><Text style={styles.aiTitle}>{priority.title}</Text><Text style={styles.aiBody}>{priority.body}</Text><TouchableOpacity style={styles.aiButton} onPress={() => router.push(priority.route)}><Text style={styles.aiButtonText}>{priority.action}</Text></TouchableOpacity></View>
-
-        <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Care Radar</Text><TouchableOpacity onPress={() => router.push("/coverage")}><Text style={styles.sectionLink}>Open Copilot</Text></TouchableOpacity></View>
-        <View style={{ backgroundColor: "#101828", borderRadius: 20, padding: 16, marginBottom: 24 }}>
-          <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }}>PREDICTIVE COVERAGE RISK</Text>
-          <Text style={{ color: "#FFFFFF", fontSize: 19, fontWeight: "900", marginTop: 6 }}>Stop missed visits before they happen.</Text>
-          {careRadarBoard.length === 0 ? (
-            <Text style={{ color: "#D0D5DD", fontSize: 12, lineHeight: 18, marginTop: 8 }}>No open shifts need rescue right now. Assigned visits should be monitored through EVV clock-in status.</Text>
-          ) : careRadarBoard.map(({ shift, radar }) => (
-            <TouchableOpacity key={shift.id} onPress={() => router.push("/coverage")} style={{ marginTop: 12, borderRadius: 14, backgroundColor: "#1D2939", padding: 13, flexDirection: "row", gap: 12, alignItems: "center" }}>
-              <View style={{ width: 54, height: 54, borderRadius: 18, backgroundColor: radar.score >= 80 ? "#FEE4E2" : radar.score >= 60 ? "#FFF6E6" : "#EAF7EF", alignItems: "center", justifyContent: "center" }}>
-                <Text style={{ color: radar.score >= 80 ? "#B42318" : radar.score >= 60 ? "#B54708" : "#087443", fontSize: 18, fontWeight: "900" }}>{radar.score}</Text>
-                <Text style={{ color: "#667085", fontSize: 8, fontWeight: "900" }}>{radar.label}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: "#FFFFFF", fontSize: 13, fontWeight: "900" }}>{shift.serviceType}{shift.careRecipientName ? ` · ${shift.careRecipientName}` : ""}</Text>
-                <Text style={{ color: "#D0D5DD", fontSize: 11, lineHeight: 16, marginTop: 4 }}>{formatTime(shift.startTime)} · {shift.location.city}, {shift.location.state}</Text>
-                <Text style={{ color: "#98A2B3", fontSize: 11, lineHeight: 16, marginTop: 4 }}>{radar.reason}</Text>
-              </View>
+        <View style={styles.actions}>
+          {signedIn ? (
+            <TouchableOpacity style={styles.primary} onPress={() => router.push("/dashboard")}>
+              <Text style={styles.primaryText}>Open employer workspace</Text>
             </TouchableOpacity>
-          ))}
+          ) : (
+            <>
+              <TouchableOpacity style={styles.primary} onPress={() => router.push("/register")}>
+                <Text style={styles.primaryText}>Create employer account</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.secondary} onPress={() => router.push("/sign-in")}>
+                <Text style={styles.secondaryText}>Sign in</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
-        <View style={styles.sectionHeader}><Text style={styles.sectionTitle}>Next shifts</Text><TouchableOpacity onPress={() => router.push("/schedule")}><Text style={styles.sectionLink}>Schedule</Text></TouchableOpacity></View>
-        <View style={styles.scheduleCard}>
-          {nextShifts.map((shift, index) => <View key={shift.id}>{index > 0 ? <View style={styles.divider} /> : null}<TouchableOpacity style={styles.scheduleRow} onPress={() => shift.status === "open" ? router.push("/coverage") : router.push("/schedule")}><View style={[styles.timeBadge, shift.status === "open" && styles.timeBadgeRisk]}><Text style={[styles.timeBadgeText, shift.status === "open" && styles.timeBadgeRiskText]}>{formatTime(shift.startTime)}</Text></View><View style={styles.scheduleCopy}><Text style={styles.scheduleTitle}>{shift.serviceType}{shift.careRecipientName ? ` · ${shift.careRecipientName}` : ""}</Text><Text style={styles.scheduleMeta}>{shift.location.city}, {shift.location.state} · {shift.status === "assigned" ? "Assigned" : shift.urgency === "urgent" ? "Urgent coverage" : "Open"}</Text></View><Text style={shift.status === "assigned" ? styles.covered : styles.atRisk}>{shift.status === "assigned" ? "Covered" : "Cover →"}</Text></TouchableOpacity></View>)}
-          {nextShifts.length === 0 ? <Text style={styles.empty}>No upcoming shifts yet. Create a shift in Schedule to publish it to caregivers.</Text> : null}
+        <View style={styles.relationshipCard}>
+          <Text style={styles.relationshipTitle}>Two apps. One connected marketplace.</Text>
+          <View style={styles.flowRow}><Text style={styles.step}>1</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Employers post shifts here</Text><Text style={styles.flowBody}>Create care opportunities with schedule, location, requirements and pay.</Text></View></View>
+          <View style={styles.line} />
+          <View style={styles.flowRow}><Text style={styles.step}>2</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Caregivers apply separately</Text><Text style={styles.flowBody}>Eligible workers discover the opportunities in the Elite Bridge Caregiver app.</Text></View></View>
+          <View style={styles.line} />
+          <View style={styles.flowRow}><Text style={styles.step}>3</Text><View style={styles.flowCopy}><Text style={styles.flowTitle}>Employers make the decision</Text><Text style={styles.flowBody}>Review applications and select the right caregiver for each shift.</Text></View></View>
         </View>
 
-        <Text style={styles.footerNote}>Workforce operations for care agencies and staffing teams.</Text>
+        <View style={styles.disclosure}>
+          <Text style={styles.disclosureTitle}>This app is only for employers</Text>
+          <Text style={styles.disclosureText}>Caregivers use the separately listed Elite Bridge Caregiver app. Employer credentials cannot unlock the caregiver application.</Text>
+        </View>
+
+        <View style={styles.links}>
+          <TouchableOpacity onPress={() => void Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy Policy</Text></TouchableOpacity>
+          <Text style={styles.dot}>•</Text>
+          <TouchableOpacity onPress={() => void Linking.openURL(TERMS_URL)}><Text style={styles.link}>Terms of Use</Text></TouchableOpacity>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
-const styles=StyleSheet.create({safeArea:{flex:1,backgroundColor:"#F7F9F8"},content:{padding:20,paddingBottom:48},brandRow:{flexDirection:"row",justifyContent:"space-between",alignItems:"center",marginBottom:28},brand:{color:"#0A4A35",fontSize:16,fontWeight:"900",letterSpacing:1.4},brandSub:{marginTop:2,color:"#C58A24",fontSize:11,fontWeight:"900",letterSpacing:2.2},maBadge:{backgroundColor:"#EAF4EF",borderRadius:999,paddingHorizontal:12,paddingVertical:7},maBadgeText:{color:"#0A4A35",fontSize:9,fontWeight:"900",letterSpacing:.7},heading:{color:"#101828",fontSize:32,fontWeight:"900",letterSpacing:-.7},subheading:{color:"#667085",fontSize:15,lineHeight:22,marginTop:6,marginBottom:20},statGrid:{flexDirection:"row",flexWrap:"wrap",gap:10,marginBottom:18},statCard:{width:"48%",minHeight:108,borderRadius:18,padding:16,justifyContent:"center"},statValue:{fontSize:28,fontWeight:"900"},statLabel:{color:"#475467",fontSize:13,fontWeight:"700",marginTop:4},commandCard:{backgroundColor:"#0A4A35",borderRadius:22,padding:18,marginBottom:28},commandEyebrow:{color:"#EBCB8B",fontSize:10,fontWeight:"900",letterSpacing:1.7},commandTitle:{color:"#FFFFFF",fontSize:22,lineHeight:28,fontWeight:"900",marginTop:7,marginBottom:14},commandInput:{backgroundColor:"#FFFFFF",borderRadius:14,paddingHorizontal:14,paddingVertical:15},commandPlaceholder:{color:"#667085",fontSize:13,lineHeight:19},promptRow:{flexDirection:"row",flexWrap:"wrap",gap:7,marginTop:12},promptChip:{overflow:"hidden",color:"#D8E9E2",backgroundColor:"#176148",paddingHorizontal:10,paddingVertical:7,borderRadius:999,fontSize:11,fontWeight:"700"},sectionHeader:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",marginTop:2,marginBottom:12},sectionTitle:{color:"#101828",fontSize:20,fontWeight:"900"},sectionLink:{color:"#0A4A35",fontSize:13,fontWeight:"800"},aiCard:{backgroundColor:"#FFFFFF",borderRadius:18,borderWidth:1,borderColor:"#E4E7EC",padding:17,marginBottom:24},aiEyebrow:{color:"#C58A24",fontSize:10,fontWeight:"900",letterSpacing:1.3},aiTitle:{color:"#101828",fontSize:17,lineHeight:23,fontWeight:"900",marginTop:7},aiBody:{color:"#667085",fontSize:13,lineHeight:20,marginTop:7},aiButton:{marginTop:14,alignSelf:"flex-start",backgroundColor:"#ECF6F1",borderRadius:10,paddingHorizontal:12,paddingVertical:9},aiButtonText:{color:"#0A4A35",fontSize:12,fontWeight:"900"},scheduleCard:{backgroundColor:"#FFFFFF",borderRadius:18,borderWidth:1,borderColor:"#E4E7EC",paddingHorizontal:14,paddingVertical:4},scheduleRow:{flexDirection:"row",alignItems:"center",paddingVertical:14},timeBadge:{width:58,backgroundColor:"#EAF7EF",paddingVertical:8,borderRadius:10,alignItems:"center"},timeBadgeText:{color:"#087443",fontSize:11,fontWeight:"900"},timeBadgeRisk:{backgroundColor:"#FFF6E6"},timeBadgeRiskText:{color:"#B54708"},scheduleCopy:{flex:1,paddingHorizontal:11},scheduleTitle:{color:"#101828",fontSize:13,fontWeight:"800"},scheduleMeta:{color:"#667085",fontSize:12,marginTop:4},covered:{color:"#087443",fontSize:11,fontWeight:"900"},atRisk:{color:"#B42318",fontSize:11,fontWeight:"900"},divider:{height:1,backgroundColor:"#EAECF0"},footerNote:{color:"#98A2B3",textAlign:"center",fontSize:11,marginTop:28},empty:{color:"#667085",fontSize:12,lineHeight:18,paddingVertical:18,textAlign:"center"},error:{backgroundColor:"#FEE4E2",borderRadius:14,padding:13,marginBottom:14},errorTitle:{color:"#B42318",fontWeight:"900"},errorText:{color:"#7A271A",fontSize:12,lineHeight:18,marginTop:4},retry:{alignSelf:"flex-start",backgroundColor:"#B42318",borderRadius:9,paddingHorizontal:11,paddingVertical:8,marginTop:8},retryText:{color:"white",fontWeight:"900",fontSize:11}});
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background },
+  content: { padding: 22, paddingBottom: 44 },
+  brandRow: { alignItems: "center", flexDirection: "row", gap: 12, marginBottom: 42 },
+  mark: { alignItems: "center", backgroundColor: colors.green, borderRadius: 17, height: 54, justifyContent: "center", width: 54 },
+  markText: { color: "#FFFFFF", fontSize: 18, fontWeight: "900" },
+  brand: { color: colors.green, fontSize: 15, fontWeight: "900", letterSpacing: 1.5 },
+  product: { color: colors.gold, fontSize: 10, fontWeight: "900", letterSpacing: 2.4, marginTop: 2 },
+  eyebrow: { color: colors.gold, fontSize: 11, fontWeight: "900", letterSpacing: 1.5 },
+  title: { color: colors.ink, fontSize: 36, fontWeight: "900", letterSpacing: -1.1, lineHeight: 42, marginTop: 10 },
+  subtitle: { color: colors.muted, fontSize: 16, lineHeight: 24, marginTop: 14 },
+  actions: { gap: 10, marginVertical: 26 },
+  primary: { alignItems: "center", backgroundColor: colors.green, borderRadius: 14, minHeight: 54, justifyContent: "center" },
+  primaryText: { color: "#FFFFFF", fontSize: 16, fontWeight: "900" },
+  secondary: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.green, borderRadius: 14, borderWidth: 1.5, minHeight: 54, justifyContent: "center" },
+  secondaryText: { color: colors.green, fontSize: 16, fontWeight: "900" },
+  relationshipCard: { ...cardShadow, backgroundColor: colors.card, borderColor: colors.border, borderRadius: 22, borderWidth: 1, padding: 18 },
+  relationshipTitle: { color: colors.ink, fontSize: 19, fontWeight: "900", marginBottom: 17 },
+  flowRow: { alignItems: "flex-start", flexDirection: "row", gap: 12 },
+  step: { backgroundColor: colors.greenSoft, borderRadius: 18, color: colors.green, fontSize: 13, fontWeight: "900", overflow: "hidden", paddingHorizontal: 11, paddingVertical: 6 },
+  flowCopy: { flex: 1 },
+  flowTitle: { color: colors.ink, fontSize: 14, fontWeight: "900" },
+  flowBody: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 4 },
+  line: { backgroundColor: colors.border, height: 1, marginVertical: 15, marginLeft: 44 },
+  disclosure: { backgroundColor: colors.greenSoft, borderRadius: 16, marginTop: 16, padding: 15 },
+  disclosureTitle: { color: colors.greenDark, fontSize: 14, fontWeight: "900" },
+  disclosureText: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 },
+  links: { alignItems: "center", flexDirection: "row", justifyContent: "center", marginTop: 24 },
+  link: { color: colors.green, fontSize: 12, fontWeight: "800" },
+  dot: { color: colors.muted, marginHorizontal: 10 },
+});
