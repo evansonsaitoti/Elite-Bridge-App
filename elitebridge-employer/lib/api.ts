@@ -94,9 +94,41 @@ export type Application = {
   certifications?: string[];
 };
 
+export type TeamMember = {
+  caregiver_id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone?: string;
+  rating?: string | number;
+  total_hours?: string | number;
+  certifications?: string[];
+  assigned_shifts: number;
+  upcoming_shifts: number;
+  last_assigned_at?: string;
+};
+
+export type ShiftActivity = {
+  id: number;
+  shift_id: number;
+  caregiver_id: number;
+  type: "clock_in" | "clock_out" | string;
+  timestamp: string;
+  shift_title: string;
+  first_name: string;
+  last_name: string;
+  notes?: string;
+};
+
 type ApiError = Error & { status?: number };
 
 export const apiConfigured = Boolean(API_URL);
+
+export async function warmEmployerService() {
+  if (!API_URL) return;
+  await fetch(`${API_URL}/health`).catch(() => undefined);
+}
 
 async function request<T>(path: string, init: RequestInit = {}, authenticated = true): Promise<T> {
   if (!API_URL) throw new Error("The secure Elite Bridge service is unavailable in this build.");
@@ -136,9 +168,10 @@ export async function registerEmployer(input: {
   email: string;
   password: string;
 }): Promise<EmployerUser> {
+  const { firstName, lastName, companyName, phone, email, password } = input;
   const result = await request<{ token: string; user: EmployerUser }>("/api/auth/register", {
     method: "POST",
-    body: JSON.stringify({ ...input, email: input.email.trim().toLowerCase(), role: "employer" }),
+    body: JSON.stringify({ firstName, lastName, companyName, phone, email: email.trim().toLowerCase(), password, role: "employer" }),
   }, false);
   assertEmployer(result.user);
   await saveSession(result.token, result.user);
@@ -232,6 +265,16 @@ export async function createEmployerShift(input: ShiftInput): Promise<{ shift: S
 export async function getEmployerApplications(): Promise<Application[]> {
   const result = await request<{ applications: Application[] }>("/api/bookings/employer/applications");
   return result.applications;
+}
+
+export async function getEmployerTeam(): Promise<TeamMember[]> {
+  const result = await request<{ team: TeamMember[] }>("/api/bookings/employer/team");
+  return result.team;
+}
+
+export async function getEmployerActivities(): Promise<ShiftActivity[]> {
+  const result = await request<{ activities: ShiftActivity[] }>("/api/bookings/activities");
+  return result.activities;
 }
 
 export async function updateApplication(id: number, status: "approved" | "rejected") {

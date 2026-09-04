@@ -470,6 +470,32 @@ router.get("/employer/applications", authMiddleware, async (req: AuthRequest, re
   } catch (error) { next(error); }
 });
 
+router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const result = await db.execute(sql`
+      SELECT c.id AS caregiver_id, u.id AS user_id, u.first_name, u.last_name,
+             u.email, u.phone, c.rating, c.total_hours, c.certifications,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved') AS assigned_shifts,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP) AS upcoming_shifts,
+             MAX(sa.updated_at) FILTER (WHERE sa.status = 'approved') AS last_assigned_at
+      FROM shift_applications sa
+      JOIN shift_posts sp ON sp.id = sa.shift_id
+      JOIN caregivers c ON c.id = sa.caregiver_id
+      JOIN users u ON u.id = c.user_id
+      WHERE sp.employer_id = ${employer.id} AND sa.status = 'approved'
+      GROUP BY c.id, u.id, u.first_name, u.last_name, u.email, u.phone, c.rating, c.total_hours, c.certifications
+      ORDER BY u.first_name, u.last_name
+    `);
+    res.json({ team: (result as any).rows.map((member: any) => ({
+      ...member,
+      assigned_shifts: Number(member.assigned_shifts || 0),
+      upcoming_shifts: Number(member.upcoming_shifts || 0),
+    })) });
+  } catch (error) { next(error); }
+});
+
 router.patch("/employer/applications/:applicationId", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();

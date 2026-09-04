@@ -6,11 +6,11 @@ Elite Bridge Employer
 
 ## Subtitle
 
-Post shifts and hire caregivers
+Hire and manage care teams
 
 ## Promotional text
 
-The employer side of the Elite Bridge care marketplace. Publish care opportunities and review applications from caregivers using the separately listed Elite Bridge Caregiver app.
+Hire, schedule and manage your care workforce. Publish opportunities, organize assigned caregivers and review time activity connected to the Elite Bridge Caregiver app.
 
 ## Description
 
@@ -23,6 +23,9 @@ Use Elite Bridge Employer to:
 - Publish matched care Shift Offers with schedule, qualification, location, pay, and responsibilities
 - Choose instant claim or employer approval for each shift
 - View open and assigned shifts
+- Manage assigned caregivers in a live team directory
+- Review upcoming assignments, credentials and employee contact records
+- Monitor caregiver clock-ins and clock-outs for assigned visits
 - Receive applications from Elite Bridge caregivers
 - Review caregiver-submitted profile information
 - Approve or decline applications
@@ -52,11 +55,13 @@ Business
 
 1. Employer-only welcome screen — “Two apps. One connected marketplace.”
 2. Public employer registration
-3. Employer Home dashboard and persistent navigation
+3. Employer Home workforce dashboard and persistent navigation
 4. Publish a matched Shift Offer with instant-claim or review-first assignment
 5. Manage posted shifts and cancellations
 6. Review caregiver applicants and staffing notifications
-7. Edit organization profile
-8. Employer account, Privacy Policy, sign out, support, and deletion
+7. Manage the assigned caregiver team directory
+8. Review time and attendance activity
+9. Edit organization profile
+10. Employer account, Privacy Policy, sign out, support, and protected deletion controls
 
-Every screenshot must come from Build 27 and must not show features absent from the submitted binary.
+Every screenshot must come from Build 28 and must not show features absent from the submitted binary.
