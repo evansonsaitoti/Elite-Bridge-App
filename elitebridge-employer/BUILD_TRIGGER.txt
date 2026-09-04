@@ -1,1 +1,1 @@
-Employer TestFlight version 1.2.0 build 24 triggered after live matched-shift verification.
+Employer TestFlight version 1.2.0 build 25 triggered with interactive welcome experience.
