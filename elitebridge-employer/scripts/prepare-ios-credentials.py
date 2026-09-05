@@ -39,13 +39,30 @@ def api_request(token: str, method: str, path: str, payload=None):
     if payload is not None:
         data = json.dumps(payload).encode("utf-8")
         headers["Content-Type"] = "application/json"
-    request = urllib.request.Request(API_ROOT + path, data=data, headers=headers, method=method)
-    try:
-        with urllib.request.urlopen(request, timeout=45) as response:
-            return json.loads(response.read().decode("utf-8"))
-    except urllib.error.HTTPError as exc:
-        detail = exc.read().decode("utf-8", errors="replace")
-        raise RuntimeError(f"Apple API {method} {path} failed with HTTP {exc.code}: {detail}") from exc
+
+    last_error = None
+    for attempt in range(1, 6):
+        request = urllib.request.Request(API_ROOT + path, data=data, headers=headers, method=method)
+        try:
+            with urllib.request.urlopen(request, timeout=45) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            last_error = RuntimeError(
+                f"Apple API {method} {path} failed with HTTP {exc.code}: {detail}"
+            )
+            if exc.code not in {429, 500, 502, 503, 504} or attempt == 5:
+                raise last_error from exc
+        except urllib.error.URLError as exc:
+            last_error = RuntimeError(f"Apple API {method} {path} connection failed: {exc}")
+            if attempt == 5:
+                raise last_error from exc
+
+        wait_seconds = min(45, 5 * attempt)
+        print(f"Apple API {method} {path} attempt {attempt} failed; retrying in {wait_seconds}s.")
+        time.sleep(wait_seconds)
+
+    raise last_error or RuntimeError(f"Apple API {method} {path} failed.")
 
 
 def p12_serial(path: str, password: str, legacy: bool = False) -> str:
