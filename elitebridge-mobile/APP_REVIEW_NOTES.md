@@ -1,4 +1,4 @@
-# Elite Bridge Caregiver — App Review Notes (Version 1.1.0, Build 50)
+# Elite Bridge Caregiver — App Review Notes (Version 1.2.0, Build 51)
 
 Production companion workflow verified September 5, 2026.
 
@@ -27,12 +27,12 @@ For the connected scenario, use the separately supplied ordinary Employer creden
 1. **Welcome:** explains the caregiver-only purpose and visibly identifies the separately listed Employer companion app.
 2. **Create profile:** public three-step registration with required-field labels, password confirmation and show/hide controls. A 24-hour email activation link is sent.
 3. **Sign in:** accepts Caregiver accounts only and rejects Employer accounts.
-4. **Work:** live matched shifts, instant claims, approval-required applications, confirmed assignments, call-outs and priority replacement offers.
+4. **Shift hub:** live matched shifts, instant claims, approval-required applications, confirmed assignments, call-outs and priority replacement offers. Self-explanatory workforce shortcuts open schedule, time clock, timesheets, availability and support functions.
 5. **Care Match:** persists availability, preferred services, travel range and urgent-offer preferences to the production caregiver profile.
 6. **Timesheets:** only confirmed assignments can be clocked. Clock-in, breaks, location-at-action, clock-out, notes, employer decisions and corrections are server-backed.
 7. **Alerts:** persistent cross-app shift, assignment and timesheet notifications with read state.
 8. **Account:** editable synchronized profile, push preference, support, Privacy Policy, Terms, sign out and protected in-app account deletion.
 
-## Version 1.1 rebuild disclosure
+## Version 1.2 disclosure
 
-Build 50 contains no demonstration login, local sample workspace, mock earnings, simulated chat, dormant user/admin route tree, secret gesture, remote feature flag or reviewer-specific data. All visible staffing, matching, attendance, notification, profile and account actions use the production Elite Bridge service. No purchase or subscription is required for review.
+Build 51 adds four distinct, content-matched public onboarding scenes, the official Elite Bridge logo and a clearer caregiver workforce hub. It contains no demonstration login, local sample workspace, mock earnings, simulated chat, dormant user/admin route tree, secret gesture, remote feature flag or reviewer-specific data. All visible staffing, matching, attendance, notification, profile and account actions use the production Elite Bridge service. No purchase or subscription is required for review.

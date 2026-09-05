@@ -3,6 +3,7 @@ import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   Alert,
+  Linking,
   RefreshControl,
   ScrollView,
   Text,
@@ -11,7 +12,12 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/use-colors";
-import { defaultCaregiverPreferences, getCaregiverPreferences, type CaregiverPreferences } from "@/lib/caregiver-preferences";
+import { IconSymbol } from "@/components/ui/icon-symbol";
+import {
+  defaultCaregiverPreferences,
+  getCaregiverPreferences,
+  type CaregiverPreferences,
+} from "@/lib/caregiver-preferences";
 import {
   applyToShift,
   callOutOfShift,
@@ -30,10 +36,21 @@ import {
 function formatDateTime(startValue: string, endValue: string) {
   const start = new Date(startValue);
   const end = new Date(endValue);
-  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return "Scheduled shift";
-  const date = start.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
-  const startTime = start.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
-  const endTime = end.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime()))
+    return "Scheduled shift";
+  const date = start.toLocaleDateString("en-US", {
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+  const startTime = start.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
+  const endTime = end.toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
   return `${date} · ${startTime} – ${endTime}`;
 }
 
@@ -47,17 +64,29 @@ function applicationColor(status?: string) {
 export default function StaffHome() {
   const colors = useColors();
   const router = useRouter();
-  const [expandedSection, setExpandedSection] = useState<string | null>("shifts");
+  const [expandedSection, setExpandedSection] = useState<string | null>(
+    "shifts",
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [availableShifts, setAvailableShifts] = useState<CaregiverShift[]>([]);
   const [applications, setApplications] = useState<CaregiverApplication[]>([]);
   const [offers, setOffers] = useState<RescueOffer[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [applyingId, setApplyingId] = useState<number | null>(null);
-  const [respondingOfferId, setRespondingOfferId] = useState<number | null>(null);
-  const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
-  const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Connecting to secure agency sync…" : "Secure device data");
-  const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
+  const [respondingOfferId, setRespondingOfferId] = useState<number | null>(
+    null,
+  );
+  const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(
+    null,
+  );
+  const [syncMessage, setSyncMessage] = useState(
+    sharedApiConfigured
+      ? "Connecting to secure agency sync…"
+      : "Secure device data",
+  );
+  const [preferences, setPreferences] = useState<CaregiverPreferences>(
+    defaultCaregiverPreferences,
+  );
 
   const refreshFeed = async () => {
     const savedPreferences = await getCaregiverPreferences();
@@ -79,7 +108,11 @@ export default function StaffHome() {
       setOffers(priorityOffers);
       setSyncMessage("Live agency sync");
     } catch (error) {
-      setSyncMessage(error instanceof Error ? `Sync issue: ${error.message}` : "Shared service unavailable");
+      setSyncMessage(
+        error instanceof Error
+          ? `Sync issue: ${error.message}`
+          : "Shared service unavailable",
+      );
     } finally {
       setRefreshing(false);
     }
@@ -93,7 +126,14 @@ export default function StaffHome() {
     const query = searchQuery.trim().toLowerCase();
     if (!query) return availableShifts;
     return availableShifts.filter((shift) =>
-      [shift.title, shift.serviceType, shift.employerName, shift.careRecipientName, shift.location.city, shift.location.state]
+      [
+        shift.title,
+        shift.serviceType,
+        shift.employerName,
+        shift.careRecipientName,
+        shift.location.city,
+        shift.location.state,
+      ]
         .filter(Boolean)
         .join(" ")
         .toLowerCase()
@@ -101,32 +141,65 @@ export default function StaffHome() {
     );
   }, [availableShifts, searchQuery]);
 
-  const approvedApplications = applications.filter((item) => item.status === "approved");
+  const approvedApplications = applications.filter(
+    (item) => item.status === "approved",
+  );
   const openOffers = offers.filter((item) => item.status === "offered");
-  const matchStrength = Math.min(98, 68 + preferences.availability.length * 4 + preferences.preferredServices.length * 3 + (preferences.instantOffers ? 8 : 0));
+  const matchStrength = Math.min(
+    98,
+    68 +
+      preferences.availability.length * 4 +
+      preferences.preferredServices.length * 3 +
+      (preferences.instantOffers ? 8 : 0),
+  );
 
   const apply = async (shift: CaregiverShift) => {
     if (shift.applicationStatus) return;
     if (!sharedApiConfigured) {
-      Alert.alert("Agency sync required", "Connect to the shared agency service before applying to a shift.");
+      Alert.alert(
+        "Agency sync required",
+        "Connect to the shared agency service before applying to a shift.",
+      );
       return;
     }
     try {
       setApplyingId(shift.id);
       if (shift.assignmentMode === "instant") await claimMatchedShift(shift.id);
-      else await applyToShift(shift.id, "Available and interested in this assignment.");
+      else
+        await applyToShift(
+          shift.id,
+          "Available and interested in this assignment.",
+        );
       await refreshFeed();
-      Alert.alert(shift.assignmentMode === "instant" ? "Shift claimed" : "Application sent", shift.assignmentMode === "instant" ? "You are assigned. The employer has been notified immediately." : "The agency can now review your application in Elite Bridge Employer.");
+      Alert.alert(
+        shift.assignmentMode === "instant"
+          ? "Shift claimed"
+          : "Application sent",
+        shift.assignmentMode === "instant"
+          ? "You are assigned. The employer has been notified immediately."
+          : "The agency can now review your application in Elite Bridge Employer.",
+      );
     } catch (error) {
-      Alert.alert(shift.assignmentMode === "instant" ? "Could not claim shift" : "Could not apply", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert(
+        shift.assignmentMode === "instant"
+          ? "Could not claim shift"
+          : "Could not apply",
+        error instanceof Error ? error.message : "Please try again.",
+      );
     } finally {
       setApplyingId(null);
     }
   };
 
-  const respondToOffer = async (offer: RescueOffer, status: "accepted" | "declined") => {
+  const respondToOffer = async (
+    offer: RescueOffer,
+    status: "accepted" | "declined",
+  ) => {
     if (!sharedApiConfigured) {
-      Alert.alert("Agency sync required", "Connect to the shared agency service before responding to an offer.");
+      Alert.alert(
+        "Agency sync required",
+        "Connect to the shared agency service before responding to an offer.",
+      );
       return;
     }
     try {
@@ -140,15 +213,24 @@ export default function StaffHome() {
           : "The agency has been updated.",
       );
     } catch (error) {
-      Alert.alert("Could not update offer", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert(
+        "Could not update offer",
+        error instanceof Error ? error.message : "Please try again.",
+      );
     } finally {
       setRespondingOfferId(null);
     }
   };
 
-  const submitCallout = async (application: CaregiverApplication, reason: CalloutReason) => {
+  const submitCallout = async (
+    application: CaregiverApplication,
+    reason: CalloutReason,
+  ) => {
     if (!sharedApiConfigured) {
-      Alert.alert("Agency sync required", "Connect to the shared agency service before reporting a call-out.");
+      Alert.alert(
+        "Agency sync required",
+        "Connect to the shared agency service before reporting a call-out.",
+      );
       return;
     }
     try {
@@ -160,7 +242,10 @@ export default function StaffHome() {
         "The agency was alerted and the shift was reopened as urgent. Coverage Copilot can now begin replacement outreach.",
       );
     } catch (error) {
-      Alert.alert("Could not report call-out", error instanceof Error ? error.message : "Please try again.");
+      Alert.alert(
+        "Could not report call-out",
+        error instanceof Error ? error.message : "Please try again.",
+      );
     } finally {
       setCallingOutShiftId(null);
     }
@@ -171,28 +256,109 @@ export default function StaffHome() {
       "Report that you cannot work this shift?",
       "This immediately alerts the agency and reopens the assignment for urgent coverage. Choose the reason that best describes the call-out.",
       [
-        { text: "Illness", onPress: () => void submitCallout(application, "illness") },
-        { text: "Family emergency", onPress: () => void submitCallout(application, "family_emergency") },
-        { text: "Transportation", onPress: () => void submitCallout(application, "transportation") },
-        { text: "Other", onPress: () => void submitCallout(application, "other") },
+        {
+          text: "Illness",
+          onPress: () => void submitCallout(application, "illness"),
+        },
+        {
+          text: "Family emergency",
+          onPress: () => void submitCallout(application, "family_emergency"),
+        },
+        {
+          text: "Transportation",
+          onPress: () => void submitCallout(application, "transportation"),
+        },
+        {
+          text: "Other",
+          onPress: () => void submitCallout(application, "other"),
+        },
         { text: "Cancel", style: "cancel" },
       ],
     );
   };
 
-  const toggleSection = (section: string) => setExpandedSection(expandedSection === section ? null : section);
+  const toggleSection = (section: string) =>
+    setExpandedSection(expandedSection === section ? null : section);
 
-  const renderStatCard = (label: string, value: string | number, color: string) => (
-    <View style={{ flex: 1, backgroundColor: color, borderRadius: 12, padding: 16, marginHorizontal: 6, alignItems: "center", justifyContent: "center" }}>
-      <Text style={{ fontSize: 24, fontWeight: "bold", color: "#fff", marginBottom: 4 }}>{value}</Text>
-      <Text style={{ fontSize: 12, color: "#fff", textAlign: "center" }}>{label}</Text>
+  const renderStatCard = (
+    label: string,
+    value: string | number,
+    color: string,
+  ) => (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: color,
+        borderRadius: 12,
+        padding: 16,
+        marginHorizontal: 6,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Text
+        style={{
+          fontSize: 24,
+          fontWeight: "bold",
+          color: "#fff",
+          marginBottom: 4,
+        }}
+      >
+        {value}
+      </Text>
+      <Text style={{ fontSize: 12, color: "#fff", textAlign: "center" }}>
+        {label}
+      </Text>
     </View>
   );
 
-  const renderSectionHeader = (title: string, icon: string, color: string, sectionId: string) => (
-    <TouchableOpacity onPress={() => toggleSection(sectionId)} style={{ backgroundColor: color, borderRadius: 12, padding: 16, marginBottom: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-      <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>{icon} {title}</Text>
-      <Text style={{ fontSize: 18, color: "#fff" }}>{expandedSection === sectionId ? "▼" : "▶"}</Text>
+  const renderSectionHeader = (
+    title: string,
+    icon: React.ComponentProps<typeof IconSymbol>["name"],
+    color: string,
+    sectionId: string,
+  ) => (
+    <TouchableOpacity
+      accessibilityRole="button"
+      accessibilityState={{ expanded: expandedSection === sectionId }}
+      onPress={() => toggleSection(sectionId)}
+      style={{
+        backgroundColor: color,
+        borderRadius: 16,
+        padding: 14,
+        marginBottom: 12,
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+      }}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+        <View
+          style={{
+            width: 38,
+            height: 38,
+            borderRadius: 12,
+            backgroundColor: "rgba(255,255,255,0.18)",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <IconSymbol name={icon} size={22} color="#FFFFFF" />
+        </View>
+        <Text style={{ fontSize: 16, fontWeight: "900", color: "#fff" }}>
+          {title}
+        </Text>
+      </View>
+      <IconSymbol
+        name="chevron.right"
+        size={23}
+        color="#FFFFFF"
+        style={{
+          transform: [
+            { rotate: expandedSection === sectionId ? "90deg" : "0deg" },
+          ],
+        }}
+      />
     </TouchableOpacity>
   );
 
@@ -200,13 +366,37 @@ export default function StaffHome() {
     <ScrollView
       style={{ flex: 1, backgroundColor: colors.background }}
       contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshFeed} />}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={refreshFeed} />
+      }
     >
       <View style={{ marginBottom: 18 }}>
-        <Text style={{ fontSize: 28, fontWeight: "bold", color: colors.foreground, marginBottom: 4 }}>My Work</Text>
-        <Text style={{ fontSize: 14, color: colors.muted }}>Available work, applications and assigned shifts in one place.</Text>
-        <View style={{ alignSelf: "flex-start", marginTop: 9, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: sharedApiConfigured ? "#EAF7EF" : "#F2F4F7" }}>
-          <Text style={{ color: "#1B5E3F", fontSize: 11, fontWeight: "800" }}>{syncMessage}</Text>
+        <Text
+          style={{
+            fontSize: 28,
+            fontWeight: "bold",
+            color: colors.foreground,
+            marginBottom: 4,
+          }}
+        >
+          Caregiver shift hub
+        </Text>
+        <Text style={{ fontSize: 14, color: colors.muted }}>
+          Find work, manage your schedule and complete every visit in one place.
+        </Text>
+        <View
+          style={{
+            alignSelf: "flex-start",
+            marginTop: 9,
+            borderRadius: 999,
+            paddingHorizontal: 10,
+            paddingVertical: 6,
+            backgroundColor: sharedApiConfigured ? "#EAF7EF" : "#F2F4F7",
+          }}
+        >
+          <Text style={{ color: "#1B5E3F", fontSize: 11, fontWeight: "800" }}>
+            {syncMessage}
+          </Text>
         </View>
       </View>
 
@@ -219,58 +409,431 @@ export default function StaffHome() {
         {renderStatCard("Priority offers", openOffers.length, "#B54708")}
       </View>
 
+      <View style={{ marginBottom: 20 }}>
+        <Text
+          style={{ color: colors.foreground, fontSize: 19, fontWeight: "900" }}
+        >
+          My caregiver tools
+        </Text>
+        <Text
+          style={{
+            color: colors.muted,
+            fontSize: 12,
+            lineHeight: 18,
+            marginTop: 4,
+            marginBottom: 11,
+          }}
+        >
+          Everything you need to find work, manage your schedule and complete
+          each visit.
+        </Text>
+        <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+          {[
+            {
+              label: "Shift offers",
+              detail: `${availableShifts.length} available`,
+              icon: "bolt.fill" as const,
+              tint: "#B54708",
+              background: "#FFF4E5",
+              onPress: () => setExpandedSection("shifts"),
+            },
+            {
+              label: "My schedule",
+              detail: `${approvedApplications.length} upcoming`,
+              icon: "calendar" as const,
+              tint: "#175CD3",
+              background: "#EFF8FF",
+              onPress: () => setExpandedSection("upcoming"),
+            },
+            {
+              label: "Time clock",
+              detail: "Clock & breaks",
+              icon: "clock.fill" as const,
+              tint: "#067647",
+              background: "#ECFDF3",
+              onPress: () => router.push("/(staff)/clock"),
+            },
+            {
+              label: "Timesheets",
+              detail: "Hours & approvals",
+              icon: "doc.text.fill" as const,
+              tint: "#6938EF",
+              background: "#F4F3FF",
+              onPress: () => router.push("/(staff)/clock"),
+            },
+            {
+              label: "Availability",
+              detail: "Tune Care Match",
+              icon: "slider.horizontal.3" as const,
+              tint: "#C11574",
+              background: "#FDF2FA",
+              onPress: () => router.push("/(staff)/match"),
+            },
+            {
+              label: "Help & support",
+              detail: "Email our team",
+              icon: "lifepreserver.fill" as const,
+              tint: "#344054",
+              background: "#F2F4F7",
+              onPress: () =>
+                void Linking.openURL(
+                  "mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20Caregiver%20Support",
+                ),
+            },
+          ].map((tool) => (
+            <TouchableOpacity
+              key={tool.label}
+              accessibilityRole="button"
+              accessibilityLabel={`${tool.label}. ${tool.detail}`}
+              onPress={tool.onPress}
+              style={{
+                width: "48.5%",
+                minHeight: 104,
+                borderRadius: 18,
+                padding: 13,
+                backgroundColor: colors.surface,
+                borderWidth: 1,
+                borderColor: colors.border,
+              }}
+            >
+              <View
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  backgroundColor: tool.background,
+                }}
+              >
+                <IconSymbol name={tool.icon} size={23} color={tool.tint} />
+              </View>
+              <Text
+                style={{
+                  color: colors.foreground,
+                  fontSize: 13,
+                  fontWeight: "900",
+                  marginTop: 9,
+                }}
+              >
+                {tool.label}
+              </Text>
+              <Text
+                style={{
+                  color: colors.muted,
+                  fontSize: 10.5,
+                  fontWeight: "700",
+                  marginTop: 2,
+                }}
+              >
+                {tool.detail}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
+
       <TouchableOpacity
         onPress={() => router.push("/(staff)/clock")}
-        style={{ backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, borderRadius: 18, padding: 16, marginBottom: 20, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}
+        style={{
+          backgroundColor: colors.surface,
+          borderWidth: 1,
+          borderColor: colors.border,
+          borderRadius: 18,
+          padding: 16,
+          marginBottom: 20,
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+        }}
       >
         <View style={{ flex: 1 }}>
-          <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }}>TIME CLOCK</Text>
-          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900", marginTop: 5 }}>Clock in or out of today’s visit</Text>
-          <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>Capture time, location, breaks and visit notes for approval.</Text>
+          <Text
+            style={{
+              color: "#C58A24",
+              fontSize: 10,
+              fontWeight: "900",
+              letterSpacing: 1.2,
+            }}
+          >
+            TIME CLOCK
+          </Text>
+          <Text
+            style={{
+              color: colors.foreground,
+              fontSize: 18,
+              fontWeight: "900",
+              marginTop: 5,
+            }}
+          >
+            Clock in or out of today’s visit
+          </Text>
+          <Text
+            style={{
+              color: colors.muted,
+              fontSize: 12,
+              lineHeight: 18,
+              marginTop: 5,
+            }}
+          >
+            Capture time, location, breaks and visit notes for approval.
+          </Text>
         </View>
-        <View style={{ width: 56, height: 56, borderRadius: 18, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center" }}>
-          <Text style={{ color: "#0A4A35", fontSize: 24, fontWeight: "900" }}>⏰</Text>
+        <View
+          style={{
+            width: 56,
+            height: 56,
+            borderRadius: 18,
+            backgroundColor: "#EAF4EF",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <IconSymbol name="clock.fill" size={28} color="#0A4A35" />
         </View>
       </TouchableOpacity>
 
-      <View style={{ backgroundColor: "#0A4A35", borderRadius: 18, padding: 16, marginBottom: 20 }}>
-        <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
+      <View
+        style={{
+          backgroundColor: "#0A4A35",
+          borderRadius: 18,
+          padding: 16,
+          marginBottom: 20,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "flex-start",
+            gap: 12,
+          }}
+        >
           <View style={{ flex: 1 }}>
-            <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }}>CARE MATCH PASSPORT</Text>
-            <Text style={{ color: "#FFFFFF", fontSize: 19, lineHeight: 25, fontWeight: "900", marginTop: 6 }}>Your profile is ready for better-fit shifts.</Text>
-            <Text style={{ color: "#D9E9E2", fontSize: 12, lineHeight: 18, marginTop: 6 }}>
-              {preferences.availability.slice(0, 2).join(" + ") || "Availability"} · {preferences.preferredServices.slice(0, 2).join(" + ") || "Preferred care"} · {preferences.maxDistanceMiles} mi
+            <Text
+              style={{
+                color: "#EBCB8B",
+                fontSize: 10,
+                fontWeight: "900",
+                letterSpacing: 1.3,
+              }}
+            >
+              CARE MATCH PASSPORT
+            </Text>
+            <Text
+              style={{
+                color: "#FFFFFF",
+                fontSize: 19,
+                lineHeight: 25,
+                fontWeight: "900",
+                marginTop: 6,
+              }}
+            >
+              Your profile is ready for better-fit shifts.
+            </Text>
+            <Text
+              style={{
+                color: "#D9E9E2",
+                fontSize: 12,
+                lineHeight: 18,
+                marginTop: 6,
+              }}
+            >
+              {preferences.availability.slice(0, 2).join(" + ") ||
+                "Availability"}{" "}
+              ·{" "}
+              {preferences.preferredServices.slice(0, 2).join(" + ") ||
+                "Preferred care"}{" "}
+              · {preferences.maxDistanceMiles} mi
             </Text>
           </View>
-          <View style={{ width: 62, height: 62, borderRadius: 20, backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center" }}>
-            <Text style={{ color: "#0A4A35", fontSize: 19, fontWeight: "900" }}>{matchStrength}</Text>
-            <Text style={{ color: "#667085", fontSize: 9, fontWeight: "800" }}>MATCH</Text>
+          <View
+            style={{
+              width: 62,
+              height: 62,
+              borderRadius: 20,
+              backgroundColor: "#FFFFFF",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <Text style={{ color: "#0A4A35", fontSize: 19, fontWeight: "900" }}>
+              {matchStrength}
+            </Text>
+            <Text style={{ color: "#667085", fontSize: 9, fontWeight: "800" }}>
+              MATCH
+            </Text>
           </View>
         </View>
-        <Text style={{ color: "#BFE4D4", fontSize: 11, lineHeight: 16, marginTop: 10 }}>Update this in Account. In live mode, this becomes the caregiver intelligence layer for offers, continuity and replacement coverage.</Text>
+        <Text
+          style={{
+            color: "#BFE4D4",
+            fontSize: 11,
+            lineHeight: 16,
+            marginTop: 10,
+          }}
+        >
+          Update this in Account. In live mode, this becomes the caregiver
+          intelligence layer for offers, continuity and replacement coverage.
+        </Text>
       </View>
 
       {openOffers.length > 0 ? (
         <View style={{ marginBottom: 20 }}>
-          <View style={{ backgroundColor: "#FFF4E5", borderColor: "#FEC84B", borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10 }}>
-            <Text style={{ color: "#7A2E0E", fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>PRIORITY COVERAGE</Text>
-            <Text style={{ color: "#101828", fontSize: 18, fontWeight: "900", marginTop: 5 }}>You have {openOffers.length} urgent shift {openOffers.length === 1 ? "offer" : "offers"}.</Text>
-            <Text style={{ color: "#667085", fontSize: 12, lineHeight: 18, marginTop: 5 }}>Elite matched these based on agency coverage needs. Accepting sends your interest to the scheduler; it does not auto-assign you.</Text>
+          <View
+            style={{
+              backgroundColor: "#FFF4E5",
+              borderColor: "#FEC84B",
+              borderWidth: 1,
+              borderRadius: 14,
+              padding: 14,
+              marginBottom: 10,
+            }}
+          >
+            <Text
+              style={{
+                color: "#7A2E0E",
+                fontSize: 11,
+                fontWeight: "900",
+                letterSpacing: 1,
+              }}
+            >
+              PRIORITY COVERAGE
+            </Text>
+            <Text
+              style={{
+                color: "#101828",
+                fontSize: 18,
+                fontWeight: "900",
+                marginTop: 5,
+              }}
+            >
+              You have {openOffers.length} urgent shift{" "}
+              {openOffers.length === 1 ? "offer" : "offers"}.
+            </Text>
+            <Text
+              style={{
+                color: "#667085",
+                fontSize: 12,
+                lineHeight: 18,
+                marginTop: 5,
+              }}
+            >
+              Elite matched these based on agency coverage needs. Accepting
+              sends your interest to the scheduler; it does not auto-assign you.
+            </Text>
           </View>
           {openOffers.map((offer) => (
-            <View key={offer.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 10, borderLeftWidth: 4, borderLeftColor: "#F79009" }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", gap: 10 }}>
+            <View
+              key={offer.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 10,
+                borderLeftWidth: 4,
+                borderLeftColor: "#F79009",
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  gap: 10,
+                }}
+              >
                 <View style={{ flex: 1 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "800", color: colors.foreground }}>{offer.shift.serviceType}{offer.shift.careRecipientName ? ` · ${offer.shift.careRecipientName}` : ""}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>{offer.shift.employerName || "Elite Bridge Agency"} · {offer.shift.location.city}, {offer.shift.location.state}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}>{formatDateTime(offer.shift.startTime, offer.shift.endTime)}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "800",
+                      color: colors.foreground,
+                    }}
+                  >
+                    {offer.shift.serviceType}
+                    {offer.shift.careRecipientName
+                      ? ` · ${offer.shift.careRecipientName}`
+                      : ""}
+                  </Text>
+                  <Text
+                    style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}
+                  >
+                    {offer.shift.employerName || "Elite Bridge Agency"} ·{" "}
+                    {offer.shift.location.city}, {offer.shift.location.state}
+                  </Text>
+                  <Text
+                    style={{ fontSize: 12, color: colors.muted, marginTop: 4 }}
+                  >
+                    {formatDateTime(offer.shift.startTime, offer.shift.endTime)}
+                  </Text>
                 </View>
-                <View style={{ backgroundColor: "#EAF4EF", borderRadius: 999, minWidth: 48, height: 48, alignItems: "center", justifyContent: "center" }}><Text style={{ color: "#0A4A35", fontWeight: "900" }}>{offer.score}</Text></View>
+                <View
+                  style={{
+                    backgroundColor: "#EAF4EF",
+                    borderRadius: 999,
+                    minWidth: 48,
+                    height: 48,
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <Text style={{ color: "#0A4A35", fontWeight: "900" }}>
+                    {offer.score}
+                  </Text>
+                </View>
               </View>
-              <Text style={{ color: "#475467", fontSize: 12, lineHeight: 18, marginTop: 10 }}>{offer.rationale}</Text>
+              <Text
+                style={{
+                  color: "#475467",
+                  fontSize: 12,
+                  lineHeight: 18,
+                  marginTop: 10,
+                }}
+              >
+                {offer.rationale}
+              </Text>
               <View style={{ flexDirection: "row", gap: 8, marginTop: 12 }}>
-                <TouchableOpacity disabled={respondingOfferId === offer.id} onPress={() => void respondToOffer(offer, "accepted")} style={{ flex: 1, backgroundColor: "#0A4A35", padding: 11, borderRadius: 9, alignItems: "center" }}><Text style={{ color: "white", fontWeight: "900", fontSize: 12 }}>{respondingOfferId === offer.id ? "Updating…" : "I'm available"}</Text></TouchableOpacity>
-                <TouchableOpacity disabled={respondingOfferId === offer.id} onPress={() => void respondToOffer(offer, "declined")} style={{ paddingHorizontal: 16, paddingVertical: 11, borderRadius: 9, borderWidth: 1, borderColor: "#D0D5DD" }}><Text style={{ color: "#475467", fontWeight: "800", fontSize: 12 }}>Decline</Text></TouchableOpacity>
+                <TouchableOpacity
+                  disabled={respondingOfferId === offer.id}
+                  onPress={() => void respondToOffer(offer, "accepted")}
+                  style={{
+                    flex: 1,
+                    backgroundColor: "#0A4A35",
+                    padding: 11,
+                    borderRadius: 9,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{ color: "white", fontWeight: "900", fontSize: 12 }}
+                  >
+                    {respondingOfferId === offer.id
+                      ? "Updating…"
+                      : "I'm available"}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={respondingOfferId === offer.id}
+                  onPress={() => void respondToOffer(offer, "declined")}
+                  style={{
+                    paddingHorizontal: 16,
+                    paddingVertical: 11,
+                    borderRadius: 9,
+                    borderWidth: 1,
+                    borderColor: "#D0D5DD",
+                  }}
+                >
+                  <Text
+                    style={{
+                      color: "#475467",
+                      fontWeight: "800",
+                      fontSize: 12,
+                    }}
+                  >
+                    Decline
+                  </Text>
+                </TouchableOpacity>
               </View>
             </View>
           ))}
@@ -281,75 +844,330 @@ export default function StaffHome() {
         placeholder="Search shifts by agency, client or location..."
         value={searchQuery}
         onChangeText={setSearchQuery}
-        style={{ backgroundColor: colors.surface, borderRadius: 8, padding: 12, fontSize: 14, color: colors.foreground, borderWidth: 1, borderColor: colors.border, marginBottom: 20 }}
+        style={{
+          backgroundColor: colors.surface,
+          borderRadius: 8,
+          padding: 12,
+          fontSize: 14,
+          color: colors.foreground,
+          borderWidth: 1,
+          borderColor: colors.border,
+          marginBottom: 20,
+        }}
         placeholderTextColor={colors.muted}
       />
 
-      {renderSectionHeader("Available Shifts", "📅", "#1B5E3F", "shifts")}
+      {renderSectionHeader(
+        "Available shifts",
+        "briefcase.fill",
+        "#1B5E3F",
+        "shifts",
+      )}
       {expandedSection === "shifts" && (
         <View style={{ marginBottom: 20 }}>
-          {refreshing && filteredShifts.length === 0 ? <ActivityIndicator color="#1B5E3F" /> : null}
+          {refreshing && filteredShifts.length === 0 ? (
+            <ActivityIndicator color="#1B5E3F" />
+          ) : null}
           {filteredShifts.map((shift) => (
-            <View key={shift.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: shift.urgency === "urgent" ? "#E74C3C" : "#1B5E3F" }}>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 8 }}>
+            <View
+              key={shift.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 12,
+                borderLeftWidth: 4,
+                borderLeftColor:
+                  shift.urgency === "urgent" ? "#E74C3C" : "#1B5E3F",
+              }}
+            >
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
+                  marginBottom: 8,
+                }}
+              >
                 <View style={{ flex: 1, paddingRight: 10 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground, marginBottom: 4 }}>{shift.serviceType}{shift.careRecipientName ? ` · ${shift.careRecipientName}` : ""}</Text>
-                  <Text style={{ fontSize: 14, color: colors.muted, marginBottom: 2 }}>{shift.employerName || "Elite Bridge Agency"}</Text>
-                  <Text style={{ fontSize: 12, color: colors.muted }}>📍 {shift.location.city}, {shift.location.state}</Text>
+                  <Text
+                    style={{
+                      fontSize: 16,
+                      fontWeight: "700",
+                      color: colors.foreground,
+                      marginBottom: 4,
+                    }}
+                  >
+                    {shift.serviceType}
+                    {shift.careRecipientName
+                      ? ` · ${shift.careRecipientName}`
+                      : ""}
+                  </Text>
+                  <Text
+                    style={{
+                      fontSize: 14,
+                      color: colors.muted,
+                      marginBottom: 2,
+                    }}
+                  >
+                    {shift.employerName || "Elite Bridge Agency"}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 4,
+                    }}
+                  >
+                    <IconSymbol
+                      name="mappin.and.ellipse"
+                      size={14}
+                      color={colors.muted}
+                    />
+                    <Text style={{ fontSize: 12, color: colors.muted }}>
+                      {shift.location.city}, {shift.location.state}
+                    </Text>
+                  </View>
                 </View>
-                <View style={{ backgroundColor: "#1B5E3F", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 }}><Text style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}>${shift.hourlyRate}/hr</Text></View>
-              </View>
-              <Text style={{ fontSize: 13, color: colors.muted, marginTop: 8 }}>{formatDateTime(shift.startTime, shift.endTime)}</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 6 }} numberOfLines={2}>{shift.responsibilities}</Text>
-              <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12 }}>
-                {shift.urgency === "urgent" ? <Text style={{ color: "#B42318", fontSize: 11, fontWeight: "900" }}>URGENT COVERAGE</Text> : <View />}
-                <TouchableOpacity
-                  disabled={Boolean(shift.applicationStatus) || applyingId === shift.id}
-                  onPress={() => void apply(shift)}
-                  style={{ backgroundColor: shift.applicationStatus ? "#D0D5DD" : "#1B5E3F", borderRadius: 7, paddingHorizontal: 14, paddingVertical: 8, minWidth: 92, alignItems: "center" }}
+                <View
+                  style={{
+                    backgroundColor: "#1B5E3F",
+                    borderRadius: 8,
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                  }}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: "700", color: shift.applicationStatus ? "#475467" : "#fff" }}>{applyingId === shift.id ? "Sending…" : shift.applicationStatus ? (shift.applicationStatus === "approved" ? "Assigned" : "Applied") : shift.assignmentMode === "instant" ? "Claim Shift" : "Apply Now"}</Text>
+                  <Text
+                    style={{ fontSize: 14, fontWeight: "700", color: "#fff" }}
+                  >
+                    ${shift.hourlyRate}/hr
+                  </Text>
+                </View>
+              </View>
+              <Text style={{ fontSize: 13, color: colors.muted, marginTop: 8 }}>
+                {formatDateTime(shift.startTime, shift.endTime)}
+              </Text>
+              <Text
+                style={{ fontSize: 12, color: colors.muted, marginTop: 6 }}
+                numberOfLines={2}
+              >
+                {shift.responsibilities}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginTop: 12,
+                }}
+              >
+                {shift.urgency === "urgent" ? (
+                  <Text
+                    style={{
+                      color: "#B42318",
+                      fontSize: 11,
+                      fontWeight: "900",
+                    }}
+                  >
+                    URGENT COVERAGE
+                  </Text>
+                ) : (
+                  <View />
+                )}
+                <TouchableOpacity
+                  disabled={
+                    Boolean(shift.applicationStatus) || applyingId === shift.id
+                  }
+                  onPress={() => void apply(shift)}
+                  style={{
+                    backgroundColor: shift.applicationStatus
+                      ? "#D0D5DD"
+                      : "#1B5E3F",
+                    borderRadius: 7,
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    minWidth: 92,
+                    alignItems: "center",
+                  }}
+                >
+                  <Text
+                    style={{
+                      fontSize: 12,
+                      fontWeight: "700",
+                      color: shift.applicationStatus ? "#475467" : "#fff",
+                    }}
+                  >
+                    {applyingId === shift.id
+                      ? "Sending…"
+                      : shift.applicationStatus
+                        ? shift.applicationStatus === "approved"
+                          ? "Assigned"
+                          : "Applied"
+                        : shift.assignmentMode === "instant"
+                          ? "Claim Shift"
+                          : "Apply Now"}
+                  </Text>
                 </TouchableOpacity>
               </View>
             </View>
           ))}
-          {filteredShifts.length === 0 && !refreshing ? <Text style={{ color: colors.muted, textAlign: "center", padding: 18 }}>No matching open shifts right now. Pull down to refresh.</Text> : null}
+          {filteredShifts.length === 0 && !refreshing ? (
+            <Text
+              style={{ color: colors.muted, textAlign: "center", padding: 18 }}
+            >
+              No matching open shifts right now. Pull down to refresh.
+            </Text>
+          ) : null}
         </View>
       )}
 
-      {renderSectionHeader("My Applications", "📋", "#4E87D9", "applications")}
+      {renderSectionHeader(
+        "My applications",
+        "doc.text.fill",
+        "#4E87D9",
+        "applications",
+      )}
       {expandedSection === "applications" && (
         <View style={{ marginBottom: 20 }}>
           {applications.map((app) => (
-            <View key={app.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: applicationColor(app.status) }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>{app.shift.employerName || "Elite Bridge Agency"}</Text>
-              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>{app.shift.serviceType}{app.shift.careRecipientName ? ` · ${app.shift.careRecipientName}` : ""}</Text>
-              <View style={{ flexDirection: "row", justifyContent: "space-between", marginTop: 10 }}><Text style={{ fontSize: 12, color: colors.muted, flex: 1 }}>{formatDateTime(app.shift.startTime, app.shift.endTime)}</Text><Text style={{ color: applicationColor(app.status), fontSize: 12, fontWeight: "900", textTransform: "capitalize" }}>{app.status === "callout" ? "Called out" : app.status}</Text></View>
+            <View
+              key={app.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 12,
+                borderLeftWidth: 4,
+                borderLeftColor: applicationColor(app.status),
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: colors.foreground,
+                }}
+              >
+                {app.shift.employerName || "Elite Bridge Agency"}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>
+                {app.shift.serviceType}
+                {app.shift.careRecipientName
+                  ? ` · ${app.shift.careRecipientName}`
+                  : ""}
+              </Text>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  marginTop: 10,
+                }}
+              >
+                <Text style={{ fontSize: 12, color: colors.muted, flex: 1 }}>
+                  {formatDateTime(app.shift.startTime, app.shift.endTime)}
+                </Text>
+                <Text
+                  style={{
+                    color: applicationColor(app.status),
+                    fontSize: 12,
+                    fontWeight: "900",
+                    textTransform: "capitalize",
+                  }}
+                >
+                  {app.status === "callout" ? "Called out" : app.status}
+                </Text>
+              </View>
             </View>
           ))}
-          {applications.length === 0 ? <Text style={{ color: colors.muted, textAlign: "center", padding: 18 }}>Applications you send will appear here.</Text> : null}
+          {applications.length === 0 ? (
+            <Text
+              style={{ color: colors.muted, textAlign: "center", padding: 18 }}
+            >
+              Applications you send will appear here.
+            </Text>
+          ) : null}
         </View>
       )}
 
-      {renderSectionHeader("Upcoming Assignments", "⏰", "#0A4A35", "upcoming")}
+      {renderSectionHeader(
+        "Upcoming assignments",
+        "calendar.badge.clock",
+        "#0A4A35",
+        "upcoming",
+      )}
       {expandedSection === "upcoming" && (
         <View style={{ marginBottom: 20 }}>
           {approvedApplications.map((app) => (
-            <View key={app.id} style={{ backgroundColor: colors.surface, borderRadius: 12, padding: 16, marginBottom: 12, borderLeftWidth: 4, borderLeftColor: "#218739" }}>
-              <Text style={{ fontSize: 16, fontWeight: "700", color: colors.foreground }}>{app.shift.employerName || "Elite Bridge Agency"}</Text>
-              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>{app.shift.serviceType}{app.shift.careRecipientName ? ` · ${app.shift.careRecipientName}` : ""}</Text>
-              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 7 }}>{formatDateTime(app.shift.startTime, app.shift.endTime)}</Text>
-              <Text style={{ fontSize: 13, fontWeight: "700", color: "#1B5E3F", marginTop: 8 }}>${app.shift.hourlyRate}/hr · Confirmed</Text>
+            <View
+              key={app.id}
+              style={{
+                backgroundColor: colors.surface,
+                borderRadius: 12,
+                padding: 16,
+                marginBottom: 12,
+                borderLeftWidth: 4,
+                borderLeftColor: "#218739",
+              }}
+            >
+              <Text
+                style={{
+                  fontSize: 16,
+                  fontWeight: "700",
+                  color: colors.foreground,
+                }}
+              >
+                {app.shift.employerName || "Elite Bridge Agency"}
+              </Text>
+              <Text style={{ fontSize: 14, color: colors.muted, marginTop: 4 }}>
+                {app.shift.serviceType}
+                {app.shift.careRecipientName
+                  ? ` · ${app.shift.careRecipientName}`
+                  : ""}
+              </Text>
+              <Text style={{ fontSize: 12, color: colors.muted, marginTop: 7 }}>
+                {formatDateTime(app.shift.startTime, app.shift.endTime)}
+              </Text>
+              <Text
+                style={{
+                  fontSize: 13,
+                  fontWeight: "700",
+                  color: "#1B5E3F",
+                  marginTop: 8,
+                }}
+              >
+                ${app.shift.hourlyRate}/hr · Confirmed
+              </Text>
               <TouchableOpacity
                 disabled={callingOutShiftId === app.shift.id}
                 onPress={() => confirmCallout(app)}
-                style={{ alignSelf: "flex-start", borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 9, paddingHorizontal: 12, paddingVertical: 9, marginTop: 12 }}
+                style={{
+                  alignSelf: "flex-start",
+                  borderWidth: 1,
+                  borderColor: "#FDA29B",
+                  backgroundColor: "#FFF5F4",
+                  borderRadius: 9,
+                  paddingHorizontal: 12,
+                  paddingVertical: 9,
+                  marginTop: 12,
+                }}
               >
-                <Text style={{ color: "#B42318", fontSize: 12, fontWeight: "900" }}>{callingOutShiftId === app.shift.id ? "Reporting…" : "I can't work this shift"}</Text>
+                <Text
+                  style={{ color: "#B42318", fontSize: 12, fontWeight: "900" }}
+                >
+                  {callingOutShiftId === app.shift.id
+                    ? "Reporting…"
+                    : "I can't work this shift"}
+                </Text>
               </TouchableOpacity>
             </View>
           ))}
-          {approvedApplications.length === 0 ? <Text style={{ color: colors.muted, textAlign: "center", padding: 18 }}>Approved assignments will appear here automatically.</Text> : null}
+          {approvedApplications.length === 0 ? (
+            <Text
+              style={{ color: colors.muted, textAlign: "center", padding: 18 }}
+            >
+              Approved assignments will appear here automatically.
+            </Text>
+          ) : null}
         </View>
       )}
     </ScrollView>
