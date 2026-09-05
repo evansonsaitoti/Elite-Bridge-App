@@ -12,7 +12,7 @@ const STAFF_TABS = [
   { label: "Work", route: "/(staff)/home", match: "/home", icon: "briefcase.fill" },
   { label: "Match", route: "/(staff)/match", match: "/match", icon: "sparkles" },
   { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
-  { label: "Alerts", route: "/(staff)/notifications", match: "/notifications", icon: "message.fill" },
+  { label: "Alerts", route: "/(staff)/notifications", match: "/notifications", icon: "bell.fill" },
   { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
 ] as const;
 

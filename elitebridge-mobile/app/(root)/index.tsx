@@ -10,7 +10,7 @@ const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 const slides = [
   { eyebrow: "CARE THAT FITS YOUR LIFE", title: "Meaningful work. Better-fit shifts.", body: "Build your profile once and see care opportunities matched to your skills, availability and preferences." },
   { eyebrow: "MATCHED SHIFT OFFERS", title: "Know the details before you accept.", body: "Review schedule, location, pay and care responsibilities together—then claim or apply with confidence." },
-  { eyebrow: "YOUR WORKDAY, ONE PLACE", title: "From availability to clock-out.", body: "Manage assigned visits, timekeeping, call-outs and earnings from your dedicated caregiver workspace." },
+  { eyebrow: "YOUR WORKDAY, ONE PLACE", title: "From availability to approved time.", body: "Manage assigned visits, timekeeping, call-outs and employer timesheet decisions from your dedicated caregiver workspace." },
   { eyebrow: "CARE WITH PURPOSE", title: "Personal support that changes a day.", body: "Find opportunities in companionship, personal care, respite and meal support with trusted care organizations." },
 ];
 

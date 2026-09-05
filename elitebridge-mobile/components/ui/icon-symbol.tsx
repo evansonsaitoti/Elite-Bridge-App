@@ -22,6 +22,7 @@ const MAPPING = {
   "person.fill": "person",
   "person.crop.circle.fill": "account-circle",
   "message.fill": "chat",
+  "bell.fill": "notifications",
   "paperplane.fill": "send",
   "dollarsign.circle.fill": "paid",
   "chevron.left.forwardslash.chevron.right": "code",

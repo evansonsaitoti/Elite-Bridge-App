@@ -20,7 +20,7 @@ The apps use the same production service so an employer action in this app can p
 | Selects instant claim or employer approval per shift | Claims an instant shift or requests employer approval |
 | Approves or declines approval-required applicants | Tracks application decisions and confirmed assignments |
 | Receives application and call-out push alerts | Receives new-shift, decision, and urgent-offer push alerts |
-| Manages schedules, assigned team members and attendance | Manages the caregiver’s workday, visits, and earnings |
+| Manages schedules, assigned team members and attendance | Manages the caregiver’s workday, visits, timesheets and alerts |
 
 The apps are intentionally intertwined, not duplicates: actions performed by one audience create the work items used by the other audience. This is the core two-sided marketplace function.
 

@@ -10,10 +10,9 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgemobile",
-      "buildNumber": "49",
+      "buildNumber": "50",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "NSMicrophoneUsageDescription": "Elite Bridge needs microphone access for voice communication.",
         "NSLocationWhenInUseUsageDescription": "Elite Bridge records your location only when you clock in or out of a scheduled visit."
       }
     },
