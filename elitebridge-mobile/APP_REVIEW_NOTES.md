@@ -1,5 +1,7 @@
 # Elite Bridge Caregiver — App Review Notes (Version 1.1.0, Build 49)
 
+Production companion workflow verified September 5, 2026.
+
 ## Purpose and companion relationship
 
 Elite Bridge is a two-sided care staffing marketplace with two separately listed companion apps. **Elite Bridge Caregiver** is only for care professionals. **Elite Bridge Employer** (App Store Connect ID `6798899931`) is only for organizations that publish and manage work.
@@ -34,4 +36,3 @@ For the connected scenario, use the separately supplied ordinary Employer creden
 ## Version 1.1 rebuild disclosure
 
 Build 49 contains no demonstration login, local sample workspace, mock earnings, simulated chat, dormant user/admin route tree, secret gesture, remote feature flag or reviewer-specific data. All visible staffing, matching, attendance, notification, profile and account actions use the production Elite Bridge service. No purchase or subscription is required for review.
-

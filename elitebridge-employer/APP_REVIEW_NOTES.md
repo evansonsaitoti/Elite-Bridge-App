@@ -1,5 +1,7 @@
 # Elite Bridge Employer — App Review Notes (Version 1.3.0, Build 29)
 
+Production companion workflow verified September 5, 2026.
+
 ## Purpose and companion-app relationship
 
 Elite Bridge is a two-sided care staffing marketplace delivered through two distinct companion apps:
