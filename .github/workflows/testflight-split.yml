@@ -29,7 +29,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 52') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
+    if: ${{ (github.event_name == 'push' && github.event.head_commit.message == 'Trigger caregiver build 53') || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
