@@ -35,8 +35,8 @@ export default function LoginScreen() {
         name: `${user.firstName} ${user.lastName}`.trim(),
         signedInAt: new Date().toISOString(),
       }));
-      await enableCaregiverPushNotifications().catch(() => false);
       router.replace("/(staff)/home");
+      void enableCaregiverPushNotifications().catch(() => false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not sign you in.");
     } finally {

@@ -14,6 +14,73 @@ type SignupDetails = {
   companyName?: string;
 };
 
+type VerificationDetails = {
+  email: string;
+  firstName: string;
+  verificationUrl: string;
+};
+
+async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
+  if (config.RESEND_API_KEY && config.RESEND_FROM) {
+    try {
+      await axios.post("https://api.resend.com/emails", {
+        from: config.RESEND_FROM,
+        to: [to],
+        subject,
+        text,
+      }, {
+        headers: {
+          Authorization: `Bearer ${config.RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        timeout: 15_000,
+      });
+      return true;
+    } catch (error) {
+      console.error("Resend email delivery failed", error);
+      return false;
+    }
+  }
+
+  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || !config.SMTP_FROM) {
+    console.warn("Email skipped: Resend and SMTP are not fully configured");
+    return false;
+  }
+
+  try {
+    const transport = nodemailer.createTransport({
+      host: config.SMTP_HOST,
+      port: config.SMTP_PORT,
+      secure: config.SMTP_PORT === 465,
+      auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
+      connectionTimeout: 10_000,
+      greetingTimeout: 10_000,
+      socketTimeout: 15_000,
+    });
+    await transport.sendMail({ from: config.SMTP_FROM, to, subject, text });
+    return true;
+  } catch (error) {
+    console.error("Email delivery failed", error);
+    return false;
+  }
+}
+
+export async function sendEmailVerification(details: VerificationDetails): Promise<boolean> {
+  const subject = "Confirm your Elite Bridge email";
+  const text = [
+    `Hi ${details.firstName},`,
+    "",
+    "Welcome to Elite Bridge. Confirm your email address to activate your verified email status:",
+    details.verificationUrl,
+    "",
+    "This secure link expires in 24 hours. If you did not create this account, you can ignore this email.",
+    "",
+    "Elite Bridge Staffing",
+  ].join("\n");
+
+  return sendEmail(details.email, subject, text);
+}
+
 export async function sendSignupAlert(details: SignupDetails): Promise<boolean> {
   const roleLabel = details.role === "employer" ? "Employer" : "Caregiver";
   const subject = `New Elite Bridge ${roleLabel} signup`;
@@ -29,54 +96,9 @@ export async function sendSignupAlert(details: SignupDetails): Promise<boolean> 
     `Source app: Elite Bridge ${roleLabel}`,
   ].join("\n");
 
-  if (config.RESEND_API_KEY && config.RESEND_FROM) {
-    try {
-      await axios.post("https://api.resend.com/emails", {
-        from: config.RESEND_FROM,
-        to: [config.SIGNUP_ALERT_EMAIL],
-        subject,
-        text,
-      }, {
-        headers: {
-          Authorization: `Bearer ${config.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 15_000,
-      });
-      console.info("Signup alert email sent with Resend");
-      return true;
-    } catch (error) {
-      console.error("Resend signup alert email failed", error);
-      return false;
-    }
-  }
-
-  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || !config.SMTP_FROM) {
-    console.warn("Signup alert email skipped: Resend and SMTP are not fully configured");
-    return false;
-  }
-
-  try {
-    const transport = nodemailer.createTransport({
-      host: config.SMTP_HOST,
-      port: config.SMTP_PORT,
-      secure: config.SMTP_PORT === 465,
-      auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 15_000,
-    });
-    await transport.sendMail({
-      from: config.SMTP_FROM,
-      to: config.SIGNUP_ALERT_EMAIL,
-      subject,
-      text,
-    });
-    return true;
-  } catch (error) {
-    console.error("Signup alert email failed", error);
-    return false;
-  }
+  const delivered = await sendEmail(config.SIGNUP_ALERT_EMAIL, subject, text);
+  if (delivered) console.info("Signup alert email sent");
+  return delivered;
 }
 
 type PushMessage = {

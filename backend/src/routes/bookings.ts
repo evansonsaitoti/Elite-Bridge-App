@@ -294,6 +294,7 @@ router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
       SELECT sp.*, e.company_name, sa.status AS application_status
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
+      JOIN caregivers c ON c.id = ${caregiver.id}
       LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
       WHERE sp.status = 'open'
         AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
@@ -466,6 +467,32 @@ router.get("/employer/applications", authMiddleware, async (req: AuthRequest, re
       ORDER BY CASE WHEN sa.status = 'pending' THEN 0 ELSE 1 END, sa.created_at DESC
     `);
     res.json({ applications: (result as any).rows });
+  } catch (error) { next(error); }
+});
+
+router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const result = await db.execute(sql`
+      SELECT c.id AS caregiver_id, u.id AS user_id, u.first_name, u.last_name,
+             u.email, u.phone, c.rating, c.total_hours, c.certifications,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved') AS assigned_shifts,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP) AS upcoming_shifts,
+             MAX(sa.updated_at) FILTER (WHERE sa.status = 'approved') AS last_assigned_at
+      FROM shift_applications sa
+      JOIN shift_posts sp ON sp.id = sa.shift_id
+      JOIN caregivers c ON c.id = sa.caregiver_id
+      JOIN users u ON u.id = c.user_id
+      WHERE sp.employer_id = ${employer.id} AND sa.status = 'approved'
+      GROUP BY c.id, u.id, u.first_name, u.last_name, u.email, u.phone, c.rating, c.total_hours, c.certifications
+      ORDER BY u.first_name, u.last_name
+    `);
+    res.json({ team: (result as any).rows.map((member: any) => ({
+      ...member,
+      assigned_shifts: Number(member.assigned_shifts || 0),
+      upcoming_shifts: Number(member.upcoming_shifts || 0),
+    })) });
   } catch (error) { next(error); }
 });
 

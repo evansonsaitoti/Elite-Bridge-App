@@ -22,6 +22,7 @@ export default function StaffProfile() {
   const router = useRouter();
   const [session, setSession] = useState<LocalSession>({});
   const [deleting, setDeleting] = useState(false);
+  const [showAdvancedAccount, setShowAdvancedAccount] = useState(false);
   const [activePanel, setActivePanel] = useState<ProfilePanel>(null);
   const [profileDraft, setProfileDraft] = useState({
     phone: "(508) 251-9346",
@@ -471,12 +472,27 @@ export default function StaffProfile() {
         <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 14 }}>Sign out</Text>
       </TouchableOpacity>
 
-      <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: "#FDA29B", padding: 14 }}>
-        <Text style={{ color: "#B42318", fontSize: 16, fontWeight: "900" }}>Delete account</Text>
-        <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 6 }}>Permanently delete your caregiver login and local profile directly in the app. This action cannot be undone.</Text>
-        <TouchableOpacity disabled={deleting} onPress={deleteAccount} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center", opacity: deleting ? 0.55 : 1 }}>
-          <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>{deleting ? "Deleting account…" : "Delete account permanently"}</Text>
+      <View style={{ marginTop: 14, backgroundColor: colors.surface, borderRadius: 16, borderWidth: 1, borderColor: colors.border, padding: 14 }}>
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => setShowAdvancedAccount((value) => !value)}
+          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+        >
+          <View style={{ flex: 1, paddingRight: 12 }}>
+            <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>More account options</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 4 }}>Account access, data and profile controls.</Text>
+          </View>
+          <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "900" }}>{showAdvancedAccount ? "Hide" : "Open"}</Text>
         </TouchableOpacity>
+        {showAdvancedAccount ? (
+          <View style={{ marginTop: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: 12 }}>
+            <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900" }}>Close caregiver account</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 5 }}>Remove your caregiver access and profile after a confirmation step. Required payroll, safety or compliance records may be retained as required by law.</Text>
+            <TouchableOpacity disabled={deleting} onPress={deleteAccount} style={{ marginTop: 12, borderRadius: 12, borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", padding: 12, alignItems: "center", opacity: deleting ? 0.55 : 1 }}>
+              <Text style={{ color: "#B42318", fontWeight: "900", fontSize: 13 }}>{deleting ? "Processing…" : "Continue"}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : null}
       </View>
     </ScrollView>
     </ScreenContainer>
