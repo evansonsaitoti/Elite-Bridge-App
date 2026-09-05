@@ -74,10 +74,10 @@ requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/home.tsx", "Call-out reported");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.version !== "1.2.0")
-  throw new Error("Caregiver release version must be 1.2.0");
-if (config.expo.ios.buildNumber !== "51")
-  throw new Error("Caregiver iOS build number must be 51");
+if (config.expo.version !== "1.2.1")
+  throw new Error("Caregiver release version must be 1.2.1");
+if (config.expo.ios.buildNumber !== "52")
+  throw new Error("Caregiver iOS build number must be 52");
 requireSource("app/(root)/index.tsx", "Care professionals start here");
 requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
 requireSource("app/(root)/index.tsx", "elitebridge-logo.png");

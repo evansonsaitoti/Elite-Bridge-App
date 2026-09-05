@@ -64,22 +64,22 @@ export default function StaffLayout() {
       .then((stored) => {
         if (!mounted) return;
         if (!stored) {
-          router.replace("/(auth)/login");
+          router.replace("/(root)");
           return;
         }
         try {
           const session = JSON.parse(stored) as { role?: string };
           if (session.role !== "staff") {
-            router.replace("/(auth)/login");
+            router.replace("/(root)");
             return;
           }
           void enableCaregiverPushNotifications().catch(() => false);
           setReady(true);
         } catch {
-          router.replace("/(auth)/login");
+          router.replace("/(root)");
         }
       })
-      .catch(() => router.replace("/(auth)/login"));
+      .catch(() => router.replace("/(root)"));
     return () => {
       mounted = false;
     };

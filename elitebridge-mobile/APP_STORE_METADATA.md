@@ -41,4 +41,4 @@ https://elitebridgestaffing.com/privacy/
 7. Cross-app staffing and timesheet alerts
 8. Editable caregiver profile and protected account controls
 
-Every screenshot must come from Build 51 and show only visible, operational features in the submitted binary.
+Every screenshot must come from Build 52 and show only visible, operational features in the submitted binary.

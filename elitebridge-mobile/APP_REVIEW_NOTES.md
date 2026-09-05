@@ -1,4 +1,4 @@
-# Elite Bridge Caregiver — App Review Notes (Version 1.2.0, Build 51)
+# Elite Bridge Caregiver — App Review Notes (Version 1.2.1, Build 52)
 
 Production companion workflow verified September 5, 2026.
 
@@ -35,4 +35,4 @@ For the connected scenario, use the separately supplied ordinary Employer creden
 
 ## Version 1.2 disclosure
 
-Build 51 adds four distinct, content-matched public onboarding scenes, the official Elite Bridge logo and a clearer caregiver workforce hub. It contains no demonstration login, local sample workspace, mock earnings, simulated chat, dormant user/admin route tree, secret gesture, remote feature flag or reviewer-specific data. All visible staffing, matching, attendance, notification, profile and account actions use the production Elite Bridge service. No purchase or subscription is required for review.
+Build 52 adds four distinct, content-matched public onboarding scenes, the official Elite Bridge logo, a corrected signed-out launch route and a clearer caregiver workforce hub. It contains no demonstration login, local sample workspace, mock earnings, simulated chat, dormant user/admin route tree, secret gesture, remote feature flag or reviewer-specific data. All visible staffing, matching, attendance, notification, profile and account actions use the production Elite Bridge service. No purchase or subscription is required for review.

@@ -20,6 +20,10 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 
+export const unstable_settings = {
+  initialRouteName: "(root)",
+};
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,

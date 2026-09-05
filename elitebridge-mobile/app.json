@@ -2,7 +2,7 @@
   "expo": {
     "name": "Elite Bridge Caregiver",
     "slug": "elitebridge-mobile",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "elitebridge",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgemobile",
-      "buildNumber": "51",
+      "buildNumber": "52",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSLocationWhenInUseUsageDescription": "Elite Bridge records your location only when you clock in or out of a scheduled visit."
