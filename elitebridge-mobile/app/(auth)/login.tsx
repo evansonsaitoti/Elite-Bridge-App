@@ -31,6 +31,7 @@ export default function LoginScreen() {
       const user = await ensureCaregiverBackendSession(email, password);
       await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
         role: "staff",
+        id: user.id,
         email: user.email,
         name: `${user.firstName} ${user.lastName}`.trim(),
         signedInAt: new Date().toISOString(),

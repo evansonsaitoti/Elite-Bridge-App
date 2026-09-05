@@ -19,20 +19,6 @@ export interface OnboardingData {
   availabilityDays: string[];
   availabilityTimes: string[];
 
-  // Step 3: Background Check
-  backgroundCheckConsent: boolean;
-  backgroundCheckStatus: "pending" | "submitted" | "clear" | "consider" | "error";
-  checkrCandidateId?: string;
-
-  // Step 4: Bank Account
-  bankName: string;
-  accountHolderName: string;
-  accountType: "checking" | "savings";
-  routingNumber: string;
-  accountNumber: string;
-  bankAccountVerified: boolean;
-  stripeTokenId?: string;
-
   // Completion
   onboardingCompleted: boolean;
   completedAt?: string;
@@ -64,14 +50,6 @@ const defaultData: OnboardingData = {
   languages: [],
   availabilityDays: [],
   availabilityTimes: [],
-  backgroundCheckConsent: false,
-  backgroundCheckStatus: "pending",
-  bankName: "",
-  accountHolderName: "",
-  accountType: "checking",
-  routingNumber: "",
-  accountNumber: "",
-  bankAccountVerified: false,
   onboardingCompleted: false,
 };
 
@@ -86,7 +64,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const nextStep = useCallback(() => {
-    setCurrentStep((prev) => Math.min(prev + 1, 5));
+    setCurrentStep((prev) => Math.min(prev + 1, 3));
   }, []);
 
   const prevStep = useCallback(() => {
@@ -94,7 +72,7 @@ export function OnboardingProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   const goToStep = useCallback((step: number) => {
-    setCurrentStep(Math.max(1, Math.min(step, 5)));
+    setCurrentStep(Math.max(1, Math.min(step, 3)));
   }, []);
 
   const completeOnboarding = useCallback(() => {

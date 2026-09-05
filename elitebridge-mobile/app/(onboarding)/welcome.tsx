@@ -1,294 +1,46 @@
-import React, { useState } from "react";
-import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
-import { useColors } from "@/hooks/use-colors";
-import { useOnboarding } from "@/lib/onboarding-context";
+import { useState } from "react";
+import { Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 
-/**
- * Onboarding Step 1: Welcome & Personal Information
- * Collects basic personal details
- */
-export default function OnboardingWelcome() {
-  const colors = useColors();
-  const { data, updateData, nextStep } = useOnboarding();
-  const router = useRouter();
+import { useOnboarding } from "@/lib/onboarding-context";
 
+export default function OnboardingWelcome() {
+  const router = useRouter();
+  const { data, updateData, nextStep } = useOnboarding();
   const [fullName, setFullName] = useState(data.fullName);
   const [email, setEmail] = useState(data.email);
+  const [phone, setPhone] = useState(data.phoneNumber);
   const [password, setPassword] = useState(data.password);
-  const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
-  const [dateOfBirth, setDateOfBirth] = useState(data.dateOfBirth);
-  const [address, setAddress] = useState(data.address);
-  const [city, setCity] = useState(data.city);
-  const [state, setState] = useState(data.state);
-  const [zip, setZip] = useState(data.zip);
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
-  const validateStep = () => {
-    const newErrors: Record<string, string> = {};
-
-    if (!fullName.trim()) newErrors.fullName = "Full name is required";
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) newErrors.email = "Enter a valid email address";
-    if (password.length < 8) newErrors.password = "Use at least 8 characters";
-    if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
-    if (!address.trim()) newErrors.address = "Address is required";
-    if (!city.trim()) newErrors.city = "City is required";
-    if (!state.trim()) newErrors.state = "State is required";
-
-    setErrors(newErrors);
-    if (Object.keys(newErrors).length > 0) {
-      Alert.alert(
-        "Complete required fields",
-        "Enter valid account, contact and address information to continue.",
-      );
-    }
-    return Object.keys(newErrors).length === 0;
+  const continueSignup = () => {
+    if (fullName.trim().split(/\s+/).length < 2 || !/^\S+@\S+\.\S+$/.test(email.trim()) || !phone.trim() || password.length < 8) return Alert.alert("Complete required fields", "Enter your full name, valid email, phone number and a password of at least 8 characters.");
+    if (password !== confirmPassword) return Alert.alert("Passwords do not match", "Enter the same password in both fields.");
+    updateData({ fullName: fullName.trim(), email: email.trim().toLowerCase(), phoneNumber: phone.trim(), password });
+    nextStep();
+    router.push("/(onboarding)/experience");
   };
 
-  const handleNext = () => {
-    if (validateStep()) {
-      updateData({
-        fullName: fullName.trim(),
-        email: email.trim().toLowerCase(),
-        password,
-        phoneNumber: phoneNumber.trim(),
-        dateOfBirth: dateOfBirth.trim(),
-        address: address.trim(),
-        city: city.trim(),
-        state: state.trim().toUpperCase(),
-        zip: zip.trim(),
-      });
-      nextStep();
-      router.push("/(onboarding)/experience");
-    }
-  };
-
-  const handleSkip = () => {
-    Alert.alert(
-      "Skip Onboarding?",
-      "You need to complete onboarding to start working. Are you sure?",
-      [
-        { text: "Cancel", onPress: () => {} },
-        {
-          text: "Go Back",
-          onPress: () => router.replace("/(staff)/home"),
-        },
-      ]
-    );
-  };
-
-  const renderInput = (
-    label: string,
-    value: string,
-    onChangeText: (text: string) => void,
-    placeholder: string,
-    error?: string,
-    keyboardType: "default" | "phone-pad" | "email-address" = "default",
-    secureTextEntry = false,
-  ) => (
-    <View style={{ marginBottom: 15 }}>
-      <Text style={{ fontSize: 13, fontWeight: "800", color: "#344054", marginBottom: 7 }}>
-        {label}
-      </Text>
-      <TextInput
-        style={{
-          backgroundColor: "#F9FAFB",
-          borderRadius: 14,
-          minHeight: 50,
-          paddingHorizontal: 14,
-          fontSize: 15,
-          color: "#101828",
-          borderWidth: 1,
-          borderColor: error ? "#D92D20" : "#D0D5DD",
-        }}
-        placeholder={placeholder}
-        placeholderTextColor="#98A2B3"
-        value={value}
-        onChangeText={onChangeText}
-        keyboardType={keyboardType}
-        secureTextEntry={secureTextEntry}
-        autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
-        autoCorrect={false}
-      />
-      {error && (
-        <Text style={{ fontSize: 12, color: "#D92D20", marginTop: 5 }}>
-          {error}
-        </Text>
-      )}
+  return <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}><ScrollView style={styles.fill} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <View style={styles.hero}><Text style={styles.eyebrow}>CAREGIVER PROFILE</Text><Text style={styles.heroTitle}>Join the Elite Bridge care network.</Text><Text style={styles.heroBody}>Create one verified profile to receive matched opportunities from employers using the companion Employer app.</Text></View>
+    <Progress step="1" title="Account" width="33%" />
+    <View style={styles.card}><Text style={styles.title}>Create your account</Text><Text style={styles.body}>Fields marked * are required. Your password is encrypted and never shown to employers.</Text>
+      <Field label="Full legal name *" value={fullName} onChangeText={setFullName} placeholder="First and last name" />
+      <Field label="Email address *" value={email} onChangeText={setEmail} placeholder="you@example.com" keyboardType="email-address" autoCapitalize="none" textContentType="username" />
+      <Field label="Phone number *" value={phone} onChangeText={setPhone} placeholder="(555) 555-0123" keyboardType="phone-pad" textContentType="telephoneNumber" />
+      <PasswordField label="Password *" value={password} onChangeText={setPassword} visible={showPassword} onToggle={() => setShowPassword((value) => !value)} />
+      <PasswordField label="Confirm password *" value={confirmPassword} onChangeText={setConfirmPassword} visible={showConfirmation} onToggle={() => setShowConfirmation((value) => !value)} />
+      <Text style={styles.hint}>Use at least 8 characters.</Text>
+      <TouchableOpacity onPress={continueSignup} style={styles.primary}><Text style={styles.primaryText}>Continue to experience</Text></TouchableOpacity>
+      <TouchableOpacity onPress={() => router.back()} style={styles.secondary}><Text style={styles.secondaryText}>Back</Text></TouchableOpacity>
     </View>
-  );
-
-  return (
-    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F7FAF8" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 36 }} keyboardShouldPersistTaps="handled">
-      <View style={{ backgroundColor: "#0A4A35", borderRadius: 24, padding: 20, marginBottom: 18 }}>
-        <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }}>CAREGIVER APPLICATION</Text>
-        <Text style={{ color: "#FFFFFF", fontSize: 28, lineHeight: 34, fontWeight: "900", marginTop: 8 }}>
-          Create your caregiver profile.
-        </Text>
-        <Text style={{ color: "#D9E9E2", fontSize: 14, lineHeight: 21, marginTop: 8 }}>
-          Tell us who you are so Elite Bridge can match you with the right care assignments.
-        </Text>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={{ marginBottom: 18, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#EAECF0" }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-            Step 1 of 5 · Personal details
-          </Text>
-          <Text style={{ fontSize: 13, color: "#667085", fontWeight: "700" }}>20% Complete</Text>
-        </View>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: "#EAECF0",
-            borderRadius: 3,
-            overflow: "hidden",
-          }}
-        >
-          <View
-            style={{
-              height: 6,
-              width: "20%",
-              backgroundColor: "#1B5E3F",
-            }}
-          />
-        </View>
-      </View>
-
-      {/* Header */}
-      <View style={{ marginBottom: 18 }}>
-        <Text style={{ fontSize: 22, fontWeight: "900", color: "#101828", marginBottom: 7 }}>
-          Basic information
-        </Text>
-        <Text style={{ fontSize: 14, color: "#667085", lineHeight: 21 }}>
-          Use your legal name and current contact information. You can review everything before submitting.
-        </Text>
-      </View>
-
-      {/* Form */}
-      <View style={{ marginBottom: 20, backgroundColor: "#FFFFFF", borderRadius: 22, padding: 18, borderWidth: 1, borderColor: "#EAECF0" }}>
-        {renderInput(
-          "Full Name",
-          fullName,
-          setFullName,
-          "Enter your full name",
-          errors.fullName
-        )}
-        {renderInput(
-          "Email Address",
-          email,
-          setEmail,
-          "you@example.com",
-          errors.email,
-          "email-address"
-        )}
-        {renderInput(
-          "Create Password",
-          password,
-          setPassword,
-          "At least 8 characters",
-          errors.password,
-          "default",
-          true
-        )}
-        {renderInput(
-          "Phone Number",
-          phoneNumber,
-          setPhoneNumber,
-          "Enter your phone number",
-          errors.phoneNumber,
-          "phone-pad"
-        )}
-        {renderInput(
-          "Date of Birth (Optional)",
-          dateOfBirth,
-          setDateOfBirth,
-          "MM/DD/YYYY",
-          errors.dateOfBirth
-        )}
-        {renderInput(
-          "Street Address",
-          address,
-          setAddress,
-          "Enter your street address",
-          errors.address
-        )}
-
-        <View style={{ flexDirection: "row", gap: 12 }}>
-          <View style={{ flex: 1 }}>
-            {renderInput(
-              "City",
-              city,
-              setCity,
-              "City",
-              errors.city
-            )}
-          </View>
-          <View style={{ flex: 0.5 }}>
-            {renderInput(
-              "State",
-              state,
-              setState,
-              "MA",
-              errors.state
-            )}
-          </View>
-        </View>
-
-        {renderInput(
-          "ZIP Code (Optional)",
-          zip,
-          setZip,
-          "12345",
-          errors.zip
-        )}
-      </View>
-
-      {/* Buttons */}
-      <View style={{ gap: 12 }}>
-        <TouchableOpacity
-          onPress={handleNext}
-          testID="caregiver-profile-continue"
-          accessibilityRole="button"
-          accessibilityLabel="Continue to caregiver experience"
-          style={{
-            backgroundColor: "#1B5E3F",
-            borderRadius: 14,
-            paddingVertical: 15,
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "900", color: "#fff" }}>
-            Continue
-          </Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleSkip}
-          style={{
-            backgroundColor: "#FFFFFF",
-            borderRadius: 14,
-            paddingVertical: 14,
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: "#D0D5DD",
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "800", color: "#344054" }}>
-            Skip for Now
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-    </KeyboardAvoidingView>
-  );
+  </ScrollView></KeyboardAvoidingView>;
 }
+
+function Progress({ step, title, width }: { step: string; title: string; width: `${number}%` }) { return <View style={styles.progress}><View style={styles.progressTop}><Text style={styles.progressTitle}>Step {step} of 3 · {title}</Text><Text style={styles.progressCount}>{width.replace("%", "")}%</Text></View><View style={styles.track}><View style={[styles.fillTrack, { width }]} /></View></View>; }
+function Field(props: React.ComponentProps<typeof TextInput> & { label: string }) { const { label, ...inputProps } = props; return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput {...inputProps} autoCorrect={false} placeholderTextColor="#98A2B3" style={styles.input} /></View>; }
+function PasswordField({ label, value, onChangeText, visible, onToggle }: { label: string; value: string; onChangeText: (value: string) => void; visible: boolean; onToggle: () => void }) { return <View style={styles.field}><Text style={styles.label}>{label}</Text><View style={styles.passwordRow}><TextInput value={value} onChangeText={onChangeText} secureTextEntry={!visible} autoCapitalize="none" autoCorrect={false} textContentType="newPassword" placeholder="At least 8 characters" placeholderTextColor="#98A2B3" style={styles.passwordInput} /><TouchableOpacity accessibilityLabel={visible ? `Hide ${label}` : `Show ${label}`} onPress={onToggle} style={styles.show}><Text style={styles.showText}>{visible ? "Hide" : "Show"}</Text></TouchableOpacity></View></View>; }
+
+const styles = StyleSheet.create({ fill: { flex: 1, backgroundColor: "#F7FAF8" }, content: { padding: 20, paddingBottom: 40 }, hero: { backgroundColor: "#0A4A35", borderRadius: 24, padding: 20 }, eyebrow: { color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }, heroTitle: { color: "#FFFFFF", fontSize: 28, lineHeight: 34, fontWeight: "900", marginTop: 8 }, heroBody: { color: "#D9E9E2", fontSize: 13, lineHeight: 20, marginTop: 8 }, progress: { backgroundColor: "#FFFFFF", borderColor: "#EAECF0", borderWidth: 1, borderRadius: 17, padding: 13, marginVertical: 14 }, progressTop: { flexDirection: "row", justifyContent: "space-between" }, progressTitle: { color: "#344054", fontSize: 12, fontWeight: "900" }, progressCount: { color: "#667085", fontSize: 12, fontWeight: "800" }, track: { height: 6, borderRadius: 3, backgroundColor: "#EAECF0", marginTop: 9, overflow: "hidden" }, fillTrack: { height: 6, backgroundColor: "#1B5E3F" }, card: { backgroundColor: "#FFFFFF", borderColor: "#EAECF0", borderWidth: 1, borderRadius: 22, padding: 18 }, title: { color: "#101828", fontSize: 22, fontWeight: "900" }, body: { color: "#667085", fontSize: 12, lineHeight: 19, marginTop: 5, marginBottom: 8 }, field: { marginTop: 12 }, label: { color: "#344054", fontSize: 12, fontWeight: "900", marginBottom: 7 }, input: { minHeight: 51, borderRadius: 13, borderColor: "#D0D5DD", borderWidth: 1, backgroundColor: "#F9FAFB", color: "#101828", paddingHorizontal: 13 }, passwordRow: { minHeight: 51, flexDirection: "row", borderRadius: 13, borderColor: "#D0D5DD", borderWidth: 1, backgroundColor: "#F9FAFB", overflow: "hidden" }, passwordInput: { flex: 1, color: "#101828", paddingHorizontal: 13 }, show: { width: 66, alignItems: "center", justifyContent: "center" }, showText: { color: "#0A4A35", fontSize: 12, fontWeight: "900" }, hint: { color: "#667085", fontSize: 11, marginTop: 7 }, primary: { minHeight: 52, borderRadius: 14, backgroundColor: "#0A4A35", alignItems: "center", justifyContent: "center", marginTop: 18 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, secondary: { minHeight: 48, alignItems: "center", justifyContent: "center", marginTop: 7 }, secondaryText: { color: "#0A4A35", fontSize: 14, fontWeight: "900" } });

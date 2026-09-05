@@ -1,383 +1,49 @@
-import React, { useState } from "react";
-import { ActivityIndicator, ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
-import { useColors } from "@/hooks/use-colors";
-import { useOnboarding } from "@/lib/onboarding-context";
-import { useRouter } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { registerCaregiverAccount, sharedApiConfigured } from "@/lib/shared-api";
+import { useState } from "react";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
+
+import { useOnboarding } from "@/lib/onboarding-context";
+import { registerCaregiverAccount, sharedApiConfigured, updateCaregiverProfile } from "@/lib/shared-api";
 import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
-/**
- * Onboarding Step 5: Review & Complete
- * Summary of all information and completion confirmation
- */
 export default function OnboardingReview() {
-  const colors = useColors();
-  const { data, completeOnboarding, prevStep } = useOnboarding();
   const router = useRouter();
+  const { data, completeOnboarding, prevStep } = useOnboarding();
   const [submitting, setSubmitting] = useState(false);
 
-  const handleCompleteOnboarding = async () => {
+  const submit = async () => {
     if (submitting) return;
-    if (!sharedApiConfigured) {
-      Alert.alert("Service unavailable", "Elite Bridge cannot reach the secure agency service in this build.");
-      return;
-    }
+    if (!sharedApiConfigured) return Alert.alert("Service unavailable", "Elite Bridge cannot reach the secure agency service in this build.");
+    setSubmitting(true);
     try {
-      setSubmitting(true);
       const names = data.fullName.trim().split(/\s+/);
       const firstName = names.shift() || "Caregiver";
       const lastName = names.join(" ") || "Applicant";
-      const user = await registerCaregiverAccount({
-        firstName,
-        lastName,
-        phone: data.phoneNumber,
-        email: data.email,
-        password: data.password,
-      });
-      await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
-        role: "staff",
-        email: user.email,
-        name: `${user.firstName} ${user.lastName}`.trim(),
-        profileStatus: "submitted",
-        signedInAt: new Date().toISOString(),
-      }));
+      const user = await registerCaregiverAccount({ firstName, lastName, phone: data.phoneNumber, email: data.email, password: data.password });
+      const experienceMatch = data.yearsOfExperience.match(/\d+/);
+      await updateCaregiverProfile({ phone: data.phoneNumber, yearsExperience: experienceMatch ? Number(experienceMatch[0]) : 0, certifications: data.certifications });
+      await AsyncStorage.setItem("elitebridge-session", JSON.stringify({ role: "staff", id: user.id, email: user.email, name: `${user.firstName} ${user.lastName}`.trim(), signedInAt: new Date().toISOString() }));
       await enableCaregiverPushNotifications().catch(() => false);
       completeOnboarding();
-      Alert.alert(
-        "Welcome to Elite Bridge! 🎉",
-        "Your onboarding is complete. You're ready to start working!",
-        [
-          {
-            text: "Go to Home",
-            onPress: () => {
-              router.replace("/(staff)/home");
-            },
-          },
-        ],
-      );
-    } catch (error) {
-      Alert.alert(
-        "Could not finish setup",
-        error instanceof Error ? error.message : "Your information is still on this screen. Please try again.",
-      );
-    } finally {
-      setSubmitting(false);
-    }
+      Alert.alert("Check your email", "Your caregiver profile is ready. We sent an activation link to confirm your email address.", [{ text: "Open my workspace", onPress: () => router.replace("/(staff)/home") }]);
+    } catch (error) { Alert.alert("Could not create account", error instanceof Error ? error.message : "Your information remains on this screen. Please try again."); }
+    finally { setSubmitting(false); }
   };
 
-  const handleBack = () => {
-    prevStep();
-    router.back();
-  };
-
-  const renderInfoSection = (title: string, items: { label: string; value: string }[]) => (
-    <View
-      style={{
-        backgroundColor: colors.surface,
-        borderRadius: 12,
-        padding: 16,
-        marginBottom: 16,
-        borderLeftWidth: 4,
-        borderLeftColor: "#1B5E3F",
-      }}
-    >
-      <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>
-        {title}
-      </Text>
-      {items.map((item, index) => (
-        <View
-          key={index}
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            paddingVertical: 8,
-            borderBottomWidth: index < items.length - 1 ? 1 : 0,
-            borderBottomColor: colors.border,
-          }}
-        >
-          <Text style={{ fontSize: 13, color: colors.muted }}>
-            {item.label}
-          </Text>
-          <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
-            {item.value}
-          </Text>
-        </View>
-      ))}
-    </View>
-  );
-
-  const getBackgroundCheckStatusLabel = () => {
-    switch (data.backgroundCheckStatus) {
-      case "submitted":
-        return "Submitted (Pending)";
-      case "clear":
-        return "Clear";
-      case "consider":
-        return "Under Review";
-      default:
-        return "Not Started";
-    }
-  };
-
-  return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-      }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-    >
-      {/* Progress Bar */}
-      <View style={{ marginBottom: 24 }}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
-          }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-            Step 5 of 5
-          </Text>
-          <Text style={{ fontSize: 14, color: colors.muted }}>100% Complete</Text>
-        </View>
-        <View
-          style={{
-            height: 6,
-            backgroundColor: colors.surface,
-            borderRadius: 3,
-            overflow: "hidden",
-          }}
-        >
-          <View
-            style={{
-              height: 6,
-              width: "100%",
-              backgroundColor: "#1B5E3F",
-            }}
-          />
-        </View>
-      </View>
-
-      {/* Header */}
-      <View style={{ marginBottom: 24 }}>
-        <Text style={{ fontSize: 28, fontWeight: "bold", color: colors.foreground, marginBottom: 8 }}>
-          Review Your Information
-        </Text>
-        <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20 }}>
-          Please review your information before completing onboarding. You can edit any section by going back.
-        </Text>
-      </View>
-
-      {/* Personal Information */}
-      {renderInfoSection("👤 Personal Information", [
-        { label: "Full Name", value: data.fullName },
-        { label: "Email", value: data.email },
-        { label: "Phone", value: data.phoneNumber },
-        ...(data.dateOfBirth
-          ? [{ label: "Date of Birth", value: data.dateOfBirth }]
-          : []),
-        {
-          label: "Address",
-          value: `${data.address}, ${data.city}, ${data.state}${data.zip ? ` ${data.zip}` : ""}`,
-        },
-      ])}
-
-      {/* Experience & Skills */}
-      {renderInfoSection("💼 Experience & Skills", [
-        { label: "Experience", value: data.yearsOfExperience },
-        { label: "Certifications", value: data.certifications.join(", ") || "None" },
-        { label: "Languages", value: data.languages.join(", ") || "English" },
-      ])}
-
-      {/* Background Check Status */}
-      <View
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 16,
-          borderLeftWidth: 4,
-          borderLeftColor: data.backgroundCheckStatus === "submitted" ? "#F7DC6F" : "#1B5E3F",
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>
-          🔒 Background Check
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ fontSize: 13, color: colors.muted }}>
-            Status
-          </Text>
-          <View
-            style={{
-              backgroundColor: data.backgroundCheckStatus === "submitted" ? "#F7DC6F" : "#E8F5E9",
-              borderRadius: 6,
-              paddingHorizontal: 12,
-              paddingVertical: 6,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                fontWeight: "600",
-                color: data.backgroundCheckStatus === "submitted" ? "#000" : "#27AE60",
-              }}
-            >
-              {getBackgroundCheckStatusLabel()}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Bank Account Status */}
-      <View
-        style={{
-          backgroundColor: colors.surface,
-          borderRadius: 12,
-          padding: 16,
-          marginBottom: 24,
-          borderLeftWidth: 4,
-          borderLeftColor: data.bankAccountVerified ? "#27AE60" : "#1B5E3F",
-        }}
-      >
-        <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground, marginBottom: 12 }}>
-          💳 Bank Account
-        </Text>
-        {data.bankAccountVerified ? (
-          <View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingVertical: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.border,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: colors.muted }}>
-                Bank
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground }}>
-                {data.bankName}
-              </Text>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingVertical: 8,
-                borderBottomWidth: 1,
-                borderBottomColor: colors.border,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: colors.muted }}>
-                Account Type
-              </Text>
-              <Text style={{ fontSize: 13, fontWeight: "600", color: colors.foreground, textTransform: "capitalize" }}>
-                {data.accountType}
-              </Text>
-            </View>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingVertical: 8,
-              }}
-            >
-              <Text style={{ fontSize: 13, color: colors.muted }}>
-                Status
-              </Text>
-              <View
-                style={{
-                  backgroundColor: "#E8F5E9",
-                  borderRadius: 6,
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                }}
-              >
-                <Text style={{ fontSize: 12, fontWeight: "600", color: "#27AE60" }}>
-                  ✓ Verified
-                </Text>
-              </View>
-            </View>
-          </View>
-        ) : (
-          <Text style={{ fontSize: 13, color: colors.muted }}>
-            Not yet configured
-          </Text>
-        )}
-      </View>
-
-      {/* Completion Message */}
-      {data.backgroundCheckStatus === "submitted" && data.bankAccountVerified && (
-        <View
-          style={{
-            backgroundColor: "#E8F5E9",
-            borderRadius: 12,
-            padding: 16,
-            marginBottom: 24,
-            borderLeftWidth: 4,
-            borderLeftColor: "#27AE60",
-          }}
-        >
-          <Text style={{ fontSize: 14, fontWeight: "600", color: "#27AE60", marginBottom: 8 }}>
-            ✓ You're All Set!
-          </Text>
-          <Text style={{ fontSize: 13, color: "#558B2F", lineHeight: 20 }}>
-            Your background check is being processed and your bank account is verified. You can start browsing and applying for shifts right away!
-          </Text>
-        </View>
-      )}
-
-      {/* Buttons */}
-      <View style={{ gap: 12 }}>
-        <TouchableOpacity
-          onPress={() => void handleCompleteOnboarding()}
-          disabled={submitting}
-          accessibilityRole="button"
-          style={{
-            backgroundColor: "#1B5E3F",
-            borderRadius: 8,
-            paddingVertical: 14,
-            alignItems: "center",
-          }}
-        >
-          {submitting ? <ActivityIndicator color="#FFFFFF" /> : (
-            <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-              Create Account &amp; Start Working
-            </Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          onPress={handleBack}
-          accessibilityRole="button"
-          style={{
-            backgroundColor: colors.surface,
-            borderRadius: 8,
-            paddingVertical: 14,
-            alignItems: "center",
-            borderWidth: 1,
-            borderColor: colors.border,
-          }}
-        >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground }}>
-            Back
-          </Text>
-        </TouchableOpacity>
-      </View>
-    </ScrollView>
-  );
+  const rows = [
+    ["Name", data.fullName], ["Email", data.email], ["Phone", data.phoneNumber], ["Experience", data.yearsOfExperience],
+    ["Credentials", data.certifications.join(", ") || "None selected"], ["Languages", data.languages.join(", ") || "Not specified"],
+  ];
+  return <ScrollView style={styles.screen} contentContainerStyle={styles.content}>
+    <View style={styles.progress}><View style={styles.progressTop}><Text style={styles.progressTitle}>Step 3 of 3 · Review</Text><Text style={styles.progressCount}>100%</Text></View><View style={styles.track}><View style={styles.fill} /></View></View>
+    <Text style={styles.title}>Review your caregiver profile</Text><Text style={styles.body}>This creates a real Caregiver account connected to the same marketplace used by Elite Bridge Employer.</Text>
+    <View style={styles.card}>{rows.map(([label, value]) => <View key={label} style={styles.row}><Text style={styles.rowLabel}>{label}</Text><Text style={styles.rowValue}>{value}</Text></View>)}</View>
+    <View style={styles.notice}><Text style={styles.noticeTitle}>Email confirmation</Text><Text style={styles.noticeBody}>After submission, an activation link will be sent to {data.email}. The link expires after 24 hours.</Text></View>
+    <TouchableOpacity disabled={submitting} onPress={() => void submit()} style={[styles.primary, submitting && { opacity: 0.6 }]}>{submitting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Create caregiver account</Text>}</TouchableOpacity>
+    <TouchableOpacity disabled={submitting} onPress={() => { prevStep(); router.back(); }} style={styles.secondary}><Text style={styles.secondaryText}>Back to experience</Text></TouchableOpacity>
+    <Text style={styles.legal}>By creating an account, you agree to Elite Bridge’s Terms of Use and acknowledge its Privacy Policy.</Text>
+  </ScrollView>;
 }
+
+const styles = StyleSheet.create({ screen: { flex: 1, backgroundColor: "#F7FAF8" }, content: { padding: 20, paddingBottom: 40 }, progress: { backgroundColor: "#FFFFFF", borderColor: "#EAECF0", borderWidth: 1, borderRadius: 17, padding: 13 }, progressTop: { flexDirection: "row", justifyContent: "space-between" }, progressTitle: { color: "#344054", fontSize: 12, fontWeight: "900" }, progressCount: { color: "#667085", fontSize: 12, fontWeight: "800" }, track: { height: 6, borderRadius: 3, backgroundColor: "#EAECF0", marginTop: 9, overflow: "hidden" }, fill: { height: 6, width: "100%", backgroundColor: "#1B5E3F" }, title: { color: "#101828", fontSize: 28, lineHeight: 34, fontWeight: "900", marginTop: 22 }, body: { color: "#667085", fontSize: 13, lineHeight: 20, marginTop: 7 }, card: { backgroundColor: "#FFFFFF", borderColor: "#EAECF0", borderWidth: 1, borderRadius: 20, padding: 16, marginTop: 17 }, row: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: "#D0D5DD", paddingVertical: 11 }, rowLabel: { color: "#667085", fontSize: 10, fontWeight: "900" }, rowValue: { color: "#101828", fontSize: 13, fontWeight: "800", marginTop: 4 }, notice: { backgroundColor: "#EAF4EF", borderRadius: 15, padding: 14, marginTop: 13 }, noticeTitle: { color: "#0A4A35", fontSize: 13, fontWeight: "900" }, noticeBody: { color: "#475467", fontSize: 12, lineHeight: 18, marginTop: 5 }, primary: { minHeight: 52, borderRadius: 14, backgroundColor: "#0A4A35", alignItems: "center", justifyContent: "center", marginTop: 17 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, secondary: { minHeight: 48, alignItems: "center", justifyContent: "center" }, secondaryText: { color: "#0A4A35", fontSize: 13, fontWeight: "900" }, legal: { color: "#667085", fontSize: 10, lineHeight: 16, textAlign: "center", marginTop: 12 } });

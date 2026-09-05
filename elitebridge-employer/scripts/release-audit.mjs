@@ -32,10 +32,12 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (!source.includes("Team directory")) failures.push("Employee team directory is missing.");
 if (!source.includes("Time & attendance")) failures.push("Time and attendance workspace is missing.");
+if (!source.includes("Generate & share timesheet")) failures.push("Timesheet generation is missing.");
+if (!source.includes("Request correction")) failures.push("Timesheet correction workflow is missing.");
 if (!source.includes("Advanced account options")) failures.push("Protected account deletion access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
-if (appConfig.expo.version !== "1.2.0") failures.push("Employer release version must be 1.2.0.");
-if (appConfig.expo.ios.buildNumber !== "28") failures.push("Employer iOS build number must be 28.");
+if (appConfig.expo.version !== "1.3.0") failures.push("Employer release version must be 1.3.0.");
+if (appConfig.expo.ios.buildNumber !== "29") failures.push("Employer iOS build number must be 29.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

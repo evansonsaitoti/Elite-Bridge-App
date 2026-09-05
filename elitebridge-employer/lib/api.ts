@@ -121,6 +121,29 @@ export type ShiftActivity = {
   notes?: string;
 };
 
+export type EmployerTimesheet = {
+  id: number;
+  shiftId: number;
+  caregiverId: number;
+  caregiverName?: string;
+  caregiverEmail?: string;
+  shiftTitle?: string;
+  serviceType?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  clockInAt: string;
+  clockOutAt?: string | null;
+  breaks: Array<{ startedAt: string; endedAt: string | null }>;
+  notes?: string | null;
+  status: "in_progress" | "submitted" | "approved" | "correction_requested";
+  employerNote?: string | null;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
+  workedHours: number;
+  hourlyRate: number;
+  grossAmount: number;
+};
+
 type ApiError = Error & { status?: number };
 
 export const apiConfigured = Boolean(API_URL);
@@ -275,6 +298,22 @@ export async function getEmployerTeam(): Promise<TeamMember[]> {
 export async function getEmployerActivities(): Promise<ShiftActivity[]> {
   const result = await request<{ activities: ShiftActivity[] }>("/api/bookings/activities");
   return result.activities;
+}
+
+export async function getEmployerTimesheets(): Promise<EmployerTimesheet[]> {
+  const result = await request<{ timesheets: EmployerTimesheet[] }>("/api/bookings/employer/timesheets");
+  return result.timesheets;
+}
+
+export async function approveEmployerTimesheet(id: number) {
+  return request<{ timesheet: EmployerTimesheet }>(`/api/bookings/employer/timesheets/${id}/approve`, { method: "PATCH" });
+}
+
+export async function requestTimesheetCorrection(id: number, note: string) {
+  return request<{ timesheet: EmployerTimesheet }>(`/api/bookings/employer/timesheets/${id}/request-correction`, {
+    method: "PATCH",
+    body: JSON.stringify({ note }),
+  });
 }
 
 export async function updateApplication(id: number, status: "approved" | "rejected") {
