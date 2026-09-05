@@ -50,6 +50,63 @@ export type RescueOffer = {
 
 export type CalloutReason = "illness" | "family_emergency" | "transportation" | "schedule_conflict" | "other";
 
+export type ClockLocationPayload = {
+  latitude: number;
+  longitude: number;
+  accuracy?: number | null;
+  capturedAt?: string;
+};
+
+export type CaregiverTimesheet = {
+  id: number;
+  shiftId: number;
+  caregiverId: number;
+  shiftTitle?: string;
+  serviceType?: string;
+  scheduledStart?: string;
+  scheduledEnd?: string;
+  clockInAt: string;
+  clockOutAt?: string | null;
+  clockInLocation?: ClockLocationPayload | null;
+  clockOutLocation?: ClockLocationPayload | null;
+  breaks: { startedAt: string; endedAt: string | null }[];
+  notes?: string | null;
+  status: "in_progress" | "submitted" | "approved" | "correction_requested";
+  employerNote?: string | null;
+  submittedAt?: string | null;
+  approvedAt?: string | null;
+  workedHours: number;
+  hourlyRate: number;
+  grossAmount: number;
+};
+
+export type CaregiverNotification = {
+  id: number;
+  type: string;
+  title: string;
+  message: string;
+  related_id?: number;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type CaregiverProfile = {
+  id: number;
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  bio?: string | null;
+  hourlyRate: string | number;
+  yearsExperience?: number | null;
+  specialties?: string[];
+  certifications?: string[];
+  rating?: string | number;
+  verificationStatus: string;
+  emailVerified?: boolean;
+};
+
 export const sharedApiConfigured = Boolean(API_BASE_URL);
 
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
@@ -178,4 +235,61 @@ export async function respondToRescueOffer(offerId: number, status: "accepted" |
     `/api/bookings/caregiver/offers/${offerId}/respond`,
     { method: "POST", body: JSON.stringify({ status }) },
   );
+}
+
+export async function fetchCaregiverTimesheets(): Promise<CaregiverTimesheet[]> {
+  const result = await request<{ timesheets: CaregiverTimesheet[] }>("/api/bookings/caregiver/timesheets");
+  return result.timesheets;
+}
+
+export async function clockInToShift(shiftId: number, location: ClockLocationPayload | null) {
+  return request<{ timesheet: CaregiverTimesheet }>(`/api/bookings/${shiftId}/clock-in`, {
+    method: "POST",
+    body: JSON.stringify({ location }),
+  });
+}
+
+export async function startShiftBreak(shiftId: number) {
+  return request<{ timesheet: CaregiverTimesheet }>(`/api/bookings/${shiftId}/break-start`, { method: "POST" });
+}
+
+export async function endShiftBreak(shiftId: number) {
+  return request<{ timesheet: CaregiverTimesheet }>(`/api/bookings/${shiftId}/break-end`, { method: "POST" });
+}
+
+export async function clockOutOfShift(shiftId: number, notes: string, location: ClockLocationPayload | null) {
+  return request<{ timesheet: CaregiverTimesheet }>(`/api/bookings/${shiftId}/clock-out`, {
+    method: "POST",
+    body: JSON.stringify({ notes, location }),
+  });
+}
+
+export async function resubmitCaregiverTimesheet(timesheetId: number, note: string) {
+  return request<{ timesheet: CaregiverTimesheet }>(`/api/bookings/caregiver/timesheets/${timesheetId}/resubmit`, {
+    method: "PATCH",
+    body: JSON.stringify({ note }),
+  });
+}
+
+export async function fetchCaregiverNotifications(): Promise<CaregiverNotification[]> {
+  const result = await request<{ notifications: CaregiverNotification[] }>("/api/notifications");
+  return result.notifications;
+}
+
+export async function markCaregiverNotificationRead(id: number) {
+  await request<void>(`/api/notifications/${id}/read`, { method: "PATCH" });
+}
+
+export async function markAllCaregiverNotificationsRead() {
+  await request<void>("/api/notifications/read-all", { method: "POST" });
+}
+
+export async function getCaregiverProfile(): Promise<CaregiverProfile> {
+  const result = await request<{ profile: CaregiverProfile }>("/api/caregivers/me");
+  return result.profile;
+}
+
+export async function updateCaregiverProfile(input: { phone?: string; bio?: string; hourlyRate?: number; yearsExperience?: number; specialties?: string[]; certifications?: string[] }) {
+  const result = await request<{ profile: CaregiverProfile }>("/api/caregivers/me", { method: "PUT", body: JSON.stringify(input) });
+  return result.profile;
 }

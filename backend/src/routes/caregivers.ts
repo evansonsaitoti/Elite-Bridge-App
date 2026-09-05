@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db";
+import { ensureCoreTables } from "../db/bootstrap";
 import { caregivers, users } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
@@ -21,6 +22,50 @@ const matchingProfileSchema = z.object({
   preferredServices: z.array(z.string()).min(1),
   maxDistanceMiles: z.number().positive().max(250),
   instantOffers: z.boolean(),
+});
+
+const selfProfileSchema = z.object({
+  phone: z.string().trim().max(30).optional(),
+  bio: z.string().trim().max(2000).optional(),
+  hourlyRate: z.number().min(0).max(500).optional(),
+  yearsExperience: z.number().int().min(0).max(80).optional(),
+  specialties: z.array(z.string().trim().min(1)).max(30).optional(),
+  certifications: z.array(z.string().trim().min(1)).max(30).optional(),
+});
+
+router.get("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const profile = await db.select({
+      id: caregivers.id, userId: caregivers.userId, bio: caregivers.bio, hourlyRate: caregivers.hourlyRate,
+      specialties: caregivers.specialties, certifications: caregivers.certifications, yearsExperience: caregivers.yearsExperience,
+      rating: caregivers.rating, firstName: users.firstName, lastName: users.lastName, email: users.email, phone: users.phone,
+      verificationStatus: users.verificationStatus, emailVerified: users.emailVerified,
+    }).from(caregivers).innerJoin(users, eq(caregivers.userId, users.id)).where(eq(caregivers.userId, req.user.id)).limit(1);
+    if (!profile[0]) throw new AppError(404, "Caregiver profile not found");
+    res.json({ profile: profile[0] });
+  } catch (error) { next(error); }
+});
+
+router.put("/me", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const data = selfProfileSchema.parse(req.body || {});
+    if (data.phone !== undefined) await db.update(users).set({ phone: data.phone, updatedAt: new Date() }).where(eq(users.id, req.user.id));
+    const existing = await db.select().from(caregivers).where(eq(caregivers.userId, req.user.id)).limit(1);
+    const values = { bio: data.bio, hourlyRate: data.hourlyRate === undefined ? undefined : data.hourlyRate.toString(), yearsExperience: data.yearsExperience, specialties: data.specialties, certifications: data.certifications, updatedAt: new Date() };
+    if (existing[0]) await db.update(caregivers).set(values).where(eq(caregivers.userId, req.user.id));
+    else await db.insert(caregivers).values({ userId: req.user.id, hourlyRate: String(data.hourlyRate || 0), specialties: data.specialties || [], certifications: data.certifications || [], bio: data.bio, yearsExperience: data.yearsExperience });
+    const refreshed = await db.select({
+      id: caregivers.id, userId: caregivers.userId, bio: caregivers.bio, hourlyRate: caregivers.hourlyRate,
+      specialties: caregivers.specialties, certifications: caregivers.certifications, yearsExperience: caregivers.yearsExperience,
+      rating: caregivers.rating, firstName: users.firstName, lastName: users.lastName, email: users.email, phone: users.phone,
+      verificationStatus: users.verificationStatus, emailVerified: users.emailVerified,
+    }).from(caregivers).innerJoin(users, eq(caregivers.userId, users.id)).where(eq(caregivers.userId, req.user.id)).limit(1);
+    res.json({ profile: refreshed[0] });
+  } catch (error) { next(error); }
 });
 
 router.put("/me/matching", authMiddleware, async (req: AuthRequest, res, next) => {

@@ -45,17 +45,14 @@ for (const relativeFile of files) {
 }
 
 requireSource("app/(onboarding)/welcome.tsx", 'router.push("/(onboarding)/experience")');
-requireSource("app/(onboarding)/experience.tsx", 'router.push("/(onboarding)/background-check")');
-requireSource("app/(onboarding)/background-check.tsx", 'router.push("/(onboarding)/bank-account")');
-requireSource("app/(onboarding)/bank-account.tsx", 'router.push("/(onboarding)/review")');
+requireSource("app/(onboarding)/experience.tsx", 'router.push("/(onboarding)/review")');
 requireSource("app/(onboarding)/review.tsx", 'router.replace("/(staff)/home")');
-requireSource("app/(staff)/profile.tsx", 'router.push("/(staff)/services")');
 requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/home.tsx", "Call-out reported");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.version !== "1.0.2") throw new Error("Caregiver release version must be 1.0.2");
-if (config.expo.ios.buildNumber !== "48") throw new Error("Caregiver iOS build number must be 48");
+if (config.expo.version !== "1.1.0") throw new Error("Caregiver release version must be 1.1.0");
+if (config.expo.ios.buildNumber !== "49") throw new Error("Caregiver iOS build number must be 49");
 requireSource("app/(root)/index.tsx", "Care professionals start here");
 requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
 
@@ -71,5 +68,17 @@ for (const relativeFile of ["app/(staff)/home.tsx", "app/(auth)/login.tsx", "lib
   }
 }
 requireSource("app/(onboarding)/review.tsx", "registerCaregiverAccount(");
+requireSource("app/(onboarding)/welcome.tsx", "Confirm password *");
+requireSource("app/(staff)/clock.tsx", "fetchCaregiverTimesheets()");
+requireSource("app/(staff)/notifications.tsx", "fetchCaregiverNotifications()");
+
+for (const removed of ["(app)", "(facility)", "(tabs)", "(user)", "dev", "oauth"]) {
+  const directory = path.join(appRoot, removed);
+  if (fs.existsSync(directory) && walk(path.join("app", removed)).length) throw new Error(`Legacy route group remains accessible: ${removed}`);
+}
+const activeSource = files.map((relativeFile) => fs.readFileSync(path.join(root, relativeFile), "utf8")).join("\n");
+if (/mock|demo|sample review data|review account|appreview|__DEV__|phase 2|coming soon/i.test(activeSource)) {
+  throw new Error("Active Caregiver routes contain simulated, reviewer-specific, or unfinished behavior");
+}
 
 console.log(`Caregiver release audit passed: ${interactiveCount} interactive controls, all declared routes, complete onboarding chain, live profile persistence, call-out reporting, account deletion, and no demo or review-only behavior paths.`);

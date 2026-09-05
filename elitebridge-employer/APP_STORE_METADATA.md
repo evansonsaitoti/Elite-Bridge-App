@@ -10,7 +10,7 @@ Hire and manage care teams
 
 ## Promotional text
 
-Hire, schedule and manage your care workforce. Publish opportunities, organize assigned caregivers and review time activity connected to the Elite Bridge Caregiver app.
+Hire, schedule and manage your care workforce. Publish opportunities, organize assigned caregivers, approve timesheets and generate records connected to the Elite Bridge Caregiver app.
 
 ## Description
 
@@ -25,7 +25,9 @@ Use Elite Bridge Employer to:
 - View open and assigned shifts
 - Manage assigned caregivers in a live team directory
 - Review upcoming assignments, credentials and employee contact records
-- Monitor caregiver clock-ins and clock-outs for assigned visits
+- Monitor caregiver clock-ins, breaks and clock-outs for assigned visits
+- Approve submitted hours or request a caregiver correction
+- Generate and share a formatted timesheet record
 - Receive applications from Elite Bridge caregivers
 - Review caregiver-submitted profile information
 - Approve or decline applications
@@ -60,8 +62,8 @@ Business
 5. Manage posted shifts and cancellations
 6. Review caregiver applicants and staffing notifications
 7. Manage the assigned caregiver team directory
-8. Review time and attendance activity
+8. Review, approve and generate timesheets from live attendance
 9. Edit organization profile
 10. Employer account, Privacy Policy, sign out, support, and protected deletion controls
 
-Every screenshot must come from Build 28 and must not show features absent from the submitted binary.
+Every screenshot must come from Build 29 and must show only visible, operational features in the submitted binary.

@@ -19,7 +19,6 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
-import { TimekeepingProvider } from "@/lib/timekeeping-context";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -68,15 +67,13 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <TimekeepingProvider>
-            <Stack screenOptions={{ headerShown: false }}>
-              <Stack.Screen name="(root)" />
-              <Stack.Screen name="(auth)" />
-              <Stack.Screen name="(onboarding)" />
-              <Stack.Screen name="(staff)" />
-            </Stack>
-            <StatusBar style="auto" />
-          </TimekeepingProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(root)" />
+            <Stack.Screen name="(auth)" />
+            <Stack.Screen name="(onboarding)" />
+            <Stack.Screen name="(staff)" />
+          </Stack>
+          <StatusBar style="auto" />
         </QueryClientProvider>
       </trpc.Provider>
     </GestureHandlerRootView>

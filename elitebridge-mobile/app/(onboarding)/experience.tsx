@@ -80,7 +80,7 @@ export default function OnboardingExperience() {
         languages,
       });
       nextStep();
-      router.push("/(onboarding)/background-check");
+      router.push("/(onboarding)/review");
     }
   };
 
@@ -146,7 +146,7 @@ export default function OnboardingExperience() {
           }}
         >
           <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-            Step 2 of 5
+            Step 2 of 3
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted }}>40% Complete</Text>
         </View>
@@ -161,7 +161,7 @@ export default function OnboardingExperience() {
           <View
             style={{
               height: 6,
-              width: "40%",
+              width: "67%",
               backgroundColor: "#1B5E3F",
             }}
           />
