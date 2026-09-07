@@ -39,7 +39,7 @@ if (!source.includes("Time & attendance")) failures.push("Time and attendance wo
 if (!source.includes("Advanced account options")) failures.push("Protected account deletion access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
 if (appConfig.expo.version !== "1.2.0") failures.push("Employer release version must be 1.2.0.");
-if (appConfig.expo.ios.buildNumber !== "28") failures.push("Employer iOS build number must be 28.");
+if (appConfig.expo.ios.buildNumber !== "30") failures.push("Employer iOS build number must be 30.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
