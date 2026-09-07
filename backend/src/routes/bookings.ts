@@ -86,10 +86,14 @@ async function ensureShiftPostsTable() {
     )
   `);
 
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS title VARCHAR(255) NOT NULL DEFAULT 'Care shift'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS service_type VARCHAR(100) NOT NULL DEFAULT 'personal_care'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS assignment_mode VARCHAR(20) NOT NULL DEFAULT 'instant'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS caregiver_type VARCHAR(100) NOT NULL DEFAULT 'caregiver'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS care_recipient_name VARCHAR(255)`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS schedule_type VARCHAR(50) NOT NULL DEFAULT 'one_time'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS start_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS end_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS location_type VARCHAR(50) NOT NULL DEFAULT 'client_home'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS address VARCHAR(255) NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS city VARCHAR(100) NOT NULL DEFAULT ''`);
@@ -104,6 +108,7 @@ async function ensureShiftPostsTable() {
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50) NOT NULL DEFAULT ''`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS urgency VARCHAR(50) NOT NULL DEFAULT 'standard'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'open'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
 
   await db.execute(sql`
@@ -308,7 +313,7 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
         ${employer.id}, ${data.title}, ${data.serviceType}, ${data.caregiverType}, ${data.careRecipientName || null},
         ${data.scheduleType}, ${startDateTime}, ${endDateTime}, ${data.location.type}, ${data.location.address},
         ${data.location.city}, ${data.location.state.toUpperCase()}, ${data.location.zipCode}, ${data.pay.hourlyRate.toString()},
-        ${data.numberOfCaregivers}, ${JSON.stringify(data.requirements)}, ${data.responsibilities},
+        ${data.numberOfCaregivers}, CAST(${JSON.stringify(data.requirements)} AS json), ${data.responsibilities},
         ${data.notes || null}, ${data.contact.name}, ${data.contact.phone}, ${data.urgency}, ${data.assignmentMode}, 'open'
       )
       RETURNING *
@@ -319,7 +324,7 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       FROM caregivers c JOIN users u ON u.id = c.user_id
       WHERE c.is_available = true AND u.is_active = true
         AND (
-          COALESCE(json_array_length(c.certifications), 0) = 0
+          COALESCE(jsonb_array_length(c.certifications::jsonb), 0) = 0
           OR LOWER(c.certifications::text) LIKE ${`%${data.caregiverType.toLowerCase()}%`}
           OR LOWER(c.specialties::text) LIKE ${`%${data.serviceType.toLowerCase()}%`}
         )
