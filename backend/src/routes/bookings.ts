@@ -593,7 +593,7 @@ router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next)
     const employer = await getOrCreateEmployer(req);
     const result = await db.execute(sql`
       SELECT c.id AS caregiver_id, u.id AS user_id, u.first_name, u.last_name,
-             u.email, u.phone, c.rating, c.total_hours, c.certifications,
+             u.email, u.phone, c.rating, c.total_hours, c.certifications::text AS certifications,
              COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved') AS assigned_shifts,
              COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP) AS upcoming_shifts,
              MAX(sa.updated_at) FILTER (WHERE sa.status = 'approved') AS last_assigned_at
@@ -602,11 +602,12 @@ router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next)
       JOIN caregivers c ON c.id = sa.caregiver_id
       JOIN users u ON u.id = c.user_id
       WHERE sp.employer_id = ${employer.id} AND sa.status = 'approved'
-      GROUP BY c.id, u.id, u.first_name, u.last_name, u.email, u.phone, c.rating, c.total_hours, c.certifications
+      GROUP BY c.id, u.id, u.first_name, u.last_name, u.email, u.phone, c.rating, c.total_hours, c.certifications::text
       ORDER BY u.first_name, u.last_name
     `);
     res.json({ team: (result as any).rows.map((member: any) => ({
       ...member,
+      certifications: typeof member.certifications === "string" ? JSON.parse(member.certifications) : member.certifications,
       assigned_shifts: Number(member.assigned_shifts || 0),
       upcoming_shifts: Number(member.upcoming_shifts || 0),
     })) });
