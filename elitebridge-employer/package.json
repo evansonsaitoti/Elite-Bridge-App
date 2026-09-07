@@ -8,6 +8,7 @@
     "ios": "expo run:ios",
     "android": "expo run:android",
     "web": "expo start --web",
+    "postinstall": "bash scripts/eas-ensure-cocoapods.sh",
     "prepare:icons": "node scripts/prepare-icons.mjs",
     "check": "tsc --noEmit",
     "audit:release": "node scripts/release-audit.mjs"
