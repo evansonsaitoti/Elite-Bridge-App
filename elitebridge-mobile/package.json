@@ -21,6 +21,7 @@
     "ios:build": "cd ios && xcodebuild -workspace projecttitle.xcworkspace -scheme projecttitle -configuration Release -archivePath build/projecttitle.xcarchive archive",
     "android": "expo run:android",
     "ios": "expo run:ios",
+    "postinstall": "bash scripts/eas-ensure-cocoapods.sh",
     "eas-build-pre-install": "bash scripts/eas-ensure-cocoapods.sh",
     "eas-build-post-install": "bash scripts/eas-ensure-cocoapods.sh"
   },
