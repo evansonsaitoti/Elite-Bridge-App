@@ -3,7 +3,10 @@
     "name": "Elite Bridge Employer",
     "slug": "elitebridge-employer",
     "version": "1.2.0",
-    "platforms": ["ios", "android"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "elitebridgeemployer",
@@ -19,7 +22,10 @@
     "android": {
       "package": "com.app.elitebridgeemployer"
     },
-    "plugins": ["expo-notifications"],
+    "plugins": [
+      "expo-notifications",
+      "expo-font"
+    ],
     "extra": {
       "eas": {
         "projectId": "adc69871-8e95-4fa7-baca-4c3e757d04f6"
