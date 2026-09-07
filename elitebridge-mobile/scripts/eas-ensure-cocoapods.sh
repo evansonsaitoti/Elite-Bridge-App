@@ -18,4 +18,10 @@ if ! command -v pod >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ -n "${EAS_BUILD_WORKINGDIR:-}" ]; then
+  EAS_BIN_DIR="$(dirname "$EAS_BUILD_WORKINGDIR")/bin"
+  mkdir -p "$EAS_BIN_DIR"
+  ln -sf "$(command -v pod)" "$EAS_BIN_DIR/pod"
+fi
+
 pod --version
