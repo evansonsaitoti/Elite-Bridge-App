@@ -168,6 +168,20 @@ export async function callOutOfShift(shiftId: number, reason: CalloutReason, not
   );
 }
 
+export async function clockInToShift(shiftId: number) {
+  return request<{ message: string; activity: { id: number; type: string; timestamp: string } }>(
+    `/api/bookings/${shiftId}/clock-in`,
+    { method: "POST" },
+  );
+}
+
+export async function clockOutOfShift(shiftId: number, notes = "") {
+  return request<{ message: string; timesheet: { id: number; status: string; worked_minutes: number; total_amount: string } }>(
+    `/api/bookings/${shiftId}/clock-out`,
+    { method: "POST", body: JSON.stringify({ notes }) },
+  );
+}
+
 export async function fetchRescueOffers(): Promise<RescueOffer[]> {
   const result = await request<{ offers: RescueOffer[] }>("/api/bookings/caregiver/offers");
   return result.offers;

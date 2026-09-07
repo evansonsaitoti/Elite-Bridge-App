@@ -121,6 +121,26 @@ export type ShiftActivity = {
   notes?: string;
 };
 
+export type EmployerTimesheet = {
+  id: number;
+  shift_id: number;
+  caregiver_id: number;
+  status: string;
+  clock_in_at: string;
+  clock_out_at: string;
+  worked_minutes: number;
+  worked_hours: number;
+  hourly_rate: number;
+  total_amount: number;
+  shift_title: string;
+  service_type: string;
+  city: string;
+  state: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+};
+
 type ApiError = Error & { status?: number };
 
 export const apiConfigured = Boolean(API_URL);
@@ -275,6 +295,11 @@ export async function getEmployerTeam(): Promise<TeamMember[]> {
 export async function getEmployerActivities(): Promise<ShiftActivity[]> {
   const result = await request<{ activities: ShiftActivity[] }>("/api/bookings/activities");
   return result.activities;
+}
+
+export async function getEmployerTimesheets(): Promise<EmployerTimesheet[]> {
+  const result = await request<{ timesheets: EmployerTimesheet[] }>("/api/bookings/employer/timesheets");
+  return result.timesheets;
 }
 
 export async function updateApplication(id: number, status: "approved" | "rejected") {

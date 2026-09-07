@@ -24,6 +24,8 @@ import {
   applyToShift,
   callOutOfShift,
   claimMatchedShift,
+  clockInToShift,
+  clockOutOfShift,
   fetchMyApplications,
   fetchOpenShifts,
   fetchRescueOffers,
@@ -93,6 +95,7 @@ export default function StaffHome() {
   const [applyingId, setApplyingId] = useState<number | null>(null);
   const [respondingOfferId, setRespondingOfferId] = useState<number | null>(null);
   const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
+  const [timeActionShiftId, setTimeActionShiftId] = useState<number | null>(null);
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Live agency sync starting" : "Secure device data");
   const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
 
@@ -227,6 +230,30 @@ export default function StaffHome() {
       Alert.alert("Could not report call-out", error instanceof Error ? error.message : "Please try again.");
     } finally {
       setCallingOutShiftId(null);
+    }
+  };
+
+  const submitTimeAction = async (application: CaregiverApplication, action: "clock-in" | "clock-out") => {
+    if (!sharedApiConfigured) {
+      Alert.alert("Agency sync required", "Connect to the shared agency service before recording time.");
+      return;
+    }
+    try {
+      setTimeActionShiftId(application.shift.id);
+      const result = action === "clock-in"
+        ? await clockInToShift(application.shift.id)
+        : await clockOutOfShift(application.shift.id, "Completed from Elite Bridge Caregiver.");
+      await refreshFeed();
+      Alert.alert(
+        action === "clock-in" ? "Clocked in" : "Clocked out",
+        action === "clock-in"
+          ? "The employer can now see your live attendance."
+          : `Timesheet generated for employer review.${"timesheet" in result ? ` Total: $${Number(result.timesheet.total_amount).toFixed(2)}` : ""}`,
+      );
+    } catch (error) {
+      Alert.alert(action === "clock-in" ? "Could not clock in" : "Could not clock out", error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setTimeActionShiftId(null);
     }
   };
 
@@ -451,13 +478,29 @@ export default function StaffHome() {
               <Text style={{ color: applicationColor(app.status), fontSize: 12, fontWeight: "900", textTransform: "capitalize" }}>{app.status === "callout" ? "Called out" : app.status}</Text>
             </View>
             {app.status === "approved" ? (
-              <TouchableOpacity
-                disabled={callingOutShiftId === app.shift.id}
-                onPress={() => confirmCallout(app)}
-                style={{ alignSelf: "flex-start", borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9, marginTop: 12 }}
-              >
-                <Text style={{ color: "#B42318", fontSize: 12, fontWeight: "900" }}>{callingOutShiftId === app.shift.id ? "Reporting" : "I cannot work this shift"}</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
+                <TouchableOpacity
+                  disabled={timeActionShiftId === app.shift.id}
+                  onPress={() => void submitTimeAction(app, "clock-in")}
+                  style={{ backgroundColor: "#0A4A35", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 }}
+                >
+                  <Text style={{ color: "#FFFFFF", fontSize: 12, fontWeight: "900" }}>{timeActionShiftId === app.shift.id ? "Updating" : "Clock in"}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={timeActionShiftId === app.shift.id}
+                  onPress={() => void submitTimeAction(app, "clock-out")}
+                  style={{ backgroundColor: "#EAF4EF", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 }}
+                >
+                  <Text style={{ color: "#0A4A35", fontSize: 12, fontWeight: "900" }}>Clock out</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  disabled={callingOutShiftId === app.shift.id}
+                  onPress={() => confirmCallout(app)}
+                  style={{ borderWidth: 1, borderColor: "#FDA29B", backgroundColor: "#FFF5F4", borderRadius: 10, paddingHorizontal: 12, paddingVertical: 9 }}
+                >
+                  <Text style={{ color: "#B42318", fontSize: 12, fontWeight: "900" }}>{callingOutShiftId === app.shift.id ? "Reporting" : "Call out"}</Text>
+                </TouchableOpacity>
+              </View>
             ) : null}
           </View>
         ))}

@@ -101,6 +101,24 @@ async function ensureShiftPostsTable() {
   `);
 
   await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS shift_timesheets (
+      id SERIAL PRIMARY KEY,
+      shift_id INTEGER NOT NULL REFERENCES shift_posts(id) ON DELETE CASCADE,
+      caregiver_id INTEGER NOT NULL REFERENCES caregivers(id) ON DELETE CASCADE,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      clock_in_at TIMESTAMP NOT NULL,
+      clock_out_at TIMESTAMP NOT NULL,
+      worked_minutes INTEGER NOT NULL,
+      hourly_rate DECIMAL(10,2) NOT NULL,
+      total_amount DECIMAL(15,2) NOT NULL,
+      status VARCHAR(50) NOT NULL DEFAULT 'pending_approval',
+      notes TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_applications (
       id SERIAL PRIMARY KEY,
       shift_id INTEGER NOT NULL REFERENCES shift_posts(id) ON DELETE CASCADE,
@@ -146,6 +164,8 @@ async function ensureShiftPostsTable() {
   await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_applications_caregiver_idx ON shift_applications(caregiver_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_callouts_shift_idx ON shift_callouts(shift_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS replacement_offers_caregiver_idx ON replacement_offers(caregiver_id, status)`);
+  await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS shift_timesheets_shift_caregiver_idx ON shift_timesheets(shift_id, caregiver_id)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_timesheets_employer_idx ON shift_timesheets(employer_id, status)`);
 
   shiftTableReady = true;
 }
@@ -216,6 +236,37 @@ function mapShift(row: any) {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
+}
+
+async function getApprovedAssignment(shiftId: number, caregiverId: number) {
+  const result = await db.execute(sql`
+    SELECT sp.*, e.user_id AS employer_user_id
+    FROM shift_posts sp
+    JOIN shift_applications sa ON sa.shift_id = sp.id
+    JOIN employers e ON e.id = sp.employer_id
+    WHERE sp.id = ${shiftId}
+      AND sa.caregiver_id = ${caregiverId}
+      AND sa.status = 'approved'
+      AND sp.status IN ('assigned', 'in_progress')
+    LIMIT 1
+  `);
+  return (result as any).rows[0];
+}
+
+async function findLatestClockIn(shiftId: number, caregiverId: number) {
+  const result = await db.execute(sql`
+    SELECT id, timestamp
+    FROM shift_activities
+    WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiverId} AND type = 'clock_in'
+      AND timestamp > COALESCE((
+        SELECT MAX(timestamp)
+        FROM shift_activities
+        WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiverId} AND type = 'clock_out'
+      ), TIMESTAMP 'epoch')
+    ORDER BY timestamp DESC
+    LIMIT 1
+  `);
+  return (result as any).rows[0];
 }
 
 router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
@@ -623,7 +674,7 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
       JOIN shift_applications sa ON sa.shift_id = sp.id
       JOIN employers e ON e.id = sp.employer_id
       WHERE sp.id = ${shiftId} AND sa.caregiver_id = ${caregiver.id}
-        AND sa.status = 'approved' AND sp.status = 'assigned'
+        AND sa.status = 'approved' AND sp.status IN ('assigned', 'in_progress')
       LIMIT 1
     `);
     const assignment = (assignmentResult as any).rows[0];
@@ -658,7 +709,7 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
           cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
       WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
         AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
-        AND status IN ('pending', 'confirmed')
+        AND status IN ('pending', 'confirmed', 'in_progress')
     `);
     await db.execute(sql`
       INSERT INTO notifications (user_id, type, title, message, related_id)
@@ -830,26 +881,6 @@ router.post("/caregiver/offers/:offerId/respond", authMiddleware, async (req: Au
   } catch (error) { next(error); }
 });
 
-router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
-  try {
-    await ensureShiftPostsTable();
-    const caregiver = await getOrCreateCaregiver(req);
-    const shiftId = parseInt(req.params.shiftId);
-    await db.execute(sql`INSERT INTO shift_activities (shift_id, caregiver_id, type) VALUES (${shiftId}, ${caregiver.id}, 'clock_in')`);
-    res.json({ message: "Clocked in successfully" });
-  } catch (error) { next(error); }
-});
-
-router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res, next) => {
-  try {
-    await ensureShiftPostsTable();
-    const caregiver = await getOrCreateCaregiver(req);
-    const shiftId = parseInt(req.params.shiftId);
-    await db.execute(sql`INSERT INTO shift_activities (shift_id, caregiver_id, type) VALUES (${shiftId}, ${caregiver.id}, 'clock_out')`);
-    res.json({ message: "Clocked out successfully" });
-  } catch (error) { next(error); }
-});
-
 router.get("/activities", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
@@ -864,6 +895,119 @@ router.get("/activities", authMiddleware, async (req: AuthRequest, res, next) =>
       ORDER BY sa.timestamp DESC LIMIT 50
     `);
     res.json({ activities: (result as any).rows });
+  } catch (error) { next(error); }
+});
+
+router.get("/employer/timesheets", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const result = await db.execute(sql`
+      SELECT st.*, sp.title AS shift_title, sp.service_type, sp.start_time, sp.end_time,
+             sp.city, sp.state, u.first_name, u.last_name, u.email
+      FROM shift_timesheets st
+      JOIN shift_posts sp ON sp.id = st.shift_id
+      JOIN caregivers c ON c.id = st.caregiver_id
+      JOIN users u ON u.id = c.user_id
+      WHERE st.employer_id = ${employer.id}
+      ORDER BY st.clock_out_at DESC
+      LIMIT 100
+    `);
+    res.json({ timesheets: (result as any).rows.map((row: any) => ({
+      ...row,
+      worked_hours: Number((Number(row.worked_minutes || 0) / 60).toFixed(2)),
+      hourly_rate: Number(row.hourly_rate),
+      total_amount: Number(row.total_amount),
+    })) });
+  } catch (error) { next(error); }
+});
+
+router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const shiftId = parseInt(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+
+    const assignment = await getApprovedAssignment(shiftId, caregiver.id);
+    if (!assignment) throw new AppError(403, "Only the assigned caregiver can clock in for this shift");
+    const openClockIn = await findLatestClockIn(shiftId, caregiver.id);
+    if (openClockIn) throw new AppError(409, "You are already clocked in for this shift");
+
+    const activity = await db.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes)
+      VALUES (${shiftId}, ${caregiver.id}, 'clock_in', CAST(${req.body?.location ? JSON.stringify(req.body.location) : null} AS jsonb), ${req.body?.notes || null})
+      RETURNING *
+    `);
+    await db.execute(sql`UPDATE shift_posts SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);
+    await db.execute(sql`
+      UPDATE bookings SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP
+      WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
+        AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
+        AND status = 'confirmed'
+    `);
+    res.json({ message: "Clocked in successfully", activity: (activity as any).rows[0] });
+  } catch (error) { next(error); }
+});
+
+router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const shiftId = parseInt(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+
+    const assignment = await getApprovedAssignment(shiftId, caregiver.id);
+    if (!assignment) throw new AppError(403, "Only the assigned caregiver can clock out for this shift");
+    const clockIn = await findLatestClockIn(shiftId, caregiver.id);
+    if (!clockIn) throw new AppError(409, "Clock in before clocking out of this shift");
+
+    const clockOut = await db.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes)
+      VALUES (${shiftId}, ${caregiver.id}, 'clock_out', CAST(${req.body?.location ? JSON.stringify(req.body.location) : null} AS jsonb), ${req.body?.notes || null})
+      RETURNING *
+    `);
+    const clockInAt = new Date(clockIn.timestamp);
+    const clockOutAt = new Date((clockOut as any).rows[0].timestamp);
+    const workedMinutes = Math.max(1, Math.round((clockOutAt.getTime() - clockInAt.getTime()) / 60000));
+    const rate = Number(assignment.hourly_rate);
+    const total = Number(((workedMinutes / 60) * rate).toFixed(2));
+
+    const timesheet = await db.execute(sql`
+      INSERT INTO shift_timesheets (
+        shift_id, caregiver_id, employer_id, clock_in_at, clock_out_at, worked_minutes,
+        hourly_rate, total_amount, status, notes
+      ) VALUES (
+        ${shiftId}, ${caregiver.id}, ${assignment.employer_id}, ${clockInAt}, ${clockOutAt}, ${workedMinutes},
+        ${rate.toString()}, ${total.toString()}, 'pending_approval', ${req.body?.notes || null}
+      )
+      ON CONFLICT (shift_id, caregiver_id)
+      DO UPDATE SET clock_in_at = EXCLUDED.clock_in_at, clock_out_at = EXCLUDED.clock_out_at,
+                    worked_minutes = EXCLUDED.worked_minutes, hourly_rate = EXCLUDED.hourly_rate,
+                    total_amount = EXCLUDED.total_amount, status = 'pending_approval',
+                    notes = EXCLUDED.notes, updated_at = CURRENT_TIMESTAMP
+      RETURNING *
+    `);
+
+    await db.execute(sql`UPDATE shift_posts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);
+    await db.execute(sql`
+      UPDATE bookings SET status = 'completed', total_amount = ${total.toString()}, updated_at = CURRENT_TIMESTAMP
+      WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
+        AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
+        AND status IN ('confirmed', 'in_progress')
+    `);
+    await db.execute(sql`
+      UPDATE caregivers SET total_hours = COALESCE(total_hours, 0) + ${String(workedMinutes / 60)}, updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${caregiver.id}
+    `);
+    await db.execute(sql`
+      INSERT INTO notifications (user_id, type, title, message, related_id)
+      VALUES (${assignment.employer_user_id}, 'timesheet_ready', 'Timesheet ready',
+        'A caregiver completed a shift and the timesheet is ready for review.',
+        ${shiftId})
+    `);
+
+    res.json({ message: "Clocked out successfully", timesheet: (timesheet as any).rows[0] });
   } catch (error) { next(error); }
 });
 
