@@ -87,6 +87,24 @@ async function ensureShiftPostsTable() {
   `);
 
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS assignment_mode VARCHAR(20) NOT NULL DEFAULT 'instant'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS caregiver_type VARCHAR(100) NOT NULL DEFAULT 'caregiver'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS care_recipient_name VARCHAR(255)`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS schedule_type VARCHAR(50) NOT NULL DEFAULT 'one_time'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS location_type VARCHAR(50) NOT NULL DEFAULT 'client_home'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS address VARCHAR(255) NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS city VARCHAR(100) NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS state VARCHAR(2) NOT NULL DEFAULT 'MA'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS zip_code VARCHAR(20) NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS hourly_rate DECIMAL(10,2) NOT NULL DEFAULT '0'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS number_of_caregivers INTEGER NOT NULL DEFAULT 1`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS requirements JSON DEFAULT '[]'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS responsibilities TEXT NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS notes TEXT`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS contact_name VARCHAR(255) NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS contact_phone VARCHAR(50) NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS urgency VARCHAR(50) NOT NULL DEFAULT 'standard'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'open'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_activities (
@@ -99,6 +117,8 @@ async function ensureShiftPostsTable() {
       notes TEXT
     )
   `);
+  await db.execute(sql`ALTER TABLE shift_activities ADD COLUMN IF NOT EXISTS location JSONB`);
+  await db.execute(sql`ALTER TABLE shift_activities ADD COLUMN IF NOT EXISTS notes TEXT`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_timesheets (
