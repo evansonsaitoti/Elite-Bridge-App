@@ -21,7 +21,7 @@ export default function AccountScreen() {
   useFocusEffect(useCallback(() => { getStoredEmployer().then((stored) => stored ? setUser(stored) : router.replace("/sign-in")); }, [router]));
 
   const signOut = () => Alert.alert("Sign out?", "You can sign in again using your employer credentials.", [{ text: "Cancel", style: "cancel" }, { text: "Sign out", onPress: async () => { await unregisterEmployerPushNotifications().catch(() => undefined); await signOutEmployer(); router.dismissAll(); router.replace("/"); } }]);
-  const remove = () => Alert.alert("Permanently delete account?", "This deletes your employer login and organization profile. Records that must be retained for legal, payroll or safety obligations may be preserved as required by law.", [{ text: "Cancel", style: "cancel" }, { text: "Delete account", style: "destructive", onPress: async () => {
+  const remove = () => Alert.alert("Delete employer account?", "This deletes your employer login and organization profile. Records that must be retained for legal, payroll or safety obligations may be preserved as required by law.", [{ text: "Cancel", style: "cancel" }, { text: "Delete account", style: "destructive", onPress: async () => {
     setDeleting(true);
     try { await deleteEmployerAccount(); router.dismissAll(); router.replace("/"); }
     catch (error) { Alert.alert("Account not deleted", error instanceof Error ? error.message : "Contact support for assistance."); }
@@ -42,7 +42,7 @@ export default function AccountScreen() {
       <Row icon="document-text-outline" title="Terms of Use" detail="Employer marketplace terms" onPress={() => void Linking.openURL(TERMS_URL)} />
       <Text style={styles.section}>Advanced</Text>
       <Row icon="settings-outline" title="Advanced account options" detail="Account deletion and data controls" expanded={showAdvanced} onPress={() => setShowAdvanced((current) => !current)} />
-      {showAdvanced ? <View style={styles.dangerCard}><View style={styles.dangerHeading}><Ionicons color={colors.danger} name="warning-outline" size={20} /><Text style={styles.dangerTitle}>Delete employer account</Text></View><Text style={styles.dangerBody}>Permanently remove your employer login and organization profile. You will be asked to confirm before anything is deleted.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Continue to account deletion</Text>}</TouchableOpacity></View> : null}
+      {showAdvanced ? <View style={styles.dangerCard}><View style={styles.dangerHeading}><Ionicons color={colors.danger} name="warning-outline" size={20} /><Text style={styles.dangerTitle}>Delete employer account</Text></View><Text style={styles.dangerBody}>Delete your employer login and organization profile. You will be asked to confirm before anything is deleted.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Continue to account deletion</Text>}</TouchableOpacity></View> : null}
       <Text style={styles.footer}>Elite Bridge Employer and Elite Bridge Caregiver are separate applications connected through the same care marketplace.</Text>
     </ScrollView><EmployerTabBar /></SafeAreaView>
   );

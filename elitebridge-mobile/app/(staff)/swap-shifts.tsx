@@ -330,7 +330,7 @@ export default function StaffSwapShifts() {
                   </TouchableOpacity>
                   <TouchableOpacity
                     accessibilityRole="button"
-                    onPress={() => confirmAction("Swap declined", `${request.fromStaff}'s swap request has been declined for this review account.`)}
+                    onPress={() => confirmAction("Swap declined", `${request.fromStaff}'s swap request has been declined.`)}
                     style={{
                       flex: 1,
                       backgroundColor: colors.border,

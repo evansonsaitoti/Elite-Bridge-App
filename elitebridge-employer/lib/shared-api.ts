@@ -134,7 +134,7 @@ async function login(email: string, password: string) {
 export async function ensureEmployerBackendSession(email: string, password: string): Promise<AuthUser> {
   if (!API_BASE_URL) throw new Error("Elite Bridge Employer cannot reach the secure agency service in this build.");
   const result = await login(email.trim().toLowerCase(), password);
-  if (result.user.role !== "employer" && result.user.role !== "admin") {
+  if (result.user.role !== "employer") {
     throw new Error("This account is not an employer account. Caregivers should use the Elite Bridge caregiver app.");
   }
   await AsyncStorage.setItem(TOKEN_KEY, result.token);

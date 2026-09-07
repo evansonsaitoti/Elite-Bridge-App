@@ -378,12 +378,6 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
     });
     res.status(201).json({ shift: mapShift(createdShift), matchedCaregivers: matchedUserIds.length });
   } catch (error) {
-    if (typeof req.body?.notes === "string" && req.body.notes.includes("Codex smoke test")) {
-      return res.status(500).json({
-        error: "Shift create diagnostic",
-        message: error instanceof Error ? error.message : "Unknown shift creation error",
-      });
-    }
     next(error);
   }
 });

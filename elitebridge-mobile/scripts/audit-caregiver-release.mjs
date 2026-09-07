@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const appRoot = path.join(root, "app");
 const scanRoots = ["app/(auth)", "app/(onboarding)", "app/(staff)", "components"];
+const prohibitedRouteRoots = ["app/(app)", "app/(facility)", "app/(tabs)", "app/(user)", "app/dev", "app/(root)/user"];
 
 function walk(relativeDirectory) {
   const absoluteDirectory = path.join(root, relativeDirectory);
@@ -20,6 +21,13 @@ function requireSource(relativeFile, needle) {
 }
 
 const files = scanRoots.flatMap(walk);
+for (const relativeDirectory of prohibitedRouteRoots) {
+  const absoluteDirectory = path.join(root, relativeDirectory);
+  if (fs.existsSync(absoluteDirectory) && walk(relativeDirectory).length > 0) {
+    throw new Error(`${relativeDirectory} contains legacy release routes that could be interpreted as hidden app behavior`);
+  }
+}
+
 let interactiveCount = 0;
 for (const relativeFile of files) {
   const source = fs.readFileSync(path.join(root, relativeFile), "utf8");
@@ -64,9 +72,9 @@ if (/review access|REVIEW_PASSWORD|demo:\s*true/i.test(loginSource)) {
   throw new Error("Caregiver login contains review-only or demo access");
 }
 
-for (const relativeFile of ["app/(staff)/home.tsx", "app/(auth)/login.tsx", "lib/shared-api.ts"]) {
+for (const relativeFile of ["app/(staff)/home.tsx", "app/(staff)/swap-shifts.tsx", "app/(auth)/login.tsx", "lib/shared-api.ts"]) {
   const source = fs.readFileSync(path.join(root, relativeFile), "utf8");
-  if (/demoMode|demoShift|demoApplication|demoOffer|sample review data|review account/i.test(source)) {
+  if (/demoMode|demoShift|demoApplication|demoOffer|sample review data|review account|review-only|reviewer/i.test(source)) {
     throw new Error(`${relativeFile} contains a dormant demo or review-only behavior path`);
   }
 }
