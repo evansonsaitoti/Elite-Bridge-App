@@ -9,7 +9,7 @@
       "corepack": true,
       "ios": {
         "resourceClass": "m-medium",
-        "image": "macos-sequoia-15.6-xcode-16.4"
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "env": {
         "EAS_BUILD_NO_EXPO_GO_WARNING": "true",
