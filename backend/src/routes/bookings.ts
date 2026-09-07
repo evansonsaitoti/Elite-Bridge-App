@@ -142,6 +142,18 @@ async function ensureShiftPostsTable() {
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS shift_id INTEGER REFERENCES shift_posts(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS caregiver_id INTEGER REFERENCES caregivers(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS employer_id INTEGER REFERENCES employers(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS clock_in_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS clock_out_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS worked_minutes INTEGER NOT NULL DEFAULT 0`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS hourly_rate DECIMAL(10,2) NOT NULL DEFAULT '0'`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS total_amount DECIMAL(15,2) NOT NULL DEFAULT '0'`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'pending_approval'`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS notes TEXT`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_applications (
