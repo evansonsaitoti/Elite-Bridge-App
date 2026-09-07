@@ -167,6 +167,12 @@ async function ensureShiftPostsTable() {
       UNIQUE (shift_id, caregiver_id)
     )
   `);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS shift_id INTEGER REFERENCES shift_posts(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS caregiver_id INTEGER REFERENCES caregivers(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'pending'`);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS note TEXT`);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_applications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS shift_callouts (
@@ -180,6 +186,13 @@ async function ensureShiftPostsTable() {
       resolved_at TIMESTAMP
     )
   `);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS shift_id INTEGER REFERENCES shift_posts(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS caregiver_id INTEGER REFERENCES caregivers(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS reason VARCHAR(50) NOT NULL DEFAULT 'other'`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS note TEXT`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'open'`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE shift_callouts ADD COLUMN IF NOT EXISTS resolved_at TIMESTAMP`);
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS replacement_offers (
@@ -195,6 +208,14 @@ async function ensureShiftPostsTable() {
       UNIQUE (callout_id, caregiver_id)
     )
   `);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS callout_id INTEGER REFERENCES shift_callouts(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS shift_id INTEGER REFERENCES shift_posts(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS caregiver_id INTEGER REFERENCES caregivers(id) ON DELETE CASCADE`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS score INTEGER NOT NULL DEFAULT 0`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS rationale TEXT NOT NULL DEFAULT ''`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS status VARCHAR(50) NOT NULL DEFAULT 'offered'`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  await db.execute(sql`ALTER TABLE replacement_offers ADD COLUMN IF NOT EXISTS responded_at TIMESTAMP`);
 
   await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_posts_status_start_idx ON shift_posts(status, start_time)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_applications_shift_idx ON shift_applications(shift_id)`);
