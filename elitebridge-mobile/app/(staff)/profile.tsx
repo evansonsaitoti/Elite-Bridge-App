@@ -210,8 +210,8 @@ export default function StaffProfile() {
               <Text style={{ color: "#0A4A35", marginTop: 6, fontWeight: "800" }}>{item.status}</Text>
             </View>
           ))}
-          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/services")} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
-            <Text style={{ color: "white", fontWeight: "900" }}>Create request</Text>
+          <TouchableOpacity accessibilityRole="button" onPress={() => Alert.alert("Request support", "Contact your agency coordinator to submit a new time-off or schedule request.")} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
+            <Text style={{ color: "white", fontWeight: "900" }}>Request support</Text>
           </TouchableOpacity>
         </View>
       );

@@ -25,7 +25,7 @@ if (/mock shift|sample caregiver|demo session/i.test(source)) failures.push("Sou
 if (/role\s*!==\s*["']admin["']|role\s*===\s*["']admin["']|role\s*==\s*["']admin["']/.test(source)) failures.push("Employer app must not grant access through an admin role.");
 if (!source.includes("Create employer account")) failures.push("Public employer registration is not visible.");
 if (!source.includes("Confirm password")) failures.push("Registration password confirmation is missing.");
-if (!source.includes("Check your email")) failures.push("Registration email-verification notice is missing.");
+if (!source.includes("Account created")) failures.push("Registration completion notice is missing.");
 if (!source.includes("Elite Bridge Caregiver")) failures.push("Companion Caregiver app relationship is not disclosed.");
 if (!source.includes("Delete account")) failures.push("In-app account deletion is missing.");
 if (!source.includes("Sign out")) failures.push("Visible sign-out control is missing.");
@@ -36,10 +36,10 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (!source.includes("Team directory")) failures.push("Employee team directory is missing.");
 if (!source.includes("Time & attendance")) failures.push("Time and attendance workspace is missing.");
-if (!source.includes("Advanced account options")) failures.push("Protected account deletion access is missing.");
+if (!source.includes("Account controls")) failures.push("Protected account controls access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
-if (appConfig.expo.version !== "1.3.1") failures.push("Employer release version must be 1.3.1.");
-if (appConfig.expo.ios.buildNumber !== "31") failures.push("Employer iOS build number must be 31.");
+if (appConfig.expo.version !== "1.3.2") failures.push("Employer release version must be 1.3.2.");
+if (appConfig.expo.ios.buildNumber !== "32") failures.push("Employer iOS build number must be 32.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

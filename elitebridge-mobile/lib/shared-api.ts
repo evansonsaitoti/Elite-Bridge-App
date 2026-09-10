@@ -8,7 +8,7 @@ export type AuthUser = {
   email: string;
   firstName: string;
   lastName: string;
-  role: "caregiver" | "employer" | "admin";
+  role: "caregiver" | "employer";
 };
 
 export type CaregiverShift = {
@@ -83,7 +83,7 @@ export async function ensureCaregiverBackendSession(email: string, password: str
   if (!API_BASE_URL) throw new Error("Elite Bridge cannot reach the secure agency service in this build.");
   const result = await login(email.trim().toLowerCase(), password);
   if (result.user.role !== "caregiver") {
-    throw new Error("This account is not a caregiver account. Agency administrators should use Elite Bridge Employer.");
+    throw new Error("This account is not a caregiver account. Agency coordinators should use Elite Bridge Employer.");
   }
   await AsyncStorage.setItem(TOKEN_KEY, result.token);
   return result.user;

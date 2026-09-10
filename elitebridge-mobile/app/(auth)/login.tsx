@@ -86,7 +86,7 @@ export default function LoginScreen() {
 
           <View style={styles.accessBox}>
             <Text style={styles.accessTitle}>Caregiver access only</Text>
-            <Text style={styles.accessText}>Agency administrators should use the separate Elite Bridge Employer app.</Text>
+            <Text style={styles.accessText}>Agency coordinators should use the separate Elite Bridge Employer app.</Text>
           </View>
 
           <Text style={styles.securityHint}>Secure agency sync</Text>

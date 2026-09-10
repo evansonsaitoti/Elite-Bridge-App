@@ -5,8 +5,7 @@ import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
 
 /**
- * Onboarding Step 3: Background Check Submission
- * Submits background check request via Checkr API
+ * Onboarding Step 3: Background Check Consent
  */
 export default function OnboardingBackgroundCheck() {
   const colors = useColors();
@@ -30,22 +29,16 @@ export default function OnboardingBackgroundCheck() {
 
     setIsLoading(true);
     try {
-      // Simulate Checkr API call
-      // In production, this would call the backend which integrates with Checkr
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Mock response
-      const candidateId = `checkr_${Date.now()}`;
 
       updateData({
         backgroundCheckConsent: true,
-        backgroundCheckStatus: "submitted",
-        checkrCandidateId: candidateId,
+        backgroundCheckStatus: "pending",
       });
 
       Alert.alert(
-        "Background Check Submitted",
-        "Your background check has been submitted to Checkr. You'll receive updates via email. You can proceed to set up your bank account in the meantime.",
+        "Consent saved",
+        "Your background check consent was saved. Elite Bridge will contact you with the next required verification steps before your first shift.",
         [
           {
             text: "Continue",
@@ -159,7 +152,7 @@ export default function OnboardingBackgroundCheck() {
           ℹ️ What to Expect
         </Text>
         <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 20 }}>
-          Checkr will verify your identity, employment history, and conduct a comprehensive background check. The process typically takes 3-5 business days.
+          Elite Bridge will use your consent and profile information to start the required background check process before your first shift.
         </Text>
       </View>
 
@@ -226,10 +219,10 @@ export default function OnboardingBackgroundCheck() {
           }}
         >
           <Text style={{ fontSize: 14, fontWeight: "600", color: "#27AE60", marginBottom: 4 }}>
-            ✓ Background Check Submitted
+            Background check consent saved
           </Text>
           <Text style={{ fontSize: 12, color: "#558B2F", lineHeight: 18 }}>
-            Your background check request has been sent to Checkr. Check your email for next steps.
+            Elite Bridge will contact you with the next required verification steps.
           </Text>
         </View>
       )}
@@ -252,7 +245,7 @@ export default function OnboardingBackgroundCheck() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-              Submit Background Check
+              Save Background Check Consent
             </Text>
           )}
         </TouchableOpacity>

@@ -10,7 +10,7 @@ export type AuthUser = {
   email: string;
   firstName: string;
   lastName: string;
-  role: "caregiver" | "employer" | "admin";
+  role: "caregiver" | "employer";
 };
 
 export type SharedShift = {

@@ -28,7 +28,7 @@ const baseEntry: TimeEntry = {
   breaks: [],
   notes: "",
   status: "in_progress",
-  adminNote: null,
+  agencyNote: null,
   approvedAt: null,
   createdAt: "2026-07-24T12:00:00.000Z",
   updatedAt: "2026-07-24T12:00:00.000Z",
@@ -98,7 +98,7 @@ describe("timekeepingReducer", () => {
       updatedAt: "2026-07-24T20:05:00.000Z",
     });
     expect(state.entries[0].status).toBe("correction_requested");
-    expect(state.entries[0].adminNote).toBe("Explain the late clock-out.");
+    expect(state.entries[0].agencyNote).toBe("Explain the late clock-out.");
 
     state = timekeepingReducer(state, {
       type: "resubmit",
@@ -107,7 +107,7 @@ describe("timekeepingReducer", () => {
       updatedAt: "2026-07-24T20:10:00.000Z",
     });
     expect(state.entries[0].status).toBe("completed");
-    expect(state.entries[0].adminNote).toBeNull();
+    expect(state.entries[0].agencyNote).toBeNull();
 
     state = timekeepingReducer(state, {
       type: "approve",

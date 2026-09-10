@@ -26,7 +26,7 @@ export default function RegisterScreen() {
     try {
       await registerEmployer(form);
       void enableEmployerPushNotifications().catch(() => false);
-      Alert.alert("Check your email", `We sent an activation link to ${form.email.trim().toLowerCase()}.`, [
+      Alert.alert("Account created", `Your employer account was created. We also sent an email verification link to ${form.email.trim().toLowerCase()}.`, [
         { text: "Continue", onPress: () => router.replace("/dashboard") },
       ]);
     } catch (error) {

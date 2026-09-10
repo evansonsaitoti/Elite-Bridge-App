@@ -17,7 +17,7 @@ export default function AccountScreen() {
   const router = useRouter();
   const [user, setUser] = useState<EmployerUser | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAccountControls, setShowAccountControls] = useState(false);
   useFocusEffect(useCallback(() => { getStoredEmployer().then((stored) => stored ? setUser(stored) : router.replace("/sign-in")); }, [router]));
 
   const signOut = () => Alert.alert("Sign out?", "You can sign in again using your employer credentials.", [{ text: "Cancel", style: "cancel" }, { text: "Sign out", onPress: async () => { await unregisterEmployerPushNotifications().catch(() => undefined); await signOutEmployer(); router.dismissAll(); router.replace("/"); } }]);
@@ -40,9 +40,9 @@ export default function AccountScreen() {
       <Row icon="help-circle-outline" title="Contact support" detail={SUPPORT_EMAIL} onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Elite%20Bridge%20Employer%20support`)} />
       <Row icon="shield-checkmark-outline" title="Privacy Policy" detail="How Elite Bridge handles information" onPress={() => void Linking.openURL(PRIVACY_URL)} />
       <Row icon="document-text-outline" title="Terms of Use" detail="Employer marketplace terms" onPress={() => void Linking.openURL(TERMS_URL)} />
-      <Text style={styles.section}>Advanced</Text>
-      <Row icon="settings-outline" title="Advanced account options" detail="Account deletion and data controls" expanded={showAdvanced} onPress={() => setShowAdvanced((current) => !current)} />
-      {showAdvanced ? <View style={styles.dangerCard}><View style={styles.dangerHeading}><Ionicons color={colors.danger} name="warning-outline" size={20} /><Text style={styles.dangerTitle}>Delete employer account</Text></View><Text style={styles.dangerBody}>Delete your employer login and organization profile. You will be asked to confirm before anything is deleted.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Continue to account deletion</Text>}</TouchableOpacity></View> : null}
+      <Text style={styles.section}>Account controls</Text>
+      <Row icon="settings-outline" title="Account controls" detail="Manage sign-out and deletion options" expanded={showAccountControls} onPress={() => setShowAccountControls((current) => !current)} />
+      {showAccountControls ? <View style={styles.dangerCard}><View style={styles.dangerHeading}><Ionicons color={colors.danger} name="warning-outline" size={20} /><Text style={styles.dangerTitle}>Delete employer account</Text></View><Text style={styles.dangerBody}>Delete your employer login and organization profile. You will be asked to confirm before anything is deleted.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Continue to account deletion</Text>}</TouchableOpacity></View> : null}
       <Text style={styles.footer}>Elite Bridge Employer and Elite Bridge Caregiver are separate applications connected through the same care marketplace.</Text>
     </ScrollView><EmployerTabBar /></SafeAreaView>
   );

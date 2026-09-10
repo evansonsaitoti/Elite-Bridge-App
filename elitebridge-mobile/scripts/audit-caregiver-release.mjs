@@ -57,13 +57,13 @@ requireSource("app/(onboarding)/experience.tsx", 'router.push("/(onboarding)/bac
 requireSource("app/(onboarding)/background-check.tsx", 'router.push("/(onboarding)/bank-account")');
 requireSource("app/(onboarding)/bank-account.tsx", 'router.push("/(onboarding)/review")');
 requireSource("app/(onboarding)/review.tsx", 'router.replace("/(staff)/home")');
-requireSource("app/(staff)/profile.tsx", 'router.push("/(staff)/services")');
+requireSource("app/(staff)/profile.tsx", "Request support");
 requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/home.tsx", "Call-out reported");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.version !== "1.2.3") throw new Error("Caregiver release version must be 1.2.3");
-if (config.expo.ios.buildNumber !== "55") throw new Error("Caregiver iOS build number must be 55");
+if (config.expo.version !== "1.2.4") throw new Error("Caregiver release version must be 1.2.4");
+if (config.expo.ios.buildNumber !== "56") throw new Error("Caregiver iOS build number must be 56");
 requireSource("app/(root)/index.tsx", "Care professionals start here");
 requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
 
@@ -76,6 +76,12 @@ for (const relativeFile of ["app/(staff)/home.tsx", "app/(staff)/swap-shifts.tsx
   const source = fs.readFileSync(path.join(root, relativeFile), "utf8");
   if (/demoMode|demoShift|demoApplication|demoOffer|sample review data|review account|review-only|reviewer/i.test(source)) {
     throw new Error(`${relativeFile} contains a dormant demo or review-only behavior path`);
+  }
+}
+for (const relativeFile of files) {
+  const source = fs.readFileSync(path.join(root, relativeFile), "utf8");
+  if (/Mary Thompson|Sarah Johnson|Michael Brown|Simulate|Mock successful verification|Bank Account Verified|Background Check Submitted/i.test(source)) {
+    throw new Error(`${relativeFile} contains static sample data or misleading verification language`);
   }
 }
 requireSource("app/(onboarding)/review.tsx", "registerCaregiverAccount(");

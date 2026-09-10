@@ -251,7 +251,7 @@ export default function StaffClock() {
       clockOut(activeEntry.id, notes, location);
       setNotes("");
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      Alert.alert("Shift completed", "Your timesheet is ready for administrator approval.");
+      Alert.alert("Shift completed", "Your timesheet is ready for agency review.");
     } catch (error) {
       Alert.alert(
         "Unable to clock out",
@@ -784,7 +784,7 @@ export default function StaffClock() {
                       <Text
                         style={{ color: colors.foreground, fontSize: 12, marginTop: 4 }}
                       >
-                        {entry.adminNote}
+                        {entry.agencyNote}
                       </Text>
                       <TextInput
                         value={correctionResponses[entry.id] || ""}

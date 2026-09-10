@@ -9,7 +9,7 @@ export type User = {
   email: string | null;
   loginMethod: string | null;
   lastSignedIn: Date;
-  role?: 'user' | 'admin';
+  role?: "caregiver" | "employer";
   onboardingCompleted?: boolean;
 };
 
@@ -88,9 +88,9 @@ export async function getUserInfo(): Promise<User | null> {
       return null;
     }
     const user = JSON.parse(info);
-    // Ensure role defaults to 'user' if not present
+    // Older cached sessions may not have a role.
     if (!user.role) {
-      user.role = 'user';
+      user.role = "caregiver";
     }
     console.log("[Auth] User info retrieved:", user);
     return user;
