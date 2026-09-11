@@ -1,4 +1,4 @@
-# Elite Bridge Employer — App Review Notes (Version 1.3.2, Build 32)
+# Elite Bridge Employer — App Review Notes (Version 1.3.2, Build 33)
 
 ## Purpose and companion-app relationship
 
