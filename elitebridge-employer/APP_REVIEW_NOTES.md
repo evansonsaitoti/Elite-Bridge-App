@@ -61,6 +61,6 @@ After a normal sign-in or registration, the app requests notification permission
 
 ## Rebuild disclosure
 
-Build 32 is a complete employer-only workforce management companion app. Employers can post and schedule shifts, manage their assigned caregiver team, review live clock-in and clock-out activity, process applicants, and maintain their organization account. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
+Build 33 is a complete employer-only workforce management companion app. Employers can post and schedule shifts, manage their assigned caregiver team, review live clock-in and clock-out activity, process applicants, and maintain their organization account. It contains no demonstration session, local sample workspace, dormant feature, reviewer-specific code path, or caregiver interface. Every displayed staffing and account action uses the production Elite Bridge service.
 
 No purchase or subscription is required to review the app.
