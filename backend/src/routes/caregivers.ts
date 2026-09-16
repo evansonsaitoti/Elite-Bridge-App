@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { db } from "../db";
-import { caregivers, users } from "../db/schema";
+import { db } from "../db/index.js";
+import { caregivers, users } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { AppError } from "../middleware/errorHandler";
+import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 

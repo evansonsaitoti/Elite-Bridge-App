@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { z } from "zod";
 import { sql, eq } from "drizzle-orm";
-import { db } from "../db";
-import { ensureCoreTables } from "../db/bootstrap";
-import { employers } from "../db/schema";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { AppError } from "../middleware/errorHandler";
+import { db } from "../db/index.js";
+import { ensureCoreTables } from "../db/bootstrap.js";
+import { employers } from "../db/schema.js";
+import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 

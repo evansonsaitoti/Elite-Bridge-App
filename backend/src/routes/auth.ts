@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
-import { db } from "../db";
-import { ensureCoreTables } from "../db/bootstrap";
-import { users, employers } from "../db/schema";
+import { db } from "../db/index.js";
+import { ensureCoreTables } from "../db/bootstrap.js";
+import { users, employers } from "../db/schema.js";
 import { eq } from "drizzle-orm";
-import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth";
-import { AppError } from "../middleware/errorHandler";
+import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 
