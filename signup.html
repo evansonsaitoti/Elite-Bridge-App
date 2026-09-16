@@ -310,13 +310,19 @@
         </form>
 
         <div class="signin-link">
-            Already have an account? <a href="login.html">Sign in here</a>
+            Already have an account? <a href="/">Sign in here</a>
         </div>
     </div>
 </div>
 
 <script>
-    const API_BASE = 'http://34.75.156.104:3000/api';
+    const API_BASE = window.ELITE_BRIDGE_API_BASE || 'https://elite-bridge-shared-api-evans.vercel.app/api';
+
+    const requestedRole = new URLSearchParams(window.location.search).get('role');
+    if (requestedRole === 'caregiver' || requestedRole === 'employer') {
+        document.getElementById(requestedRole).checked = true;
+        updateCompanySection();
+    }
 
     function updateCompanySection() {
         const role = document.querySelector('input[name="role"]:checked').value;
