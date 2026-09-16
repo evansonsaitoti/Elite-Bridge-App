@@ -9,20 +9,15 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: { service: "elite-bridge-api" },
-  transports: [
-    new winston.transports.File({ filename: "error.log", level: "error" }),
-    new winston.transports.File({ filename: "combined.log" }),
-  ],
+  // Vercel's deployment filesystem is read-only. Console output is captured by
+  // Runtime Logs and avoids crashing the function while opening local files.
+  transports: [new winston.transports.Console()],
 });
 
 if (process.env.NODE_ENV === "development") {
-  logger.add(
-    new winston.transports.Console({
-      format: winston.format.combine(
-        winston.format.colorize(),
-        winston.format.simple()
-      ),
-    })
+  logger.format = winston.format.combine(
+    winston.format.colorize(),
+    winston.format.simple()
   );
 }
 

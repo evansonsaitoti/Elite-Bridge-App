@@ -5,20 +5,20 @@ import morgan from "morgan";
 import { createServer } from "http";
 import { Server as SocketIOServer } from "socket.io";
 import { config } from "./config/env.js";
-import { checkDatabaseConnection } from "./db";
-import { errorHandler } from "./middleware/errorHandler";
-import { requestLogger } from "./middleware/requestLogger";
+import { checkDatabaseConnection } from "./db/index.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+import { requestLogger } from "./middleware/requestLogger.js";
 
 // Import routes
-import authRoutes from "./routes/auth";
-import userRoutes from "./routes/users";
-import caregiverRoutes from "./routes/caregivers";
-import employerRoutes from "./routes/employers";
-import bookingRoutes from "./routes/bookings";
-import messageRoutes from "./routes/messages";
-import paymentRoutes from "./routes/payments";
-import payrollRoutes from "./routes/payroll";
-import adminRoutes from "./routes/admin";
+import authRoutes from "./routes/auth.js";
+import userRoutes from "./routes/users.js";
+import caregiverRoutes from "./routes/caregivers.js";
+import employerRoutes from "./routes/employers.js";
+import bookingRoutes from "./routes/bookings.js";
+import messageRoutes from "./routes/messages.js";
+import paymentRoutes from "./routes/payments.js";
+import payrollRoutes from "./routes/payroll.js";
+import adminRoutes from "./routes/admin.js";
 
 const app = express();
 const httpServer = createServer(app);
@@ -36,6 +36,14 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(morgan("combined"));
 app.use(requestLogger);
+
+app.get("/", (_req, res) => {
+  res.json({
+    service: "elite-bridge-api",
+    status: "ok",
+    timestamp: new Date().toISOString(),
+  });
+});
 
 // Health check endpoint
 app.get("/health", async (req, res) => {
