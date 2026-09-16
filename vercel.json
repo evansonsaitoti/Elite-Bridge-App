@@ -2,6 +2,8 @@
   "version": 2,
   "builds": [
     { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.css", "use": "@vercel/static" },
+    { "src": "*.js", "use": "@vercel/static" },
     { "src": "*.png", "use": "@vercel/static" },
     { "src": "*.webp", "use": "@vercel/static" },
     { "src": "*.svg", "use": "@vercel/static" },
@@ -11,6 +13,7 @@
     { "src": "/", "dest": "/index.html" },
     { "src": "/login/?", "dest": "/index.html" },
     { "src": "/signup/?", "dest": "/signup.html" },
+    { "src": "/onboarding/?", "dest": "/onboarding.html" },
     { "src": "/marketplace/?", "dest": "/marketplace.html" },
     { "src": "/caregiver-dashboard/?", "dest": "/caregiver-dashboard.html" },
     { "src": "/employer-dashboard/?", "dest": "/employer-dashboard.html" },

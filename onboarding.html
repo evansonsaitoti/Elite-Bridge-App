@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#052d22">
+  <meta name="description" content="Set up your Elite Bridge web and mobile app profile.">
+  <title>Set up your Elite Bridge app</title>
+  <link rel="stylesheet" href="/app-shell.css">
+</head>
+<body class="onboarding-page">
+  <main class="onboarding-shell">
+    <aside class="onboarding-aside">
+      <img class="onboarding-logo" src="/logo-white.png" alt="Elite Bridge">
+      <div class="onboarding-aside-copy">
+        <p class="eyebrow">Mobile and web, together</p>
+        <h1 id="asideTitle">Set up your care workspace.</h1>
+        <p id="asideCopy">Tell us how you work so your dashboard starts with the right tools, opportunities and priorities.</p>
+        <div class="aside-points">
+          <div class="aside-point"><b>✓</b><span>One profile across the app and web</span></div>
+          <div class="aside-point"><b>✓</b><span>Role-specific shifts, schedules and messages</span></div>
+          <div class="aside-point"><b>✓</b><span>You can update these details at any time</span></div>
+        </div>
+      </div>
+    </aside>
+
+    <section class="onboarding-form-side">
+      <div class="onboarding-top">
+        <a href="#" id="exitLink">Finish later</a>
+        <div class="step-dots" aria-label="Setup progress">
+          <span class="step-dot active" data-dot="1">1</span><span class="step-line"></span>
+          <span class="step-dot" data-dot="2">2</span><span class="step-line"></span>
+          <span class="step-dot" data-dot="3">3</span><span class="step-line"></span>
+          <span class="step-dot" data-dot="4">4</span>
+        </div>
+      </div>
+
+      <form class="onboarding-form-wrap" id="onboardingForm" novalidate>
+        <div class="onboarding-error" id="onboardingError" hidden></div>
+
+        <section class="step-panel active" data-step="1">
+          <span class="step-kicker">Step 1 of 4</span>
+          <h2 id="stepOneTitle">Let’s personalize your workspace</h2>
+          <p class="step-intro" id="stepOneIntro">A few details help Elite Bridge organize the right experience for you.</p>
+
+          <div class="role-fields" data-role-fields="caregiver">
+            <div class="form-grid">
+              <div class="field">
+                <label for="careRole">Your primary care role</label>
+                <select id="careRole" name="careRole">
+                  <option value="Home care professional">Home care professional</option>
+                  <option value="Companion caregiver">Companion caregiver</option>
+                  <option value="Personal care aide">Personal care aide</option>
+                  <option value="Respite caregiver">Respite caregiver</option>
+                  <option value="Independent caregiver">Independent caregiver</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="yearsExperience">Years of experience</label>
+                <select id="yearsExperience" name="yearsExperience">
+                  <option value="0">Just getting started</option>
+                  <option value="1">1–2 years</option>
+                  <option value="3">3–5 years</option>
+                  <option value="6">6–10 years</option>
+                  <option value="11">More than 10 years</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="role-fields" data-role-fields="employer" hidden>
+            <div class="form-grid">
+              <div class="field full">
+                <label for="companyName">Organization or household name</label>
+                <input id="companyName" name="companyName" autocomplete="organization" placeholder="Example: Sunrise Home Care" required>
+              </div>
+              <div class="field full">
+                <label for="employerRole">Your role</label>
+                <select id="employerRole" name="employerRole">
+                  <option value="Owner or administrator">Owner or administrator</option>
+                  <option value="Care coordinator">Care coordinator</option>
+                  <option value="Scheduler">Scheduler</option>
+                  <option value="Family or household manager">Family or household manager</option>
+                  <option value="HR or operations">HR or operations</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="2">
+          <span class="step-kicker">Step 2 of 4</span>
+          <h2 id="serviceTitle">What care do you provide?</h2>
+          <p class="step-intro" id="serviceIntro">Select every service that fits. This powers matching and keeps your workspace relevant.</p>
+          <div class="choice-grid" id="serviceChoices">
+            <div class="choice"><input type="checkbox" id="service-companion" name="services" value="Companionship"><label for="service-companion">Companionship<small>Conversation, routines and social support</small></label></div>
+            <div class="choice"><input type="checkbox" id="service-personal" name="services" value="Personal care"><label for="service-personal">Personal care<small>Daily living and mobility support</small></label></div>
+            <div class="choice"><input type="checkbox" id="service-respite" name="services" value="Respite care"><label for="service-respite">Respite care<small>Short-term family caregiver relief</small></label></div>
+            <div class="choice"><input type="checkbox" id="service-meals" name="services" value="Meal preparation"><label for="service-meals">Meal preparation<small>Planning, preparation and cleanup</small></label></div>
+            <div class="choice"><input type="checkbox" id="service-transport" name="services" value="Transportation"><label for="service-transport">Transportation<small>Appointments, errands and activities</small></label></div>
+            <div class="choice"><input type="checkbox" id="service-house" name="services" value="Light housekeeping"><label for="service-house">Light housekeeping<small>Safe, tidy daily living spaces</small></label></div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="3">
+          <span class="step-kicker">Step 3 of 4</span>
+          <h2 id="detailsTitle">Set your working preferences</h2>
+          <p class="step-intro" id="detailsIntro">These details help us organize your care opportunities and schedule.</p>
+
+          <div class="role-fields" data-role-fields="caregiver">
+            <div class="form-grid">
+              <div class="field">
+                <label for="hourlyRate">Preferred hourly rate</label>
+                <input id="hourlyRate" name="hourlyRate" type="number" min="0" step="1" value="25" inputmode="decimal" required>
+              </div>
+              <div class="field">
+                <label for="availability">Typical availability</label>
+                <select id="availability" name="availability">
+                  <option value="Flexible">Flexible</option>
+                  <option value="Weekdays">Weekdays</option>
+                  <option value="Evenings">Evenings</option>
+                  <option value="Weekends">Weekends</option>
+                  <option value="Overnight">Overnight</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="caregiverBio">A short introduction</label>
+                <textarea id="caregiverBio" name="caregiverBio" placeholder="Share your approach to dependable, respectful care."></textarea>
+              </div>
+              <div class="field full">
+                <label for="certifications">Certifications (optional, separated by commas)</label>
+                <input id="certifications" name="certifications" placeholder="CPR, First Aid, HHA">
+              </div>
+            </div>
+          </div>
+
+          <div class="role-fields" data-role-fields="employer" hidden>
+            <div class="form-grid">
+              <div class="field">
+                <label for="organizationType">Organization type</label>
+                <select id="organizationType" name="organizationType">
+                  <option value="Home care">Home care agency</option>
+                  <option value="Assisted living">Assisted living</option>
+                  <option value="Family or household">Family or household</option>
+                  <option value="Community care">Community care organization</option>
+                  <option value="Staffing">Care staffing organization</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="teamSize">Care team size</label>
+                <select id="teamSize" name="teamSize">
+                  <option value="1">Just me</option>
+                  <option value="5">2–5 people</option>
+                  <option value="10">6–10 people</option>
+                  <option value="30">11–30 people</option>
+                  <option value="75">31–100 people</option>
+                  <option value="150">More than 100</option>
+                </select>
+              </div>
+              <div class="field full">
+                <label for="companyDescription">Tell caregivers about your care setting</label>
+                <textarea id="companyDescription" name="companyDescription" placeholder="Describe your clients, care environment and what makes your team a good place to work."></textarea>
+              </div>
+              <div class="field">
+                <label for="website">Website (optional)</label>
+                <input id="website" name="website" type="url" placeholder="https://example.com">
+              </div>
+              <div class="field">
+                <label for="zipCode">Primary service ZIP code</label>
+                <input id="zipCode" name="zipCode" inputmode="numeric" autocomplete="postal-code" placeholder="01852">
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="step-panel" data-step="4">
+          <span class="step-kicker">Final step</span>
+          <h2>Your Elite Bridge workspace is ready</h2>
+          <p class="step-intro">The mobile app and web portal use the same account. Changes you make to connected profile information will be available across both.</p>
+          <div class="surface surface-pad setup-card">
+            <div class="setup-top"><h2 id="reviewTitle">Caregiver workspace</h2><span class="status">Ready</span></div>
+            <div class="setup-list" style="margin-top:18px">
+              <div class="setup-step done">Role and profile preferences added</div>
+              <div class="setup-step done">Care services selected</div>
+              <div class="setup-step done">Dashboard personalized for your work</div>
+            </div>
+          </div>
+        </section>
+
+        <div class="onboarding-actions">
+          <button class="skip-button" type="button" id="backButton" hidden>Back</button>
+          <div class="button-group">
+            <button class="secondary-button" type="button" id="skipButton">Skip for now</button>
+            <button class="primary-button" type="button" id="nextButton">Continue</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script src="/onboarding.js"></script>
+</body>
+</html>

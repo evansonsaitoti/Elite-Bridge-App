@@ -401,12 +401,10 @@
             successDiv.textContent = 'Account created successfully! Redirecting...';
             successDiv.style.display = 'block';
 
-            // Redirect based on role
+            // New members complete role-specific setup before opening the dashboard.
             setTimeout(() => {
-                if (role === 'caregiver') {
-                    window.location.href = 'caregiver-dashboard.html';
-                } else if (role === 'employer') {
-                    window.location.href = 'employer-dashboard.html';
+                if (role === 'caregiver' || role === 'employer') {
+                    window.location.href = '/onboarding';
                 } else {
                     window.location.href = 'index.html';
                 }
