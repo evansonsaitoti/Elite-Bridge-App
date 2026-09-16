@@ -9,6 +9,7 @@ import { AppError } from "../middleware/errorHandler.js";
 const router = Router();
 
 const updateProfileSchema = z.object({
+  companyName: z.string().min(2).optional(),
   companyDescription: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -16,6 +17,8 @@ const updateProfileSchema = z.object({
   zipCode: z.string().optional(),
   phone: z.string().optional(),
   website: z.string().optional(),
+  industry: z.string().optional(),
+  teamSize: z.number().int().positive().optional(),
   servicesOffered: z.array(z.string()).optional(),
 });
 
@@ -82,8 +85,11 @@ router.put("/:id", authMiddleware, async (req: AuthRequest, res, next) => {
 
     // Prepare employer update data
     const employerData: any = {};
+    if (data.companyName) employerData.companyName = data.companyName;
     if (data.companyDescription) employerData.companyDescription = data.companyDescription;
     if (data.website) employerData.website = data.website;
+    if (data.industry) employerData.industry = data.industry;
+    if (data.teamSize) employerData.teamSize = data.teamSize;
     if (data.servicesOffered) employerData.serviceArea = data.servicesOffered;
     
     if (data.address || data.city || data.state || data.zipCode) {
