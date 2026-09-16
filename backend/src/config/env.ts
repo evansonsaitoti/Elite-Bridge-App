@@ -21,6 +21,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().email().optional(),
+  SMTP_FROM_NAME: z.string().default("Elite Bridge"),
+  SMTP_SECURE: z.coerce.boolean().optional(),
+  SIGNUP_NOTIFICATION_EMAIL: z.string().email().default("info@elitebridgestaffing.com"),
+  APP_URL: z.string().url().default("https://app.elitebridgestaffing.com"),
 
   // SMS (Twilio)
   TWILIO_ACCOUNT_SID: z.string().optional(),

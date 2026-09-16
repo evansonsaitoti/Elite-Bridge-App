@@ -14,6 +14,8 @@ const updateProfileSchema = z.object({
   yearsExperience: z.number().min(0).optional(),
   specialties: z.array(z.string()).min(1),
   certifications: z.array(z.string()).optional(),
+  availability: z.record(z.array(z.string())).optional(),
+  phone: z.string().optional(),
 });
 
 // List all caregivers (for employer discovery)
@@ -56,6 +58,13 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
 
     const data = updateProfileSchema.parse(req.body);
 
+    if (data.phone) {
+      await db
+        .update(users)
+        .set({ phone: data.phone, updatedAt: new Date() })
+        .where(eq(users.id, userId));
+    }
+
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (user.length === 0) {
       throw new AppError(404, "User not found");
@@ -79,6 +88,7 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
           yearsExperience: data.yearsExperience,
           specialties: data.specialties,
           certifications: data.certifications,
+          availability: data.availability,
           updatedAt: new Date(),
         })
         .where(eq(caregivers.userId, userId));
@@ -90,6 +100,7 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
         yearsExperience: data.yearsExperience,
         specialties: data.specialties,
         certifications: data.certifications,
+        availability: data.availability,
       });
     }
 
@@ -122,6 +133,10 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
         certifications: caregivers.certifications,
         yearsExperience: caregivers.yearsExperience,
         rating: caregivers.rating,
+        totalEarnings: caregivers.totalEarnings,
+        totalHours: caregivers.totalHours,
+        availability: caregivers.availability,
+        backgroundCheckStatus: caregivers.backgroundCheckStatus,
         firstName: users.firstName,
         lastName: users.lastName,
         profileImage: users.profileImage,

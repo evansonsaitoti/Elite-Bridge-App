@@ -7,6 +7,7 @@ import { users, employers } from "../db/schema.js";
 import { eq } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { sendSignupEmails } from "../services/email.js";
 
 const router = Router();
 
@@ -63,8 +64,19 @@ router.post("/register", async (req, res, next) => {
 
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
+    // Email is intentionally non-blocking for account creation: a temporary mail
+    // provider issue must never prevent a member from accessing Elite Bridge.
+    await sendSignupEmails({
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      role: data.role,
+      phone: user.phone || undefined,
+      companyName: data.companyName,
+    }).catch((error) => console.error("Signup email delivery failed", error));
+
     res.status(201).json({
-      message: "User registered successfully",
+      message: `Welcome to Elite Bridge, ${user.firstName}! Your ${user.role} account is ready.`,
       token,
       user: {
         id: user.id,

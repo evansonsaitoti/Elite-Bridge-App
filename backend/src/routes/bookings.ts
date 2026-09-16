@@ -179,6 +179,20 @@ router.get("/employer/my", authMiddleware, async (req: AuthRequest, res, next) =
   } catch (error) { next(error); }
 });
 
+// Open shifts available to caregivers across the Elite Bridge network.
+router.get("/available", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const result = await db.execute(sql`
+      SELECT * FROM shift_posts
+      WHERE status = 'open' AND start_time >= CURRENT_TIMESTAMP
+      ORDER BY urgency DESC, start_time ASC
+      LIMIT 100
+    `);
+    res.json({ shifts: (result as any).rows.map(mapShift) });
+  } catch (error) { next(error); }
+});
+
 // Clock-in route for caregivers
 router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
   try {

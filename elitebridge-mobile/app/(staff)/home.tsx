@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, TextInput } from "react-native";
 import { useColors } from "@/hooks/use-colors";
+import { eliteBridgeApi } from "@/lib/elite-bridge-api";
 
 /**
  * Staff Home Dashboard
@@ -11,46 +12,32 @@ export default function StaffHome() {
   const [expandedSection, setExpandedSection] = useState<string | null>("shifts");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Mock data
+  const [availableShifts, setAvailableShifts] = useState<Array<{ id: number; title: string; facility: string; location: string; date: string; time: string; pay: string; status: string }>>([]);
+  const [shiftError, setShiftError] = useState("");
+
+  useEffect(() => {
+    eliteBridgeApi.getAvailableShifts()
+      .then(({ shifts }) => setAvailableShifts(shifts.map((shift) => ({
+        id: shift.id,
+        title: shift.title,
+        facility: shift.serviceType,
+        location: `${shift.location.city}, ${shift.location.state}`,
+        date: new Date(shift.startTime).toLocaleDateString(),
+        time: `${new Date(shift.startTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - ${new Date(shift.endTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
+        pay: `$${shift.hourlyRate}/hr`,
+        status: shift.status,
+      }))))
+      .catch((error) => setShiftError(error instanceof Error ? error.message : "Could not load shifts"));
+  }, []);
+
+  const visibleShifts = useMemo(() => availableShifts.filter((shift) => `${shift.title} ${shift.facility} ${shift.location}`.toLowerCase().includes(searchQuery.toLowerCase())), [availableShifts, searchQuery]);
+
   const stats = {
     appliedShifts: 5,
     completedShifts: 12,
     totalEarnings: 1440,
     upcomingShifts: 2,
   };
-
-  const availableShifts = [
-    {
-      id: 1,
-      title: "Caregiver - Assisted Living",
-      facility: "Sunrise Senior Living",
-      location: "Maple Grove, MN",
-      date: "Tomorrow",
-      time: "8:00 AM - 4:00 PM",
-      pay: "$18/hr",
-      status: "Open",
-    },
-    {
-      id: 2,
-      title: "Activities Coordinator",
-      facility: "Golden Years Community",
-      location: "Minneapolis, MN",
-      date: "Tomorrow",
-      time: "10:00 AM - 6:00 PM",
-      pay: "$16/hr",
-      status: "Open",
-    },
-    {
-      id: 3,
-      title: "Dining Services Assistant",
-      facility: "Meadowbrook Assisted Living",
-      location: "St Paul, MN",
-      date: "Day After Tomorrow",
-      time: "9:00 AM - 5:00 PM",
-      pay: "$17/hr",
-      status: "Open",
-    },
-  ];
 
   const applications = [
     {
@@ -205,7 +192,9 @@ export default function StaffHome() {
       {renderSectionHeader("Available Shifts", "📅", "#FF6B6B", "shifts")}
       {expandedSection === "shifts" && (
         <View style={{ marginBottom: 20 }}>
-          {availableShifts.map((shift) => (
+          {shiftError ? <Text style={{ color: "#B42318", marginBottom: 12 }}>{shiftError}</Text> : null}
+          {!shiftError && visibleShifts.length === 0 ? <Text style={{ color: colors.muted, marginBottom: 12 }}>No open shifts are available right now.</Text> : null}
+          {visibleShifts.map((shift) => (
             <TouchableOpacity
               key={shift.id}
               style={{

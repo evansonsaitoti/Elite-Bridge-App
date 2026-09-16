@@ -8,11 +8,13 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import { useCallback } from "react";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useTimekeeping } from "@/lib/timekeeping-context";
+import { eliteBridgeApi } from "@/lib/elite-bridge-api";
 
 type Shift = {
   id: string;
@@ -108,6 +110,23 @@ export default function AdminHomeScreen() {
       }
     });
   }, []);
+
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    eliteBridgeApi.getEmployerShifts().then(({ shifts }) => {
+      if (!active) return;
+      setData((current) => ({ ...current, shifts: shifts.map((shift) => ({
+        id: String(shift.id),
+        title: shift.title,
+        client: shift.careRecipientName || shift.serviceType,
+        date: new Date(shift.startTime).toLocaleDateString(),
+        time: `${new Date(shift.startTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - ${new Date(shift.endTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}`,
+        rate: `$${shift.hourlyRate}/hr`,
+        status: shift.status === "open" ? "Open" : "Filled",
+      })) }));
+    }).catch(() => undefined);
+    return () => { active = false; };
+  }, []));
 
   const persist = (next: DashboardData) => {
     setData(next);
@@ -278,7 +297,7 @@ export default function AdminHomeScreen() {
       {[ [activeStaff, "Active Staff"], [data.shifts.length, "Total Shifts"] ].map(([value, label]) => <View key={String(label)} style={{ flex: 1, padding: 16, borderRadius: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center" }}><Text style={{ color: colors.primary, fontSize: 26, fontWeight: "900" }}>{value}</Text><Text style={{ color: colors.muted, textAlign: "center" }}>{label}</Text></View>)}
     </View>
 
-    <TouchableOpacity style={{ backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 12 }} onPress={() => { resetDraft(); setShowShiftForm(!showShiftForm); }}><Text style={{ color: "white", fontWeight: "900", fontSize: 17 }}>+ Post New Shift</Text></TouchableOpacity>
+    <TouchableOpacity style={{ backgroundColor: colors.primary, borderRadius: 12, padding: 16, alignItems: "center", marginBottom: 12 }} onPress={() => router.push("/(admin)/post-shift")}><Text style={{ color: "white", fontWeight: "900", fontSize: 17 }}>+ Post New Shift</Text></TouchableOpacity>
     {showShiftForm && <View style={[card, { padding: 14 }]}>
       <Text style={{ color: colors.foreground, fontSize: 19, fontWeight: "900", marginBottom: 12 }}>{editingShiftId ? "Edit Shift" : "Post New Shift"}</Text>
       <TextInput placeholder="Service, e.g. Personal Care" placeholderTextColor={colors.muted} value={draft.title} onChangeText={(title) => setDraft({ ...draft, title })} style={input} />

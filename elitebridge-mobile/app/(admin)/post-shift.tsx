@@ -3,6 +3,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { eliteBridgeApi } from "@/lib/elite-bridge-api";
 
 /**
  * Admin Post Shift Screen - Create new shift opportunities
@@ -13,7 +14,14 @@ export default function AdminPostShiftScreen() {
 
   const [formData, setFormData] = useState({
     title: "",
-    location: "",
+    serviceType: "Companionship",
+    caregiverType: "Caregiver",
+    recipientName: "",
+    address: "",
+    city: "",
+    state: "",
+    zipCode: "",
+    phone: "",
     date: "",
     startTime: "",
     endTime: "",
@@ -22,19 +30,49 @@ export default function AdminPostShiftScreen() {
     description: "",
   });
 
-  const handleSubmit = () => {
-    if (!formData.title || !formData.location || !formData.date || !formData.payRate) {
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.address || !formData.city || !formData.state || !formData.zipCode || !formData.date || !formData.startTime || !formData.endTime || !formData.payRate) {
       Alert.alert("Missing Information", "Please fill in all required fields");
       return;
     }
-
-    Alert.alert("Shift Posted", `"${formData.title}" has been posted successfully!`, [
+    const hourlyRate = Number(formData.payRate.replace(/[^0-9.]/g, ""));
+    if (!hourlyRate) return Alert.alert("Invalid Rate", "Enter a valid hourly rate.");
+    try {
+      setSubmitting(true);
+      await eliteBridgeApi.createShift({
+        title: formData.title,
+        serviceType: formData.serviceType,
+        caregiverType: formData.caregiverType,
+        careRecipientName: formData.recipientName || undefined,
+        scheduleType: "one_time",
+        startDate: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        location: { type: "client_home", address: formData.address, city: formData.city, state: formData.state.toUpperCase(), zipCode: formData.zipCode },
+        pay: { hourlyRate, currency: "USD" },
+        numberOfCaregivers: 1,
+        requirements: formData.requirements.split("\n").map((item) => item.trim()).filter(Boolean),
+        responsibilities: formData.description || formData.serviceType,
+        notes: "",
+        contact: { name: "Elite Bridge employer", phone: formData.phone || "Contact through Elite Bridge" },
+        urgency: "standard",
+      });
+      Alert.alert("Shift Posted", `"${formData.title}" is now visible on web and mobile.`, [
       {
         text: "Post Another",
         onPress: () => {
           setFormData({
             title: "",
-            location: "",
+            serviceType: "Companionship",
+            caregiverType: "Caregiver",
+            recipientName: "",
+            address: "",
+            city: "",
+            state: "",
+            zipCode: "",
+            phone: "",
             date: "",
             startTime: "",
             endTime: "",
@@ -48,7 +86,12 @@ export default function AdminPostShiftScreen() {
         text: "Back to Dashboard",
         onPress: () => router.back(),
       },
-    ]);
+      ]);
+    } catch (error) {
+      Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const styles = StyleSheet.create({
@@ -156,19 +199,23 @@ export default function AdminPostShiftScreen() {
             />
           </View>
 
+          <View style={styles.formGroup}><Text style={styles.label}>Service type</Text><TextInput style={styles.input} value={formData.serviceType} onChangeText={(serviceType) => setFormData({ ...formData, serviceType })} /></View>
+          <View style={styles.formGroup}><Text style={styles.label}>Care recipient first name</Text><TextInput style={styles.input} value={formData.recipientName} onChangeText={(recipientName) => setFormData({ ...formData, recipientName })} /></View>
+
           {/* Location */}
           <View style={styles.formGroup}>
             <Text style={styles.label}>
-              Facility Location <Text style={styles.required}>*</Text>
+              Street address <Text style={styles.required}>*</Text>
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="e.g., Sunrise Senior Living - Maple Grove"
+              placeholder="Care location"
               placeholderTextColor={colors.muted}
-              value={formData.location}
-              onChangeText={(text) => setFormData({ ...formData, location: text })}
+              value={formData.address}
+              onChangeText={(address) => setFormData({ ...formData, address })}
             />
           </View>
+          <View style={styles.row}><TextInput style={[styles.input, styles.rowItem]} placeholder="City" value={formData.city} onChangeText={(city) => setFormData({ ...formData, city })} /><TextInput style={[styles.input, { width: 76 }]} placeholder="State" autoCapitalize="characters" maxLength={2} value={formData.state} onChangeText={(state) => setFormData({ ...formData, state })} /><TextInput style={[styles.input, { width: 104 }]} placeholder="ZIP" keyboardType="number-pad" value={formData.zipCode} onChangeText={(zipCode) => setFormData({ ...formData, zipCode })} /></View>
 
           {/* Date and Time */}
           <View style={styles.row}>
@@ -178,7 +225,7 @@ export default function AdminPostShiftScreen() {
               </Text>
               <TextInput
                 style={styles.input}
-                placeholder="MM/DD/YYYY"
+                placeholder="YYYY-MM-DD"
                 placeholderTextColor={colors.muted}
                 value={formData.date}
                 onChangeText={(text) => setFormData({ ...formData, date: text })}
@@ -192,7 +239,7 @@ export default function AdminPostShiftScreen() {
               <Text style={styles.label}>Start Time</Text>
               <TextInput
                 style={styles.input}
-                placeholder="8:00 AM"
+                placeholder="08:00"
                 placeholderTextColor={colors.muted}
                 value={formData.startTime}
                 onChangeText={(text) => setFormData({ ...formData, startTime: text })}
@@ -202,13 +249,14 @@ export default function AdminPostShiftScreen() {
               <Text style={styles.label}>End Time</Text>
               <TextInput
                 style={styles.input}
-                placeholder="4:00 PM"
+                placeholder="16:00"
                 placeholderTextColor={colors.muted}
                 value={formData.endTime}
                 onChangeText={(text) => setFormData({ ...formData, endTime: text })}
               />
             </View>
           </View>
+          <View style={styles.formGroup}><Text style={styles.label}>Contact phone</Text><TextInput style={styles.input} keyboardType="phone-pad" value={formData.phone} onChangeText={(phone) => setFormData({ ...formData, phone })} /></View>
 
           {/* Pay Rate */}
           <View style={styles.formGroup}>
@@ -251,8 +299,8 @@ export default function AdminPostShiftScreen() {
           </View>
 
           {/* Buttons */}
-          <Pressable style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>Post Shift</Text>
+          <Pressable style={[styles.submitButton, submitting && { opacity: 0.6 }]} onPress={handleSubmit} disabled={submitting}>
+            <Text style={styles.submitButtonText}>{submitting ? "Posting…" : "Post Shift"}</Text>
           </Pressable>
           <Pressable style={styles.cancelButton} onPress={() => router.back()}>
             <Text style={styles.cancelButtonText}>Cancel</Text>

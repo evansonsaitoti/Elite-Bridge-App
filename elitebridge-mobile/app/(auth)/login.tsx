@@ -13,64 +13,63 @@ import {
 } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
+import * as Auth from "@/lib/_core/auth";
+import { eliteBridgeApi } from "@/lib/elite-bridge-api";
 
 type LoginRole = "administrator" | "staff";
-
-const DEMO_ACCOUNTS = {
-  administrator: {
-    email: "admin@elitebridge.com",
-    password: "Admin123!",
-    destination: "/(admin)/home" as const,
-  },
-  staff: {
-    email: "staff@elitebridge.com",
-    password: "Staff123!",
-    destination: "/(staff)/home" as const,
-  },
-};
 
 export default function LoginScreen() {
   const router = useRouter();
   const [role, setRole] = useState<LoginRole>("administrator");
-  const [email, setEmail] = useState(DEMO_ACCOUNTS.administrator.email);
-  const [password, setPassword] = useState(DEMO_ACCOUNTS.administrator.password);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   const chooseRole = (nextRole: LoginRole) => {
     setRole(nextRole);
-    setEmail(DEMO_ACCOUNTS[nextRole].email);
-    setPassword(DEMO_ACCOUNTS[nextRole].password);
     setError("");
   };
 
   const handleLogin = async () => {
-    const account = DEMO_ACCOUNTS[role];
     setError("");
     if (!email.trim() || !password) {
       setError("Enter both your email address and password.");
       return;
     }
-    if (email.trim().toLowerCase() !== account.email.toLowerCase() || password !== account.password) {
-      setError(`These details do not match the selected ${role} account. Use the demo credentials shown below.`);
-      return;
-    }
     try {
       setIsLoading(true);
+      const result = await eliteBridgeApi.login(email.trim(), password);
+      const expectedRole = role === "administrator" ? "employer" : "caregiver";
+      if (result.user.role !== expectedRole) {
+        setError(`This account is registered as a ${result.user.role}. Choose the matching portal and try again.`);
+        return;
+      }
+      const appRole = result.user.role === "employer" ? "admin" : "user";
+      await Auth.setSessionToken(result.token);
+      await Auth.setUserInfo({
+        id: result.user.id,
+        openId: `elitebridge_${result.user.id}`,
+        name: `${result.user.firstName} ${result.user.lastName}`.trim(),
+        email: result.user.email,
+        loginMethod: "email",
+        lastSignedIn: new Date(),
+        role: appRole,
+        onboardingCompleted: true,
+      });
       await AsyncStorage.setItem(
         "elitebridge-session",
-        JSON.stringify({ role, email: account.email, signedInAt: new Date().toISOString() }),
+        JSON.stringify({ role, email: result.user.email, userId: result.user.id, signedInAt: new Date().toISOString() }),
       );
-      router.replace(account.destination);
-    } catch {
-      setError("We could not sign you in. Please try again.");
+      router.replace(role === "administrator" ? "/(admin)/home" : "/(staff)/home");
+    } catch (loginError) {
+      setError(loginError instanceof Error ? loginError.message : "We could not sign you in. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const account = DEMO_ACCOUNTS[role];
   const isAdmin = role === "administrator";
 
   return (
@@ -93,7 +92,7 @@ export default function LoginScreen() {
             style={[styles.roleCard, isAdmin && styles.roleCardSelected]}
           >
             <Text style={styles.roleEyebrow}>AGENCY</Text>
-            <Text style={[styles.roleTitle, isAdmin && styles.roleTitleSelected]}>Administrator</Text>
+            <Text style={[styles.roleTitle, isAdmin && styles.roleTitleSelected]}>Employer</Text>
             <Text style={[styles.roleDescription, isAdmin && styles.roleDescriptionSelected]}>
               Manage shifts, staff, applications and timesheets
             </Text>
@@ -106,7 +105,7 @@ export default function LoginScreen() {
             style={[styles.roleCard, !isAdmin && styles.roleCardSelected]}
           >
             <Text style={styles.roleEyebrow}>CAREGIVER</Text>
-            <Text style={[styles.roleTitle, !isAdmin && styles.roleTitleSelected]}>Staff</Text>
+            <Text style={[styles.roleTitle, !isAdmin && styles.roleTitleSelected]}>Caregiver</Text>
             <Text style={[styles.roleDescription, !isAdmin && styles.roleDescriptionSelected]}>
               View shifts, clock in and manage your profile
             </Text>
@@ -115,7 +114,7 @@ export default function LoginScreen() {
 
         <View style={styles.portalBanner}>
           <Text style={styles.portalLabel}>YOU ARE SIGNING IN TO</Text>
-          <Text style={styles.portalTitle}>{isAdmin ? "Administrator Portal" : "Staff Portal"}</Text>
+          <Text style={styles.portalTitle}>{isAdmin ? "Employer Portal" : "Caregiver Portal"}</Text>
         </View>
 
         {error ? (
@@ -151,12 +150,6 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          <View style={styles.demoBox}>
-            <Text style={styles.demoTitle}>Demo {isAdmin ? "administrator" : "staff"} login</Text>
-            <Text style={styles.demoText}>Email: {account.email}</Text>
-            <Text style={styles.demoText}>Password: {account.password}</Text>
-          </View>
-
           <TouchableOpacity
             style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
             onPress={handleLogin}
@@ -165,7 +158,7 @@ export default function LoginScreen() {
             {isLoading ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.loginButtonText}>Sign in as {isAdmin ? "Administrator" : "Staff"}</Text>
+              <Text style={styles.loginButtonText}>Sign in as {isAdmin ? "Employer" : "Caregiver"}</Text>
             )}
           </TouchableOpacity>
         </View>

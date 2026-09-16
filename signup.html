@@ -398,15 +398,13 @@
             localStorage.setItem('user', JSON.stringify(data.user));
 
             // Show success message
-            successDiv.textContent = 'Account created successfully! Redirecting...';
+            successDiv.textContent = `${data.message || 'Welcome to Elite Bridge! Your account is ready.'} Redirecting...`;
             successDiv.style.display = 'block';
 
-            // Redirect based on role
+            // New members complete role-specific setup before opening the dashboard.
             setTimeout(() => {
-                if (role === 'caregiver') {
-                    window.location.href = 'caregiver-dashboard.html';
-                } else if (role === 'employer') {
-                    window.location.href = 'employer-dashboard.html';
+                if (role === 'caregiver' || role === 'employer') {
+                    window.location.href = '/onboarding';
                 } else {
                     window.location.href = 'index.html';
                 }
