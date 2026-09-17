@@ -21,6 +21,9 @@
     { "src": "/find-jobs/?", "dest": "/find-jobs.html" },
     { "src": "/services/?", "dest": "/services.html" },
     { "src": "/privacy/?", "dest": "/privacy.html" },
+    { "src": "/terms/?", "dest": "/terms.html" },
+    { "src": "/forgot-password/?", "dest": "/forgot-password.html" },
+    { "src": "/reset-password/?", "dest": "/reset-password.html" },
     {
       "src": "/(.*)",
       "headers": {

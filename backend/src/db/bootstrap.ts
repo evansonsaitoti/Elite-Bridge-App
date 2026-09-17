@@ -62,9 +62,54 @@ export async function ensureCoreTables() {
     )
   `);
 
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS caregiver_invitations (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      token_hash VARCHAR(64) NOT NULL UNIQUE,
+      first_name VARCHAR(100),
+      last_name VARCHAR(100),
+      email VARCHAR(255),
+      phone VARCHAR(20),
+      status VARCHAR(20) NOT NULL DEFAULT 'pending',
+      accepted_by_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      expires_at TIMESTAMP NOT NULL,
+      accepted_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS employer_caregivers (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      caregiver_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      invitation_id INTEGER REFERENCES caregiver_invitations(id) ON DELETE SET NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS password_reset_tokens (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      token_hash VARCHAR(64) NOT NULL UNIQUE,
+      expires_at TIMESTAMP NOT NULL,
+      used_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS email_idx ON users(email)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS role_idx ON users(role)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS employer_user_id_idx ON employers(user_id)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS caregiver_invitation_employer_idx ON caregiver_invitations(employer_id)`);
+  await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS caregiver_invitation_token_idx ON caregiver_invitations(token_hash)`);
+  await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS employer_caregiver_unique_idx ON employer_caregivers(employer_id, caregiver_user_id)`);
+  await db.execute(sql`CREATE INDEX IF NOT EXISTS password_reset_user_idx ON password_reset_tokens(user_id)`);
+  await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS password_reset_token_idx ON password_reset_tokens(token_hash)`);
 
   coreTablesReady = true;
 }
