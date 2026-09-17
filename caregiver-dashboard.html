@@ -1,542 +1,62 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Caregiver Dashboard - Elite Bridge</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f4f7f6;
-            color: #333;
-        }
-
-        :root {
-            --primary-dark: #0b3726;
-            --accent-gold: #c08530;
-            --white: #ffffff;
-            --gray-light: #e9ecef;
-        }
-
-        header {
-            background: var(--white);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-            padding: 15px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .header-left img {
-            height: 40px;
-            width: auto;
-        }
-
-        .header-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-        }
-
-        .user-menu {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-        }
-
-        .user-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: var(--primary-dark);
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-        }
-
-        .logout-btn {
-            padding: 8px 16px;
-            background: var(--accent-gold);
-            color: var(--primary-dark);
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .logout-btn:hover {
-            background: var(--primary-dark);
-            color: var(--white);
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            margin-bottom: 40px;
-        }
-
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-
-        .profile-card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-            text-align: center;
-        }
-
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: var(--primary-dark);
-            color: var(--white);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            margin: 0 auto 15px;
-        }
-
-        .profile-card h3 {
-            color: var(--primary-dark);
-            margin-bottom: 5px;
-        }
-
-        .profile-card p {
-            color: #999;
-            font-size: 0.9rem;
-            margin-bottom: 15px;
-        }
-
-        .profile-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
-            padding-top: 15px;
-            border-top: 1px solid var(--gray-light);
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--primary-dark);
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: #999;
-        }
-
-        .btn-primary {
-            width: 100%;
-            padding: 10px;
-            background: var(--primary-dark);
-            color: var(--white);
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-gold);
-        }
-
-        .main-content {
-            display: flex;
-            flex-direction: column;
-            gap: 30px;
-        }
-
-        .card {
-            background: var(--white);
-            border-radius: 12px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-        }
-
-        .card h2 {
-            color: var(--primary-dark);
-            margin-bottom: 20px;
-            font-size: 1.3rem;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            color: var(--primary-dark);
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-        }
-
-        .form-group input,
-        .form-group textarea,
-        .form-group select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--gray-light);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            font-family: inherit;
-        }
-
-        .form-group textarea {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        .form-group input:focus,
-        .form-group textarea:focus,
-        .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-dark);
-            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
-        }
-
-        .services-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .service-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .service-checkbox input {
-            width: auto;
-            margin: 0;
-        }
-
-        .service-checkbox label {
-            margin: 0;
-            font-weight: normal;
-        }
-
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .btn-save {
-            padding: 12px 30px;
-            background: var(--primary-dark);
-            color: var(--white);
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        .btn-save:hover {
-            background: var(--accent-gold);
-        }
-
-        .time-tracking {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-        }
-
-        .time-btn {
-            padding: 15px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .clock-in {
-            background: #4caf50;
-            color: var(--white);
-        }
-
-        .clock-in:hover {
-            background: #45a049;
-        }
-
-        .clock-out {
-            background: #f44336;
-            color: var(--white);
-        }
-
-        .clock-out:hover {
-            background: #da190b;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .status-active {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .status-inactive {
-            background: #f3e5f5;
-            color: #6a1b9a;
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            .time-tracking {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#063e2c">
+  <meta name="description" content="Elite Bridge caregiver workspace for shifts, schedules, time tracking, messages and earnings.">
+  <title>Caregiver workspace | Elite Bridge</title>
+  <link rel="stylesheet" href="/app-shell.css">
 </head>
-<body>
-
-<header>
-    <div class="header-left">
-        <img src="logo.webp" alt="Elite Bridge Logo">
-    </div>
-    <div class="header-right">
-        <div class="user-menu">
-            <div class="user-avatar" id="userInitial">J</div>
-            <span id="userName">John Doe</span>
+<body data-role="caregiver">
+  <div class="app-frame">
+    <header class="app-header">
+      <div class="brand-panel"><img src="/logo.png" alt="Elite Bridge"></div>
+      <div class="header-main">
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation">☰</button>
+        <label class="global-search"><input id="globalSearch" type="search" placeholder="Search this workspace"><span class="search-glyph">⌕</span></label>
+        <span class="header-spacer"></span>
+        <button class="header-action" type="button" data-notify="Elite Bridge support is available at info@elitebridgestaffing.com.">Help</button>
+        <button class="round-action has-alert" type="button" aria-label="Notifications" data-notify="You are all caught up.">♢</button>
+        <div class="account-wrap">
+          <button class="account-button" id="accountButton" type="button" aria-expanded="false" aria-controls="accountMenu"><span class="avatar" data-user-initials>EB</span><span class="account-copy"><strong data-user-name>Caregiver</strong><small>Caregiver workspace</small></span><span aria-hidden="true">⌄</span></button>
+          <div class="account-menu" id="accountMenu" hidden><a href="/onboarding">Update setup</a><button type="button" data-view="profile">Profile & preferences</button><button type="button" data-view="documents">Documents</button><div class="menu-divider"></div><button type="button" data-logout>Sign out</button></div>
         </div>
-        <button class="logout-btn" onclick="handleLogout()">Logout</button>
-    </div>
-</header>
+      </div>
+    </header>
 
-<div class="container">
-    <div class="dashboard-grid">
-        <div class="sidebar">
-            <div class="profile-card">
-                <div class="profile-avatar">👵</div>
-                <h3 id="profileName">John Doe</h3>
-                <p id="profileRole">Caregiver</p>
-                <div class="profile-stats">
-                    <div class="stat">
-                        <div class="stat-value" id="ratingValue">4.8</div>
-                        <div class="stat-label">Rating</div>
-                    </div>
-                    <div class="stat">
-                        <div class="stat-value" id="bookingsValue">12</div>
-                        <div class="stat-label">Bookings</div>
-                    </div>
-                </div>
-                <button class="btn-primary" onclick="scrollToSection('profile')">Edit Profile</button>
-            </div>
+    <aside class="app-sidebar">
+      <nav class="nav-shell" aria-label="Caregiver workspace">
+        <div class="nav-section"><p class="nav-label">Workspace</p><a class="nav-link active" href="#overview" data-view="overview"><span class="nav-icon">⌂</span>Overview</a><a class="nav-link" href="#available" data-view="available"><span class="nav-icon">↗</span>Available shifts<span class="nav-count">Live</span></a><a class="nav-link" href="#schedule" data-view="schedule"><span class="nav-icon">▦</span>My schedule</a><a class="nav-link" href="#clock" data-view="clock"><span class="nav-icon">◷</span>Time clock</a></div>
+        <div class="nav-section"><p class="nav-label">Communication</p><a class="nav-link" href="#messages" data-view="messages"><span class="nav-icon">✉</span>Messages</a><a class="nav-link" href="#updates" data-view="updates"><span class="nav-icon">◎</span>Care updates</a></div>
+        <div class="nav-section"><p class="nav-label">My work</p><a class="nav-link" href="#earnings" data-view="earnings"><span class="nav-icon">$</span>Earnings</a><a class="nav-link" href="#documents" data-view="documents"><span class="nav-icon">✓</span>Documents</a><a class="nav-link" href="#profile" data-view="profile"><span class="nav-icon">○</span>Profile & availability</a></div>
+        <div class="sidebar-foot"><strong>Mobile app connected</strong><p>Your account and connected profile information stay together across web and mobile.</p><a href="/onboarding">Review your setup →</a></div>
+      </nav>
+    </aside>
+    <button class="mobile-overlay" id="mobileOverlay" aria-label="Close navigation"></button>
 
-            <div class="card">
-                <h3 style="margin-bottom: 15px;">Quick Actions</h3>
-                <button class="btn-primary" style="margin-bottom: 10px;" onclick="scrollToSection('availability')">Set Availability</button>
-                <button class="btn-primary" style="margin-bottom: 10px; background: var(--accent-gold); color: var(--primary-dark);" onclick="scrollToSection('time-tracking')">Clock In/Out</button>
-            </div>
-        </div>
+    <main class="app-main"><div class="content-shell">
+      <section data-view-panel="overview">
+        <div class="page-head"><div><p class="eyebrow">Caregiver workspace</p><h1>Good <span id="dayPart">day</span>, <span data-user-first>there</span>.</h1><p>Your workday, opportunities and updates in one clear view.</p></div><span class="sync-status">App and web connected</span></div>
+        <div class="dashboard-grid"><div class="dashboard-main">
+          <section class="surface surface-pad"><div class="surface-head"><div><h2>Quick actions</h2><p>Start the tasks you use most</p></div></div><div class="quick-grid"><button class="quick-card" type="button" data-go-view="available"><span class="quick-icon">↗</span><span class="quick-copy"><strong>Find shifts</strong><span>View open care opportunities</span></span></button><button class="quick-card" type="button" data-go-view="clock"><span class="quick-icon">◷</span><span class="quick-copy"><strong>Time clock</strong><span>Start or end a care visit</span></span></button><button class="quick-card" type="button" data-go-view="messages"><span class="quick-icon">✉</span><span class="quick-copy"><strong>Messages</strong><span>Keep care communication together</span></span></button><button class="quick-card" type="button" data-go-view="profile"><span class="quick-icon">✓</span><span class="quick-copy"><strong>Availability</strong><span>Update when you can work</span></span></button></div></section>
+          <section class="metric-grid" aria-label="Caregiver summary"><article class="metric-card"><span class="metric-label">Available shifts <i class="metric-dot"></i></span><strong class="metric-value" id="metricAvailable">—</strong><span class="metric-foot">Currently open to you</span></article><article class="metric-card"><span class="metric-label">Completed visits <i class="metric-dot"></i></span><strong class="metric-value" id="metricCompleted">—</strong><span class="metric-foot">All-time completed care</span></article><article class="metric-card"><span class="metric-label">Total earnings <i class="metric-dot"></i></span><strong class="metric-value" id="metricEarnings">—</strong><span class="metric-foot">Recorded in Elite Bridge</span></article><article class="metric-card"><span class="metric-label">Care rating <i class="metric-dot"></i></span><strong class="metric-value" id="metricRating">—</strong><span class="metric-foot">From completed reviews</span></article></section>
+          <section class="operations-grid"><div class="surface surface-pad"><div class="surface-head"><div><h2>Open care opportunities</h2><p>Recent shifts you can review</p></div><button class="text-link" type="button" data-go-view="available">View all</button></div><div id="overviewShiftList"><div class="empty-state"><div><span class="empty-mark">↗</span><strong>Loading opportunities</strong><p>Checking for care shifts now.</p></div></div></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>This week</h2><p>Your scheduled care time</p></div></div><div class="timeline" aria-label="Weekly schedule"><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Mon</span></div><div class="bar-wrap"><div class="bar" style="height:45px"></div><span>Tue</span></div><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Wed</span></div><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Thu</span></div><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Fri</span></div><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Sat</span></div><div class="bar-wrap"><div class="bar" style="height:20px"></div><span>Sun</span></div></div></div></section>
+        </div><aside class="dashboard-rail"><section class="surface setup-card"><div class="setup-banner"><div class="setup-top"><h2>Profile readiness</h2><span class="setup-percent">75%</span></div><div class="progress-track"><span style="width:75%"></span></div><div class="setup-list"><div class="setup-step done">Basic account created</div><div class="setup-step done">Services selected</div><div class="setup-step done">Availability added</div><div class="setup-step">Verification documents</div></div><a class="primary-button" href="/onboarding">Complete your profile</a></div></section><section class="surface surface-pad"><div class="surface-head"><div><h2>Your care profile</h2><p>Visible to matching employers</p></div></div><div class="list"><div class="list-row"><span class="row-icon">$</span><span class="row-copy"><strong>Preferred rate</strong><span id="profileRate">Loading…</span></span></div><div class="list-row"><span class="row-icon">✓</span><span class="row-copy"><strong>Services</strong><span id="profileServices">Loading…</span></span></div></div><button class="secondary-button" type="button" data-go-view="profile" style="width:100%;margin-top:12px">Update profile</button></section></aside></div>
+      </section>
 
-        <div class="main-content">
-            <!-- Time Tracking Section -->
-            <div class="card" id="time-tracking">
-                <h2>Time Tracking</h2>
-                <div class="time-tracking">
-                    <button class="time-btn clock-in" onclick="clockIn()">⏱️ Clock In</button>
-                    <button class="time-btn clock-out" onclick="clockOut()">⏹️ Clock Out</button>
-                </div>
-                <p style="margin-top: 15px; color: #999; font-size: 0.9rem;">Current Status: <span class="status-badge status-inactive">Offline</span></p>
-            </div>
-
-            <!-- Profile Section -->
-            <div class="card" id="profile">
-                <h2>Profile Information</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>First Name</label>
-                        <input type="text" id="firstName" placeholder="John">
-                    </div>
-                    <div class="form-group">
-                        <label>Last Name</label>
-                        <input type="text" id="lastName" placeholder="Doe">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Email</label>
-                    <input type="email" id="email" placeholder="john@example.com" disabled>
-                </div>
-                <div class="form-group">
-                    <label>Phone</label>
-                    <input type="tel" id="phone" placeholder="(555) 123-4567">
-                </div>
-                <div class="form-group">
-                    <label>Bio</label>
-                    <textarea id="bio" placeholder="Tell families about yourself..."></textarea>
-                </div>
-                <button class="btn-save" onclick="saveProfile()">Save Changes</button>
-            </div>
-
-            <!-- Services Section -->
-            <div class="card">
-                <h2>Services Offered</h2>
-                <div class="services-grid">
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="senior" name="services" value="senior">
-                        <label for="senior">Senior Companion</label>
-                    </div>
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="housekeeping" name="services" value="housekeeping">
-                        <label for="housekeeping">Housekeeping</label>
-                    </div>
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="transportation" name="services" value="transportation">
-                        <label for="transportation">Transportation</label>
-                    </div>
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="errands" name="services" value="errands">
-                        <label for="errands">Errands</label>
-                    </div>
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="meal" name="services" value="meal">
-                        <label for="meal">Meal Prep</label>
-                    </div>
-                    <div class="service-checkbox">
-                        <input type="checkbox" id="pet" name="services" value="pet">
-                        <label for="pet">Pet Care</label>
-                    </div>
-                </div>
-                <button class="btn-save" onclick="saveServices()">Save Services</button>
-            </div>
-
-            <!-- Availability Section -->
-            <div class="card" id="availability">
-                <h2>Availability & Rates</h2>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Hourly Rate ($)</label>
-                        <input type="number" id="hourlyRate" placeholder="20" min="10" step="0.50">
-                    </div>
-                    <div class="form-group">
-                        <label>Availability</label>
-                        <select id="availability">
-                            <option value="">Select availability</option>
-                            <option value="fulltime">Full-time</option>
-                            <option value="parttime">Part-time</option>
-                            <option value="flexible">Flexible</option>
-                            <option value="weekends">Weekends Only</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Zip Code</label>
-                    <input type="text" id="zipCode" placeholder="02101">
-                </div>
-                <button class="btn-save" onclick="saveAvailability()">Save Availability</button>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const API_BASE = 'https://elite-bridge-shared-api.onrender.com/api';
-
-    // Load user data on page load
-    window.addEventListener('load', () => {
-        const user = JSON.parse(localStorage.getItem('user'));
-        if (!user) {
-            window.location.href = 'login.html';
-            return;
-        }
-
-        document.getElementById('userName').textContent = `${user.firstName} ${user.lastName}`;
-        document.getElementById('userInitial').textContent = user.firstName.charAt(0);
-        document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
-        document.getElementById('firstName').value = user.firstName;
-        document.getElementById('lastName').value = user.lastName;
-        document.getElementById('email').value = user.email;
-        document.getElementById('phone').value = user.phone || '';
-    });
-
-    function scrollToSection(sectionId) {
-        const element = document.getElementById(sectionId);
-        if (element) {
-            element.scrollIntoView({ behavior: 'smooth' });
-        }
-    }
-
-    function saveProfile() {
-        alert('Profile saved successfully!');
-    }
-
-    function saveServices() {
-        const selectedServices = Array.from(document.querySelectorAll('input[name="services"]:checked')).map(cb => cb.value);
-        console.log('Selected services:', selectedServices);
-        alert('Services updated successfully!');
-    }
-
-    function saveAvailability() {
-        alert('Availability saved successfully!');
-    }
-
-    function clockIn() {
-        alert('Clocked in at ' + new Date().toLocaleTimeString());
-    }
-
-    function clockOut() {
-        alert('Clocked out at ' + new Date().toLocaleTimeString());
-    }
-
-    function handleLogout() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        window.location.href = 'index.html';
-    }
-</script>
-
+      <section data-view-panel="available" hidden><div class="page-head"><div><p class="eyebrow">Opportunities</p><h1>Available shifts</h1><p>Review open care work posted by employers.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Open care shifts</h2><p>Live opportunities from Elite Bridge</p></div></div><div id="availableShiftList"></div></div></section>
+      <section data-view-panel="schedule" hidden><div class="page-head"><div><p class="eyebrow">My work</p><h1>Schedule</h1><p>Your accepted and upcoming care visits will appear here.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">▦</span><strong>No scheduled visits yet</strong><p>When an employer confirms you for a shift, it will appear here and in your mobile app.</p><button class="primary-button" type="button" data-go-view="available">Find a shift</button></div></div></div></section>
+      <section data-view-panel="clock" hidden><div class="page-head"><div><p class="eyebrow">Timekeeping</p><h1>Time clock</h1><p>Clock in from an assigned visit to keep care time accurate.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">◷</span><strong>No visit ready to clock in</strong><p>Your clock becomes available shortly before a confirmed shift begins.</p><button class="secondary-button" type="button" data-go-view="schedule">View schedule</button></div></div></div></section>
+      <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Conversations</h2><p>Your recent contacts</p></div></div><div id="conversationList"></div></div></section>
+      <section data-view-panel="updates" hidden><div class="page-head"><div><p class="eyebrow">Care communication</p><h1>Care updates</h1><p>Important visit notes and employer updates stay organized here.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">◎</span><strong>No care updates yet</strong><p>Updates connected to scheduled care will appear here.</p></div></div></div></section>
+      <section data-view-panel="earnings" hidden><div class="page-head"><div><p class="eyebrow">Payments</p><h1>Earnings</h1><p>Track recorded earnings from completed Elite Bridge care.</p></div></div><div class="metric-grid"><article class="metric-card"><span class="metric-label">Total earnings <i class="metric-dot"></i></span><strong class="metric-value">See overview</strong><span class="metric-foot">All recorded payments</span></article><article class="metric-card"><span class="metric-label">Pending <i class="metric-dot"></i></span><strong class="metric-value">$0</strong><span class="metric-foot">Awaiting processing</span></article></div></section>
+      <section data-view-panel="documents" hidden><div class="page-head"><div><p class="eyebrow">Trust & compliance</p><h1>Documents</h1><p>Keep credentials and verification status easy to review.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">✓</span><strong>Document upload is coming to web</strong><p>Your existing mobile verification status remains connected. Secure web upload will be added here.</p></div></div></div></section>
+      <section data-view-panel="profile" hidden><div class="page-head"><div><p class="eyebrow">Your account</p><h1>Profile & availability</h1><p>Manage the details employers use to match with you.</p></div><a class="primary-button" href="/onboarding">Edit setup</a></div><div class="surface surface-pad"><div class="list"><div class="list-row"><span class="avatar" data-user-initials>EB</span><span class="row-copy"><strong data-user-name>Caregiver</strong><span>Your signed-in Elite Bridge account</span></span><span class="status">Connected</span></div><div class="list-row"><span class="row-icon">✓</span><span class="row-copy"><strong>Web and mobile profile</strong><span>Profile updates use the shared Elite Bridge account.</span></span></div></div></div></section>
+    </div></main>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </div>
+  <script>document.getElementById('dayPart').textContent = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening';</script>
+  <script src="/dashboard.js"></script>
 </body>
 </html>

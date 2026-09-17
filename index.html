@@ -1,604 +1,357 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Bridge - Professional Non-Medical Caregiver Staffing in Massachusetts</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#063e2c">
+  <meta name="description" content="Sign in to the Elite Bridge app on the web. Your account, shifts, messages, and activity stay connected across web and mobile.">
+  <title>Sign in to the Elite Bridge app</title>
+  <style>
+    :root {
+      --forest: #063e2c;
+      --forest-2: #0b513a;
+      --forest-soft: #e9f3ee;
+      --gold: #c88b2c;
+      --gold-soft: #fbf3e5;
+      --ink: #15231d;
+      --muted: #69766f;
+      --line: #dfe7e3;
+      --canvas: #f3f5f4;
+      --white: #fff;
+      --danger: #a12a2a;
+      --danger-bg: #fff0f0;
+      --success: #17633f;
+      --success-bg: #eaf7ef;
+    }
 
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #f8f9fa;
-            color: #333;
-            line-height: 1.6;
-        }
+    * { box-sizing: border-box; }
+    html { min-width: 320px; }
+    body { margin: 0; min-height: 100vh; color: var(--ink); background: var(--canvas); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+    a { color: inherit; }
+    button, input { font: inherit; }
 
-        /* BRAND COLORS */
-        :root {
-            --primary-dark: #0b3726;
-            --accent-gold: #c08530;
-            --text-dark: #1B5E3F;
-            --bg-light: #f4f7f6;
-            --white: #ffffff;
-            --gray-light: #e9ecef;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-        }
+    .site-shell { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 34px 0; }
+    .topbar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+    .logo-link { display: block; }
+    .logo { display: block; width: 196px; height: auto; }
+    .topbar-note { color: #7a8580; font-size: 13px; }
+    .topbar-note a { color: var(--forest); font-weight: 750; text-decoration: none; }
 
-        /* HEADER & NAVIGATION */
-        header {
-            background: var(--white);
-            box-shadow: var(--shadow);
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
+    .portal-card { display: grid; grid-template-columns: minmax(480px, 1fr) minmax(470px, .9fr); min-height: 720px; overflow: hidden; border: 1px solid #e4e8e6; border-radius: 28px; background: var(--white); box-shadow: 0 28px 80px rgba(18, 43, 33, .11); }
 
-        .header-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 20px;
-        }
+    .product-side { position: relative; display: flex; flex-direction: column; overflow: hidden; padding: 40px 44px 34px; background: radial-gradient(circle at 8% 2%, rgba(200,139,44,.2), transparent 30%), radial-gradient(circle at 92% 88%, rgba(6,62,44,.13), transparent 34%), linear-gradient(145deg, #edf6f1 0%, #e7f0ed 44%, #f4eee4 100%); }
+    .product-side::before, .product-side::after { content: ""; position: absolute; border: 1px solid rgba(6,62,44,.1); border-radius: 50%; }
+    .product-side::before { width: 420px; height: 420px; top: -255px; left: -170px; }
+    .product-side::after { width: 340px; height: 340px; right: -215px; bottom: -160px; }
+    .product-copy, .device-stage, .sync-note { position: relative; z-index: 1; }
+    .product-copy { text-align: center; }
+    .product-kicker { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .product-kicker::before, .product-kicker::after { content: ""; width: 22px; height: 1px; background: currentColor; }
+    .product-copy h1 { max-width: 540px; margin: 0 auto; color: var(--forest); font-size: clamp(26px, 2.7vw, 38px); line-height: 1.13; letter-spacing: -.04em; }
+    .product-copy p { max-width: 480px; margin: 12px auto 0; color: var(--muted); font-size: 14px; line-height: 1.55; }
 
-        .logo-section {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
+    .view-switch { display: inline-flex; margin-top: 18px; padding: 4px; border: 1px solid rgba(6,62,44,.1); border-radius: 999px; background: rgba(255,255,255,.62); backdrop-filter: blur(8px); }
+    .view-switch button { min-width: 100px; padding: 8px 14px; border: 0; border-radius: 999px; color: #77817c; background: transparent; font-size: 11px; font-weight: 750; cursor: pointer; transition: color .2s, background .2s, box-shadow .2s; }
+    .view-switch button.active { color: #fff; background: var(--forest); box-shadow: 0 5px 13px rgba(6,62,44,.18); }
 
-        .logo-section img {
-            height: 50px;
-            width: auto;
-        }
+    .device-stage { flex: 1; display: grid; place-items: end center; min-height: 440px; padding-top: 20px; }
+    .phone { position: relative; width: 282px; height: 498px; padding: 10px; border: 4px solid #16201c; border-bottom-width: 0; border-radius: 38px 38px 0 0; background: #111915; box-shadow: 0 28px 45px rgba(6,37,26,.22), 0 0 0 1px rgba(255,255,255,.28) inset; }
+    .phone::before { content: ""; position: absolute; z-index: 4; top: 9px; left: 50%; width: 80px; height: 22px; transform: translateX(-50%); border-radius: 0 0 14px 14px; background: #111915; }
+    .phone-screen { position: relative; height: 100%; overflow: hidden; border-radius: 25px 25px 0 0; background: #f7f9f8; }
+    .app-view { position: absolute; inset: 0; padding: 27px 14px 0; opacity: 0; transform: translateX(14px); pointer-events: none; transition: opacity .35s ease, transform .35s ease; }
+    .app-view.active { opacity: 1; transform: translateX(0); pointer-events: auto; }
+    .app-bar { display: flex; align-items: center; justify-content: space-between; }
+    .app-brand { display: flex; align-items: center; gap: 7px; color: var(--forest); font-size: 11px; font-weight: 850; }
+    .mini-logo { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 8px; color: var(--gold); background: var(--forest); font-size: 8px; font-weight: 900; }
+    .notification { position: relative; display: grid; place-items: center; width: 27px; height: 27px; border-radius: 9px; color: var(--forest); background: #fff; font-size: 12px; box-shadow: 0 2px 8px rgba(10,47,34,.08); }
+    .notification::after { content: ""; position: absolute; top: 5px; right: 5px; width: 5px; height: 5px; border: 1px solid #fff; border-radius: 50%; background: #e55c54; }
+    .welcome { margin: 18px 0 13px; }
+    .welcome small { color: #87928d; font-size: 8px; }
+    .welcome h3 { margin: 2px 0 0; color: var(--forest); font-size: 17px; letter-spacing: -.03em; }
+    .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
+    .stat { min-height: 61px; padding: 9px 10px; border: 1px solid #edf0ee; border-radius: 12px; background: #fff; box-shadow: 0 3px 10px rgba(16,56,40,.04); }
+    .stat-top { display: flex; align-items: center; justify-content: space-between; color: #89938f; font-size: 7px; font-weight: 700; }
+    .stat-icon { display: grid; place-items: center; width: 19px; height: 19px; border-radius: 6px; color: var(--forest); background: var(--forest-soft); font-size: 9px; }
+    .stat strong { display: block; margin-top: 5px; color: var(--forest); font-size: 16px; }
+    .section-title { display: flex; align-items: center; justify-content: space-between; margin: 15px 2px 8px; }
+    .section-title strong { color: var(--forest); font-size: 10px; }
+    .section-title span { color: var(--gold); font-size: 7px; font-weight: 800; }
+    .shift-card, .activity-card { padding: 11px; border: 1px solid #e9eeeb; border-radius: 13px; background: #fff; box-shadow: 0 3px 10px rgba(16,56,40,.045); }
+    .shift-head { display: flex; justify-content: space-between; gap: 8px; }
+    .shift-head strong { color: var(--forest); font-size: 10px; }
+    .pill { padding: 4px 7px; border-radius: 999px; color: #377554; background: #e6f5eb; font-size: 6px; font-weight: 800; text-transform: uppercase; }
+    .shift-card p { margin: 4px 0 0; color: #89938f; font-size: 7px; line-height: 1.4; }
+    .shift-meta { display: flex; justify-content: space-between; margin-top: 9px; padding-top: 8px; border-top: 1px solid #f0f2f1; color: #53635c; font-size: 7px; font-weight: 750; }
+    .quick-actions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 9px; }
+    .quick-action { padding: 9px 4px; border-radius: 10px; color: #52615b; background: #fff; font-size: 6px; font-weight: 750; text-align: center; }
+    .quick-action b { display: grid; place-items: center; width: 23px; height: 23px; margin: 0 auto 5px; border-radius: 8px; color: var(--forest); background: var(--forest-soft); font-size: 10px; }
+    .live-row { display: flex; align-items: center; gap: 8px; padding: 8px 0; border-bottom: 1px solid #f0f2f1; }
+    .live-row:last-child { border-bottom: 0; }
+    .avatar { display: grid; flex: 0 0 25px; place-items: center; width: 25px; height: 25px; border-radius: 9px; color: var(--gold); background: var(--gold-soft); font-size: 7px; font-weight: 900; }
+    .live-copy { min-width: 0; flex: 1; }
+    .live-copy strong { display: block; color: var(--forest); font-size: 8px; }
+    .live-copy span { display: block; margin-top: 2px; overflow: hidden; color: #929b97; font-size: 6px; text-overflow: ellipsis; white-space: nowrap; }
+    .live-status { color: #4f8a62; font-size: 6px; font-weight: 800; }
+    .bottom-nav { position: absolute; right: 0; bottom: 0; left: 0; display: grid; grid-template-columns: repeat(4, 1fr); padding: 8px 5px 9px; border-top: 1px solid #e9eeeb; background: rgba(255,255,255,.96); }
+    .nav-item { color: #9aa39f; font-size: 6px; font-weight: 700; text-align: center; }
+    .nav-item b { display: block; margin-bottom: 3px; font-size: 11px; }
+    .nav-item.active { color: var(--forest); }
+    .sync-note { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; color: #64716b; font-size: 11px; font-weight: 650; }
+    .sync-dot { width: 7px; height: 7px; border-radius: 50%; background: #48a66c; box-shadow: 0 0 0 4px rgba(72,166,108,.13); }
 
-        nav {
-            display: flex;
-            gap: 25px;
-            align-items: center;
-            flex: 1;
-            justify-content: center;
-        }
+    .auth-side { display: flex; align-items: center; justify-content: center; padding: 50px clamp(36px, 5vw, 72px); background: #fff; }
+    .auth-shell { width: 100%; max-width: 440px; }
+    .mobile-logo { display: none; }
+    .auth-header h2 { margin: 0; color: var(--forest); font-size: clamp(32px, 3vw, 43px); letter-spacing: -.045em; }
+    .auth-header > p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }
+    .app-sync-copy { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #dceae3; border-radius: 12px; color: #506058; background: #f4f9f6; font-size: 12px; line-height: 1.5; }
+    .app-sync-copy strong { color: var(--forest); }
+    .message { display: none; margin: 21px 0 -3px; padding: 12px 14px; border: 1px solid transparent; border-radius: 11px; font-size: 13px; line-height: 1.45; }
+    .message.error { color: var(--danger); background: var(--danger-bg); border-color: #f3cccc; }
+    .message.success { color: var(--success); background: var(--success-bg); border-color: #cde8d7; }
+    form { margin-top: 27px; }
+    .field { margin-bottom: 18px; }
+    .field-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+    label { color: #26352f; font-size: 13px; font-weight: 750; }
+    .help-link { color: var(--forest-2); font-size: 12px; font-weight: 750; text-decoration: none; }
+    .help-link:hover { text-decoration: underline; }
+    .input-wrap { position: relative; }
+    input[type="email"], input[type="password"], input[type="text"] { width: 100%; height: 53px; padding: 0 15px; border: 1px solid var(--line); border-radius: 11px; outline: none; color: var(--ink); background: #fff; box-shadow: 0 1px 2px rgba(7,60,43,.03); transition: border-color .18s, box-shadow .18s; }
+    input::placeholder { color: #a0aaa5; }
+    input:focus { border-color: var(--forest-2); box-shadow: 0 0 0 4px rgba(11,81,58,.1); }
+    .password-input { padding-right: 63px !important; }
+    .show-password { position: absolute; top: 50%; right: 8px; transform: translateY(-50%); padding: 8px; border: 0; color: var(--forest-2); background: transparent; font-size: 12px; font-weight: 750; cursor: pointer; }
+    .remember { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; font-weight: 500; cursor: pointer; }
+    .remember input { width: 16px; height: 16px; margin: 0; accent-color: var(--forest); }
+    .submit { display: flex; align-items: center; justify-content: center; gap: 9px; width: 100%; height: 54px; margin-top: 23px; border: 0; border-radius: 11px; color: #fff; background: var(--forest); box-shadow: 0 10px 23px rgba(6,62,44,.18); font-weight: 800; cursor: pointer; transition: transform .18s, background .18s, box-shadow .18s; }
+    .submit:hover { transform: translateY(-1px); background: var(--forest-2); box-shadow: 0 13px 28px rgba(6,62,44,.22); }
+    .submit:disabled { transform: none; background: #7d948b; box-shadow: none; cursor: wait; }
+    .spinner { display: none; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.35); border-top-color: #fff; border-radius: 50%; animation: spin .7s linear infinite; }
+    .submit[aria-busy="true"] .spinner { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .join { margin-top: 29px; padding-top: 24px; border-top: 1px solid var(--line); }
+    .join > p { margin: 0 0 12px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .join-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .join-card { display: flex; align-items: center; gap: 10px; min-height: 62px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 11px; text-decoration: none; background: #fff; transition: border-color .18s, transform .18s, background .18s; }
+    .join-card:hover { transform: translateY(-1px); border-color: #a9bbb3; background: #fafcfb; }
+    .join-icon { display: grid; flex: 0 0 34px; place-items: center; width: 34px; height: 34px; border-radius: 9px; color: var(--forest); background: var(--forest-soft); font-size: 16px; }
+    .join-card strong { display: block; color: var(--ink); font-size: 12px; }
+    .join-card span:last-child { display: block; margin-top: 2px; color: var(--muted); font-size: 10px; }
+    .auth-footer { display: flex; justify-content: space-between; gap: 16px; margin-top: 27px; color: var(--muted); font-size: 11px; }
+    .auth-footer a { color: var(--forest-2); font-weight: 750; text-decoration: none; }
+    .auth-footer a:hover { text-decoration: underline; }
 
-        nav a {
-            text-decoration: none;
-            color: #444;
-            font-weight: 500;
-            transition: color 0.3s ease;
-            font-size: 0.95rem;
-        }
+    @media (max-width: 940px) {
+      .site-shell { width: min(680px, calc(100% - 30px)); padding-top: 24px; }
+      .topbar { display: none; }
+      .portal-card { display: block; min-height: 0; }
+      .product-side { display: none; }
+      .auth-side { min-height: calc(100vh - 48px); padding: 35px 28px; }
+      .mobile-logo { display: block; width: 185px; margin: 0 0 46px; }
+    }
 
-        nav a:hover {
-            color: var(--primary-dark);
-        }
+    @media (max-width: 520px) {
+      .site-shell { width: 100%; padding: 0; }
+      .portal-card { min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
+      .auth-side { align-items: flex-start; min-height: 100vh; padding: 25px 21px; }
+      .mobile-logo { width: 164px; margin-bottom: 37px; }
+      .join-options { grid-template-columns: 1fr; }
+      .auth-footer { flex-direction: column; align-items: center; }
+    }
 
-        .auth-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .btn-signin {
-            padding: 8px 18px;
-            color: var(--primary-dark);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.95rem;
-        }
-
-        .btn-signup {
-            padding: 10px 24px;
-            background: var(--primary-dark);
-            color: var(--white);
-            text-decoration: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.95rem;
-            transition: background 0.3s ease;
-        }
-
-        .btn-signup:hover {
-            background: var(--accent-gold);
-        }
-
-        /* HERO SECTION - Care.com Style Search First */
-        .hero {
-            background: var(--white);
-            padding: 80px 20px;
-            text-align: center;
-            border-bottom: 1px solid var(--gray-light);
-        }
-
-        .hero-container {
-            max-width: 900px;
-            margin: 0 auto;
-        }
-
-        .hero h1 {
-            font-size: 3.5rem;
-            color: var(--primary-dark);
-            margin-bottom: 15px;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }
-
-        .hero p {
-            font-size: 1.25rem;
-            color: #666;
-            margin-bottom: 40px;
-        }
-
-        .search-box {
-            background: var(--white);
-            padding: 10px;
-            border-radius: 50px;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-            display: flex;
-            max-width: 600px;
-            margin: 0 auto 50px;
-            border: 1px solid var(--gray-light);
-        }
-
-        .search-box input {
-            flex: 1;
-            border: none;
-            padding: 15px 25px;
-            font-size: 1.1rem;
-            border-radius: 50px;
-            outline: none;
-        }
-
-        .search-box button {
-            background: var(--primary-dark);
-            color: var(--white);
-            border: none;
-            padding: 15px 35px;
-            border-radius: 50px;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 1rem;
-            transition: background 0.3s ease;
-        }
-
-        .search-box button:hover {
-            background: var(--accent-gold);
-        }
-
-        /* SERVICE CATEGORIES - Care.com Style Icons */
-        .categories {
-            padding: 40px 20px;
-            background: var(--bg-light);
-        }
-
-        .categories-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 20px;
-        }
-
-        .category-item {
-            background: var(--white);
-            padding: 30px 20px;
-            border-radius: 12px;
-            text-align: center;
-            text-decoration: none;
-            color: var(--primary-dark);
-            font-weight: 700;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
-        }
-
-        .category-item:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-            color: var(--accent-gold);
-        }
-
-        .category-icon {
-            font-size: 2.5rem;
-            display: block;
-            margin-bottom: 10px;
-        }
-
-        /* TRUST SECTION */
-        .trust {
-            padding: 80px 20px;
-            background: var(--white);
-            text-align: center;
-        }
-
-        .trust-container {
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .trust h2 {
-            font-size: 2.5rem;
-            color: var(--primary-dark);
-            margin-bottom: 50px;
-        }
-
-        .trust-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 40px;
-        }
-
-        .trust-item {
-            text-align: left;
-            padding: 20px;
-        }
-
-        .trust-item h3 {
-            color: var(--primary-dark);
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .trust-item p {
-            color: #666;
-            font-size: 1.05rem;
-        }
-
-        /* PROFILE PREVIEWS - Care.com Style */
-        .profiles {
-            padding: 80px 20px;
-            background: var(--bg-light);
-        }
-
-        .profiles-header {
-            max-width: 1200px;
-            margin: 0 auto 40px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-        }
-
-        .profiles-header h2 {
-            font-size: 2.2rem;
-            color: var(--primary-dark);
-        }
-
-        .profiles-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 30px;
-        }
-
-        .profile-card {
-            background: var(--white);
-            border-radius: 12px;
-            overflow: hidden;
-            box-shadow: var(--shadow);
-            display: flex;
-            padding: 20px;
-            gap: 20px;
-        }
-
-        .profile-img {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            background: #ddd;
-            flex-shrink: 0;
-        }
-
-        .profile-info h3 {
-            color: var(--primary-dark);
-            margin-bottom: 5px;
-        }
-
-        .profile-info .tagline {
-            font-weight: 600;
-            color: var(--accent-gold);
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-
-        .profile-info .desc {
-            font-size: 0.9rem;
-            color: #777;
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .profile-stats {
-            display: flex;
-            gap: 15px;
-            font-size: 0.85rem;
-            color: #444;
-            font-weight: 600;
-        }
-
-        /* CTA SECTION */
-        .cta {
-            background: var(--primary-dark);
-            color: var(--white);
-            padding: 100px 20px;
-            text-align: center;
-        }
-
-        .cta h2 {
-            font-size: 2.8rem;
-            margin-bottom: 20px;
-        }
-
-        .cta p {
-            font-size: 1.2rem;
-            margin-bottom: 40px;
-            opacity: 0.9;
-        }
-
-        .cta-btns {
-            display: flex;
-            justify-content: center;
-            gap: 20px;
-        }
-
-        .btn-large {
-            padding: 16px 40px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1.1rem;
-            transition: all 0.3s ease;
-        }
-
-        .btn-gold {
-            background: var(--accent-gold);
-            color: var(--primary-dark);
-        }
-
-        .btn-outline {
-            border: 2px solid var(--white);
-            color: var(--white);
-        }
-
-        .btn-large:hover {
-            transform: scale(1.05);
-        }
-
-        /* FOOTER */
-        footer {
-            background: #fff;
-            padding: 60px 20px;
-            border-top: 1px solid var(--gray-light);
-        }
-
-        .footer-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 40px;
-        }
-
-        .footer-col h4 {
-            color: var(--primary-dark);
-            margin-bottom: 20px;
-        }
-
-        .footer-col ul {
-            list-style: none;
-        }
-
-        .footer-col ul li {
-            margin-bottom: 10px;
-        }
-
-        .footer-col ul li a {
-            text-decoration: none;
-            color: #666;
-            font-size: 0.9rem;
-        }
-
-        .footer-bottom {
-            max-width: 1200px;
-            margin: 40px auto 0;
-            padding-top: 20px;
-            border-top: 1px solid var(--gray-light);
-            text-align: center;
-            color: #999;
-            font-size: 0.85rem;
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 2.5rem; }
-            .profiles-header { flex-direction: column; align-items: flex-start; gap: 20px; }
-            .cta-btns { flex-direction: column; align-items: center; }
-            nav { display: none; }
-        }
-    </style>
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
 </head>
 <body>
+  <div class="site-shell">
+    <header class="topbar">
+      <a class="logo-link" href="https://elitebridgestaffing.com" aria-label="Elite Bridge home"><img class="logo" src="/logo.png" alt="Elite Bridge"></a>
+      <span class="topbar-note">Need help? <a href="mailto:info@elitebridgestaffing.com">Contact support</a></span>
+    </header>
 
-<header>
-    <div class="header-container">
-        <div class="logo-section">
-            <img src="logo.webp" alt="Elite Bridge Logo">
+    <main class="portal-card">
+      <section class="product-side" aria-label="Elite Bridge app preview">
+        <div class="product-copy">
+          <p class="product-kicker">The Elite Bridge app</p>
+          <h1>Your app, now on the web.</h1>
+          <p>Move between mobile and web with the same account. Your shifts, profiles, messages and activity stay together.</p>
+          <div class="view-switch" role="tablist" aria-label="Preview app view">
+            <button class="active" id="caregiverTab" type="button" role="tab" aria-selected="true" aria-controls="caregiverPreview">Caregiver app</button>
+            <button id="employerTab" type="button" role="tab" aria-selected="false" aria-controls="employerPreview">Employer app</button>
+          </div>
         </div>
-        <nav>
-            <a href="find-care.html">Find Care</a>
-            <a href="find-jobs.html">Find Jobs</a>
-            <a href="services.html">Services</a>
-            <a href="#">Resources</a>
-        </nav>
-        <div class="auth-buttons">
-            <a href="#" class="btn-signin">Sign in</a>
-            <a href="#" class="btn-signup">Join Now</a>
-        </div>
-    </div>
-</header>
 
-<section class="hero">
-    <div class="hero-container">
-        <h1>Find non-medical care you can trust</h1>
-        <p>Connecting Massachusetts families with quality, local non-medical caregivers.</p>
-        
-        <form class="search-box" onsubmit="handleZipSearch(event)">
-            <input type="text" id="zipInput" placeholder="Enter your zip code in MA" required>
-            <button type="submit">Search</button>
-        </form>
-
-        <p style="font-size: 1rem; color: #999;">Elite Bridge: Support for every stage of life.</p>
-    </div>
-</section>
-
-<section class="categories">
-    <div class="categories-grid">
-        <a href="#" class="category-item">
-            <span class="category-icon">👵</span>
-            Senior Companion
-        </a>
-        <a href="#" class="category-item">
-            <span class="category-icon">🧹</span>
-            Housekeeping
-        </a>
-        <a href="#" class="category-item">
-            <span class="category-icon">🚗</span>
-            Transportation
-        </a>
-        <a href="#" class="category-item">
-            <span class="category-icon">🛒</span>
-            Errands & Groceries
-        </a>
-        <a href="#" class="category-item">
-            <span class="category-icon">🍳</span>
-            Meal Preparation
-        </a>
-        <a href="#" class="category-item">
-            <span class="category-icon">🐾</span>
-            Pet Support
-        </a>
-    </div>
-</section>
-
-<section class="trust">
-    <div class="trust-container">
-        <h2>More than access. It's support.</h2>
-        <div class="trust-grid">
-            <div class="trust-item">
-                <h3>🛡️ Search safer</h3>
-                <p>We provide tools you won't get with social media or referrals, including background check integrations and verified reviews.</p>
-            </div>
-            <div class="trust-item">
-                <h3>💎 Quality non-medical care</h3>
-                <p>Find expertise you need—dementia companion support, light housekeeping, and specialized non-medical assistance.</p>
-            </div>
-            <div class="trust-item">
-                <h3>🤝 Unlimited connections</h3>
-                <p>Message and video interview caregivers directly through our platform without sharing your personal contact info.</p>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="profiles">
-    <div class="profiles-header">
-        <h2>Top-rated caregivers in Massachusetts</h2>
-        <a href="#" style="color: var(--primary-dark); font-weight: 700;">View all caregivers →</a>
-    </div>
-    <div class="profiles-grid">
-        <!-- Sample Profile 1 -->
-        <div class="profile-card">
-            <div class="profile-img" style="background: #e2e8f0 url('https://i.pravatar.cc/100?u=sarah') center/cover;"></div>
-            <div class="profile-info">
-                <h3>Sarah J.</h3>
-                <div class="tagline">Senior Companion & Housekeeper</div>
-                <p class="desc">"I love helping seniors maintain their independence. I specialize in meal prep and light cleaning."</p>
-                <div class="profile-stats">
-                    <span>⭐ 4.9 (42 reviews)</span>
-                    <span>📍 Boston, MA</span>
+        <div class="device-stage">
+          <div class="phone" aria-label="Elite Bridge mobile app mockup">
+            <div class="phone-screen">
+              <div class="app-view active" id="caregiverPreview" role="tabpanel" aria-labelledby="caregiverTab">
+                <div class="app-bar"><div class="app-brand"><span class="mini-logo">EB</span> ELITE BRIDGE</div><div class="notification" aria-hidden="true">♢</div></div>
+                <div class="welcome"><small>Caregiver dashboard</small><h3>Good morning, Sarah</h3></div>
+                <div class="stats">
+                  <div class="stat"><div class="stat-top"><span>Applied</span><span class="stat-icon">↗</span></div><strong>5</strong></div>
+                  <div class="stat"><div class="stat-top"><span>Completed</span><span class="stat-icon">✓</span></div><strong>12</strong></div>
+                  <div class="stat"><div class="stat-top"><span>Earnings</span><span class="stat-icon">$</span></div><strong>$1,440</strong></div>
+                  <div class="stat"><div class="stat-top"><span>Upcoming</span><span class="stat-icon">◷</span></div><strong>2</strong></div>
                 </div>
-            </div>
-        </div>
-        <!-- Sample Profile 2 -->
-        <div class="profile-card">
-            <div class="profile-img" style="background: #e2e8f0 url('https://i.pravatar.cc/100?u=james') center/cover;"></div>
-            <div class="profile-info">
-                <h3>James M.</h3>
-                <div class="tagline">Transportation & Errands Specialist</div>
-                <p class="desc">"Reliable transportation and help with groceries. I've been supporting families in the Worcester area for 5 years."</p>
-                <div class="profile-stats">
-                    <span>⭐ 5.0 (18 reviews)</span>
-                    <span>📍 Worcester, MA</span>
+                <div class="section-title"><strong>Next shift</strong><span>VIEW ALL</span></div>
+                <div class="shift-card">
+                  <div class="shift-head"><strong>Personal Care Visit</strong><span class="pill">Confirmed</span></div>
+                  <p>Thompson Family · Companion care</p>
+                  <div class="shift-meta"><span>Tomorrow · 8:00 AM</span><span>$35/hr</span></div>
                 </div>
+                <div class="quick-actions">
+                  <div class="quick-action"><b>⌕</b>Find shifts</div><div class="quick-action"><b>◷</b>Clock in</div><div class="quick-action"><b>✉</b>Messages</div>
+                </div>
+                <nav class="bottom-nav" aria-label="Caregiver preview navigation"><span class="nav-item active"><b>⌂</b>Home</span><span class="nav-item"><b>▣</b>Shifts</span><span class="nav-item"><b>◷</b>Clock</span><span class="nav-item"><b>○</b>Profile</span></nav>
+              </div>
+
+              <div class="app-view" id="employerPreview" role="tabpanel" aria-labelledby="employerTab">
+                <div class="app-bar"><div class="app-brand"><span class="mini-logo">EB</span> ELITE BRIDGE</div><div class="notification" aria-hidden="true">♢</div></div>
+                <div class="welcome"><small>Employer dashboard</small><h3>Good morning, Elite</h3></div>
+                <div class="stats">
+                  <div class="stat"><div class="stat-top"><span>Open shifts</span><span class="stat-icon">＋</span></div><strong>4</strong></div>
+                  <div class="stat"><div class="stat-top"><span>On duty now</span><span class="stat-icon">●</span></div><strong>3</strong></div>
+                  <div class="stat"><div class="stat-top"><span>Applications</span><span class="stat-icon">▤</span></div><strong>8</strong></div>
+                  <div class="stat"><div class="stat-top"><span>Pending payroll</span><span class="stat-icon">$</span></div><strong>$2,480</strong></div>
+                </div>
+                <div class="section-title"><strong>Live attendance</strong><span>FULL VIEW</span></div>
+                <div class="activity-card">
+                  <div class="live-row"><span class="avatar">SJ</span><span class="live-copy"><strong>Sarah Johnson</strong><span>Personal Care Visit</span></span><span class="live-status">CLOCKED IN</span></div>
+                  <div class="live-row"><span class="avatar">MB</span><span class="live-copy"><strong>Michael Brown</strong><span>Companionship</span></span><span class="live-status">ON DUTY</span></div>
+                  <div class="live-row"><span class="avatar">ER</span><span class="live-copy"><strong>Emily Rodriguez</strong><span>Meal preparation</span></span><span class="live-status">ON DUTY</span></div>
+                </div>
+                <nav class="bottom-nav" aria-label="Employer preview navigation"><span class="nav-item active"><b>⌂</b>Home</span><span class="nav-item"><b>▣</b>Shifts</span><span class="nav-item"><b>◎</b>Staff</span><span class="nav-item"><b>○</b>Account</span></nav>
+              </div>
             </div>
+          </div>
         </div>
-    </div>
-</section>
+        <div class="sync-note"><span class="sync-dot" aria-hidden="true"></span>One account · Mobile and web stay synchronized</div>
+      </section>
 
-<section class="cta">
-    <h2>Ready to find the perfect care?</h2>
-    <p>Join over thousands of Massachusetts families who trust Elite Bridge.</p>
-    <div class="cta-btns">
-        <a href="find-care.html" class="btn-large btn-gold">Find a Caregiver</a>
-        <a href="find-jobs.html" class="btn-large btn-outline">Apply as a Caregiver</a>
-    </div>
-</section>
+      <section class="auth-side">
+        <div class="auth-shell">
+          <a href="https://elitebridgestaffing.com" aria-label="Elite Bridge home"><img class="mobile-logo" src="/logo.png" alt="Elite Bridge"></a>
+          <header class="auth-header">
+            <h2>Welcome back</h2>
+            <p>Sign in to open your Elite Bridge app on the web.</p>
+            <div class="app-sync-copy"><strong>Already use the mobile app?</strong> Use the same email and password. Your account and app activity will be available here.</div>
+          </header>
 
-<footer>
-    <div class="footer-grid">
-        <div class="footer-col">
-            <h4>Elite Bridge</h4>
-            <ul>
-                <li><a href="#">About Us</a></li>
-                <li><a href="#">Safety</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Terms of Use</a></li>
-            </ul>
-        </div>
-        <div class="footer-col">
-            <h4>Find Care</h4>
-            <ul>
-                <li><a href="#">Senior Care</a></li>
-                <li><a href="#">Housekeeping</a></li>
-                <li><a href="#">Pet Care</a></li>
-                <li><a href="#">Errands</a></li>
-            </ul>
-        </div>
-        <div class="footer-col">
-            <h4>Support</h4>
-            <ul>
-                <li><a href="#">Help Center</a></li>
-                <li><a href="#">Contact Us</a></li>
-                <li><a href="#">MA Regulations</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="footer-bottom">
-        &copy; 2026 Elite Bridge Staffing. Serving the state of Massachusetts. Non-medical services only. 
-        <br>Contact: info@elitebridgestaffing.com
-    </div>
-</footer>
+          <div class="message error" id="errorMessage" role="alert" aria-live="polite"></div>
+          <div class="message success" id="successMessage" role="status" aria-live="polite"></div>
 
-<script>
-    function handleZipSearch(event) {
-        event.preventDefault();
-        const zipCode = document.getElementById('zipInput').value;
-        
-        if (zipCode && zipCode.length >= 3) {
-            // Redirect to find-care page with zip code parameter
-            window.location.href = `find-care.html?zip=${encodeURIComponent(zipCode)}`;
-        }
+          <form id="loginForm" novalidate>
+            <div class="field">
+              <div class="field-head"><label for="email">Email address</label></div>
+              <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" required>
+            </div>
+            <div class="field">
+              <div class="field-head"><label for="password">Password</label><a class="help-link" href="/forgot-password">Forgot password?</a></div>
+              <div class="input-wrap">
+                <input class="password-input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" minlength="6" required>
+                <button class="show-password" id="togglePassword" type="button" aria-label="Show password" aria-pressed="false">Show</button>
+              </div>
+            </div>
+            <label class="remember" for="remember"><input id="remember" name="remember" type="checkbox"> Keep me signed in on this device</label>
+            <button class="submit" id="submitButton" type="submit" aria-busy="false"><span class="spinner" aria-hidden="true"></span><span id="submitLabel">Sign in to Elite Bridge</span></button>
+          </form>
+
+          <div class="join">
+            <p>New to Elite Bridge? Choose the account you need.</p>
+            <div class="join-options">
+              <a class="join-card" href="/signup?role=caregiver"><span class="join-icon" aria-hidden="true">♡</span><span><strong>Caregiver account</strong><span>Work and manage shifts</span></span></a>
+              <a class="join-card" href="/signup?role=employer"><span class="join-icon" aria-hidden="true">⌂</span><span><strong>Employer account</strong><span>Hire and manage care</span></span></a>
+            </div>
+          </div>
+
+          <footer class="auth-footer"><span>© <span id="year"></span> Elite Bridge Staffing</span><span><a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://elitebridgestaffing.com">Main website</a></span></footer>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script>
+    const API_BASE = window.ELITE_BRIDGE_API_BASE || 'https://elite-bridge-shared-api-evans.vercel.app/api';
+    const form = document.getElementById('loginForm');
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const togglePassword = document.getElementById('togglePassword');
+    const submitButton = document.getElementById('submitButton');
+    const submitLabel = document.getElementById('submitLabel');
+    const errorMessage = document.getElementById('errorMessage');
+    const successMessage = document.getElementById('successMessage');
+    const tabs = [document.getElementById('caregiverTab'), document.getElementById('employerTab')];
+    const previews = [document.getElementById('caregiverPreview'), document.getElementById('employerPreview')];
+    let previewIndex = 0;
+    let previewTimer;
+
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    function selectPreview(index, restart = true) {
+      previewIndex = index;
+      tabs.forEach((tab, i) => { tab.classList.toggle('active', i === index); tab.setAttribute('aria-selected', String(i === index)); });
+      previews.forEach((preview, i) => preview.classList.toggle('active', i === index));
+      if (restart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
     }
-</script>
 
+    function startPreviewTimer() {
+      window.clearInterval(previewTimer);
+      previewTimer = window.setInterval(() => selectPreview((previewIndex + 1) % previews.length, false), 5000);
+    }
+
+    tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
+    if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
+
+    togglePassword.addEventListener('click', () => {
+      const willShow = passwordInput.type === 'password';
+      passwordInput.type = willShow ? 'text' : 'password';
+      togglePassword.textContent = willShow ? 'Hide' : 'Show';
+      togglePassword.setAttribute('aria-label', willShow ? 'Hide password' : 'Show password');
+      togglePassword.setAttribute('aria-pressed', String(willShow));
+    });
+
+    function showMessage(element, text) {
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      element.textContent = text;
+      element.style.display = 'block';
+    }
+
+    function setLoading(loading) {
+      submitButton.disabled = loading;
+      submitButton.setAttribute('aria-busy', String(loading));
+      submitLabel.textContent = loading ? 'Signing in…' : 'Sign in to Elite Bridge';
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      errorMessage.style.display = 'none';
+      successMessage.style.display = 'none';
+      if (!form.checkValidity()) { form.reportValidity(); return; }
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: emailInput.value.trim(), password: passwordInput.value })
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || data.error || 'The email or password you entered is not correct.');
+        const storage = document.getElementById('remember').checked ? localStorage : sessionStorage;
+        storage.setItem('token', data.token);
+        storage.setItem('user', JSON.stringify(data.user));
+        showMessage(successMessage, 'Signed in. Opening your Elite Bridge app…');
+        const role = data.user?.role;
+        const dashboard = role === 'caregiver' ? '/caregiver-dashboard' : role === 'employer' ? '/employer-dashboard' : '/marketplace';
+        const onboardingKey = `eliteBridgeOnboarding:${data.user?.id}:${role}`;
+        const destination = (role === 'caregiver' || role === 'employer') && !localStorage.getItem(onboardingKey) ? '/onboarding' : dashboard;
+        window.setTimeout(() => window.location.assign(destination), 500);
+      } catch (error) {
+        const message = error instanceof TypeError ? 'We could not reach Elite Bridge right now. Please try again in a moment.' : error.message;
+        showMessage(errorMessage, message);
+        setLoading(false);
+      }
+    });
+  </script>
 </body>
 </html>

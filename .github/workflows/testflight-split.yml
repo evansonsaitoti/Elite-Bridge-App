@@ -1,14 +1,6 @@
 name: Elite Bridge Split TestFlight
 
 on:
-  push:
-    branches:
-      - elitebridge-split-ai-ma
-      - agent/employer-clean-rebuild
-    paths:
-      - "elitebridge-mobile/**"
-      - "elitebridge-employer/**"
-      - ".github/workflows/testflight-split.yml"
   workflow_dispatch:
     inputs:
       app:
@@ -30,7 +22,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && (github.event.head_commit.message == 'Trigger caregiver build 56' || github.event.head_commit.message == 'Trigger both App Review cleanup builds 56 and 32')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -129,7 +121,7 @@ jobs:
         run: npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive
 
   employer:
-    if: ${{ (github.event_name == 'push' && (github.event.head_commit.message == 'Trigger employer build 33' || github.event.head_commit.message == 'Trigger both App Review cleanup builds 56 and 32')) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'employer')) }}
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:

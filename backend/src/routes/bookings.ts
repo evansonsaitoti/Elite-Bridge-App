@@ -422,6 +422,24 @@ router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
   } catch (error) { next(error); }
 });
 
+// The web dashboard uses the same synchronized feed under this legacy name.
+router.get("/available", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const result = await db.execute(sql`
+      SELECT sp.*, e.company_name, sa.status AS application_status
+      FROM shift_posts sp
+      JOIN employers e ON e.id = sp.employer_id
+      LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
+      WHERE sp.status = 'open' AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
+      ORDER BY CASE WHEN sp.urgency = 'urgent' THEN 0 ELSE 1 END, sp.start_time ASC
+      LIMIT 100
+    `);
+    res.json({ shifts: (result as any).rows.map(mapShift) });
+  } catch (error) { next(error); }
+});
+
 // Qualified caregivers can claim instant-assignment shifts. The conditional
 // status update is the concurrency guard: only the first eligible claimant wins.
 router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, next) => {

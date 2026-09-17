@@ -132,6 +132,77 @@ export const employers = pgTable(
   })
 );
 
+// Employer-issued invitations let a caregiver join the correct organization
+// without exposing employer or caregiver data in the URL.
+export const caregiverInvitations = pgTable(
+  "caregiver_invitations",
+  {
+    id: serial("id").primaryKey(),
+    employerId: integer("employer_id")
+      .notNull()
+      .references(() => employers.id, { onDelete: "cascade" }),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    firstName: varchar("first_name", { length: 100 }),
+    lastName: varchar("last_name", { length: 100 }),
+    email: varchar("email", { length: 255 }),
+    phone: varchar("phone", { length: 20 }),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    acceptedByUserId: integer("accepted_by_user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    expiresAt: timestamp("expires_at").notNull(),
+    acceptedAt: timestamp("accepted_at"),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+    updatedAt: timestamp("updated_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    employerIdx: index("caregiver_invitation_employer_idx").on(table.employerId),
+    tokenIdx: uniqueIndex("caregiver_invitation_token_idx").on(table.tokenHash),
+  })
+);
+
+export const employerCaregivers = pgTable(
+  "employer_caregivers",
+  {
+    id: serial("id").primaryKey(),
+    employerId: integer("employer_id")
+      .notNull()
+      .references(() => employers.id, { onDelete: "cascade" }),
+    caregiverUserId: integer("caregiver_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    invitationId: integer("invitation_id").references(() => caregiverInvitations.id, {
+      onDelete: "set null",
+    }),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    employerCaregiverIdx: uniqueIndex("employer_caregiver_unique_idx").on(
+      table.employerId,
+      table.caregiverUserId
+    ),
+  })
+);
+
+export const passwordResetTokens = pgTable(
+  "password_reset_tokens",
+  {
+    id: serial("id").primaryKey(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    tokenHash: varchar("token_hash", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expires_at").notNull(),
+    usedAt: timestamp("used_at"),
+    createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`).notNull(),
+  },
+  (table) => ({
+    userIdx: index("password_reset_user_idx").on(table.userId),
+    tokenIdx: uniqueIndex("password_reset_token_idx").on(table.tokenHash),
+  })
+);
+
 // Bookings Table
 export const bookings = pgTable(
   "bookings",

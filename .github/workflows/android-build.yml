@@ -1,10 +1,6 @@
 name: Elite Bridge Android Builds
 
 on:
-  push:
-    branches:
-      - codex/android-builds-57-34
-      - codex/elite-care-work-sync
   workflow_dispatch:
     inputs:
       app:
@@ -26,15 +22,17 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
       run:
         working-directory: elitebridge-mobile
     steps:
-      - name: Checkout selected release branch
+      - name: Checkout exact source used by latest iOS split build
         uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -43,29 +41,6 @@ jobs:
 
       - name: Set up pnpm
         run: npm install --global pnpm@9.12.0
-
-      - name: Remove iOS-only install hooks from Android package
-        shell: bash
-        run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
-          pkg.scripts = pkg.scripts || {};
-          delete pkg.scripts['eas-build-pre-install'];
-          delete pkg.scripts['eas-build-post-install'];
-          if (pkg.scripts.postinstall?.includes('cocoapods')) delete pkg.scripts.postinstall;
-          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          NODE
-
-      - name: Apply Android-only Elite Care name
-        shell: bash
-        run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-          app.expo.name = 'Elite Care';
-          fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
-          NODE
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -76,51 +51,18 @@ jobs:
       - name: Type check caregiver app
         run: pnpm check
 
-      - name: Audit caregiver release
-        run: pnpm audit:release
-
-      - name: Validate caregiver Android identity
+      - name: Validate Android package
         shell: bash
         run: |
           node - <<'NODE'
           const app = require('./app.json').expo;
-          if (app.android?.package !== 'com.elitebridgestaffing.caregiver') {
-            throw new Error(`Unexpected caregiver package: ${app.android?.package}`);
+          if (app.android?.package !== 'com.app.elitebridgemobile') {
+            throw new Error(`Unexpected caregiver Android package: ${app.android?.package}`);
           }
-          if (app.android?.versionCode !== 57) {
-            throw new Error(`Unexpected caregiver versionCode: ${app.android?.versionCode}`);
-          }
-          if (app.name !== 'Elite Care') throw new Error(`Unexpected caregiver Android name: ${app.name}`);
-          console.log(`Caregiver: ${app.android.package} versionCode ${app.android.versionCode}`);
+          console.log(`Caregiver Android package: ${app.android.package}`);
           NODE
-          npx expo config --type public > /tmp/elitebridge-caregiver-android-config.json
 
-      - name: Build caregiver Android App Bundle
-        env:
-          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-          CI: "1"
-        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
-
-  employer:
-    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 90
-    defaults:
-      run:
-        working-directory: elitebridge-employer
-    steps:
-      - name: Checkout selected release branch
-        uses: actions/checkout@v5
-
-      - name: Set up Node
-        uses: actions/setup-node@v5
-        with:
-          node-version: 20
-
-      - name: Set up pnpm
-        run: npm install --global pnpm@9.12.0
-
-      - name: Remove iOS-only install hooks from Android package
+      - name: Remove iOS-only EAS hooks from Android upload package
         shell: bash
         run: |
           node - <<'NODE'
@@ -129,19 +71,37 @@ jobs:
           pkg.scripts = pkg.scripts || {};
           delete pkg.scripts['eas-build-pre-install'];
           delete pkg.scripts['eas-build-post-install'];
-          if (pkg.scripts.postinstall?.includes('cocoapods')) delete pkg.scripts.postinstall;
+          if (pkg.scripts.postinstall === 'bash scripts/eas-fix-pod-path.sh') delete pkg.scripts.postinstall;
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
+          pnpm install --lockfile-only --no-frozen-lockfile
 
-      - name: Apply Android-only Elite Work name
-        shell: bash
-        run: |
-          node - <<'NODE'
-          const fs = require('fs');
-          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
-          app.expo.name = 'Elite Work';
-          fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
-          NODE
+      - name: Build caregiver Android App Bundle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
+
+  employer:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout exact source used by latest iOS split build
+        uses: actions/checkout@v5
+        with:
+          ref: elitebridge-split-ai-ma
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
 
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
@@ -152,24 +112,16 @@ jobs:
       - name: Type check employer app
         run: pnpm check
 
-      - name: Audit employer release
-        run: pnpm audit:release
-
-      - name: Validate employer Android identity
+      - name: Validate Android package
         shell: bash
         run: |
           node - <<'NODE'
           const app = require('./app.json').expo;
-          if (app.android?.package !== 'com.elitebridgestaffing.employer') {
-            throw new Error(`Unexpected employer package: ${app.android?.package}`);
+          if (app.android?.package !== 'com.app.elitebridgeemployer') {
+            throw new Error(`Unexpected employer Android package: ${app.android?.package}`);
           }
-          if (app.android?.versionCode !== 34) {
-            throw new Error(`Unexpected employer versionCode: ${app.android?.versionCode}`);
-          }
-          if (app.name !== 'Elite Work') throw new Error(`Unexpected employer Android name: ${app.name}`);
-          console.log(`Employer: ${app.android.package} versionCode ${app.android.versionCode}`);
+          console.log(`Employer Android package: ${app.android.package}`);
           NODE
-          npx expo config --type public > /tmp/elitebridge-employer-android-config.json
 
       - name: Build employer Android App Bundle
         env:

@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { sql, eq, and } from "drizzle-orm";
-import { db } from "../db";
-import { payments, bookings, employers, caregivers, users } from "../db/schema";
-import { authMiddleware, AuthRequest } from "../middleware/auth";
-import { AppError } from "../middleware/errorHandler";
+import { db } from "../db/index.js";
+import { payments, bookings, employers, caregivers, users } from "../db/schema.js";
+import { authMiddleware, AuthRequest } from "../middleware/auth.js";
+import { AppError } from "../middleware/errorHandler.js";
 
 const router = Router();
 

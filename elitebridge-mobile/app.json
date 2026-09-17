@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Elite Bridge",
+    "name": "Elite Care",
     "slug": "elitebridge-mobile",
     "version": "1.2.4",
     "orientation": "portrait",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgemobile",
-      "buildNumber": "56",
+      "buildNumber": "57",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Elite Bridge needs microphone access for voice communication.",

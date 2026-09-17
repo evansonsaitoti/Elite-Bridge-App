@@ -1,18 +1,37 @@
 {
   "version": 2,
   "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    }
+    { "src": "*.html", "use": "@vercel/static" },
+    { "src": "*.css", "use": "@vercel/static" },
+    { "src": "*.js", "use": "@vercel/static" },
+    { "src": "*.png", "use": "@vercel/static" },
+    { "src": "*.webp", "use": "@vercel/static" },
+    { "src": "*.svg", "use": "@vercel/static" },
+    { "src": "*.ico", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/login/?", "dest": "/index.html" },
+    { "src": "/signup/?", "dest": "/signup.html" },
+    { "src": "/onboarding/?", "dest": "/onboarding.html" },
+    { "src": "/marketplace/?", "dest": "/marketplace.html" },
+    { "src": "/caregiver-dashboard/?", "dest": "/caregiver-dashboard.html" },
+    { "src": "/employer-dashboard/?", "dest": "/employer-dashboard.html" },
+    { "src": "/find-care/?", "dest": "/find-care.html" },
+    { "src": "/find-jobs/?", "dest": "/find-jobs.html" },
+    { "src": "/services/?", "dest": "/services.html" },
+    { "src": "/privacy/?", "dest": "/privacy.html" },
+    { "src": "/terms/?", "dest": "/terms.html" },
+    { "src": "/forgot-password/?", "dest": "/forgot-password.html" },
+    { "src": "/reset-password/?", "dest": "/reset-password.html" },
     {
       "src": "/(.*)",
-      "dest": "index.html",
       "headers": {
-        "Cache-Control": "public, max-age=0, must-revalidate"
-      }
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "X-Content-Type-Options": "nosniff",
+        "Referrer-Policy": "strict-origin-when-cross-origin"
+      },
+      "continue": true
     }
   ]
 }
