@@ -36,6 +36,8 @@
   const mobileOverlay = document.getElementById('mobileOverlay');
   const toast = document.getElementById('toast');
   const search = document.getElementById('globalSearch');
+  const inviteDialog = document.getElementById('inviteDialog');
+  const inviteForm = document.getElementById('inviteForm');
   let toastTimer;
 
   function notify(message) {
@@ -106,11 +108,48 @@
 
   document.querySelectorAll('[data-notify]').forEach((button) => button.addEventListener('click', () => notify(button.dataset.notify)));
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
-  document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', async () => {
-    const inviteUrl = `${location.origin}/signup?role=caregiver`;
-    try { await navigator.clipboard.writeText(inviteUrl); notify('Caregiver invitation link copied.'); }
-    catch (_) { window.prompt('Copy this caregiver invitation link:', inviteUrl); }
+  document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', () => {
+    if (!inviteDialog) return;
+    inviteForm?.reset();
+    const result = document.getElementById('inviteResult');
+    if (result) result.hidden = true;
+    inviteDialog.showModal();
+    document.getElementById('inviteFirstName')?.focus();
   }));
+  ['inviteClose', 'inviteCancel'].forEach((id) => document.getElementById(id)?.addEventListener('click', () => inviteDialog?.close()));
+  inviteDialog?.addEventListener('click', (event) => { if (event.target === inviteDialog) inviteDialog.close(); });
+
+  document.getElementById('copyInvite')?.addEventListener('click', async () => {
+    const link = document.getElementById('inviteLink')?.value;
+    if (!link) return;
+    try { await navigator.clipboard.writeText(link); notify('Invitation link copied.'); }
+    catch (_) { window.prompt('Copy this caregiver invitation link:', link); }
+  });
+
+  inviteForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const formData = new FormData(inviteForm);
+    const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'phone'].map((key) => [key, String(formData.get(key) || '').trim()]));
+    if (!payload.email && !payload.phone) { notify('Enter an email address or phone number.'); return; }
+    Object.keys(payload).forEach((key) => { if (!payload[key]) delete payload[key]; });
+    const submit = document.getElementById('inviteSubmit');
+    submit.disabled = true;
+    submit.textContent = 'Creating…';
+    try {
+      const data = await api('/employers/invitations', { method: 'POST', body: JSON.stringify(payload) });
+      const result = document.getElementById('inviteResult');
+      const link = document.getElementById('inviteLink');
+      const delivery = document.getElementById('inviteDelivery');
+      link.value = data.inviteUrl;
+      delivery.textContent = data.emailSent ? 'The invitation email was sent. You can also copy or text the link.' : 'Copy, email, or text this secure link to the caregiver.';
+      document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Care invitation')}&body=${encodeURIComponent(`Join our care team on Elite Care: ${data.inviteUrl}`)}`;
+      document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(`Join our care team on Elite Care: ${data.inviteUrl}`)}`;
+      result.hidden = false;
+      notify('Caregiver invitation created.');
+      await loadEmployer();
+    } catch (error) { notify(error.message); }
+    finally { submit.disabled = false; submit.textContent = 'Create invitation'; }
+  });
 
   function setText(id, value) {
     const element = document.getElementById(id);
@@ -168,9 +207,35 @@
     container.querySelectorAll('[data-notify]').forEach((button) => button.addEventListener('click', () => notify(button.dataset.notify)));
   }
 
+  function renderInvitations(container, invitations) {
+    if (!container) return;
+    if (!invitations.length) {
+      renderEmpty(container, 'No invitations yet', 'Invite a caregiver by email or phone to connect them to your organization.');
+      return;
+    }
+    container.innerHTML = invitations.map((invitation) => {
+      const name = `${invitation.firstName || ''} ${invitation.lastName || ''}`.trim() || invitation.email || invitation.phone || 'Caregiver';
+      const expired = invitation.status === 'pending' && new Date(invitation.expiresAt) <= new Date();
+      const status = expired ? 'expired' : invitation.status;
+      return `<div class="list-row" data-searchable><span class="row-icon">IN</span><span class="row-copy"><strong>${escapeHtml(name)}</strong><span>${escapeHtml(invitation.email || invitation.phone || '')} · Sent ${dateTime(invitation.createdAt)}</span></span><span class="status ${status === 'accepted' ? '' : 'neutral'}">${escapeHtml(status)}</span></div>`;
+    }).join('');
+  }
+
+  function renderCompliance(container, caregivers) {
+    if (!container) return;
+    if (!caregivers.length) {
+      renderEmpty(container, 'No caregiver screening records', 'Invite a caregiver first. Screening status will appear after their profile is connected.');
+      return;
+    }
+    container.innerHTML = caregivers.map((person) => {
+      const status = person.backgroundCheckStatus || 'pending';
+      return `<div class="list-row" data-searchable><span class="avatar">${escapeHtml(`${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`)}</span><span class="row-copy"><strong>${escapeHtml(`${person.firstName || ''} ${person.lastName || ''}`.trim())}</strong><span>${person.backgroundCheckDate ? `Updated ${dateTime(person.backgroundCheckDate)}` : 'Awaiting screening update'}</span></span><span class="status ${status === 'verified' ? '' : 'warning'}">${escapeHtml(status)}</span></div>`;
+    }).join('');
+  }
+
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/caregivers'), api('/messages/conversations'), api(`/employers/${session.user.id}`)
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/caregivers'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -178,6 +243,7 @@
     const caregivers = caregiverResult.status === 'fulfilled' ? caregiverResult.value.caregivers || [] : [];
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
     const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
+    const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];
     if (profile?.companyName) {
       session.user.companyName = profile.companyName;
       session.storage.setItem('user', JSON.stringify(session.user));
@@ -199,6 +265,8 @@
       if (!caregivers.length) renderEmpty(caregiverList, 'No caregivers available yet', 'Verified caregivers will appear here as the network grows.');
       else caregiverList.innerHTML = caregivers.map((person) => `<div class="list-row" data-searchable><span class="avatar">${escapeHtml(`${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`)}</span><span class="row-copy"><strong>${escapeHtml(`${person.firstName || ''} ${person.lastName || ''}`)}</strong><span>${escapeHtml((person.specialties || []).join(' · ') || 'Caregiver')}</span></span><span class="row-meta">★ ${escapeHtml(person.rating || 'New')}<br>${money(person.hourlyRate)}/hr</span></div>`).join('');
     }
+    renderInvitations(document.getElementById('invitationList'), invitations);
+    renderCompliance(document.getElementById('complianceList'), caregivers);
     setText('payrollTotal', money(payroll.stats?.total_spent));
     setText('payrollPending', money(payroll.stats?.pending_amount));
     setText('payrollPaid', money(payroll.stats?.paid_amount));

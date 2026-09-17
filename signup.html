@@ -219,6 +219,20 @@
             display: block;
         }
 
+        .invite-banner {
+            display: none;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border: 1px solid #cfe3d8;
+            border-radius: 10px;
+            color: #325e4b;
+            background: #f1f8f4;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .invite-banner.active { display: block; }
+
         @media (max-width: 480px) {
             .form-card {
                 padding: 30px 20px;
@@ -246,6 +260,7 @@
 
         <div class="error-message" id="errorMessage"></div>
         <div class="success-message" id="successMessage"></div>
+        <div class="invite-banner" id="inviteBanner"></div>
 
         <form id="signupForm" onsubmit="handleSignup(event)">
             <div style="margin-bottom: 25px;">
@@ -301,7 +316,7 @@
             </div>
 
             <div class="terms">
-                By signing up, you agree to our <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>
+                By signing up, you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
             </div>
 
             <button type="submit" class="btn-signup" id="submitBtn">Create Account</button>
@@ -318,10 +333,42 @@
 <script>
     const API_BASE = window.ELITE_BRIDGE_API_BASE || 'https://elite-bridge-shared-api-evans.vercel.app/api';
 
-    const requestedRole = new URLSearchParams(window.location.search).get('role');
+    const params = new URLSearchParams(window.location.search);
+    const requestedRole = params.get('role');
+    const inviteToken = params.get('invite');
     if (requestedRole === 'caregiver' || requestedRole === 'employer') {
         document.getElementById(requestedRole).checked = true;
         updateCompanySection();
+    }
+
+    if (inviteToken) {
+        document.getElementById('caregiver').checked = true;
+        document.getElementById('employer').disabled = true;
+        updateCompanySection();
+        loadInvitation();
+    }
+
+    async function loadInvitation() {
+        const errorDiv = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        try {
+            const response = await fetch(`${API_BASE}/employers/invitations/${encodeURIComponent(inviteToken)}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.error || 'This invitation is invalid or has expired.');
+            const invitation = data.invitation;
+            document.getElementById('firstName').value = invitation.firstName || '';
+            document.getElementById('lastName').value = invitation.lastName || '';
+            document.getElementById('email').value = invitation.email || '';
+            document.getElementById('phone').value = invitation.phone || '';
+            if (invitation.email) document.getElementById('email').readOnly = true;
+            const banner = document.getElementById('inviteBanner');
+            banner.textContent = `${invitation.companyName} invited you to join their care team in Elite Care. Create your caregiver account to accept.`;
+            banner.classList.add('active');
+        } catch (error) {
+            errorDiv.textContent = error.message || 'This invitation could not be opened.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = true;
+        }
     }
 
     function updateCompanySection() {
@@ -384,6 +431,7 @@
                     password,
                     role,
                     companyName: role === 'employer' ? companyName : undefined,
+                    inviteToken: inviteToken || undefined,
                 }),
             });
 

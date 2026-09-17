@@ -1,34 +1,80 @@
 import { Router } from "express";
 import { z } from "zod";
 import bcrypt from "bcryptjs";
+import { createHash, randomBytes } from "crypto";
 import { db } from "../db/index.js";
 import { ensureCoreTables } from "../db/bootstrap.js";
-import { users, employers } from "../db/schema.js";
-import { eq } from "drizzle-orm";
+import {
+  users,
+  employers,
+  caregiverInvitations,
+  employerCaregivers,
+  passwordResetTokens,
+} from "../db/schema.js";
+import { and, eq, gt, isNull } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { config } from "../config/env.js";
+import { sendEmail } from "../services/email.js";
 
 const router = Router();
 
 const registerSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
   password: z.string().min(8),
   firstName: z.string().min(2),
   lastName: z.string().min(2),
   role: z.enum(["caregiver", "employer"]),
   phone: z.string().optional(),
   companyName: z.string().optional(),
+  inviteToken: z.string().min(20).optional(),
 });
 
 const loginSchema = z.object({
-  email: z.string().email(),
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
   password: z.string(),
 });
+
+const forgotPasswordSchema = z.object({
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string().min(20),
+  password: z.string().min(8),
+});
+
+const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
 
 router.post("/register", async (req, res, next) => {
   try {
     await ensureCoreTables();
     const data = registerSchema.parse(req.body);
+    let invitation: typeof caregiverInvitations.$inferSelect | undefined;
+
+    if (data.inviteToken) {
+      if (data.role !== "caregiver") {
+        throw new AppError(400, "Caregiver invitations can only create caregiver accounts");
+      }
+      const invitationList = await db
+        .select()
+        .from(caregiverInvitations)
+        .where(
+          and(
+            eq(caregiverInvitations.tokenHash, hashToken(data.inviteToken)),
+            eq(caregiverInvitations.status, "pending"),
+            gt(caregiverInvitations.expiresAt, new Date())
+          )
+        )
+        .limit(1);
+      invitation = invitationList[0];
+      if (!invitation) {
+        throw new AppError(400, "This invitation is invalid or has expired");
+      }
+      if (invitation.email && invitation.email.toLowerCase() !== data.email) {
+        throw new AppError(400, "Use the email address that received this invitation");
+      }
+    }
 
     const existingUser = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
 
@@ -61,6 +107,27 @@ router.post("/register", async (req, res, next) => {
       });
     }
 
+    if (invitation) {
+      await db
+        .insert(employerCaregivers)
+        .values({
+          employerId: invitation.employerId,
+          caregiverUserId: user.id,
+          invitationId: invitation.id,
+          status: "active",
+        })
+        .onConflictDoNothing();
+      await db
+        .update(caregiverInvitations)
+        .set({
+          status: "accepted",
+          acceptedByUserId: user.id,
+          acceptedAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(eq(caregiverInvitations.id, invitation.id));
+    }
+
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
 
     res.status(201).json({
@@ -78,6 +145,75 @@ router.post("/register", async (req, res, next) => {
         emailVerified: user.emailVerified,
       },
     });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/forgot-password", async (req, res, next) => {
+  try {
+    await ensureCoreTables();
+    const data = forgotPasswordSchema.parse(req.body);
+    const userList = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
+    const user = userList[0];
+
+    if (user) {
+      await db.delete(passwordResetTokens).where(eq(passwordResetTokens.userId, user.id));
+      const token = randomBytes(32).toString("hex");
+      await db.insert(passwordResetTokens).values({
+        userId: user.id,
+        tokenHash: hashToken(token),
+        expiresAt: new Date(Date.now() + 30 * 60 * 1000),
+      });
+      const resetUrl = `${config.WEB_APP_URL.replace(/\/$/, "")}/reset-password?token=${encodeURIComponent(token)}`;
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: "Reset your Elite Bridge password",
+          text: `Reset your Elite Bridge password within 30 minutes: ${resetUrl}`,
+          html: `<p>Hello ${user.firstName},</p><p>Use the secure link below to reset your Elite Bridge password. It expires in 30 minutes.</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+        });
+      } catch (error) {
+        console.error("Password reset email could not be delivered", error);
+      }
+    }
+
+    res.json({ message: "If that account exists, a password reset email has been sent." });
+  } catch (error) {
+    next(error);
+  }
+});
+
+router.post("/reset-password", async (req, res, next) => {
+  try {
+    await ensureCoreTables();
+    const data = resetPasswordSchema.parse(req.body);
+    const tokenList = await db
+      .select()
+      .from(passwordResetTokens)
+      .where(
+        and(
+          eq(passwordResetTokens.tokenHash, hashToken(data.token)),
+          gt(passwordResetTokens.expiresAt, new Date()),
+          isNull(passwordResetTokens.usedAt)
+        )
+      )
+      .limit(1);
+    const resetToken = tokenList[0];
+    if (!resetToken) {
+      throw new AppError(400, "This password reset link is invalid or has expired");
+    }
+
+    await db
+      .update(users)
+      .set({ password: await bcrypt.hash(data.password, 10), updatedAt: new Date() })
+      .where(eq(users.id, resetToken.userId));
+    await db
+      .update(passwordResetTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(passwordResetTokens.id, resetToken.id));
+
+    res.json({ message: "Your password has been updated. You can now sign in." });
   } catch (error) {
     next(error);
   }
