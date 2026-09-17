@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - codex/android-builds-57-34
+      - codex/elite-care-work-sync
   workflow_dispatch:
     inputs:
       app:
@@ -56,6 +57,16 @@ jobs:
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
 
+      - name: Apply Android-only Elite Care name
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          app.expo.name = 'Elite Care';
+          fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          NODE
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
@@ -79,6 +90,7 @@ jobs:
           if (app.android?.versionCode !== 57) {
             throw new Error(`Unexpected caregiver versionCode: ${app.android?.versionCode}`);
           }
+          if (app.name !== 'Elite Care') throw new Error(`Unexpected caregiver Android name: ${app.name}`);
           console.log(`Caregiver: ${app.android.package} versionCode ${app.android.versionCode}`);
           NODE
           npx expo config --type public > /tmp/elitebridge-caregiver-android-config.json
@@ -121,6 +133,16 @@ jobs:
           fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
           NODE
 
+      - name: Apply Android-only Elite Work name
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+          app.expo.name = 'Elite Work';
+          fs.writeFileSync('app.json', JSON.stringify(app, null, 2) + '\n');
+          NODE
+
       - name: Install dependencies
         run: pnpm install --no-frozen-lockfile
 
@@ -144,6 +166,7 @@ jobs:
           if (app.android?.versionCode !== 34) {
             throw new Error(`Unexpected employer versionCode: ${app.android?.versionCode}`);
           }
+          if (app.name !== 'Elite Work') throw new Error(`Unexpected employer Android name: ${app.name}`);
           console.log(`Employer: ${app.android.package} versionCode ${app.android.versionCode}`);
           NODE
           npx expo config --type public > /tmp/elitebridge-employer-android-config.json

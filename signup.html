@@ -316,7 +316,14 @@
 </div>
 
 <script>
-    const API_BASE = 'http://34.75.156.104:3000/api';
+    const API_BASE = 'https://elite-bridge-shared-api.onrender.com/api';
+    const inviteToken = new URLSearchParams(window.location.search).get('invite');
+
+    if (inviteToken) {
+        document.getElementById('caregiver').checked = true;
+        document.getElementById('employer').disabled = true;
+        updateCompanySection();
+    }
 
     function updateCompanySection() {
         const role = document.querySelector('input[name="role"]:checked').value;
@@ -378,6 +385,7 @@
                     password,
                     role,
                     companyName: role === 'employer' ? companyName : undefined,
+                    inviteToken: role === 'caregiver' ? inviteToken || undefined : undefined,
                 }),
             });
 

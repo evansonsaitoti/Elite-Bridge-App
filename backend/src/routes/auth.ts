@@ -5,7 +5,7 @@ import jwt from "jsonwebtoken";
 import { db } from "../db";
 import { ensureCoreTables } from "../db/bootstrap";
 import { users, employers } from "../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import { sendEmailVerification, sendSignupAlert } from "../services/notifications";
@@ -21,6 +21,7 @@ const registerSchema = z.object({
   role: z.enum(["caregiver", "employer"]),
   phone: z.string().optional(),
   companyName: z.string().optional(),
+  inviteToken: z.string().uuid().optional(),
 });
 
 const loginSchema = z.object({
@@ -57,6 +58,20 @@ router.post("/register", async (req, res, next) => {
       throw new AppError(409, "User with this email already exists");
     }
 
+    if (data.role === "caregiver" && data.inviteToken) {
+      const invitation = await db.execute(sql`
+        SELECT id FROM caregiver_invitations
+        WHERE token = ${data.inviteToken}
+          AND LOWER(email) = LOWER(${data.email})
+          AND status = 'pending'
+          AND expires_at > CURRENT_TIMESTAMP
+        LIMIT 1
+      `);
+      if (!(invitation as any).rows[0]) {
+        throw new AppError(400, "Invitation is invalid, expired, or belongs to another email address");
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const newUser = await db
@@ -80,6 +95,16 @@ router.post("/register", async (req, res, next) => {
         userId: user.id,
         companyName: data.companyName || `${user.firstName} ${user.lastName}`,
       });
+    } else if (data.inviteToken) {
+      await db.execute(sql`
+        UPDATE caregiver_invitations
+        SET status = 'accepted', accepted_at = CURRENT_TIMESTAMP
+        WHERE token = ${data.inviteToken}
+          AND LOWER(email) = LOWER(${data.email})
+          AND status = 'pending'
+          AND expires_at > CURRENT_TIMESTAMP
+        RETURNING id
+      `);
     }
 
     const token = generateToken({ id: user.id, email: user.email, role: user.role });

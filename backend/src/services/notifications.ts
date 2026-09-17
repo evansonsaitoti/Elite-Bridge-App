@@ -20,7 +20,7 @@ type VerificationDetails = {
   verificationUrl: string;
 };
 
-async function sendEmail(to: string, subject: string, text: string): Promise<boolean> {
+export async function sendTransactionalEmail(to: string, subject: string, text: string): Promise<boolean> {
   if (config.RESEND_API_KEY && config.RESEND_FROM) {
     try {
       await axios.post("https://api.resend.com/emails", {
@@ -78,7 +78,7 @@ export async function sendEmailVerification(details: VerificationDetails): Promi
     "Elite Bridge Staffing",
   ].join("\n");
 
-  return sendEmail(details.email, subject, text);
+  return sendTransactionalEmail(details.email, subject, text);
 }
 
 export async function sendSignupAlert(details: SignupDetails): Promise<boolean> {
@@ -96,7 +96,7 @@ export async function sendSignupAlert(details: SignupDetails): Promise<boolean> 
     `Source app: Elite Bridge ${roleLabel}`,
   ].join("\n");
 
-  const delivered = await sendEmail(config.SIGNUP_ALERT_EMAIL, subject, text);
+  const delivered = await sendTransactionalEmail(config.SIGNUP_ALERT_EMAIL, subject, text);
   if (delivered) console.info("Signup alert email sent");
   return delivered;
 }

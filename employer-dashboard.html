@@ -301,6 +301,13 @@
             color: var(--white);
         }
 
+        .option-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+        .option-chip { padding: 10px; border-radius: 8px; background: #eef4f1; color: var(--primary-dark); text-align: center; font-weight: 600; font-size: .85rem; }
+        .notice { display: none; margin: 12px 0; padding: 12px; border-radius: 8px; background: #e8f5e9; color: #185c2c; }
+        .status-pill { display: inline-block; padding: 4px 9px; border-radius: 999px; background: #fff3d6; color: #7a5311; font-size: .78rem; font-weight: 700; }
+        .check-row { display: flex; align-items: center; gap: 9px; margin: 12px 0; }
+        .check-row input { width: auto; }
+
         @media (max-width: 768px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -313,6 +320,7 @@
                 align-items: flex-start;
                 gap: 10px;
             }
+            .option-grid { grid-template-columns: 1fr 1fr; }
         }
     </style>
 </head>
@@ -355,6 +363,18 @@
                 <h3 style="margin-bottom: 15px;">Quick Actions</h3>
                 <button class="btn-primary" style="margin-bottom: 10px;" onclick="scrollToSection('post-job')">Post a Job</button>
                 <button class="btn-primary" style="margin-bottom: 10px; background: var(--accent-gold); color: var(--primary-dark);" onclick="scrollToSection('company')">Company Info</button>
+                <button class="btn-primary" style="margin-bottom: 10px;" onclick="scrollToSection('invite-caregiver')">Invite Caregiver</button>
+                <button class="btn-primary" onclick="scrollToSection('care-team')">Care Team & Checks</button>
+            </div>
+            <div class="card">
+                <h3 style="margin-bottom: 15px;">Elite Work Tools</h3>
+                <div class="option-grid">
+                    <span class="option-chip">Shifts</span><span class="option-chip">Applicants</span>
+                    <span class="option-chip">Care Team</span><span class="option-chip">Timesheets</span>
+                    <span class="option-chip">Messages</span><span class="option-chip">Compliance</span>
+                    <span class="option-chip">Payroll</span><span class="option-chip">Reports</span>
+                    <span class="option-chip">Invoices</span>
+                </div>
             </div>
         </div>
 
@@ -383,6 +403,19 @@
                 <button class="btn-save" onclick="saveProfile()">Save Changes</button>
             </div>
 
+            <div class="card" id="invite-caregiver">
+                <h2>Invite a Caregiver</h2>
+                <p style="margin-bottom:18px;color:#667;">Send a secure Elite Care signup link and optionally start background-check tracking.</p>
+                <div class="form-row">
+                    <div class="form-group"><label>First Name</label><input id="inviteFirstName" autocomplete="given-name"></div>
+                    <div class="form-group"><label>Last Name</label><input id="inviteLastName" autocomplete="family-name"></div>
+                </div>
+                <div class="form-group"><label>Email</label><input type="email" id="inviteEmail" autocomplete="email"></div>
+                <label class="check-row"><input type="checkbox" id="inviteBackgroundCheck"> Request a background check after signup</label>
+                <div class="notice" id="inviteNotice"></div>
+                <button class="btn-save" onclick="inviteCaregiver()">Send Invitation</button>
+            </div>
+
             <!-- Company Information Section -->
             <div class="card" id="company">
                 <h2>Company Information</h2>
@@ -404,7 +437,22 @@
                         <input type="email" id="contactEmail" placeholder="info@company.com">
                     </div>
                 </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Start Date</label><input type="date" id="startDate"></div>
+                    <div class="form-group"><label>Start / End</label><div style="display:flex;gap:8px"><input type="time" id="startTime"><input type="time" id="endTime"></div></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label>Street Address</label><input id="jobAddress" placeholder="123 Main St"></div>
+                    <div class="form-group"><label>City / State</label><div style="display:flex;gap:8px"><input id="jobCity" placeholder="Boston"><input id="jobState" value="MA" maxlength="2"></div></div>
+                </div>
                 <button class="btn-save" onclick="saveCompanyInfo()">Save Company Info</button>
+            </div>
+
+            <div class="card" id="care-team">
+                <h2>Care Team & Background Checks</h2>
+                <div class="jobs-list" id="caregiverList"><p>Loading caregivers…</p></div>
+                <h2 style="margin-top:28px;">Pending Invitations</h2>
+                <div class="jobs-list" id="invitationList"><p>No invitations yet.</p></div>
             </div>
 
             <!-- Post Job Section -->
@@ -475,10 +523,18 @@
 </div>
 
 <script>
-    const API_BASE = 'http://34.75.156.104:3000/api';
+    const API_BASE = 'https://elite-bridge-shared-api.onrender.com/api';
+    const token = localStorage.getItem('token');
+    const authHeaders = () => ({ 'Content-Type': 'application/json', Authorization: `Bearer ${token}` });
+    async function api(path, options = {}) {
+        const response = await fetch(`${API_BASE}${path}`, { ...options, headers: { ...authHeaders(), ...(options.headers || {}) } });
+        const data = response.status === 204 ? {} : await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(data.message || data.error || 'Request failed');
+        return data;
+    }
 
     // Load user data on page load
-    window.addEventListener('load', () => {
+    window.addEventListener('load', async () => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
             window.location.href = 'login.html';
@@ -494,6 +550,20 @@
         document.getElementById('email').value = user.email;
         document.getElementById('phone').value = user.phone || '';
         document.getElementById('companyNameInput').value = user.companyName || '';
+        document.getElementById('startDate').value = new Date().toISOString().slice(0, 10);
+        document.getElementById('startTime').value = '09:00';
+        document.getElementById('endTime').value = '17:00';
+        try {
+            const { profile } = await api('/employers/me');
+            Object.assign(user, profile);
+            localStorage.setItem('user', JSON.stringify(user));
+            document.getElementById('companyName').textContent = profile.companyName || 'Your Company';
+            document.getElementById('companyNameInput').value = profile.companyName || '';
+            document.getElementById('companyDescription').value = profile.companyDescription || '';
+            document.getElementById('phone').value = profile.phone || '';
+            document.getElementById('zipCode').value = profile.billingAddress?.zipCode || '';
+        } catch (error) { console.error(error); }
+        await Promise.all([loadShifts(), loadCaregivers(), loadInvitations()]);
     });
 
     function scrollToSection(sectionId) {
@@ -503,24 +573,100 @@
         }
     }
 
-    function saveProfile() {
-        alert('Profile saved successfully!');
+    async function saveProfile() {
+        try {
+            await api('/employers/me', { method: 'PUT', body: JSON.stringify({
+                firstName: document.getElementById('firstName').value,
+                lastName: document.getElementById('lastName').value,
+                phone: document.getElementById('phone').value,
+            }) });
+            alert('Profile saved and synchronized.');
+        } catch (error) { alert(error.message); }
     }
 
-    function saveCompanyInfo() {
-        alert('Company information saved successfully!');
+    async function saveCompanyInfo() {
+        try {
+            await api('/employers/me', { method: 'PUT', body: JSON.stringify({
+                companyName: document.getElementById('companyNameInput').value,
+                companyDescription: document.getElementById('companyDescription').value,
+                zipCode: document.getElementById('zipCode').value,
+            }) });
+            document.getElementById('companyName').textContent = document.getElementById('companyNameInput').value;
+            alert('Company information saved and synchronized.');
+        } catch (error) { alert(error.message); }
     }
 
-    function postJob() {
+    async function postJob() {
         const jobTitle = document.getElementById('jobTitle').value;
         if (!jobTitle) {
             alert('Please fill in all required fields');
             return;
         }
-        alert('Job posted successfully!');
-        document.getElementById('jobTitle').value = '';
-        document.getElementById('jobDescription').value = '';
+        const user = JSON.parse(localStorage.getItem('user'));
+        try {
+            await api('/bookings', { method: 'POST', body: JSON.stringify({
+                title: jobTitle,
+                serviceType: document.getElementById('serviceType').value || 'personal_care',
+                caregiverType: 'caregiver', scheduleType: 'one_time',
+                startDate: document.getElementById('startDate').value,
+                startTime: document.getElementById('startTime').value,
+                endTime: document.getElementById('endTime').value,
+                location: { type: 'client_home', address: document.getElementById('jobAddress').value, city: document.getElementById('jobCity').value, state: document.getElementById('jobState').value, zipCode: document.getElementById('jobZipCode').value },
+                pay: { hourlyRate: Number(document.getElementById('hourlyRate').value), currency: 'USD' },
+                numberOfCaregivers: 1, requirements: [],
+                responsibilities: document.getElementById('jobDescription').value || jobTitle,
+                contact: { name: `${user.firstName} ${user.lastName}`, phone: document.getElementById('phone').value || 'Not provided' },
+                urgency: 'standard', assignmentMode: 'review',
+            }) });
+            alert('Shift posted. It is now synchronized with Elite Care.');
+            await loadShifts();
+        } catch (error) { alert(error.message); }
     }
+
+    async function inviteCaregiver() {
+        const notice = document.getElementById('inviteNotice');
+        try {
+            const data = await api('/employers/invitations', { method: 'POST', body: JSON.stringify({
+                firstName: document.getElementById('inviteFirstName').value,
+                lastName: document.getElementById('inviteLastName').value,
+                email: document.getElementById('inviteEmail').value,
+                requestBackgroundCheck: document.getElementById('inviteBackgroundCheck').checked,
+            }) });
+            notice.style.display = 'block';
+            notice.textContent = data.emailDelivered ? 'Invitation sent successfully.' : `Invitation created. Copy this link: ${data.inviteUrl}`;
+            await loadInvitations();
+        } catch (error) { alert(error.message); }
+    }
+
+    async function loadShifts() {
+        try {
+            const { shifts } = await api('/bookings/employer/my');
+            document.getElementById('jobsValue').textContent = shifts.filter(s => ['open', 'assigned'].includes(s.status)).length;
+            document.getElementById('jobsList').innerHTML = shifts.length ? shifts.map(shift => `<div class="job-item"><div class="job-info"><h4>${escapeHtml(shift.title)}</h4><p>${new Date(shift.startTime).toLocaleString()} • $${shift.pay?.hourlyRate || shift.hourlyRate}/hour</p></div><span class="status-pill">${escapeHtml(shift.status)}</span></div>`).join('') : '<p>No shifts posted yet.</p>';
+        } catch (error) { document.getElementById('jobsList').innerHTML = `<p>${escapeHtml(error.message)}</p>`; }
+    }
+
+    async function loadCaregivers() {
+        try {
+            const { caregivers } = await api('/caregivers');
+            document.getElementById('caregiverList').innerHTML = caregivers.length ? caregivers.map(c => `<div class="job-item"><div class="job-info"><h4>${escapeHtml(c.firstName)} ${escapeHtml(c.lastName)}</h4><p>${escapeHtml((c.specialties || []).join(', ') || 'Caregiver')} • <span class="status-pill">${escapeHtml(c.backgroundCheckStatus || 'pending')}</span></p></div><button class="btn-small btn-edit" onclick="requestBackgroundCheck(${Number(c.userId)})">Request Check</button></div>`).join('') : '<p>No caregiver profiles yet.</p>';
+        } catch (error) { document.getElementById('caregiverList').innerHTML = `<p>${escapeHtml(error.message)}</p>`; }
+    }
+
+    async function requestBackgroundCheck(caregiverUserId) {
+        if (!confirm('Request a background check for this caregiver?')) return;
+        try { await api('/employers/background-checks', { method: 'POST', body: JSON.stringify({ caregiverUserId, package: 'basic' }) }); await loadCaregivers(); alert('Background check requested.'); }
+        catch (error) { alert(error.message); }
+    }
+
+    async function loadInvitations() {
+        try {
+            const { invitations } = await api('/employers/invitations');
+            document.getElementById('invitationList').innerHTML = invitations.length ? invitations.map(i => `<div class="job-item"><div class="job-info"><h4>${escapeHtml(i.first_name)} ${escapeHtml(i.last_name)}</h4><p>${escapeHtml(i.email)} • Background check: ${escapeHtml(i.background_check_status)}</p></div><span class="status-pill">${escapeHtml(i.status)}</span></div>`).join('') : '<p>No invitations yet.</p>';
+        } catch (error) { document.getElementById('invitationList').innerHTML = `<p>${escapeHtml(error.message)}</p>`; }
+    }
+
+    function escapeHtml(value) { const node = document.createElement('div'); node.textContent = String(value ?? ''); return node.innerHTML; }
 
     function handleLogout() {
         localStorage.removeItem('token');

@@ -51,8 +51,12 @@ router.get("/", authMiddleware, async (req, res, next) => {
         certifications: caregivers.certifications,
         yearsExperience: caregivers.yearsExperience,
         rating: caregivers.rating,
+        backgroundCheckStatus: caregivers.backgroundCheckStatus,
+        backgroundCheckDate: caregivers.backgroundCheckDate,
         firstName: users.firstName,
         lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
         profileImage: users.profileImage,
       })
       .from(caregivers)
@@ -144,6 +148,9 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
         certifications: caregivers.certifications,
         yearsExperience: caregivers.yearsExperience,
         rating: caregivers.rating,
+        backgroundCheckStatus: caregivers.backgroundCheckStatus,
+        backgroundCheckDate: caregivers.backgroundCheckDate,
+        backgroundCheckProvider: caregivers.backgroundCheckProvider,
         firstName: users.firstName,
         lastName: users.lastName,
         profileImage: users.profileImage,

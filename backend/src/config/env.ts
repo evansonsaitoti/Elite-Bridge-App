@@ -36,7 +36,10 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
 
-  // Chekr Background Check
+  // Checkr Background Check (legacy CHEKR names remain supported)
+  CHECKR_API_KEY: z.string().optional(),
+  CHECKR_API_URL: z.string().url().optional(),
+  CHECKR_PACKAGE: z.string().default("basic"),
   CHEKR_API_KEY: z.string().optional(),
   CHEKR_API_URL: z.string().optional(),
 
