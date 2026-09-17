@@ -1,0 +1,152 @@
+name: Elite Bridge Android Builds
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: "Which Android app should be built?"
+        required: true
+        default: "both"
+        type: choice
+        options:
+          - both
+          - caregiver
+          - employer
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elite-bridge-android-builds
+  cancel-in-progress: false
+
+jobs:
+  caregiver:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout selected release branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Remove iOS-only install hooks from Android package
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.scripts = pkg.scripts || {};
+          delete pkg.scripts['eas-build-pre-install'];
+          delete pkg.scripts['eas-build-post-install'];
+          if (pkg.scripts.postinstall?.includes('cocoapods')) delete pkg.scripts.postinstall;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized caregiver icon
+        run: pnpm prepare:icons
+
+      - name: Type check caregiver app
+        run: pnpm check
+
+      - name: Audit caregiver release
+        run: pnpm audit:release
+
+      - name: Validate caregiver Android identity
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const app = require('./app.json').expo;
+          if (app.android?.package !== 'com.elitebridgestaffing.caregiver') {
+            throw new Error(`Unexpected caregiver package: ${app.android?.package}`);
+          }
+          if (app.android?.versionCode !== 57) {
+            throw new Error(`Unexpected caregiver versionCode: ${app.android?.versionCode}`);
+          }
+          console.log(`Caregiver: ${app.android.package} versionCode ${app.android.versionCode}`);
+          NODE
+          npx expo config --type public > /tmp/elitebridge-caregiver-android-config.json
+
+      - name: Build caregiver Android App Bundle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
+
+  employer:
+    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout selected release branch
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Remove iOS-only install hooks from Android package
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const fs = require('fs');
+          const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+          pkg.scripts = pkg.scripts || {};
+          delete pkg.scripts['eas-build-pre-install'];
+          delete pkg.scripts['eas-build-post-install'];
+          if (pkg.scripts.postinstall?.includes('cocoapods')) delete pkg.scripts.postinstall;
+          fs.writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
+          NODE
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized employer icon
+        run: pnpm prepare:icons
+
+      - name: Type check employer app
+        run: pnpm check
+
+      - name: Audit employer release
+        run: pnpm audit:release
+
+      - name: Validate employer Android identity
+        shell: bash
+        run: |
+          node - <<'NODE'
+          const app = require('./app.json').expo;
+          if (app.android?.package !== 'com.elitebridgestaffing.employer') {
+            throw new Error(`Unexpected employer package: ${app.android?.package}`);
+          }
+          if (app.android?.versionCode !== 34) {
+            throw new Error(`Unexpected employer versionCode: ${app.android?.versionCode}`);
+          }
+          console.log(`Employer: ${app.android.package} versionCode ${app.android.versionCode}`);
+          NODE
+          npx expo config --type public > /tmp/elitebridge-employer-android-config.json
+
+      - name: Build employer Android App Bundle
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
