@@ -1,0 +1,57 @@
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Alert, Linking, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFocusEffect, useRouter } from "expo-router";
+import Ionicons from "@expo/vector-icons/Ionicons";
+
+import { deleteEmployerAccount, EmployerUser, getStoredEmployer, signOutEmployer } from "../lib/api";
+import { unregisterEmployerPushNotifications } from "../lib/push-notifications";
+import { colors } from "../lib/theme";
+import { EmployerTabBar } from "../components/employer-tab-bar";
+
+const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
+const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
+const TERMS_URL = "https://elitebridgestaffing.com/terms/";
+
+export default function AccountScreen() {
+  const router = useRouter();
+  const [user, setUser] = useState<EmployerUser | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showAccountControls, setShowAccountControls] = useState(false);
+  useFocusEffect(useCallback(() => { getStoredEmployer().then((stored) => stored ? setUser(stored) : router.replace("/sign-in")); }, [router]));
+
+  const signOut = () => Alert.alert("Sign out?", "You can sign in again using your employer credentials.", [{ text: "Cancel", style: "cancel" }, { text: "Sign out", onPress: async () => { await unregisterEmployerPushNotifications().catch(() => undefined); await signOutEmployer(); router.dismissAll(); router.replace("/"); } }]);
+  const remove = () => Alert.alert("Delete employer account?", "This deletes your employer login and organization profile. Records that must be retained for legal, payroll or safety obligations may be preserved as required by law.", [{ text: "Cancel", style: "cancel" }, { text: "Delete account", style: "destructive", onPress: async () => {
+    setDeleting(true);
+    try { await deleteEmployerAccount(); router.dismissAll(); router.replace("/"); }
+    catch (error) { Alert.alert("Account not deleted", error instanceof Error ? error.message : "Contact support for assistance."); }
+    finally { setDeleting(false); }
+  } }]);
+
+  return (
+    <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
+      <View style={styles.profile}><View style={styles.avatar}><Text style={styles.avatarText}>{user?.firstName?.slice(0, 1).toUpperCase() || "E"}</Text></View><Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : "Employer"}</Text><Text style={styles.email}>{user?.email}</Text><Text style={styles.badge}>EMPLOYER ACCOUNT</Text></View>
+      <Text style={styles.section}>Account</Text>
+      <Row icon="business-outline" title="Organization profile" detail="Edit contact, services and service area" onPress={() => router.push("/profile")} />
+      <Row icon="notifications-outline" title="Notifications" detail="Review staffing and account updates" onPress={() => router.push("/notifications")} />
+      <Row icon="phone-portrait-outline" title="Push notification settings" detail="Manage permissions in device settings" onPress={() => void Linking.openSettings()} />
+      <Row icon="log-out-outline" title="Sign out" detail="Remove employer access from this device" onPress={signOut} />
+      <Text style={styles.section}>Help and legal</Text>
+      <Row icon="help-circle-outline" title="Contact support" detail={SUPPORT_EMAIL} onPress={() => void Linking.openURL(`mailto:${SUPPORT_EMAIL}?subject=Elite%20Bridge%20Employer%20support`)} />
+      <Row icon="shield-checkmark-outline" title="Privacy Policy" detail="How Elite Bridge handles information" onPress={() => void Linking.openURL(PRIVACY_URL)} />
+      <Row icon="document-text-outline" title="Terms of Use" detail="Employer marketplace terms" onPress={() => void Linking.openURL(TERMS_URL)} />
+      <Text style={styles.section}>Account controls</Text>
+      <Row icon="settings-outline" title="Account controls" detail="Manage sign-out and deletion options" expanded={showAccountControls} onPress={() => setShowAccountControls((current) => !current)} />
+      {showAccountControls ? <View style={styles.dangerCard}><View style={styles.dangerHeading}><Ionicons color={colors.danger} name="warning-outline" size={20} /><Text style={styles.dangerTitle}>Delete employer account</Text></View><Text style={styles.dangerBody}>Delete your employer login and organization profile. You will be asked to confirm before anything is deleted.</Text><TouchableOpacity disabled={deleting} onPress={remove} style={styles.delete}>{deleting ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.deleteText}>Continue to account deletion</Text>}</TouchableOpacity></View> : null}
+      <Text style={styles.footer}>Elite Bridge Employer and Elite Bridge Caregiver are separate applications connected through the same care marketplace.</Text>
+    </ScrollView><EmployerTabBar /></SafeAreaView>
+  );
+}
+
+function Row({ icon, title, detail, expanded, onPress }: { icon: React.ComponentProps<typeof Ionicons>["name"]; title: string; detail: string; expanded?: boolean; onPress: () => void }) { return <TouchableOpacity onPress={onPress} style={styles.row}><View style={styles.rowIcon}><Ionicons color={colors.green} name={icon} size={21} /></View><View style={styles.rowCopy}><Text style={styles.rowTitle}>{title}</Text><Text style={styles.rowDetail}>{detail}</Text></View><Ionicons color={colors.green} name={expanded === undefined ? "chevron-forward" : expanded ? "chevron-up" : "chevron-down"} size={20} /></TouchableOpacity>; }
+
+const styles = StyleSheet.create({
+  safe: { flex: 1, backgroundColor: colors.background }, content: { padding: 20, paddingBottom: 44 }, profile: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 20, borderWidth: 1, padding: 22 }, avatar: { alignItems: "center", backgroundColor: colors.green, borderRadius: 30, height: 60, justifyContent: "center", width: 60 }, avatarText: { color: "#FFFFFF", fontSize: 23, fontWeight: "900" }, name: { color: colors.ink, fontSize: 20, fontWeight: "900", marginTop: 11 }, email: { color: colors.muted, fontSize: 13, marginTop: 4 }, badge: { backgroundColor: colors.greenSoft, borderRadius: 9, color: colors.green, fontSize: 9, fontWeight: "900", letterSpacing: 1, marginTop: 10, overflow: "hidden", paddingHorizontal: 9, paddingVertical: 5 },
+  section: { color: colors.ink, fontSize: 17, fontWeight: "900", marginBottom: 9, marginTop: 24 }, row: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14, borderWidth: 1, flexDirection: "row", marginBottom: 8, minHeight: 66, padding: 13 }, rowIcon: { alignItems: "center", backgroundColor: colors.greenSoft, borderRadius: 11, height: 38, justifyContent: "center", marginRight: 12, width: 38 }, rowCopy: { flex: 1 }, rowTitle: { color: colors.ink, fontSize: 14, fontWeight: "900" }, rowDetail: { color: colors.muted, fontSize: 11, marginTop: 4 },
+  dangerCard: { backgroundColor: colors.dangerSoft, borderColor: "#F4C7C3", borderRadius: 16, borderWidth: 1, marginTop: 2, padding: 15 }, dangerHeading: { alignItems: "center", flexDirection: "row", gap: 7 }, dangerTitle: { color: colors.danger, fontSize: 15, fontWeight: "900" }, dangerBody: { color: "#7A271A", fontSize: 12, lineHeight: 18, marginTop: 7 }, delete: { alignItems: "center", borderColor: colors.danger, borderRadius: 11, borderWidth: 1, justifyContent: "center", marginTop: 13, minHeight: 44 }, deleteText: { color: colors.danger, fontWeight: "900" }, footer: { color: colors.muted, fontSize: 11, lineHeight: 17, marginTop: 24, textAlign: "center" },
+});

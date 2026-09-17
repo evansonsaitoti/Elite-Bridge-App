@@ -133,7 +133,7 @@ export function TimekeepingProvider({ children }: PropsWithChildren) {
         breaks: [],
         notes: "",
         status: "in_progress",
-        adminNote: null,
+        agencyNote: null,
         approvedAt: null,
         createdAt: now,
         updatedAt: now,

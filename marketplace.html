@@ -450,7 +450,7 @@
     <div class="hero-container">
         <h1>Find non-medical care you can trust</h1>
         <p>Connecting Massachusetts families with quality, local non-medical caregivers.</p>
-        
+
         <form class="search-box" onsubmit="handleZipSearch(event)">
             <input type="text" id="zipInput" placeholder="Enter your zip code in MA" required>
             <button type="submit">Search</button>
@@ -583,7 +583,7 @@
         </div>
     </div>
     <div class="footer-bottom">
-        &copy; 2026 Elite Bridge Staffing. Serving the state of Massachusetts. Non-medical services only. 
+        &copy; 2026 Elite Bridge Staffing. Serving the state of Massachusetts. Non-medical services only.
         <br>Contact: info@elitebridgestaffing.com
     </div>
 </footer>
@@ -592,7 +592,7 @@
     function handleZipSearch(event) {
         event.preventDefault();
         const zipCode = document.getElementById('zipInput').value;
-        
+
         if (zipCode && zipCode.length >= 3) {
             // Redirect to find-care page with zip code parameter
             window.location.href = `find-care.html?zip=${encodeURIComponent(zipCode)}`;

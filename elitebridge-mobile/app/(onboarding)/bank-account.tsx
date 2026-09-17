@@ -2,14 +2,15 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert, ActivityIndicator } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
+import { useRouter } from "expo-router";
 
 /**
- * Onboarding Step 4: Bank Account Setup
- * Collects and validates bank account information via Stripe
+ * Onboarding Step 4: Payout Setup
  */
 export default function OnboardingBankAccount() {
   const colors = useColors();
   const { data, updateData, nextStep, prevStep } = useOnboarding();
+  const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
   const [bankName, setBankName] = useState(data.bankName);
@@ -31,6 +32,12 @@ export default function OnboardingBankAccount() {
     if (accountNumber !== confirmAccountNumber) newErrors.confirmAccountNumber = "Account numbers do not match";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Alert.alert(
+        "Check your bank details",
+        "Complete every field, use a 9-digit routing number and make sure both account numbers match.",
+      );
+    }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -39,12 +46,7 @@ export default function OnboardingBankAccount() {
 
     setIsLoading(true);
     try {
-      // Simulate Stripe API call for bank account verification
-      // In production, this would call the backend which integrates with Stripe
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Mock successful verification
-      const stripeTokenId = `ba_${Date.now()}`;
 
       updateData({
         bankName,
@@ -52,18 +54,18 @@ export default function OnboardingBankAccount() {
         accountType,
         routingNumber,
         accountNumber,
-        bankAccountVerified: true,
-        stripeTokenId,
+        bankAccountVerified: false,
       });
 
       Alert.alert(
-        "Account Verified",
-        "Your bank account has been verified successfully. You're almost done!",
+        "Payout details saved",
+        "Your payout details were saved for onboarding review. Elite Bridge will confirm payout setup before paid work begins.",
         [
           {
             text: "Continue",
             onPress: () => {
               nextStep();
+              router.push("/(onboarding)/review");
             },
           },
         ]
@@ -73,6 +75,11 @@ export default function OnboardingBankAccount() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderInput = (
@@ -158,7 +165,7 @@ export default function OnboardingBankAccount() {
           Bank Account Setup
         </Text>
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20 }}>
-          We'll deposit your earnings directly to this account. Your information is securely encrypted.
+          Add the account you want to use for future direct deposits. Elite Bridge will confirm payout setup before paid work begins.
         </Text>
       </View>
 
@@ -177,7 +184,7 @@ export default function OnboardingBankAccount() {
           🔒 Your Information is Safe
         </Text>
         <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 20 }}>
-          We use Stripe for secure payment processing. Your bank details are encrypted and never stored on our servers.
+          Payout information is used only for caregiver onboarding and payment setup.
         </Text>
       </View>
 
@@ -262,7 +269,7 @@ export default function OnboardingBankAccount() {
         )}
       </View>
 
-      {/* Verification Status */}
+      {/* Payout Status */}
       {data.bankAccountVerified && (
         <View
           style={{
@@ -275,10 +282,10 @@ export default function OnboardingBankAccount() {
           }}
         >
           <Text style={{ fontSize: 14, fontWeight: "600", color: "#27AE60", marginBottom: 4 }}>
-            ✓ Bank Account Verified
+            Payout details saved
           </Text>
           <Text style={{ fontSize: 12, color: "#558B2F", lineHeight: 18 }}>
-            Your bank account has been verified and is ready to receive payments.
+            Elite Bridge will confirm payout setup before paid work begins.
           </Text>
         </View>
       )}
@@ -287,6 +294,7 @@ export default function OnboardingBankAccount() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleVerifyAccount}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: "#1B5E3F",
@@ -300,13 +308,14 @@ export default function OnboardingBankAccount() {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-              Verify Account
+              Save payout details
             </Text>
           )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           disabled={isLoading}
           style={{
             backgroundColor: colors.surface,

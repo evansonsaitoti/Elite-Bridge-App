@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { z } from "zod";
-import { db } from "../db/index.js";
-import { caregivers, users } from "../db/schema.js";
+import { db } from "../db";
+import { caregivers, users } from "../db/schema";
 import { eq } from "drizzle-orm";
-import { authMiddleware, AuthRequest } from "../middleware/auth.js";
-import { AppError } from "../middleware/errorHandler.js";
+import { authMiddleware, AuthRequest } from "../middleware/auth";
+import { AppError } from "../middleware/errorHandler";
 
 const router = Router();
 
@@ -14,8 +14,28 @@ const updateProfileSchema = z.object({
   yearsExperience: z.number().min(0).optional(),
   specialties: z.array(z.string()).min(1),
   certifications: z.array(z.string()).optional(),
-  availability: z.record(z.array(z.string())).optional(),
-  phone: z.string().optional(),
+});
+
+const matchingProfileSchema = z.object({
+  availability: z.array(z.string()).min(1),
+  preferredServices: z.array(z.string()).min(1),
+  maxDistanceMiles: z.number().positive().max(250),
+  instantOffers: z.boolean(),
+});
+
+router.put("/me/matching", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const data = matchingProfileSchema.parse(req.body);
+    const existing = await db.select().from(caregivers).where(eq(caregivers.userId, req.user.id)).limit(1);
+    const availability = { windows: data.availability, maxDistanceMiles: [String(data.maxDistanceMiles)], instantOffers: [String(data.instantOffers)] };
+    if (existing[0]) {
+      await db.update(caregivers).set({ specialties: data.preferredServices, availability, isAvailable: true, updatedAt: new Date() }).where(eq(caregivers.userId, req.user.id));
+    } else {
+      await db.insert(caregivers).values({ userId: req.user.id, hourlyRate: "0", specialties: data.preferredServices, certifications: [], availability, isAvailable: true });
+    }
+    res.json({ message: "Matching profile updated" });
+  } catch (error) { next(error); }
 });
 
 // List all caregivers (for employer discovery)
@@ -33,9 +53,10 @@ router.get("/", authMiddleware, async (req, res, next) => {
         rating: caregivers.rating,
         backgroundCheckStatus: caregivers.backgroundCheckStatus,
         backgroundCheckDate: caregivers.backgroundCheckDate,
-        verificationStatus: users.verificationStatus,
         firstName: users.firstName,
         lastName: users.lastName,
+        email: users.email,
+        phone: users.phone,
         profileImage: users.profileImage,
       })
       .from(caregivers)
@@ -61,13 +82,6 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
 
     const data = updateProfileSchema.parse(req.body);
 
-    if (data.phone) {
-      await db
-        .update(users)
-        .set({ phone: data.phone, updatedAt: new Date() })
-        .where(eq(users.id, userId));
-    }
-
     const user = await db.select().from(users).where(eq(users.id, userId)).limit(1);
     if (user.length === 0) {
       throw new AppError(404, "User not found");
@@ -91,7 +105,6 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
           yearsExperience: data.yearsExperience,
           specialties: data.specialties,
           certifications: data.certifications,
-          availability: data.availability,
           updatedAt: new Date(),
         })
         .where(eq(caregivers.userId, userId));
@@ -103,7 +116,6 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
         yearsExperience: data.yearsExperience,
         specialties: data.specialties,
         certifications: data.certifications,
-        availability: data.availability,
       });
     }
 
@@ -136,10 +148,9 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
         certifications: caregivers.certifications,
         yearsExperience: caregivers.yearsExperience,
         rating: caregivers.rating,
-        totalEarnings: caregivers.totalEarnings,
-        totalHours: caregivers.totalHours,
-        availability: caregivers.availability,
         backgroundCheckStatus: caregivers.backgroundCheckStatus,
+        backgroundCheckDate: caregivers.backgroundCheckDate,
+        backgroundCheckProvider: caregivers.backgroundCheckProvider,
         firstName: users.firstName,
         lastName: users.lastName,
         profileImage: users.profileImage,

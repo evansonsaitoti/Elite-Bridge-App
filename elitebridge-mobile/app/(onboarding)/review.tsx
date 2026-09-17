@@ -1,8 +1,11 @@
-import React from "react";
-import { ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
+import React, { useState } from "react";
+import { ActivityIndicator, ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerCaregiverAccount, sharedApiConfigured } from "@/lib/shared-api";
+import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 /**
  * Onboarding Step 5: Review & Complete
@@ -12,21 +15,60 @@ export default function OnboardingReview() {
   const colors = useColors();
   const { data, completeOnboarding, prevStep } = useOnboarding();
   const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleCompleteOnboarding = () => {
-    completeOnboarding();
-    Alert.alert(
-      "Welcome to Elite Bridge! 🎉",
-      "Your onboarding is complete. You're ready to start working!",
-      [
-        {
-          text: "Go to Home",
-          onPress: () => {
-            router.replace("/(staff)/home");
+  const handleCompleteOnboarding = async () => {
+    if (submitting) return;
+    if (!sharedApiConfigured) {
+      Alert.alert("Service unavailable", "Elite Bridge cannot reach the secure agency service in this build.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      const names = data.fullName.trim().split(/\s+/);
+      const firstName = names.shift() || "Caregiver";
+      const lastName = names.join(" ") || "Applicant";
+      const user = await registerCaregiverAccount({
+        firstName,
+        lastName,
+        phone: data.phoneNumber,
+        email: data.email,
+        password: data.password,
+      });
+      await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
+        role: "staff",
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`.trim(),
+        profileStatus: "submitted",
+        signedInAt: new Date().toISOString(),
+      }));
+      await enableCaregiverPushNotifications().catch(() => false);
+      completeOnboarding();
+      Alert.alert(
+        "Welcome to Elite Bridge! 🎉",
+        "Your onboarding is complete. You're ready to start working!",
+        [
+          {
+            text: "Go to Home",
+            onPress: () => {
+              router.replace("/(staff)/home");
+            },
           },
-        },
-      ]
-    );
+        ],
+      );
+    } catch (error) {
+      Alert.alert(
+        "Could not finish setup",
+        error instanceof Error ? error.message : "Your information is still on this screen. Please try again.",
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderInfoSection = (title: string, items: { label: string; value: string }[]) => (
@@ -133,9 +175,15 @@ export default function OnboardingReview() {
       {/* Personal Information */}
       {renderInfoSection("👤 Personal Information", [
         { label: "Full Name", value: data.fullName },
+        { label: "Email", value: data.email },
         { label: "Phone", value: data.phoneNumber },
-        { label: "Date of Birth", value: data.dateOfBirth },
-        { label: "Address", value: `${data.address}, ${data.city}, ${data.state} ${data.zip}` },
+        ...(data.dateOfBirth
+          ? [{ label: "Date of Birth", value: data.dateOfBirth }]
+          : []),
+        {
+          label: "Address",
+          value: `${data.address}, ${data.city}, ${data.state}${data.zip ? ` ${data.zip}` : ""}`,
+        },
       ])}
 
       {/* Experience & Skills */}
@@ -296,7 +344,9 @@ export default function OnboardingReview() {
       {/* Buttons */}
       <View style={{ gap: 12 }}>
         <TouchableOpacity
-          onPress={handleCompleteOnboarding}
+          onPress={() => void handleCompleteOnboarding()}
+          disabled={submitting}
+          accessibilityRole="button"
           style={{
             backgroundColor: "#1B5E3F",
             borderRadius: 8,
@@ -304,13 +354,16 @@ export default function OnboardingReview() {
             alignItems: "center",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-            🎉 Start Working
-          </Text>
+          {submitting ? <ActivityIndicator color="#FFFFFF" /> : (
+            <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
+              Create Account &amp; Start Working
+            </Text>
+          )}
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           style={{
             backgroundColor: colors.surface,
             borderRadius: 8,

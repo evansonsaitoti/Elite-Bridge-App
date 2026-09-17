@@ -43,7 +43,7 @@ export type TimeEntry = {
   breaks: BreakPeriod[];
   notes: string;
   status: TimeEntryStatus;
-  adminNote: string | null;
+  agencyNote: string | null;
   approvedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -125,7 +125,7 @@ export function timekeepingReducer(
                 ),
                 notes: action.notes.trim(),
                 status: "completed",
-                adminNote: null,
+                agencyNote: null,
                 updatedAt: action.clockOutAt,
               }
             : entry,
@@ -138,7 +138,7 @@ export function timekeepingReducer(
             ? {
                 ...entry,
                 status: "approved",
-                adminNote: null,
+                agencyNote: null,
                 approvedAt: action.approvedAt,
                 updatedAt: action.approvedAt,
               }
@@ -152,7 +152,7 @@ export function timekeepingReducer(
             ? {
                 ...entry,
                 status: "correction_requested",
-                adminNote: action.note.trim(),
+                agencyNote: action.note.trim(),
                 approvedAt: null,
                 updatedAt: action.updatedAt,
               }
@@ -167,7 +167,7 @@ export function timekeepingReducer(
                 ...entry,
                 status: "completed",
                 notes: action.notes.trim(),
-                adminNote: null,
+                agencyNote: null,
                 updatedAt: action.updatedAt,
               }
             : entry,

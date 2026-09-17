@@ -21,6 +21,10 @@ const envSchema = z.object({
   SMTP_USER: z.string().optional(),
   SMTP_PASS: z.string().optional(),
   SMTP_FROM: z.string().email().optional(),
+  SIGNUP_ALERT_EMAIL: z.string().email().default("info@elitebridgestaffing.com"),
+  RESEND_API_KEY: z.string().optional(),
+  RESEND_FROM: z.string().optional(),
+  EXPO_ACCESS_TOKEN: z.string().optional(),
 
   // SMS (Twilio)
   TWILIO_ACCOUNT_SID: z.string().optional(),
@@ -32,7 +36,10 @@ const envSchema = z.object({
   FIREBASE_PRIVATE_KEY: z.string().optional(),
   FIREBASE_CLIENT_EMAIL: z.string().optional(),
 
-  // Chekr Background Check
+  // Checkr Background Check (legacy CHEKR names remain supported)
+  CHECKR_API_KEY: z.string().optional(),
+  CHECKR_API_URL: z.string().url().optional(),
+  CHECKR_PACKAGE: z.string().default("basic"),
   CHEKR_API_KEY: z.string().optional(),
   CHEKR_API_URL: z.string().optional(),
 

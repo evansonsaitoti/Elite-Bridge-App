@@ -6,13 +6,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
+import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 const STAFF_TABS = [
-  { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
+  { label: "Work", route: "/(staff)/home", match: "/home", icon: "briefcase.fill" },
+  { label: "Match", route: "/(staff)/match", match: "/match", icon: "sparkles" },
   { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
-  { label: "Services", route: "/(staff)/services", match: "/services", icon: "checklist" },
-  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "dollarsign.circle.fill" },
-  { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.fill" },
+  { label: "Chat", route: "/(staff)/chat", match: "/chat", icon: "message.fill" },
+  { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
 ] as const;
 
 export default function StaffLayout() {
@@ -31,9 +32,10 @@ export default function StaffLayout() {
         try {
           const session = JSON.parse(stored) as { role?: string };
           if (session.role !== "staff") {
-            router.replace(session.role === "administrator" ? "/(admin)/home" : "/(auth)/login");
+            router.replace("/(auth)/login");
             return;
           }
+          void enableCaregiverPushNotifications().catch(() => false);
           setReady(true);
         } catch { router.replace("/(auth)/login"); }
       })
@@ -43,15 +45,34 @@ export default function StaffLayout() {
 
   if (!ready) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
+  const needsTopInset = pathname.includes("/home");
+
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
-    <View style={{ flex: 1 }}><Slot /></View>
-    <View style={{ flexDirection: "row", minHeight: 62 + Math.max(insets.bottom, 8), paddingTop: 8, paddingBottom: Math.max(insets.bottom, 8), borderTopWidth: 0.5, borderTopColor: colors.border, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
+    <View style={{
+      flexDirection: "row",
+      minHeight: 76 + Math.max(insets.bottom, 8),
+      marginHorizontal: 14,
+      marginBottom: Math.max(insets.bottom, 8),
+      paddingHorizontal: 8,
+      paddingTop: 8,
+      paddingBottom: 8,
+      borderRadius: 28,
+      backgroundColor: colors.surface,
+      shadowColor: "#101828",
+      shadowOpacity: 0.12,
+      shadowRadius: 18,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 8,
+    }}>
       {STAFF_TABS.map((tab) => {
         const active = pathname.includes(tab.match);
         const tint = active ? colors.primary : colors.muted;
-        return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.65 : 1 })}>
-          <IconSymbol size={22} name={tab.icon} color={tint} />
-          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 9.5, fontWeight: active ? "800" : "600", color: tint }}>{tab.label}</Text>
+        return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1, transform: [{ translateY: active ? -2 : 0 }] })}>
+          <View style={{ width: active ? 44 : 36, height: 32, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: active ? "#EAF4EF" : "transparent", borderWidth: active ? 1 : 0, borderColor: active ? "#CDE7DB" : "transparent" }}>
+            <IconSymbol size={active ? 22 : 20} name={tab.icon} color={tint} />
+          </View>
+          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 10.5, fontWeight: active ? "900" : "700", color: tint }}>{tab.label}</Text>
         </Pressable>;
       })}
     </View>

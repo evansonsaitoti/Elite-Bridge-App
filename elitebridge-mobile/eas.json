@@ -6,11 +6,18 @@
   "build": {
     "production": {
       "distribution": "store",
+      "corepack": true,
+      "android": {
+        "buildType": "app-bundle"
+      },
       "ios": {
-        "resourceClass": "m-medium"
+        "resourceClass": "m-medium",
+        "image": "macos-sequoia-15.6-xcode-26.0"
       },
       "env": {
-        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true",
+        "EAS_NO_FROZEN_LOCKFILE": "1",
+        "EXPO_PUBLIC_API_URL": "https://elite-bridge-shared-api-evans.vercel.app"
       }
     }
   },
@@ -19,7 +26,10 @@
       "ios": {
         "appleId": "evasaitoti@gmail.com",
         "appleTeamId": "F42HSPN3W4",
-        "ascAppId": "6770962152"
+        "ascAppId": "6770962152",
+        "ascApiKeyPath": "/tmp/AuthKey.p8",
+        "ascApiKeyId": "MFTWNL24P5",
+        "ascApiKeyIssuerId": "94a27216-e287-4aa5-9471-57173e4af009"
       }
     }
   }

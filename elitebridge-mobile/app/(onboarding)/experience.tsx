@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ScrollView, View, Text, TouchableOpacity, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
+import { useRouter } from "expo-router";
 
 /**
  * Onboarding Step 2: Work Experience & Skills
@@ -10,6 +11,7 @@ import { useOnboarding } from "@/lib/onboarding-context";
 export default function OnboardingExperience() {
   const colors = useColors();
   const { data, updateData, nextStep, prevStep } = useOnboarding();
+  const router = useRouter();
 
   const [yearsOfExperience, setYearsOfExperience] = useState(data.yearsOfExperience);
   const [certifications, setCertifications] = useState(data.certifications);
@@ -61,6 +63,12 @@ export default function OnboardingExperience() {
     if (certifications.length === 0) newErrors.certifications = "Please select at least one certification";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Alert.alert(
+        "Complete required fields",
+        "Select your experience level and at least one certification to continue.",
+      );
+    }
     return Object.keys(newErrors).length === 0;
   };
 
@@ -72,7 +80,13 @@ export default function OnboardingExperience() {
         languages,
       });
       nextStep();
+      router.push("/(onboarding)/background-check");
     }
+  };
+
+  const handleBack = () => {
+    prevStep();
+    router.back();
   };
 
   const renderCheckbox = (label: string, isSelected: boolean, onPress: () => void) => (
@@ -231,6 +245,7 @@ export default function OnboardingExperience() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleNext}
+          accessibilityRole="button"
           style={{
             backgroundColor: "#1B5E3F",
             borderRadius: 8,
@@ -244,7 +259,8 @@ export default function OnboardingExperience() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={prevStep}
+          onPress={handleBack}
+          accessibilityRole="button"
           style={{
             backgroundColor: colors.surface,
             borderRadius: 8,

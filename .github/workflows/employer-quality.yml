@@ -1,0 +1,51 @@
+name: Employer App Quality
+
+on:
+  pull_request:
+    paths:
+      - "elitebridge-employer/**"
+      - ".github/workflows/employer-quality.yml"
+  push:
+    branches:
+      - elitebridge-split-ai-ma
+    paths:
+      - "elitebridge-employer/**"
+      - ".github/workflows/employer-quality.yml"
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+
+      - name: Set up pnpm
+        run: npm install --global pnpm@9.12.0
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Prepare finalized app icon
+        run: pnpm prepare:icons
+
+      - name: Verify icon output
+        run: |
+          test -s assets/images/icon.png
+          node -e "const sharp=require('sharp'); sharp('assets/images/icon.png').metadata().then(m=>{if(m.width!==1024||m.height!==1024||m.hasAlpha) process.exit(1); console.log('Employer icon:',m.width+'x'+m.height,'opaque')})"
+
+      - name: TypeScript check
+        run: pnpm check
+
+      - name: Export iOS bundle
+        run: npx expo export --platform ios --output-dir dist-ios
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public > /tmp/elitebridge-employer-expo-config.json

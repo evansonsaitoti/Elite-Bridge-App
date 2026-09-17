@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
 import { useRouter } from "expo-router";
@@ -14,6 +14,8 @@ export default function OnboardingWelcome() {
   const router = useRouter();
 
   const [fullName, setFullName] = useState(data.fullName);
+  const [email, setEmail] = useState(data.email);
+  const [password, setPassword] = useState(data.password);
   const [phoneNumber, setPhoneNumber] = useState(data.phoneNumber);
   const [dateOfBirth, setDateOfBirth] = useState(data.dateOfBirth);
   const [address, setAddress] = useState(data.address);
@@ -26,29 +28,38 @@ export default function OnboardingWelcome() {
     const newErrors: Record<string, string> = {};
 
     if (!fullName.trim()) newErrors.fullName = "Full name is required";
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) newErrors.email = "Enter a valid email address";
+    if (password.length < 8) newErrors.password = "Use at least 8 characters";
     if (!phoneNumber.trim()) newErrors.phoneNumber = "Phone number is required";
-    if (!dateOfBirth.trim()) newErrors.dateOfBirth = "Date of birth is required";
     if (!address.trim()) newErrors.address = "Address is required";
     if (!city.trim()) newErrors.city = "City is required";
     if (!state.trim()) newErrors.state = "State is required";
-    if (!zip.trim()) newErrors.zip = "ZIP code is required";
 
     setErrors(newErrors);
+    if (Object.keys(newErrors).length > 0) {
+      Alert.alert(
+        "Complete required fields",
+        "Enter valid account, contact and address information to continue.",
+      );
+    }
     return Object.keys(newErrors).length === 0;
   };
 
   const handleNext = () => {
     if (validateStep()) {
       updateData({
-        fullName,
-        phoneNumber,
-        dateOfBirth,
-        address,
-        city,
-        state,
-        zip,
+        fullName: fullName.trim(),
+        email: email.trim().toLowerCase(),
+        password,
+        phoneNumber: phoneNumber.trim(),
+        dateOfBirth: dateOfBirth.trim(),
+        address: address.trim(),
+        city: city.trim(),
+        state: state.trim().toUpperCase(),
+        zip: zip.trim(),
       });
       nextStep();
+      router.push("/(onboarding)/experience");
     }
   };
 
@@ -72,30 +83,35 @@ export default function OnboardingWelcome() {
     onChangeText: (text: string) => void,
     placeholder: string,
     error?: string,
-    keyboardType: "default" | "phone-pad" | "email-address" = "default"
+    keyboardType: "default" | "phone-pad" | "email-address" = "default",
+    secureTextEntry = false,
   ) => (
-    <View style={{ marginBottom: 16 }}>
-      <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground, marginBottom: 6 }}>
+    <View style={{ marginBottom: 15 }}>
+      <Text style={{ fontSize: 13, fontWeight: "800", color: "#344054", marginBottom: 7 }}>
         {label}
       </Text>
       <TextInput
         style={{
-          backgroundColor: colors.surface,
-          borderRadius: 8,
-          padding: 12,
-          fontSize: 14,
-          color: colors.foreground,
+          backgroundColor: "#F9FAFB",
+          borderRadius: 14,
+          minHeight: 50,
+          paddingHorizontal: 14,
+          fontSize: 15,
+          color: "#101828",
           borderWidth: 1,
-          borderColor: error ? "#E74C3C" : colors.border,
+          borderColor: error ? "#D92D20" : "#D0D5DD",
         }}
         placeholder={placeholder}
-        placeholderTextColor={colors.muted}
+        placeholderTextColor="#98A2B3"
         value={value}
         onChangeText={onChangeText}
         keyboardType={keyboardType}
+        secureTextEntry={secureTextEntry}
+        autoCapitalize={keyboardType === "email-address" ? "none" : "sentences"}
+        autoCorrect={false}
       />
       {error && (
-        <Text style={{ fontSize: 12, color: "#E74C3C", marginTop: 4 }}>
+        <Text style={{ fontSize: 12, color: "#D92D20", marginTop: 5 }}>
           {error}
         </Text>
       )}
@@ -103,15 +119,20 @@ export default function OnboardingWelcome() {
   );
 
   return (
-    <ScrollView
-      style={{
-        flex: 1,
-        backgroundColor: colors.background,
-      }}
-      contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
-    >
+    <KeyboardAvoidingView style={{ flex: 1, backgroundColor: "#F7FAF8" }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+    <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 20, paddingBottom: 36 }} keyboardShouldPersistTaps="handled">
+      <View style={{ backgroundColor: "#0A4A35", borderRadius: 24, padding: 20, marginBottom: 18 }}>
+        <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.5 }}>CAREGIVER APPLICATION</Text>
+        <Text style={{ color: "#FFFFFF", fontSize: 28, lineHeight: 34, fontWeight: "900", marginTop: 8 }}>
+          Create your caregiver profile.
+        </Text>
+        <Text style={{ color: "#D9E9E2", fontSize: 14, lineHeight: 21, marginTop: 8 }}>
+          Tell us who you are so Elite Bridge can match you with the right care assignments.
+        </Text>
+      </View>
+
       {/* Progress Bar */}
-      <View style={{ marginBottom: 24 }}>
+      <View style={{ marginBottom: 18, backgroundColor: "#FFFFFF", borderRadius: 18, padding: 14, borderWidth: 1, borderColor: "#EAECF0" }}>
         <View
           style={{
             flexDirection: "row",
@@ -121,14 +142,14 @@ export default function OnboardingWelcome() {
           }}
         >
           <Text style={{ fontSize: 14, fontWeight: "600", color: colors.foreground }}>
-            Step 1 of 5
+            Step 1 of 5 · Personal details
           </Text>
-          <Text style={{ fontSize: 14, color: colors.muted }}>20% Complete</Text>
+          <Text style={{ fontSize: 13, color: "#667085", fontWeight: "700" }}>20% Complete</Text>
         </View>
         <View
           style={{
             height: 6,
-            backgroundColor: colors.surface,
+            backgroundColor: "#EAECF0",
             borderRadius: 3,
             overflow: "hidden",
           }}
@@ -144,23 +165,40 @@ export default function OnboardingWelcome() {
       </View>
 
       {/* Header */}
-      <View style={{ marginBottom: 24 }}>
-        <Text style={{ fontSize: 28, fontWeight: "bold", color: colors.foreground, marginBottom: 8 }}>
-          Welcome to Elite Bridge
+      <View style={{ marginBottom: 18 }}>
+        <Text style={{ fontSize: 22, fontWeight: "900", color: "#101828", marginBottom: 7 }}>
+          Basic information
         </Text>
-        <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20 }}>
-          Let's get you set up to start working. We'll collect some basic information to complete your profile.
+        <Text style={{ fontSize: 14, color: "#667085", lineHeight: 21 }}>
+          Use your legal name and current contact information. You can review everything before submitting.
         </Text>
       </View>
 
       {/* Form */}
-      <View style={{ marginBottom: 24 }}>
+      <View style={{ marginBottom: 20, backgroundColor: "#FFFFFF", borderRadius: 22, padding: 18, borderWidth: 1, borderColor: "#EAECF0" }}>
         {renderInput(
           "Full Name",
           fullName,
           setFullName,
           "Enter your full name",
           errors.fullName
+        )}
+        {renderInput(
+          "Email Address",
+          email,
+          setEmail,
+          "you@example.com",
+          errors.email,
+          "email-address"
+        )}
+        {renderInput(
+          "Create Password",
+          password,
+          setPassword,
+          "At least 8 characters",
+          errors.password,
+          "default",
+          true
         )}
         {renderInput(
           "Phone Number",
@@ -171,7 +209,7 @@ export default function OnboardingWelcome() {
           "phone-pad"
         )}
         {renderInput(
-          "Date of Birth",
+          "Date of Birth (Optional)",
           dateOfBirth,
           setDateOfBirth,
           "MM/DD/YYYY",
@@ -207,7 +245,7 @@ export default function OnboardingWelcome() {
         </View>
 
         {renderInput(
-          "ZIP Code",
+          "ZIP Code (Optional)",
           zip,
           setZip,
           "12345",
@@ -219,34 +257,38 @@ export default function OnboardingWelcome() {
       <View style={{ gap: 12 }}>
         <TouchableOpacity
           onPress={handleNext}
+          testID="caregiver-profile-continue"
+          accessibilityRole="button"
+          accessibilityLabel="Continue to caregiver experience"
           style={{
             backgroundColor: "#1B5E3F",
-            borderRadius: 8,
-            paddingVertical: 14,
+            borderRadius: 14,
+            paddingVertical: 15,
             alignItems: "center",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: "#fff" }}>
-            Next
+          <Text style={{ fontSize: 16, fontWeight: "900", color: "#fff" }}>
+            Continue
           </Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleSkip}
           style={{
-            backgroundColor: colors.surface,
-            borderRadius: 8,
+            backgroundColor: "#FFFFFF",
+            borderRadius: 14,
             paddingVertical: 14,
             alignItems: "center",
             borderWidth: 1,
-            borderColor: colors.border,
+            borderColor: "#D0D5DD",
           }}
         >
-          <Text style={{ fontSize: 16, fontWeight: "600", color: colors.foreground }}>
+          <Text style={{ fontSize: 16, fontWeight: "800", color: "#344054" }}>
             Skip for Now
           </Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

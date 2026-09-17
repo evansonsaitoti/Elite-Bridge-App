@@ -13,77 +13,6 @@ export function useAuth(options?: UseAuthOptions) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  // Login function
-  const login = useCallback(async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Mock login - will be replaced with API call in Phase 2
-      const mockUser: Auth.User = {
-        id: Math.floor(Math.random() * 10000),
-        openId: `user_${Date.now()}`,
-        name: email.split("@")[0],
-        email,
-        loginMethod: "email",
-        lastSignedIn: new Date(),
-        role: email.includes("admin") ? "admin" : "user",
-      };
-
-      // Save user info and token
-      const token = `token_${Date.now()}`;
-      await Auth.setSessionToken(token);
-      const userWithRole = { ...mockUser, role: mockUser.role };
-      await Auth.setUserInfo(userWithRole);
-
-      setUser(userWithRole);
-      return { success: true };
-    } catch (err) {
-      const error = err instanceof Error ? err : new Error("Login failed");
-      setError(error);
-      return { success: false, error: error.message };
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  // Signup function
-  const signup = useCallback(
-    async (email: string, password: string, name: string, role: "user" | "admin") => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        // Mock signup - will be replaced with API call in Phase 2
-        const mockUser: Auth.User = {
-          id: Math.floor(Math.random() * 10000),
-          openId: `user_${Date.now()}`,
-          name,
-          email,
-          loginMethod: "email",
-          lastSignedIn: new Date(),
-          role,
-        };
-
-        // Save user info and token
-        const token = `token_${Date.now()}`;
-        await Auth.setSessionToken(token);
-        const userWithRole = { ...mockUser, role };
-        await Auth.setUserInfo(userWithRole);
-
-        setUser(userWithRole);
-        return { success: true };
-      } catch (err) {
-        const error = err instanceof Error ? err : new Error("Signup failed");
-        setError(error);
-        return { success: false, error: error.message };
-      } finally {
-        setLoading(false);
-      }
-    },
-    []
-  );
-
   const fetchUser = useCallback(async () => {
     console.log("[useAuth] fetchUser called");
     try {
@@ -215,8 +144,6 @@ export function useAuth(options?: UseAuthOptions) {
     error,
     isAuthenticated,
     refresh: fetchUser,
-    login,
-    signup,
     logout,
   };
 }

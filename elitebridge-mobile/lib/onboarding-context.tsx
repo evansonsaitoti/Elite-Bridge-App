@@ -3,6 +3,8 @@ import React, { createContext, useContext, useState, useCallback } from "react";
 export interface OnboardingData {
   // Step 1: Personal Information
   fullName: string;
+  email: string;
+  password: string;
   phoneNumber: string;
   dateOfBirth: string;
   address: string;
@@ -49,6 +51,8 @@ interface OnboardingContextType {
 
 const defaultData: OnboardingData = {
   fullName: "",
+  email: "",
+  password: "",
   phoneNumber: "",
   dateOfBirth: "",
   address: "",
