@@ -1,6 +1,9 @@
 name: Elite Bridge Android Builds
 
 on:
+  push:
+    branches:
+      - codex/android-builds-57-34
   workflow_dispatch:
     inputs:
       app:
@@ -22,7 +25,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -87,7 +90,7 @@ jobs:
         run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
 
   employer:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
