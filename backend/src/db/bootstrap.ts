@@ -181,6 +181,34 @@ export async function ensureCoreTables() {
   `);
 
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS email_idx ON users(email)`);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS messages (
+      id SERIAL PRIMARY KEY,
+      sender_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      recipient_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      content TEXT NOT NULL, attachments JSON, is_read BOOLEAN DEFAULT false,
+      read_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(sql`
+    DO $$ BEGIN
+      CREATE TYPE payment_status AS ENUM ('pending', 'completed', 'failed', 'refunded');
+    EXCEPTION WHEN duplicate_object THEN null; END $$;
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS payments (
+      id SERIAL PRIMARY KEY,
+      booking_id INTEGER NOT NULL REFERENCES bookings(id) ON DELETE CASCADE,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      caregiver_id INTEGER NOT NULL REFERENCES caregivers(id) ON DELETE CASCADE,
+      amount DECIMAL(15,2) NOT NULL, platform_fee DECIMAL(15,2) NOT NULL,
+      caregiver_payout DECIMAL(15,2) NOT NULL, status payment_status NOT NULL DEFAULT 'pending',
+      stripe_payment_id VARCHAR(255), stripe_transfer_id VARCHAR(255), payment_method VARCHAR(50),
+      invoice_number VARCHAR(50) UNIQUE,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS role_idx ON users(role)`);
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS caregiver_user_unique_idx ON caregivers(user_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS caregiver_user_id_idx ON caregivers(user_id)`);

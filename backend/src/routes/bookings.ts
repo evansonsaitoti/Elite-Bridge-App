@@ -6,7 +6,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { caregivers, employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
-import { sendPushToUsers } from "../services/notifications";
+import { sendPushToUsers, sendOperationsAlert } from "../services/notifications";
 
 const router = Router();
 
@@ -376,6 +376,7 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       body: `${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()} · $${data.pay.hourlyRate}/hr`,
       data: { type: "new_shift_offer", shiftId: createdShift.id, assignmentMode: data.assignmentMode },
     });
+    await sendOperationsAlert("New shift posted", `Employer #${employer.id} posted shift #${createdShift.id}.`);
     res.status(201).json({ shift: mapShift(createdShift), matchedCaregivers: matchedUserIds.length });
   } catch (error) {
     next(error);
@@ -397,7 +398,7 @@ router.get("/employer/my", authMiddleware, async (req: AuthRequest, res, next) =
   } catch (error) { next(error); }
 });
 
-router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
+router.get(["/open", "/available"], authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
     const caregiver = await getOrCreateCaregiver(req);
@@ -415,24 +416,6 @@ router.get("/open", authMiddleware, async (req: AuthRequest, res, next) => {
           OR LOWER(c.certifications::text) LIKE '%' || LOWER(sp.caregiver_type) || '%'
           OR LOWER(c.specialties::text) LIKE '%' || LOWER(sp.service_type) || '%'
         )
-      ORDER BY CASE WHEN sp.urgency = 'urgent' THEN 0 ELSE 1 END, sp.start_time ASC
-      LIMIT 100
-    `);
-    res.json({ shifts: (result as any).rows.map(mapShift) });
-  } catch (error) { next(error); }
-});
-
-// The web dashboard uses the same synchronized feed under this legacy name.
-router.get("/available", authMiddleware, async (req: AuthRequest, res, next) => {
-  try {
-    await ensureShiftPostsTable();
-    const caregiver = await getOrCreateCaregiver(req);
-    const result = await db.execute(sql`
-      SELECT sp.*, e.company_name, sa.status AS application_status
-      FROM shift_posts sp
-      JOIN employers e ON e.id = sp.employer_id
-      LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
-      WHERE sp.status = 'open' AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
       ORDER BY CASE WHEN sp.urgency = 'urgent' THEN 0 ELSE 1 END, sp.start_time ASC
       LIMIT 100
     `);
@@ -500,6 +483,7 @@ router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, nex
       body: `A qualified caregiver claimed ${shift.title}.`,
       data: { type: "shift_claimed", shiftId, applicationId: (application as any).rows[0].id },
     });
+    await sendOperationsAlert("Shift claimed", `Shift #${shiftId} for employer #${shift.employer_id} has been claimed.`);
     res.json({ application: (application as any).rows[0], shift: { id: shiftId, status: "assigned" } });
   } catch (error) { next(error); }
 });
@@ -515,10 +499,18 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
       WHERE id = ${shiftId} AND employer_id = ${employer.id} AND status IN ('open', 'assigned') RETURNING id
     `);
     if (!(updated as any).rows[0]) throw new AppError(409, "This shift cannot be cancelled");
-    await db.execute(sql`UPDATE bookings SET status = 'cancelled', cancellation_reason = 'Cancelled by employer', cancelled_by = 'employer', cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP WHERE employer_id = ${employer.id} AND status IN ('pending', 'confirmed') AND start_time = (SELECT start_time FROM shift_posts WHERE id = ${shiftId})`);
+    await db.execute(sql`
+      UPDATE bookings SET status = 'cancelled', cancellation_reason = 'Cancelled by employer',
+        cancelled_by = 'employer', cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
+      WHERE employer_id = ${employer.id} AND status IN ('pending', 'confirmed')
+        AND start_time = (SELECT start_time FROM shift_posts WHERE id = ${shiftId})
+        AND end_time = (SELECT end_time FROM shift_posts WHERE id = ${shiftId})
+        AND caregiver_id IN (SELECT caregiver_id FROM shift_applications WHERE shift_id = ${shiftId} AND status = 'approved')
+    `);
     const caregiversResult = await db.execute(sql`SELECT c.user_id FROM shift_applications sa JOIN caregivers c ON c.id = sa.caregiver_id WHERE sa.shift_id = ${shiftId} AND sa.status = 'approved'`);
     const caregiverUserIds = (caregiversResult as any).rows.map((row: any) => row.user_id);
     void sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
+    await sendOperationsAlert("Shift cancelled", `Employer #${employer.id} cancelled shift #${shiftId}.`);
     res.status(204).send();
   } catch (error) { next(error); }
 });
@@ -553,6 +545,7 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
       body: `A caregiver applied for ${shift.title}.`,
       data: { type: "new_application", shiftId, applicationId: (result as any).rows[0].id },
     });
+    await sendOperationsAlert("New shift application", `A caregiver applied for shift #${shiftId}. Employer account #${shift.employer_user_id} can review the application.`);
     res.status(201).json({ application: (result as any).rows[0] });
   } catch (error) { next(error); }
 });
@@ -606,19 +599,25 @@ router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next)
     const result = await db.execute(sql`
       SELECT c.id AS caregiver_id, u.id AS user_id, u.first_name, u.last_name,
              u.email, u.phone, c.rating, c.total_hours, c.certifications::text AS certifications,
+             c.specialties::text AS specialties, c.hourly_rate, c.background_check_status, c.background_check_date,
              COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved') AS assigned_shifts,
-             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP) AS upcoming_shifts,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP AND sp.status IN ('assigned', 'in_progress')) AS upcoming_shifts,
              MAX(sa.updated_at) FILTER (WHERE sa.status = 'approved') AS last_assigned_at
-      FROM shift_applications sa
-      JOIN shift_posts sp ON sp.id = sa.shift_id
-      JOIN caregivers c ON c.id = sa.caregiver_id
-      JOIN users u ON u.id = c.user_id
-      WHERE sp.employer_id = ${employer.id} AND sa.status = 'approved'
-      GROUP BY c.id, u.id, u.first_name, u.last_name, u.email, u.phone, c.rating, c.total_hours, c.certifications::text
+      FROM users u
+      LEFT JOIN caregivers c ON c.user_id = u.id
+      LEFT JOIN shift_posts sp ON sp.employer_id = ${employer.id}
+      LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = c.id AND sa.status = 'approved'
+      WHERE u.role = 'caregiver' AND u.is_active = true AND (
+        EXISTS (SELECT 1 FROM employer_caregivers ec WHERE ec.employer_id = ${employer.id}
+                AND ec.caregiver_user_id = u.id AND ec.status = 'active')
+        OR sa.id IS NOT NULL
+      )
+      GROUP BY c.id, u.id
       ORDER BY u.first_name, u.last_name
     `);
     res.json({ team: (result as any).rows.map((member: any) => ({
       ...member,
+      specialties: typeof member.specialties === "string" ? JSON.parse(member.specialties) : member.specialties || [],
       certifications: typeof member.certifications === "string" ? JSON.parse(member.certifications) : member.certifications,
       assigned_shifts: Number(member.assigned_shifts || 0),
       upcoming_shifts: Number(member.upcoming_shifts || 0),
@@ -644,6 +643,15 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
     `);
     const application = (lookup as any).rows[0];
     if (!application) throw new AppError(404, "Application not found");
+    if (application.status === status) return res.json({ application });
+    if (application.status !== "pending") throw new AppError(409, "This application has already been decided");
+    if (status === "approved") {
+      const assignment = await db.execute(sql`
+        UPDATE shift_posts SET status = 'assigned', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ${application.shift_id} AND status = 'open' RETURNING id
+      `);
+      if (!(assignment as any).rows.length) throw new AppError(409, "This shift is no longer open");
+    }
 
     const updated = await db.execute(sql`
       UPDATE shift_applications SET status = ${status}, updated_at = CURRENT_TIMESTAMP
@@ -662,10 +670,6 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
         UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
         WHERE shift_id = ${application.shift_id} AND id <> ${applicationId} AND status = 'pending'
       `);
-      await db.execute(sql`
-        UPDATE shift_posts SET status = 'assigned', updated_at = CURRENT_TIMESTAMP WHERE id = ${application.shift_id}
-      `);
-
       const start = new Date(application.start_time);
       const end = new Date(application.end_time);
       const hours = Math.max(0, (end.getTime() - start.getTime()) / 3_600_000);
@@ -734,6 +738,7 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
       });
     }
 
+    await sendOperationsAlert(`Shift application ${status}`, `Employer #${employer.id} ${status} application #${applicationId} for shift #${application.shift_id}.`);
     res.json({ application: (updated as any).rows[0] });
   } catch (error) { next(error); }
 });
@@ -797,6 +802,7 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
         ${shiftId})
     `);
 
+    await sendOperationsAlert("Urgent shift call-out", `Shift #${shiftId} for employer #${assignment.employer_id} needs replacement coverage.`);
     res.status(201).json({ callout: (callout as any).rows[0], shift: { id: shiftId, status: "open", urgency: "urgent" } });
   } catch (error) { next(error); }
 });
@@ -1086,6 +1092,7 @@ router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res,
         ${shiftId})
     `);
 
+    await sendOperationsAlert("Timesheet ready", `Shift #${shiftId} for employer #${assignment.employer_id} is completed. The timesheet is ready for review.`);
     res.json({ message: "Clocked out successfully", timesheet: (timesheet as any).rows[0] });
   } catch (error) { next(error); }
 });

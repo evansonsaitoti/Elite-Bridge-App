@@ -6,6 +6,7 @@ import { db } from "../db/index.js";
 import { ensureCoreTables } from "../db/bootstrap.js";
 import {
   users,
+  caregivers,
   employers,
   caregiverInvitations,
   employerCaregivers,
@@ -15,7 +16,8 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { generateToken, AuthRequest, authMiddleware } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { config } from "../config/env.js";
-import { sendEmail } from "../services/email.js";
+import { sendEmail, escapeEmailHtml } from "../services/email.js";
+import { sendSignupAlert, sendWelcomeEmail } from "../services/notifications";
 
 const router = Router();
 
@@ -105,6 +107,8 @@ router.post("/register", async (req, res, next) => {
         userId: user.id,
         companyName: data.companyName || `${user.firstName} ${user.lastName}`,
       });
+    } else {
+      await db.insert(caregivers).values({ userId: user.id, hourlyRate: "0", specialties: [], certifications: [] });
     }
 
     if (invitation) {
@@ -129,10 +133,12 @@ router.post("/register", async (req, res, next) => {
     }
 
     const token = generateToken({ id: user.id, email: user.email, role: user.role });
+    const [officeAlertSent, welcomeSent] = await Promise.all([sendSignupAlert(data), sendWelcomeEmail(data)]);
 
     res.status(201).json({
       message: "User registered successfully",
       token,
+      emailNotifications: { officeAlertSent, welcomeSent },
       user: {
         id: user.id,
         email: user.email,
@@ -171,10 +177,10 @@ router.post("/forgot-password", async (req, res, next) => {
           to: user.email,
           subject: "Reset your Elite Bridge password",
           text: `Reset your Elite Bridge password within 30 minutes: ${resetUrl}`,
-          html: `<p>Hello ${user.firstName},</p><p>Use the secure link below to reset your Elite Bridge password. It expires in 30 minutes.</p><p><a href="${resetUrl}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
+          html: `<p>Hello ${escapeEmailHtml(user.firstName)},</p><p>Use the secure link below to reset your Elite Bridge password. It expires in 30 minutes.</p><p><a href="${escapeEmailHtml(resetUrl)}">Reset password</a></p><p>If you did not request this, you can ignore this email.</p>`,
         });
-      } catch (error) {
-        console.error("Password reset email could not be delivered", error);
+      } catch {
+        console.error("Password reset email could not be delivered; check the email provider log");
       }
     }
 

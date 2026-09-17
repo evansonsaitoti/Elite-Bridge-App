@@ -1,5 +1,5 @@
 import axios from "axios";
-import nodemailer from "nodemailer";
+import { sendEmail } from "./email";
 import { sql } from "drizzle-orm";
 
 import { config } from "../config/env";
@@ -21,48 +21,28 @@ type VerificationDetails = {
 };
 
 export async function sendTransactionalEmail(to: string, subject: string, text: string): Promise<boolean> {
-  if (config.RESEND_API_KEY && config.RESEND_FROM) {
-    try {
-      await axios.post("https://api.resend.com/emails", {
-        from: config.RESEND_FROM,
-        to: [to],
-        subject,
-        text,
-      }, {
-        headers: {
-          Authorization: `Bearer ${config.RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        timeout: 15_000,
-      });
-      return true;
-    } catch (error) {
-      console.error("Resend email delivery failed", error);
-      return false;
-    }
-  }
-
-  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || !config.SMTP_FROM) {
-    console.warn("Email skipped: Resend and SMTP are not fully configured");
-    return false;
-  }
-
   try {
-    const transport = nodemailer.createTransport({
-      host: config.SMTP_HOST,
-      port: config.SMTP_PORT,
-      secure: config.SMTP_PORT === 465,
-      auth: { user: config.SMTP_USER, pass: config.SMTP_PASS },
-      connectionTimeout: 10_000,
-      greetingTimeout: 10_000,
-      socketTimeout: 15_000,
-    });
-    await transport.sendMail({ from: config.SMTP_FROM, to, subject, text });
-    return true;
-  } catch (error) {
-    console.error("Email delivery failed", error);
+    return await sendEmail({ to, subject, text });
+  } catch {
+    // Provider errors can contain credentials and message content.
+    console.error("Transactional email failed; check the email provider delivery log");
     return false;
   }
+}
+
+export async function sendWelcomeEmail(details: SignupDetails): Promise<boolean> {
+  return sendTransactionalEmail(details.email, "Welcome to Elite Bridge", [
+    `Hi ${details.firstName},`, "", "Welcome to Elite Bridge.",
+    details.role === "caregiver"
+      ? "Complete your caregiver profile to review shifts and stay connected with your care team."
+      : "Your employer workspace is ready. Invite your caregivers and post your first shift.",
+    "", `Sign in: ${config.WEB_APP_URL}`, "", "Need help? Contact info@elitebridgestaffing.com.",
+  ].join("\n"));
+}
+
+export async function sendOperationsAlert(event: string, details: string): Promise<boolean> {
+  return sendTransactionalEmail(config.SIGNUP_ALERT_EMAIL, `Elite Bridge: ${event}`,
+    `${details}\n\nReview in your workspace: ${config.WEB_APP_URL}\n\nRecorded: ${new Date().toISOString()}`);
 }
 
 export async function sendEmailVerification(details: VerificationDetails): Promise<boolean> {
