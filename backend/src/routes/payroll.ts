@@ -4,8 +4,11 @@ import { db } from "../db/index.js";
 import { payments, bookings, employers, caregivers, users } from "../db/schema.js";
 import { authMiddleware, AuthRequest } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { requireRole } from "../middleware/auth.js";
+import { z } from "zod";
 
 const router = Router();
+router.use(authMiddleware, requireRole("employer"));
 
 // Get payroll overview for employer
 router.get("/employer/overview", authMiddleware, async (req: AuthRequest, res, next) => {
@@ -45,10 +48,13 @@ router.get("/employer/overview", authMiddleware, async (req: AuthRequest, res, n
 // Generate invoice for a completed booking
 router.post("/generate-invoice", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const { bookingId } = req.body;
+    const { bookingId } = z.object({ bookingId: z.number().int().positive() }).parse(req.body);
     const bookingList = await db.select().from(bookings).where(eq(bookings.id, bookingId)).limit(1);
     if (bookingList.length === 0) throw new AppError(404, "Booking not found");
     const booking = bookingList[0];
+    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    if (!employer || employer.id !== booking.employerId) throw new AppError(404, "Booking not found");
+    if (booking.status !== "completed") throw new AppError(409, "Only completed bookings can be invoiced");
 
     // Check if payment already exists
     const existing = await db.select().from(payments).where(eq(payments.bookingId, bookingId)).limit(1);
@@ -74,30 +80,15 @@ router.post("/generate-invoice", authMiddleware, async (req: AuthRequest, res, n
   } catch (error) { next(error); }
 });
 
-// Process payment (Simulated)
+// Settlement must be confirmed by a payment provider before updating balances.
 router.post("/:paymentId/process", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const paymentId = parseInt(req.params.paymentId);
-    const result = await db.update(payments)
-      .set({ 
-        status: "completed", 
-        updatedAt: new Date(),
-        paymentMethod: "Stripe/Credit Card"
-      })
-      .where(eq(payments.id, paymentId))
-      .returning();
-
-    if (result.length === 0) throw new AppError(404, "Payment not found");
-
-    // Update total spent for employer and total earnings for caregiver
-    await db.execute(sql`
-      UPDATE employers SET total_spent = total_spent + ${result[0].amount} WHERE id = ${result[0].employerId}
-    `);
-    await db.execute(sql`
-      UPDATE caregivers SET total_earnings = total_earnings + ${result[0].caregiverPayout} WHERE id = ${result[0].caregiverId}
-    `);
-
-    res.json({ payment: result[0] });
+    const paymentId = z.coerce.number().int().positive().parse(req.params.paymentId);
+    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    if (!employer) throw new AppError(404, "Employer not found");
+    const payment = (await db.select().from(payments).where(and(eq(payments.id, paymentId), eq(payments.employerId, employer.id))).limit(1))[0];
+    if (!payment) throw new AppError(404, "Payment not found");
+    throw new AppError(501, "Payment processing is not configured. No charge or payout was made.");
   } catch (error) { next(error); }
 });
 

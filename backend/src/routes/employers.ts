@@ -2,14 +2,14 @@ import { Router } from "express";
 import { z } from "zod";
 import axios from "axios";
 import { createHash, randomBytes, randomUUID } from "crypto";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { caregiverInvitations, caregivers, employers, users } from "../db/schema.js";
 import { ensureCoreTables } from "../db/bootstrap.js";
 import { authMiddleware, AuthRequest, requireRole } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { config } from "../config/env.js";
-import { sendEmail } from "../services/email.js";
+import { sendEmail, escapeEmailHtml } from "../services/email.js";
 
 const router = Router();
 
@@ -130,10 +130,10 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
           to: data.email,
           subject: `${employer.companyName} invited you to Elite Care`,
           text: `${employer.companyName} invited you to join their care team on Elite Care. Accept within 7 days: ${inviteUrl}`,
-          html: `<p>Hello ${data.firstName},</p><p><strong>${employer.companyName}</strong> invited you to join their care team on Elite Care.</p><p><a href="${inviteUrl}">Accept caregiver invitation</a></p><p>This secure invitation expires in 7 days.</p>`,
+          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Care.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p>This secure invitation expires in 7 days.</p>`,
         });
-      } catch (error) {
-        console.error("Invitation email could not be delivered", error);
+      } catch {
+        console.error("Invitation email could not be delivered; check the email provider log");
       }
     }
     res.status(201).json({
@@ -197,8 +197,18 @@ router.put("/me", authMiddleware, requireRole("employer", "admin"), async (req: 
 
 router.post("/background-checks", authMiddleware, requireRole("employer", "admin"), async (req: AuthRequest, res, next) => {
   try {
-    await employerForUser(req.user!.id);
+    const employer = await employerForUser(req.user!.id);
     const data = backgroundCheckSchema.parse(req.body);
+    const linked = await db.execute(sql`
+      SELECT 1 FROM employer_caregivers
+      WHERE employer_id = ${employer.id} AND caregiver_user_id = ${data.caregiverUserId} AND status = 'active'
+      UNION ALL
+      SELECT 1 FROM shift_applications sa JOIN shift_posts sp ON sp.id = sa.shift_id
+      JOIN caregivers c ON c.id = sa.caregiver_id
+      WHERE sp.employer_id = ${employer.id} AND c.user_id = ${data.caregiverUserId} AND sa.status = 'approved'
+      LIMIT 1
+    `);
+    if (!(linked as any).rows.length) throw new AppError(403, "Only caregivers on your team can be screened");
     const caregiver = (await db.select({
       userId: caregivers.userId,
       firstName: users.firstName,

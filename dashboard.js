@@ -235,12 +235,16 @@
 
   async function loadEmployer() {
     const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/caregivers'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations')
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
     const payroll = payrollResult.status === 'fulfilled' ? payrollResult.value : { stats: {}, recentPayments: [] };
-    const caregivers = caregiverResult.status === 'fulfilled' ? caregiverResult.value.caregivers || [] : [];
+    const caregivers = caregiverResult.status === 'fulfilled' ? (caregiverResult.value.team || []).map((person) => ({
+      ...person, userId: person.user_id, firstName: person.first_name, lastName: person.last_name,
+      hourlyRate: person.hourly_rate, backgroundCheckStatus: person.background_check_status,
+      backgroundCheckDate: person.background_check_date,
+    })) : [];
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
     const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
     const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];

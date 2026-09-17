@@ -32,3 +32,6 @@ jobs:
 
       - name: Build TypeScript
         run: npm run build
+
+      - name: Test isolated backend workflows
+        run: npm test

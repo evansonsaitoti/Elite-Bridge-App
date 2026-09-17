@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { Application, EmployerUser, getEmployerApplications, getEmployerShifts, getStoredEmployer, Shift } from "../lib/api";
+import { Application, EmployerUser, getEmployerApplications, getEmployerShifts, getEmployerTeam, getStoredEmployer, Shift } from "../lib/api";
 import { cardShadow, colors } from "../lib/theme";
 import { enableEmployerPushNotifications } from "../lib/push-notifications";
 import { EmployerTabBar } from "../components/employer-tab-bar";
@@ -14,6 +14,7 @@ export default function DashboardScreen() {
   const [user, setUser] = useState<EmployerUser | null>(null);
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
+  const [team, setTeam] = useState(0);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -24,9 +25,10 @@ export default function DashboardScreen() {
       if (!stored) return router.replace("/sign-in");
       setUser(stored);
       void enableEmployerPushNotifications().catch(() => false);
-      const [nextShifts, nextApplications] = await Promise.all([getEmployerShifts(), getEmployerApplications()]);
+      const [nextShifts, nextApplications, nextTeam] = await Promise.all([getEmployerShifts(), getEmployerApplications(), getEmployerTeam()]);
       setShifts(nextShifts);
       setApplications(nextApplications);
+      setTeam(nextTeam.length);
     } catch (error) {
       Alert.alert("Unable to load workspace", error instanceof Error ? error.message : "Please try again.");
     } finally {
@@ -40,7 +42,6 @@ export default function DashboardScreen() {
   const open = shifts.filter((shift) => shift.status === "open").length;
   const assigned = shifts.filter((shift) => shift.status === "assigned").length;
   const pending = applications.filter((application) => application.status === "pending").length;
-  const team = new Set(applications.filter((application) => application.status === "approved").map((application) => application.email)).size;
 
   return (
     <SafeAreaView style={styles.safe}>
