@@ -1,6 +1,12 @@
 name: Elite Bridge Android Builds
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'elitebridge-mobile/app.json'
+      - 'elitebridge-employer/app.json'
+      - '.github/workflows/android-build.yml'
   workflow_dispatch:
     inputs:
       app:
@@ -22,17 +28,17 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Release mobile builds 58 and 35')) || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
       run:
         working-directory: elitebridge-mobile
     steps:
-      - name: Checkout exact source used by latest iOS split build
+      - name: Checkout selected release source
         uses: actions/checkout@v5
         with:
-          ref: elitebridge-split-ai-ma
+          ref: ${{ github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v5
@@ -83,17 +89,17 @@ jobs:
         run: npx eas-cli@latest build --platform android --profile production --non-interactive --wait
 
   employer:
-    if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ (github.event_name == 'push' && startsWith(github.event.head_commit.message, 'Release mobile builds 58 and 35')) || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
       run:
         working-directory: elitebridge-employer
     steps:
-      - name: Checkout exact source used by latest iOS split build
+      - name: Checkout selected release source
         uses: actions/checkout@v5
         with:
-          ref: elitebridge-split-ai-ma
+          ref: ${{ github.ref }}
 
       - name: Set up Node
         uses: actions/setup-node@v5

@@ -39,7 +39,7 @@ if (!source.includes("Time & attendance")) failures.push("Time and attendance wo
 if (!source.includes("Account controls")) failures.push("Protected account controls access is missing.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
 if (appConfig.expo.version !== "1.3.3") failures.push("Employer release version must be 1.3.3.");
-if (appConfig.expo.ios.buildNumber !== "34") failures.push("Employer iOS build number must be 34.");
+if (appConfig.expo.ios.buildNumber !== "35") failures.push("Employer iOS build number must be 35.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

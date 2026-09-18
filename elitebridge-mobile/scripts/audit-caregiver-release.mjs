@@ -63,7 +63,7 @@ requireSource("app/(staff)/home.tsx", "Call-out reported");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
 if (config.expo.version !== "1.2.5") throw new Error("Caregiver release version must be 1.2.5");
-if (config.expo.ios.buildNumber !== "57") throw new Error("Caregiver iOS build number must be 57");
+if (config.expo.ios.buildNumber !== "58") throw new Error("Caregiver iOS build number must be 58");
 requireSource("app/(root)/index.tsx", "Care professionals start here");
 requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
 
