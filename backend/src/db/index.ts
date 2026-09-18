@@ -5,6 +5,15 @@ import * as schema from "./schema.js";
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  options: "-c timezone=UTC",
+  // Existing timestamp-without-zone columns represent UTC instants.
+  // Do not let a host's local timezone shift them during decoding.
+  types: {
+    getTypeParser(oid, format) {
+      if (oid === 1114 && format !== "binary") return (value: string) => new Date(`${value.replace(" ", "T")}Z`);
+      return pg.types.getTypeParser(oid, format);
+    },
+  },
 });
 
 export const db = drizzle(pool, { schema });

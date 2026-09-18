@@ -1,7 +1,8 @@
+import { useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
-import * as Location from "expo-location";
+import { captureClockLocation } from "@/lib/shared-api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -15,41 +16,15 @@ import {
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
-import { useTimekeeping } from "@/lib/timekeeping-context";
+import { useSharedTimekeeping } from "@/hooks/use-shared-timekeeping";
 import {
   calculateBreakMilliseconds,
-  calculateWorkedMilliseconds,
   type ClockLocation,
   formatDuration,
   hasOpenBreak,
   type ScheduledShift,
   type TimeEntry,
 } from "@/lib/timekeeping";
-
-function buildShift(
-  id: string,
-  dayOffset: number,
-  startHour: number,
-  endHour: number,
-  details: Pick<
-    ScheduledShift,
-    "clientName" | "serviceType" | "locationLabel"
-  >,
-): ScheduledShift {
-  const start = new Date();
-  start.setDate(start.getDate() + dayOffset);
-  start.setHours(startHour, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setHours(endHour, 0, 0, 0);
-
-  return {
-    id,
-    ...details,
-    scheduledStart: start.toISOString(),
-    scheduledEnd: end.toISOString(),
-  };
-}
 
 function formatDateTime(value: string): string {
   return new Date(value).toLocaleString("en-US", {
@@ -94,49 +69,28 @@ function getClockWindowStatus(shift: ScheduledShift): { label: string; tone: "go
     return { label: "Past shift", tone: "risk", detail: "This scheduled visit has ended. Add a note if this is a correction." };
   }
   if (minutesToStart < -15) {
-    return { label: "Late start", tone: "risk", detail: `${Math.abs(minutesToStart)} min after scheduled start. Agency may review this EVV record.` };
+    return { label: "Late start", tone: "risk", detail: `${Math.abs(minutesToStart)} min after scheduled start. Your employer may review this attendance record.` };
   }
   return { label: "On time", tone: "good", detail: "You are inside the expected clock-in window." };
 }
 
-function getEvvScore(entry: TimeEntry | null, locationMessage: string, notes: string): number {
-  let score = entry ? 72 : 58;
-  if (entry?.clockInLocation) score += 10;
-  if (entry?.clockOutLocation) score += 10;
-  if (notes.trim()) score += 8;
-  if (locationMessage.toLowerCase().includes("verified")) score += 8;
-  return Math.min(100, score);
-}
-
 export default function StaffClock() {
   const colors = useColors();
+  const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
   const { user } = useAuth();
   const {
     entries,
     ready,
+    shifts,
+    error: syncError,
+    refresh,
     getActiveForStaff,
     clockIn,
     startBreak,
     endBreak,
     clockOut,
     resubmitEntry,
-  } = useTimekeeping();
-
-  const shifts = useMemo<ScheduledShift[]>(
-    () => [
-      buildShift("dracut-companion-today", 0, 8, 16, {
-        clientName: "Private Client – Dracut",
-        serviceType: "Companionship & personal care",
-        locationLabel: "Dracut, MA",
-      }),
-      buildShift("lowell-respite-tomorrow", 1, 10, 18, {
-        clientName: "Private Client – Lowell",
-        serviceType: "Respite & household support",
-        locationLabel: "Lowell, MA",
-      }),
-    ],
-    [],
-  );
+  } = useSharedTimekeeping();
 
   const [localSession, setLocalSession] = useState<{ email?: string; name?: string }>({});
   const resolvedStaffKey = (localSession.email || user?.email || user?.openId || `staff-${user?.id ?? "local"}`)
@@ -145,7 +99,8 @@ export default function StaffClock() {
   const resolvedStaffName = localSession.name || user?.name?.trim() || "Caregiver";
   const activeEntry = getActiveForStaff(resolvedStaffKey);
 
-  const [selectedShiftId, setSelectedShiftId] = useState(shifts[0].id);
+  const [selectedShiftId, setSelectedShiftId] = useState(shiftId || "");
+  useEffect(() => { if (shiftId) setSelectedShiftId(shiftId); }, [shiftId]);
   const [notes, setNotes] = useState("");
   const [busy, setBusy] = useState(false);
   const [now, setNow] = useState(new Date());
@@ -173,26 +128,25 @@ export default function StaffClock() {
     });
   }, []);
 
+  const activeEntryId = activeEntry?.id;
+  const savedNotes = activeEntry?.notes || "";
   useEffect(() => {
-    if (activeEntry) {
-      setNotes(activeEntry.notes);
-    }
-  }, [activeEntry?.id]);
+    if (activeEntryId) setNotes(savedNotes);
+  }, [activeEntryId, savedNotes]);
 
   const selectedShift =
-    shifts.find((shift) => shift.id === selectedShiftId) ?? shifts[0];
+    shifts.find((shift) => shift.id === activeEntry?.shiftId) ?? shifts.find((shift) => shift.id === selectedShiftId) ?? shifts[0];
   const openBreak = activeEntry ? hasOpenBreak(activeEntry) : false;
-  const clockWindow = getClockWindowStatus(selectedShift);
-  const evvScore = getEvvScore(activeEntry, locationMessage, notes);
+  const clockWindow = selectedShift ? getClockWindowStatus(selectedShift) : { label: "No assigned shifts", tone: "warn", detail: "Accepted shifts appear here after assignment. Pull the latest records with Refresh." };
   const evvChecklist = [
     { label: "Caregiver identity", done: Boolean(resolvedStaffKey) },
     { label: "Service selected", done: Boolean(activeEntry || selectedShift) },
     { label: "Start time captured", done: Boolean(activeEntry?.clockInAt) },
-    { label: "Location captured", done: Boolean(activeEntry?.clockInLocation || locationMessage.toLowerCase().includes("verified")) },
+    { label: "Location captured", done: Boolean(activeEntry?.clockInLocation) },
     { label: "Visit notes ready", done: Boolean(notes.trim()) },
   ];
   const recentEntries = entries
-    .filter((entry) => entry.staffKey === resolvedStaffKey && entry.status !== "in_progress")
+    .filter((entry) => entry.status !== "in_progress")
     .sort(
       (left, right) =>
         new Date(right.clockInAt).getTime() - new Date(left.clockInAt).getTime(),
@@ -200,35 +154,18 @@ export default function StaffClock() {
     .slice(0, 8);
 
   const captureLocation = async (): Promise<ClockLocation | null> => {
-    const permission = await Location.requestForegroundPermissionsAsync();
-    if (!permission.granted) {
-      setLocationMessage("Location permission was denied; the time was still recorded.");
-      return null;
-    }
-
-    try {
-      const current = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
-      setLocationMessage("Location verified for this clock action.");
-      return {
-        latitude: current.coords.latitude,
-        longitude: current.coords.longitude,
-        accuracy: current.coords.accuracy,
-        capturedAt: new Date(current.timestamp).toISOString(),
-      };
-    } catch {
-      setLocationMessage("Location was unavailable; the time was still recorded.");
-      return null;
-    }
+    const location = await captureClockLocation();
+    setLocationMessage(location ? "GPS captured for employer review. Site verification is not yet configured." : "GPS unavailable. Attendance will be recorded without location evidence.");
+    return location;
   };
 
   const handleClockIn = async () => {
+    if (!selectedShift || syncError) return;
     setBusy(true);
     try {
       const location = await captureLocation();
-      clockIn(selectedShift, { key: resolvedStaffKey, name: resolvedStaffName }, location);
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await clockIn(selectedShift, { key: resolvedStaffKey, name: resolvedStaffName }, location);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       Alert.alert(
         "Clocked in",
         `${selectedShift.serviceType}\n${selectedShift.locationLabel}`,
@@ -248,9 +185,9 @@ export default function StaffClock() {
     setBusy(true);
     try {
       const location = await captureLocation();
-      clockOut(activeEntry.id, notes, location);
+      await clockOut(activeEntry.id, notes, location);
       setNotes("");
-      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       Alert.alert("Shift completed", "Your timesheet is ready for agency review.");
     } catch (error) {
       Alert.alert(
@@ -274,34 +211,37 @@ export default function StaffClock() {
   };
 
   const handleBreak = async () => {
-    if (!activeEntry) return;
+    if (!activeEntry || busy) return;
+    setBusy(true);
     try {
       if (openBreak) {
-        endBreak(activeEntry.id);
+        await endBreak(activeEntry.id);
       } else {
-        startBreak(activeEntry.id);
+        await startBreak(activeEntry.id);
       }
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
     } catch (error) {
       Alert.alert(
         "Unable to update break",
         error instanceof Error ? error.message : "Please try again.",
       );
-    }
+    } finally { setBusy(false); }
   };
 
-  const handleResubmit = (entry: TimeEntry) => {
+  const handleResubmit = async (entry: TimeEntry) => {
+    if (busy) return;
+    setBusy(true);
     const response = correctionResponses[entry.id] || "";
     try {
-      resubmitEntry(entry.id, response);
+      await resubmitEntry(entry.id, response);
       setCorrectionResponses((current) => ({ ...current, [entry.id]: "" }));
-      Alert.alert("Resubmitted", "The corrected timesheet is pending approval.");
+      Alert.alert("Resubmitted", "Your clarification is saved for employer review. Recorded hours are unchanged.");
     } catch (error) {
       Alert.alert(
         "Response required",
         error instanceof Error ? error.message : "Add a response and try again.",
       );
-    }
+    } finally { setBusy(false); }
   };
 
   if (!ready) {
@@ -332,6 +272,8 @@ export default function StaffClock() {
         showsVerticalScrollIndicator={false}
       >
         <View style={{ marginBottom: 20 }}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => void refresh()}><Text style={{ color: colors.primary, fontWeight: "700", marginBottom: 10 }}>Refresh shared records</Text></TouchableOpacity>
+          {syncError ? <Text accessibilityRole="alert" style={{ color: colors.error, marginBottom: 10 }}>{syncError}. Connect and refresh before recording time.</Text> : null}
           <Text
             style={{
               fontSize: 28,
@@ -343,7 +285,7 @@ export default function StaffClock() {
             Time Clock
           </Text>
           <Text style={{ fontSize: 14, color: colors.muted }}>
-            Record your visit, breaks and service notes
+            Record your visit, paid breaks and service notes
           </Text>
         </View>
 
@@ -381,7 +323,7 @@ export default function StaffClock() {
             }}
           >
             {activeEntry
-              ? formatDuration(calculateWorkedMilliseconds(activeEntry, now))
+              ? formatDuration(Math.max(0, now.getTime() - new Date(activeEntry.clockInAt).getTime()))
               : "00:00:00"}
           </Text>
 
@@ -438,7 +380,7 @@ export default function StaffClock() {
               <View style={{ flexDirection: "row", gap: 10 }}>
                 <TouchableOpacity
                   onPress={handleBreak}
-                  disabled={busy}
+                  disabled={busy || Boolean(syncError)}
                   style={{
                     flex: 1,
                     borderRadius: 12,
@@ -459,7 +401,7 @@ export default function StaffClock() {
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleClockOut}
-                  disabled={busy}
+                  disabled={busy || Boolean(syncError)}
                   style={{
                     flex: 1,
                     borderRadius: 12,
@@ -482,7 +424,7 @@ export default function StaffClock() {
           ) : (
             <TouchableOpacity
               onPress={handleClockIn}
-              disabled={busy}
+              disabled={busy || Boolean(syncError) || !selectedShift}
               style={{
                 borderRadius: 12,
                 paddingVertical: 15,
@@ -495,7 +437,7 @@ export default function StaffClock() {
                 <ActivityIndicator color="#FFFFFF" />
               ) : (
                 <Text style={{ color: "#FFFFFF", fontSize: 17, fontWeight: "800" }}>
-                  Clock In
+                  {selectedShift ? "Clock In" : "No assigned shift"}
                 </Text>
               )}
             </TouchableOpacity>
@@ -515,18 +457,14 @@ export default function StaffClock() {
           <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }}>
-                EVV INTELLIGENCE
+                ATTENDANCE RECORD
               </Text>
               <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900", marginTop: 5 }}>
-                {activeEntry ? "Visit verification in progress" : "Ready to verify this visit"}
+                {activeEntry ? "Attendance saved to your account" : "Shared with your employer"}
               </Text>
               <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>
-                Elite checks time, location, caregiver identity, service and notes before the timesheet reaches the agency.
+                Clock actions use server timestamps. GPS is captured when available; location alone does not verify attendance. Breaks are recorded as paid time.
               </Text>
-            </View>
-            <View style={{ width: 62, height: 62, borderRadius: 20, backgroundColor: evvScore >= 85 ? "#EAF7EF" : "#FFF6E6", alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ color: evvScore >= 85 ? "#087443" : "#B54708", fontSize: 19, fontWeight: "900" }}>{evvScore}</Text>
-              <Text style={{ color: "#667085", fontSize: 9, fontWeight: "800" }}>EVV</Text>
             </View>
           </View>
 
@@ -580,7 +518,7 @@ export default function StaffClock() {
               Scheduled Shifts
             </Text>
             {shifts.map((shift) => {
-              const selected = shift.id === selectedShift.id;
+              const selected = shift.id === selectedShift?.id;
               return (
                 <TouchableOpacity
                   key={shift.id}
@@ -628,7 +566,7 @@ export default function StaffClock() {
                   </View>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 10 }}>
                     {formatDateTime(shift.scheduledStart)} –{" "}
-                    {formatTime(shift.scheduledEnd)}
+                    {formatDateTime(shift.scheduledEnd)}
                   </Text>
                   <Text style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>
                     {shift.locationLabel}
@@ -741,12 +679,12 @@ export default function StaffClock() {
                         Worked
                       </Text>
                       <Text style={{ color: colors.foreground, fontWeight: "800" }}>
-                        {formatDuration(calculateWorkedMilliseconds(entry))}
+                        {formatDuration(Math.max(0, new Date(entry.clockOutAt || entry.clockInAt).getTime() - new Date(entry.clockInAt).getTime()))}
                       </Text>
                     </View>
                     <View style={{ flex: 1 }}>
                       <Text style={{ color: colors.muted, fontSize: 11 }}>
-                        Breaks
+                        Paid breaks
                       </Text>
                       <Text style={{ color: colors.foreground, fontWeight: "800" }}>
                         {formatDuration(calculateBreakMilliseconds(entry))}

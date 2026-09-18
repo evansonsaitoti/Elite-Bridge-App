@@ -1,10 +1,10 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { getEmployerActivities, getEmployerTimesheets, getStoredEmployer, EmployerTimesheet, ShiftActivity } from "../lib/api";
+import { getEmployerAttendance, getEmployerTimesheets, getStoredEmployer, reviewTimesheet, EmployerTimesheet, ShiftActivity } from "../lib/api";
 import { colors } from "../lib/theme";
 import { EmployerTabBar } from "../components/employer-tab-bar";
 
@@ -14,25 +14,36 @@ export default function TimeScreen() {
   const [timesheets, setTimesheets] = useState<EmployerTimesheet[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [clockedIn, setClockedIn] = useState(0);
+  const [reviewing, setReviewing] = useState<number | null>(null);
+  const [reviewNote, setReviewNote] = useState("");
+  const [saving, setSaving] = useState(false);
 
   const load = useCallback(async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
     try {
       if (!await getStoredEmployer()) return router.replace("/sign-in");
       const [activityResult, timesheetResult] = await Promise.all([
-        getEmployerActivities(),
+        getEmployerAttendance(),
         getEmployerTimesheets(),
       ]);
-      setActivities(activityResult);
+      setActivities(activityResult.activities);
+      setClockedIn(activityResult.activeCount);
       setTimesheets(timesheetResult);
     } catch (error) { Alert.alert("Unable to load attendance", error instanceof Error ? error.message : "Please try again."); }
     finally { setLoading(false); setRefreshing(false); }
   }, [router]);
 
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-  const latestByCaregiver = new Map<number, ShiftActivity>();
-  for (const activity of activities) if (!latestByCaregiver.has(activity.caregiver_id)) latestByCaregiver.set(activity.caregiver_id, activity);
-  const clockedIn = [...latestByCaregiver.values()].filter((activity) => activity.type === "clock_in").length;
+  const decide = async (id: number, status: "approved" | "correction_requested") => {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await reviewTimesheet(id, status, reviewNote);
+      setReviewing(null); setReviewNote(""); await load(true);
+    } catch (e) { Alert.alert("Review not saved", e instanceof Error ? e.message : "Try again"); }
+    finally { setSaving(false); }
+  };
   const pendingTimesheets = timesheets.filter((item) => item.status === "pending_approval").length;
   const payrollTotal = timesheets.reduce((sum, item) => sum + Number(item.total_amount || 0), 0);
 
@@ -44,11 +55,22 @@ export default function TimeScreen() {
       <View style={styles.timesheetMetric}><Text style={styles.timesheetValue}>${payrollTotal.toFixed(0)}</Text><Text style={styles.timesheetLabel}>Payroll total</Text></View>
     </View>
     <View style={styles.headingRow}><Text style={styles.heading}>Timesheets</Text><Text style={styles.headingMeta}>Generated after clock-out</Text></View>
-    {!loading && timesheets.length === 0 ? <View style={styles.emptyCompact}><Ionicons color={colors.green} name="document-text-outline" size={30} /><Text style={styles.emptyTitle}>No timesheets yet</Text><Text style={styles.emptyBody}>When a caregiver clocks out, Elite Bridge creates a payroll-ready timesheet here.</Text></View> : null}
-    {timesheets.slice(0, 8).map((sheet) => (
+    {!loading && timesheets.length === 0 ? <View style={styles.emptyCompact}><Ionicons color={colors.green} name="document-text-outline" size={30} /><Text style={styles.emptyTitle}>No timesheets yet</Text><Text style={styles.emptyBody}>When a caregiver clocks out, Elite Bridge creates a timesheet here for your review.</Text></View> : null}
+    {timesheets.map((sheet) => (
       <View key={sheet.id} style={styles.timesheetCard}>
         <View style={styles.timesheetTop}><View style={styles.documentIcon}><Ionicons color={colors.green} name="document-text" size={20} /></View><View style={styles.activityCopy}><Text style={styles.name}>{sheet.first_name} {sheet.last_name}</Text><Text style={styles.shift}>{sheet.shift_title}</Text><Text style={styles.time}>{new Date(sheet.clock_in_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} - {new Date(sheet.clock_out_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })} · {Number(sheet.worked_hours).toFixed(2)} hrs</Text></View><Text style={styles.total}>${Number(sheet.total_amount).toFixed(2)}</Text></View>
+        {sheet.notes ? <Text style={styles.shift}>Caregiver notes: {sheet.notes}</Text> : null}
+        {sheet.agency_note ? <Text style={styles.shift}>Review note: {sheet.agency_note}</Text> : null}
         <Text style={styles.statusPill}>{sheet.status.replaceAll("_", " ").toUpperCase()}</Text>
+        {sheet.status === "pending_approval" ? <View>
+          <TouchableOpacity disabled={saving} onPress={() => { setReviewing(reviewing === sheet.id ? null : sheet.id); setReviewNote(""); }} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Review timesheet</Text></TouchableOpacity>
+          {reviewing === sheet.id ? <View>
+            <Text style={styles.emptyBody}>Confirm recorded hours before approval. Approval does not send payment.</Text>
+            <TextInput accessibilityLabel="Timesheet review note" placeholder="Note (required for clarification)" multiline value={reviewNote} onChangeText={setReviewNote} style={{ borderWidth: 1, borderColor: colors.border, borderRadius: 10, padding: 12, marginTop: 10, color: colors.ink }} />
+            <TouchableOpacity disabled={saving} onPress={() => void decide(sheet.id, "approved")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>{saving ? "Saving…" : "Approve recorded hours"}</Text></TouchableOpacity>
+            <TouchableOpacity disabled={saving || !reviewNote.trim()} onPress={() => void decide(sheet.id, "correction_requested")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Request clarification</Text></TouchableOpacity>
+          </View> : null}
+        </View> : null}
       </View>
     ))}
     <View style={styles.headingRow}><Text style={styles.heading}>Recent activity</Text><TouchableOpacity onPress={() => void load(true)}><Ionicons color={colors.green} name="refresh" size={21} /></TouchableOpacity></View>
@@ -56,7 +78,7 @@ export default function TimeScreen() {
     {!loading && activities.length === 0 ? <View style={styles.empty}><Ionicons color={colors.green} name="time-outline" size={36} /><Text style={styles.emptyTitle}>No time activity yet</Text><Text style={styles.emptyBody}>Clock-ins and clock-outs from assigned caregiver visits will appear here automatically.</Text><TouchableOpacity onPress={() => router.push("/shifts")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>View schedule</Text></TouchableOpacity></View> : null}
     {activities.map((activity) => {
       const isIn = activity.type === "clock_in";
-      return <View key={activity.id} style={styles.card}><View style={[styles.activityIcon, isIn ? styles.inIcon : styles.outIcon]}><Ionicons color={isIn ? colors.green : colors.gold} name={isIn ? "log-in-outline" : "log-out-outline"} size={21} /></View><View style={styles.activityCopy}><Text style={styles.name}>{activity.first_name} {activity.last_name}</Text><Text style={styles.action}>{isIn ? "Clocked in" : activity.type === "clock_out" ? "Clocked out" : activity.type.replaceAll("_", " ")}</Text><Text style={styles.shift}>{activity.shift_title}</Text><Text style={styles.time}>{new Date(activity.timestamp).toLocaleString()}</Text></View></View>;
+      return <View key={activity.id} style={styles.card}><View style={[styles.activityIcon, isIn ? styles.inIcon : styles.outIcon]}><Ionicons color={isIn ? colors.green : colors.gold} name={isIn ? "log-in-outline" : "log-out-outline"} size={21} /></View><View style={styles.activityCopy}><Text style={styles.name}>{activity.first_name} {activity.last_name}</Text><Text style={styles.action}>{isIn ? "Clocked in" : activity.type === "clock_out" ? "Clocked out" : activity.type.replaceAll("_", " ")}</Text><Text style={styles.shift}>{activity.shift_title}</Text><Text style={styles.time}>{new Date(activity.timestamp).toLocaleString()}</Text>{activity.type === "clock_in" || activity.type === "clock_out" ? <Text style={styles.time}>{activity.location ? "GPS captured · location review required" : "No GPS evidence"}</Text> : null}</View></View>;
     })}
   </ScrollView><EmployerTabBar /></SafeAreaView>;
 }

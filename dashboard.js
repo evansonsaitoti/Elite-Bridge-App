@@ -179,10 +179,12 @@
       return;
     }
     container.innerHTML = shifts.map((shift) => `
-      <article class="list-row" data-searchable>
+      <article class="list-row shift-row" data-searchable>
         <span class="row-icon">${employerView ? 'SH' : '$'}</span>
-        <span class="row-copy"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.location?.city || '')}${shift.location?.state ? `, ${escapeHtml(shift.location.state)}` : ''} · ${dateTime(shift.startTime)}</span></span>
+        <span class="row-copy"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.location?.city || '')}${shift.location?.state ? `, ${escapeHtml(shift.location.state)}` : ''} · ${dateTime(shift.startTime)} – ${dateTime(shift.endTime)} · ${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span></span>
         <span class="row-meta"><span class="status ${shift.status === 'open' ? '' : 'neutral'}">${escapeHtml(shift.status || 'open')}</span><br>${money(shift.hourlyRate)}/hr</span>
+        ${!employerView && expectedRole === 'caregiver' ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`) : ''}
+        ${employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(shift.status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : ''}
       </article>`).join('');
   }
 
@@ -193,8 +195,102 @@
       return;
     }
     container.innerHTML = activities.slice(0, 6).map((activity) => `
-      <div class="list-row" data-searchable><span class="row-icon">${activity.type === 'clock_in' ? 'IN' : 'OUT'}</span><span class="row-copy"><strong>${escapeHtml(`${activity.first_name || ''} ${activity.last_name || ''}`.trim() || 'Caregiver')}</strong><span>${escapeHtml(activity.shift_title || 'Care shift')} · ${dateTime(activity.timestamp)}</span></span><span class="status ${activity.type === 'clock_in' ? '' : 'neutral'}">${escapeHtml(String(activity.type || '').replace('_', ' '))}</span></div>`).join('');
+      <div class="list-row" data-searchable><span class="row-icon">${activity.type === 'clock_in' ? 'IN' : activity.type === 'clock_out' ? 'OUT' : 'BR'}</span><span class="row-copy"><strong>${escapeHtml(`${activity.first_name || ''} ${activity.last_name || ''}`.trim() || 'Caregiver')}</strong><span>${escapeHtml(activity.shift_title || 'Care shift')} · ${dateTime(activity.timestamp)}${['clock_in', 'clock_out'].includes(activity.type) ? activity.location ? ' · GPS captured; review required' : ' · No GPS evidence' : ''}</span></span><span class="status ${activity.type === 'clock_in' ? '' : 'neutral'}">${escapeHtml(String(activity.type || '').replace('_', ' '))}</span></div>`).join('');
   }
+
+  function renderApplications(applications) {
+    const container = document.getElementById('applicationList');
+    if (!container) return;
+    const pending = applications.filter(a => a.status === 'pending');
+    if (!pending.length) { renderEmpty(container, 'No applications to review', 'Caregiver applications appear here when you choose employer review.'); return; }
+    container.innerHTML = pending.map(a => `<article class="surface-pad" data-searchable><strong>${escapeHtml(`${a.first_name} ${a.last_name}`)}</strong><p>${escapeHtml(a.shift_title)} · ${dateTime(a.start_time)} – ${dateTime(a.end_time)}</p><p>${escapeHtml(a.note || '')}</p><button class="primary-button" type="button" data-application-id="${a.id}" data-decision="approved">Approve caregiver</button> <button class="secondary-button" type="button" data-application-id="${a.id}" data-decision="rejected">Decline</button></article>`).join('');
+  }
+
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-application-id], [data-shift-op]');
+    if (!button || savingTime) return;
+    const operation = button.dataset.shiftOp;
+    if (operation === 'cancel' && !window.confirm('Cancel this shift and notify assigned caregivers?')) return;
+    savingTime = true; button.disabled = true;
+    try {
+      const route = button.dataset.applicationId ? `/bookings/employer/applications/${button.dataset.applicationId}` : operation === 'cancel' ? `/bookings/employer/${button.dataset.shiftId}/cancel` : `/bookings/${button.dataset.shiftId}/${operation}`;
+      await api(route, { method: button.dataset.applicationId || operation === 'cancel' ? 'PATCH' : 'POST', body: JSON.stringify(button.dataset.applicationId ? { status: button.dataset.decision } : {}) });
+      notify('Shift update saved.');
+      await (expectedRole === 'employer' ? loadEmployer() : loadCaregiver());
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; button.disabled = false; }
+  });
+
+  function renderTimesheets(container, sheets, employerView, applications = []) {
+    if (!container) return;
+    if (!sheets.length) { renderEmpty(container, 'No completed timesheets yet', 'Clocking out creates a shared timesheet for employer review.'); return; }
+    container.innerHTML = sheets.map((sheet) => {
+      const title = employerView ? `${sheet.first_name} ${sheet.last_name} · ${sheet.shift_title}` : applications.find(a => a.shift.id === sheet.shift_id)?.shift.title || 'Care shift';
+      return `<article class="surface-pad" data-searchable><strong>${escapeHtml(title)}</strong><p>${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}</p><span class="status">${escapeHtml(sheet.status.replaceAll('_', ' '))}</span>${sheet.notes ? `<p>${escapeHtml(sheet.notes)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
+      ${employerView && sheet.status === 'pending_approval' ? `<form data-review-sheet="${sheet.id}" class="field"><label for="review-${sheet.id}">Review note (required for clarification)</label><textarea id="review-${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
+      ${!employerView && sheet.status === 'correction_requested' ? `<form data-resubmit-sheet="${sheet.id}" class="field"><label for="response-${sheet.id}">Clarification for your employer</label><textarea id="response-${sheet.id}" name="notes" maxlength="2000" required></textarea><button class="primary-button" type="submit">Send clarification</button><small>Recorded hours remain unchanged.</small></form>` : ''}</article>`;
+    }).join('');
+  }
+
+  async function captureLocation() {
+    if (!navigator.geolocation) return null;
+    return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp).toISOString() }), () => resolve(null), { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 }));
+  }
+
+  function renderCaregiverClock(applications, records) {
+    const container = document.getElementById('caregiverClock');
+    if (!container) return;
+    const drafts = new Map([...container.querySelectorAll('textarea')].map(el => [el.id, el.value]));
+    const starts = records.activities.filter(a => a.type === 'clock_in');
+    const active = starts.find(i => !records.activities.some(o => o.shift_id === i.shift_id && o.type === 'clock_out' && o.id > i.id));
+    const assignments = applications.filter(a => a.status === 'approved' && ['open', 'assigned', 'in_progress'].includes(a.shift.status) && !records.timesheets.some(t => t.shift_id === a.shift.id));
+    if (!assignments.length) { renderEmpty(container, 'No assigned shifts ready', 'Accept a shift or wait for your employer to approve an application.'); return; }
+    container.innerHTML = assignments.map(({ shift }) => {
+      const running = active?.shift_id === shift.id;
+      const last = records.activities.filter(a => a.shift_id === shift.id).at(-1);
+      const onBreak = running && last?.type === 'break_start';
+      return `<article class="surface-pad"><h2>${escapeHtml(shift.title)}</h2><p>${dateTime(shift.startTime)} – ${dateTime(shift.endTime)}</p><p>${escapeHtml(shift.location.address)}, ${escapeHtml(shift.location.city)}</p>${running ? `<p>Clocked in ${dateTime(active.timestamp)}${onBreak ? ' · On paid break' : ''}</p><p>${active.location ? 'GPS captured for employer review; site verification is not configured.' : 'No GPS evidence captured.'}</p><label for="clock-note-${shift.id}">Shift notes</label><textarea id="clock-note-${shift.id}" maxlength="4000"></textarea><p><button type="button" class="secondary-button" data-clock-shift="${shift.id}" data-clock-action="${onBreak ? 'end' : 'start'}">${onBreak ? 'End' : 'Start'} paid break</button> <button type="button" class="primary-button" data-clock-shift="${shift.id}" data-clock-action="clock-out" ${onBreak ? 'disabled' : ''}>Clock out</button></p>` : `<button type="button" class="primary-button" data-clock-shift="${shift.id}" data-clock-action="clock-in" ${active ? 'disabled' : ''}>Clock in</button>`}</article>`;
+    }).join('');
+    for (const [id, value] of drafts) { const field = document.getElementById(id); if (field) field.value = value; }
+  }
+
+  let savingTime = false;
+  document.addEventListener('submit', async event => {
+    const form = event.target;
+    if (!form.matches('[data-review-sheet], [data-resubmit-sheet]')) return;
+    event.preventDefault();
+    if (savingTime) return;
+    const review = form.dataset.reviewSheet;
+    const data = new FormData(form);
+    const status = event.submitter?.value;
+    if (review && !['approved', 'correction_requested'].includes(status)) return;
+    if (status === 'correction_requested' && !String(data.get('note') || '').trim()) { notify('Explain what needs clarification.'); return; }
+    if (status === 'approved' && !window.confirm('Approve these recorded hours? This does not send payment.')) return;
+    savingTime = true;
+    form.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    try {
+      await api(review ? `/bookings/employer/timesheets/${review}` : `/bookings/caregiver/timesheets/${form.dataset.resubmitSheet}/resubmit`, { method: review ? 'PATCH' : 'POST', body: JSON.stringify(review ? { status, note: String(data.get('note') || '') } : { notes: String(data.get('notes') || '') }) });
+      notify('Timesheet update saved.');
+      await (review ? loadEmployer() : loadCaregiver());
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; form.querySelectorAll('button').forEach(b => { b.disabled = false; }); }
+  });
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-clock-shift]');
+    if (!button || savingTime) return;
+    const shiftId = button.dataset.clockShift;
+    const action = button.dataset.clockAction;
+    if (action === 'clock-out' && !window.confirm('Finish this shift and send the timesheet for review?')) return;
+    savingTime = true; button.disabled = true;
+    try {
+      const isBreak = action === 'start' || action === 'end';
+      const location = isBreak ? null : await captureLocation();
+      await api(`/bookings/${shiftId}/${isBreak ? 'break' : action}`, { method: 'POST', body: JSON.stringify(isBreak ? { action } : { location, notes: document.getElementById(`clock-note-${shiftId}`)?.value || '' }) });
+      notify(isBreak ? 'Break saved.' : location ? 'Attendance saved with GPS evidence.' : 'Attendance saved without GPS evidence.');
+      await loadCaregiver();
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; button.disabled = false; }
+  });
 
   function renderConversations(container, conversations) {
     if (!container) return;
@@ -234,8 +330,8 @@
   }
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -253,22 +349,27 @@
       session.storage.setItem('user', JSON.stringify(session.user));
       document.querySelectorAll('[data-company-name]').forEach((element) => { element.textContent = profile.companyName; });
     }
-    setText('metricOpenShifts', shifts.filter((shift) => shift.status === 'open').length);
-    setText('metricOnDuty', activities.filter((item) => item.type === 'clock_in').length);
+    const timesheets = timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : [];
+    const unfilled = shifts.filter(shift => ['open', 'assigned', 'in_progress'].includes(shift.status) && shift.remainingPositions > 0).length;
+    setText('metricOpenShifts', unfilled);
+    setText('metricOnDuty', activityResult.status === 'fulfilled' ? activityResult.value.activeCount : 'Unavailable');
     setText('metricCaregivers', caregivers.length);
     setText('metricPendingPayroll', money(payroll.stats?.pending_amount));
-    setText('attentionTimesheets', activities.filter((item) => item.type === 'clock_out').length);
-    setText('attentionShifts', shifts.filter((shift) => shift.status === 'open').length);
+    setText('attentionTimesheets', timesheetResult.status === 'fulfilled' ? timesheets.filter(t => t.status === 'pending_approval').length : 'Unavailable');
+    setText('attentionShifts', unfilled);
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
     renderActivities(document.getElementById('activityList'), activities);
-    renderActivities(document.getElementById('timesheetList'), activities);
+    if (timesheetResult.status === 'fulfilled') renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
+    else renderEmpty(document.getElementById('timesheetList'), 'Timesheets could not be loaded', 'Refresh to try again.');
     renderConversations(document.getElementById('conversationList'), conversations);
     const caregiverList = document.getElementById('caregiverList');
     if (caregiverList) {
       if (!caregivers.length) renderEmpty(caregiverList, 'No caregivers available yet', 'Verified caregivers will appear here as the network grows.');
       else caregiverList.innerHTML = caregivers.map((person) => `<div class="list-row" data-searchable><span class="avatar">${escapeHtml(`${person.firstName?.[0] || ''}${person.lastName?.[0] || ''}`)}</span><span class="row-copy"><strong>${escapeHtml(`${person.firstName || ''} ${person.lastName || ''}`)}</strong><span>${escapeHtml((person.specialties || []).join(' · ') || 'Caregiver')}</span></span><span class="row-meta">★ ${escapeHtml(person.rating || 'New')}<br>${money(person.hourlyRate)}/hr</span></div>`).join('');
     }
+    if (applicationsResult.status === 'fulfilled') renderApplications(applicationsResult.value.applications || []);
+    else renderEmpty(document.getElementById('applicationList'), 'Applications unavailable', 'Refresh to try again.');
     renderInvitations(document.getElementById('invitationList'), invitations);
     renderCompliance(document.getElementById('complianceList'), caregivers);
     setText('payrollTotal', money(payroll.stats?.total_spent));
@@ -277,14 +378,24 @@
   }
 
   async function loadCaregiver() {
-    const [profileResult, shiftResult, conversationResult] = await Promise.allSettled([
-      api(`/caregivers/${session.user.id}`), api('/bookings/available'), api('/messages/conversations')
+    const [profileResult, shiftResult, conversationResult, assignmentsResult, timeResult] = await Promise.allSettled([
+      api(`/caregivers/${session.user.id}`), api('/bookings/available'), api('/messages/conversations'), api('/bookings/caregiver/my-applications'), api('/bookings/caregiver/timekeeping')
     ]);
     const profile = profileResult.status === 'fulfilled' ? profileResult.value.profile : null;
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
     setText('metricAvailable', shifts.length);
-    setText('metricCompleted', '0');
+    const applications = assignmentsResult.status === 'fulfilled' ? assignmentsResult.value.applications || [] : [];
+    const records = timeResult.status === 'fulfilled' ? timeResult.value : { activities: [], timesheets: [] };
+    setText('metricCompleted', timeResult.status === 'fulfilled' ? records.timesheets.length : 'Unavailable');
+    renderShiftRows(document.getElementById('assignedShiftList'), applications.filter(a => a.status === 'approved').map(a => a.shift), true);
+    if (assignmentsResult.status === 'fulfilled' && timeResult.status === 'fulfilled') {
+      renderCaregiverClock(applications, records);
+      renderTimesheets(document.getElementById('caregiverTimesheets'), records.timesheets, false, applications);
+    } else {
+      renderEmpty(document.getElementById('caregiverClock'), 'Time records could not be loaded', 'Reconnect and select Refresh before recording attendance.');
+      renderEmpty(document.getElementById('caregiverTimesheets'), 'Timesheets unavailable', 'Refresh to try again.');
+    }
     setText('metricEarnings', money(profile?.totalEarnings || 0));
     setText('metricRating', Number(profile?.rating || 0) ? Number(profile.rating).toFixed(1) : 'New');
     setText('profileRate', `${money(profile?.hourlyRate || 0)}/hr`);
@@ -303,9 +414,9 @@
     submit.disabled = true;
     submit.textContent = 'Posting…';
     const payload = {
-      title: formData.get('title'), serviceType: formData.get('serviceType'), caregiverType: formData.get('caregiverType'), careRecipientName: formData.get('careRecipientName'), scheduleType: 'one_time', startDate: formData.get('startDate'), startTime: formData.get('startTime'), endTime: formData.get('endTime'),
+      title: formData.get('title'), serviceType: formData.get('serviceType'), caregiverType: formData.get('caregiverType'), careRecipientName: formData.get('careRecipientName'), scheduleType: 'one_time', startDate: formData.get('startDate'), startTime: formData.get('startTime'), endTime: formData.get('endTime'), endDate: formData.get('endDate') || undefined, timeZone: formData.get('timeZone'), assignmentMode: formData.get('assignmentMode'),
       location: { type: 'client_home', address: formData.get('address'), city: formData.get('city'), state: String(formData.get('state') || '').toUpperCase(), zipCode: formData.get('zipCode') },
-      pay: { hourlyRate: Number(formData.get('hourlyRate')), currency: 'USD' }, numberOfCaregivers: 1, requirements: [], responsibilities: formData.get('responsibilities'), notes: '', contact: { name: fullName, phone: session.user.phone || 'Contact through Elite Bridge' }, urgency: formData.get('urgency')
+      pay: { hourlyRate: Number(formData.get('hourlyRate')), currency: 'USD' }, numberOfCaregivers: Number(formData.get('numberOfCaregivers') || 1), requirements: [], responsibilities: formData.get('responsibilities'), notes: '', contact: { name: fullName, phone: session.user.phone || 'Contact through Elite Bridge' }, urgency: formData.get('urgency')
     };
     try {
       await api('/bookings', { method: 'POST', body: JSON.stringify(payload) });
@@ -316,5 +427,10 @@
     finally { submit.disabled = false; submit.textContent = 'Publish shift'; }
   });
 
+  const refreshShared = () => (expectedRole === 'employer' ? loadEmployer() : loadCaregiver()).catch(() => notify('Could not refresh shared records.'));
+  document.getElementById('refreshTime')?.addEventListener('click', refreshShared);
+  window.addEventListener('focus', () => {
+    if (!savingTime && !document.querySelector('textarea:not(:placeholder-shown)') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) void refreshShared();
+  });
   (expectedRole === 'employer' ? loadEmployer() : loadCaregiver()).catch(() => notify('Some live information could not be loaded. Please refresh to try again.'));
 })();

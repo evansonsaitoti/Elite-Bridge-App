@@ -6,7 +6,7 @@ import { useRouter } from "expo-router";
 import { createEmployerShift, ShiftInput } from "../lib/api";
 import { colors } from "../lib/theme";
 
-const initial: Record<Exclude<keyof ShiftInput, "hourlyRate" | "urgency" | "assignmentMode">, string> = {
+const initial: Record<Exclude<keyof ShiftInput, "hourlyRate" | "urgency" | "assignmentMode" | "numberOfCaregivers" | "endDate" | "timeZone">, string> = {
   careRecipientName: "", serviceType: "", caregiverType: "", startDate: "", startTime: "", endTime: "", address: "", city: "", state: "", zipCode: "", responsibilities: "", contactName: "", contactPhone: "",
 };
 
@@ -14,6 +14,9 @@ export default function PostShiftScreen() {
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [rate, setRate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [timeZone, setTimeZone] = useState("America/New_York");
+  const [positions, setPositions] = useState("1");
   const [urgent, setUrgent] = useState(false);
   const [assignmentMode, setAssignmentMode] = useState<"instant" | "review">("instant");
   const [busy, setBusy] = useState(false);
@@ -22,11 +25,13 @@ export default function PostShiftScreen() {
   const submit = async () => {
     if (Object.values(form).some((value) => !value.trim()) || !rate.trim()) return Alert.alert("Complete the shift", "Every field is required so caregivers can evaluate the opportunity.");
     const hourlyRate = Number(rate);
+    const numberOfCaregivers = Number(positions);
+    if (!Number.isInteger(numberOfCaregivers) || numberOfCaregivers < 1 || numberOfCaregivers > 50) return Alert.alert("Check staffing", "Enter between 1 and 50 caregivers.");
     if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) return Alert.alert("Check hourly rate", "Enter a valid hourly rate.");
     if (!/^\d{4}-\d{2}-\d{2}$/.test(form.startDate) || !/^\d{2}:\d{2}$/.test(form.startTime) || !/^\d{2}:\d{2}$/.test(form.endTime)) return Alert.alert("Check date and time", "Use YYYY-MM-DD for the date and 24-hour HH:MM for times.");
     setBusy(true);
     try {
-      const result = await createEmployerShift({ ...form, hourlyRate, urgency: urgent ? "urgent" : "standard", assignmentMode });
+      const result = await createEmployerShift({ ...form, endDate: endDate || undefined, timeZone, numberOfCaregivers, hourlyRate, urgency: urgent ? "urgent" : "standard", assignmentMode });
       const action = assignmentMode === "instant" ? "claim it immediately" : "apply for your review";
       Alert.alert("Shift offer sent", `${result.matchedCaregivers} currently eligible caregiver${result.matchedCaregivers === 1 ? "" : "s"} matched. They can ${action} in Elite Bridge Caregiver.`, [{ text: "View shifts", onPress: () => router.replace("/shifts") }]);
     } catch (error) {
@@ -44,6 +49,9 @@ export default function PostShiftScreen() {
           <Field label="Caregiver qualification" placeholder="PCA, HHA, CNA…" value={form.caregiverType} onChangeText={(v) => set("caregiverType", v)} />
           <Text style={styles.section}>Schedule</Text>
           <Field label="Date" helper="YYYY-MM-DD" placeholder="2026-09-15" keyboardType="numbers-and-punctuation" value={form.startDate} onChangeText={(v) => set("startDate", v)} />
+          <Field label="End date (optional)" helper="Leave blank for the same day, or next day when the end time is earlier." placeholder="YYYY-MM-DD" value={endDate} onChangeText={setEndDate} />
+          <Field label="Facility time zone" helper="Massachusetts uses America/New_York, including daylight saving time." value={timeZone} onChangeText={setTimeZone} autoCapitalize="none" />
+          <Field label="Caregivers needed" keyboardType="number-pad" value={positions} onChangeText={setPositions} />
           <View style={styles.double}><View style={styles.half}><Field label="Start" helper="24-hour HH:MM" placeholder="09:00" keyboardType="numbers-and-punctuation" value={form.startTime} onChangeText={(v) => set("startTime", v)} /></View><View style={styles.half}><Field label="End" helper="24-hour HH:MM" placeholder="17:00" keyboardType="numbers-and-punctuation" value={form.endTime} onChangeText={(v) => set("endTime", v)} /></View></View>
           <Text style={styles.section}>Location and pay</Text>
           <Field label="Street address" placeholder="Care location" value={form.address} onChangeText={(v) => set("address", v)} />
@@ -56,7 +64,7 @@ export default function PostShiftScreen() {
           <Field label="On-site contact phone" placeholder="Phone number" keyboardType="phone-pad" value={form.contactPhone} onChangeText={(v) => set("contactPhone", v)} />
           <View style={styles.switchRow}><View style={styles.switchCopy}><Text style={styles.switchTitle}>Urgent coverage</Text><Text style={styles.switchBody}>Clearly marks the opportunity as urgent for caregivers.</Text></View><Switch onValueChange={setUrgent} trackColor={{ false: colors.border, true: "#76B99C" }} thumbColor={urgent ? colors.green : "#FFFFFF"} value={urgent} /></View>
           <Text style={styles.section}>How caregivers respond</Text>
-          <View style={styles.modeRow}><TouchableOpacity onPress={() => setAssignmentMode("instant")} style={[styles.mode, assignmentMode === "instant" && styles.modeActive]}><Text style={[styles.modeTitle, assignmentMode === "instant" && styles.modeTitleActive]}>Instant claim</Text><Text style={[styles.modeBody, assignmentMode === "instant" && styles.modeBodyActive]}>First eligible caregiver to accept is assigned.</Text></TouchableOpacity><TouchableOpacity onPress={() => setAssignmentMode("review")} style={[styles.mode, assignmentMode === "review" && styles.modeActive]}><Text style={[styles.modeTitle, assignmentMode === "review" && styles.modeTitleActive]}>Review first</Text><Text style={[styles.modeBody, assignmentMode === "review" && styles.modeBodyActive]}>Caregivers apply; you select one.</Text></TouchableOpacity></View>
+          <View style={styles.modeRow}><TouchableOpacity onPress={() => setAssignmentMode("instant")} style={[styles.mode, assignmentMode === "instant" && styles.modeActive]}><Text style={[styles.modeTitle, assignmentMode === "instant" && styles.modeTitleActive]}>Instant claim</Text><Text style={[styles.modeBody, assignmentMode === "instant" && styles.modeBodyActive]}>Eligible caregivers claim available positions.</Text></TouchableOpacity><TouchableOpacity onPress={() => setAssignmentMode("review")} style={[styles.mode, assignmentMode === "review" && styles.modeActive]}><Text style={[styles.modeTitle, assignmentMode === "review" && styles.modeTitleActive]}>Review first</Text><Text style={[styles.modeBody, assignmentMode === "review" && styles.modeBodyActive]}>Caregivers apply; you approve each position.</Text></TouchableOpacity></View>
           <View style={styles.delivery}><Text style={styles.deliveryTitle}>Sent as a matched Shift Offer</Text><Text style={styles.deliveryBody}>Only active, available caregivers whose profile meets the role or service criteria can see this opportunity. Eligible caregivers receive a push notification.</Text></View>
           <TouchableOpacity disabled={busy} onPress={() => void submit()} style={[styles.primary, busy && styles.disabled]}>{busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Publish and notify matches</Text>}</TouchableOpacity>
         </ScrollView>
