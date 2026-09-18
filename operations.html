@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Care operations | Elite Bridge</title>
+    <link rel="stylesheet" href="/app-shell.css" />
+    <style>
+      main {
+        max-width: 1100px;
+        margin: auto;
+        padding: 24px;
+      }
+      section {
+        margin: 24px 0;
+      }
+      label {
+        display: block;
+        margin: 12px 0;
+      }
+      input,
+      select,
+      textarea {
+        display: block;
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #bccdc5;
+        border-radius: 8px;
+        font: inherit;
+      }
+      button {
+        margin: 8px 8px 8px 0;
+      }
+      article {
+        padding: 18px 0;
+        border-bottom: 1px solid #ddd;
+      }
+      pre {
+        white-space: pre-wrap;
+        font: inherit;
+      }
+      #feedback {
+        position: sticky;
+        top: 0;
+        background: #fff;
+        padding: 14px;
+        border-left: 4px solid #08704b;
+        z-index: 2;
+      }
+      .columns {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a id="back" href="/">← Dashboard</a>
+      <h1>Care operations</h1>
+      <p>
+        Shared incident reports, location settings, payroll exports and
+        notification preferences.
+      </p>
+      <p id="feedback" role="status">Loading your workspace…</p>
+      <section class="surface surface-pad">
+        <h2>Incident reports</h2>
+        <p>
+          For immediate danger, contact emergency services and your supervisor
+          first. Reports here are not monitored as an emergency service. Include
+          only information necessary for review.
+        </p>
+        <form id="incidentForm">
+          <label
+            >Shift<select name="shiftId" class="shift-options" required></select
+          ></label>
+          <div class="columns">
+            <label
+              >Category<select name="category">
+                <option value="safety">Safety</option>
+                <option value="injury">Injury</option>
+                <option value="medication">Medication</option>
+                <option value="conduct">Conduct</option>
+                <option value="property">Property</option>
+                <option value="other">Other</option>
+              </select></label
+            ><label
+              >Severity<select name="severity">
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="critical">Critical</option>
+              </select></label
+            ><label
+              >Occurred at (your local time)<input
+                name="occurredAt"
+                type="datetime-local"
+                required
+            /></label>
+          </div>
+          <label
+            >What happened?<textarea
+              name="description"
+              minlength="10"
+              maxlength="4000"
+              rows="4"
+              required
+            ></textarea></label
+          ><button class="primary-button">Submit report</button>
+        </form>
+        <button id="refresh" class="secondary-button">Refresh records</button>
+        <div id="incidents"></div>
+      </section>
+      <section class="surface surface-pad" data-employer hidden>
+        <h2>Clock-in locations</h2>
+        <p>
+          Set each shift's facility coordinates and permitted radius before
+          attendance starts. Caregivers must provide a fresh, precise location
+          inside this area. GPS checks cannot guarantee that a device location
+          has not been spoofed. Clock-out remains available.
+        </p>
+        <form id="fenceForm">
+          <label
+            >Shift<select name="shiftId" class="shift-options" required></select
+          ></label>
+          <div class="columns">
+            <label
+              >Latitude<input
+                name="latitude"
+                type="number"
+                min="-90"
+                max="90"
+                step="any"
+                required /></label
+            ><label
+              >Longitude<input
+                name="longitude"
+                type="number"
+                min="-180"
+                max="180"
+                step="any"
+                required /></label
+            ><label
+              >Radius (meters)<input
+                name="radiusMeters"
+                type="number"
+                min="50"
+                max="1000"
+                value="150"
+                required
+            /></label>
+          </div>
+          <button type="button" id="useLocation" class="secondary-button">
+            Use my current location</button
+          ><button class="primary-button">Save clock-in area</button>
+        </form>
+        <div id="fences"></div>
+      </section>
+      <section class="surface surface-pad" data-employer hidden>
+        <h2>Payroll preparation</h2>
+        <p>
+          Download approved recorded hours. Dates select clock-ins in UTC,
+          including an overnight shift in the day it started. Review overtime,
+          taxes, deductions and pay-period allocation with your payroll
+          provider. Exporting does not issue payment.
+        </p>
+        <form id="exportForm">
+          <div class="columns">
+            <label>From<input type="date" name="from" required /></label
+            ><label>Through<input type="date" name="to" required /></label>
+          </div>
+          <button class="primary-button">Download approved hours CSV</button>
+        </form>
+        <h3>External integrations</h3>
+        <p>
+          This is an Elite Bridge CSV, not a certified vendor import format.
+          Direct synchronization requires provider activation.
+        </p>
+        <div id="integrations"></div>
+      </section>
+      <section class="surface surface-pad">
+        <h2>SMS shift alerts</h2>
+        <p id="smsStatus"></p>
+        <form id="phoneForm">
+          <label
+            >Mobile number with country code<input
+              name="phone"
+              type="tel"
+              placeholder="+15085550123"
+              pattern="\+[1-9][0-9]{7,14}"
+              required /></label
+          ><button class="secondary-button">Send verification code</button>
+        </form>
+        <form id="codeForm">
+          <label
+            >Six-digit code<input
+              name="code"
+              inputmode="numeric"
+              pattern="[0-9]{6}"
+              required /></label
+          ><label
+            ><input
+              style="display: inline; width: auto"
+              name="consent"
+              type="checkbox"
+              required
+            />
+            I agree to receive automated Elite Bridge shift alerts at this
+            number. Frequency varies. Message and data rates may apply. Reply
+            STOP to opt out. Consent is optional.</label
+          ><button class="primary-button">Verify and enable alerts</button>
+        </form>
+        <button id="disableSms" class="secondary-button">
+          Turn off SMS alerts
+        </button>
+        <div id="smsHistory"></div>
+      </section>
+    </main>
+    <script src="/operations.js"></script>
+  </body>
+</html>

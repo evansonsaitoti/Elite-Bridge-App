@@ -2,7 +2,7 @@
   "expo": {
     "name": "Elite Work",
     "slug": "elitebridge-employer",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "platforms": [
       "ios",
       "android"
@@ -14,14 +14,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgeemployer",
-      "buildNumber": "35",
+      "buildNumber": "36",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.elitebridgestaffing.employer",
-      "versionCode": 35
+      "versionCode": 36
     },
     "plugins": [
       "expo-notifications",
