@@ -40,6 +40,7 @@ function shift(mode = "review", extra = {}) {
 }
 
 beforeAll(async () => {
+  await database.exec("SET TIME ZONE 'UTC'");
   vi.stubEnv("NODE_ENV", "test");
   vi.stubEnv("DATABASE_URL", "postgresql://unused:unused@localhost/isolated_test");
   vi.stubEnv("JWT_SECRET", "isolated-test-secret-at-least-32-characters");
@@ -111,7 +112,7 @@ describe.sequential("Employer and caregiver lifecycle", () => {
   it("rejects unauthorized and invalid shifts", async () => {
     await request("/bookings", undefined, "POST", shift(), 401);
     await request("/bookings", caregiver, "POST", shift(), 403);
-    await request("/bookings", employer, "POST", shift("review", { endTime: "08:00" }), 400);
+    await request("/bookings", employer, "POST", shift("review", { endTime: "09:00" }), 400);
   });
   it("posts a shift and synchronizes web, mobile and employer feeds", async () => {
     reviewShift = (await request("/bookings", employer, "POST", shift(), 201)).shift;
@@ -256,6 +257,77 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     for (const event of ["New shift posted", "New shift application", "Shift application approved", "Shift claimed", "Shift cancelled", "Urgent shift call-out", "Timesheet ready"]) {
       expect(alerts.some(([, body]) => body.subject === `Elite Bridge: ${event}` && body.to[0] === "info@elitebridgestaffing.com")).toBe(true);
     }
+  });
+  it("supports overnight local schedules and rejects invalid calendar/DST times", async () => {
+    const overnight = (await request("/bookings", employer, "POST", shift("instant", { startDate: "2026-12-10", startTime: "22:00", endTime: "06:00", timeZone: "America/New_York" }), 201)).shift;
+    expect(overnight.startTime).toBe("2026-12-11T03:00:00.000Z");
+    expect(overnight.endTime).toBe("2026-12-11T11:00:00.000Z");
+    const fall = (await request("/bookings", employer, "POST", shift("instant", { startDate: "2026-10-31", startTime: "22:00", endTime: "06:00", timeZone: "America/New_York" }), 201)).shift;
+    expect((Date.parse(fall.endTime) - Date.parse(fall.startTime)) / 3600000).toBe(9);
+    const spring = (await request("/bookings", employer, "POST", shift("instant", { startDate: "2026-03-07", startTime: "22:00", endTime: "06:00", timeZone: "America/New_York" }), 201)).shift;
+    expect((Date.parse(spring.endTime) - Date.parse(spring.startTime)) / 3600000).toBe(7);
+    for (const extra of [{ startDate: "2026-02-30" }, { startTime: "25:00" }, { timeZone: "Invalid/Zone" }, { startDate: "2026-03-08", startTime: "02:30", timeZone: "America/New_York" }, { startDate: "2026-11-01", startTime: "01:30", timeZone: "America/New_York" }]) {
+      await request("/bookings", employer, "POST", shift("instant", extra), 400);
+    }
+  });
+  it("keeps a multi-caregiver shift open until all positions are claimed", async () => {
+    const target = (await request("/bookings", employer, "POST", shift("instant", { numberOfCaregivers: 2 }), 201)).shift;
+    await request(`/bookings/${target.id}/claim`, caregiver, "POST", {});
+    await request(`/bookings/${target.id}/claim`, caregiver, "POST", {}, 409);
+    await request(`/bookings/${target.id}/apply`, caregiver, "POST", {}, 409);
+    const partial = (await request("/bookings/open", replacement)).shifts.find((s: any) => s.id === target.id);
+    expect(partial).toMatchObject({ assignedCaregivers: 1, remainingPositions: 1, status: "open" });
+    await request(`/bookings/${target.id}/claim`, replacement, "POST", {});
+    expect((await request("/bookings/employer/my", employer)).shifts.find((s: any) => s.id === target.id)).toMatchObject({ assignedCaregivers: 2, remainingPositions: 0, status: "assigned" });
+    await request(`/bookings/${target.id}/clock-in`, caregiver, "POST", { location: { latitude: 999 } }, 400);
+    const location = { latitude: 42.6334, longitude: -71.3162, accuracy: 12, capturedAt: new Date().toISOString() };
+    const attempts = await Promise.all([1, 2].map(() => fetch(`${base}/api/bookings/${target.id}/clock-in`, { method: "POST", headers: { Authorization: `Bearer ${caregiver.token}`, "Content-Type": "application/json" }, body: JSON.stringify({ location }) })));
+    expect(attempts.map(r => r.status).sort()).toEqual([200, 409]);
+    await request(`/bookings/${target.id}/clock-in`, replacement, "POST", {});
+    expect((await request("/bookings/activities", employer)).activeCount).toBe(2);
+    await request(`/bookings/${target.id}/callout`, caregiver, "POST", { reason: "other" }, 409);
+    await request(`/bookings/${target.id}/break`, caregiver, "POST", { action: "start" });
+    await request(`/bookings/${target.id}/break`, caregiver, "POST", { action: "start" }, 409);
+    expect((await request("/bookings/activities", employer)).activeCount).toBe(2);
+    await request(`/bookings/${target.id}/clock-out`, caregiver, "POST", {}, 409);
+    await request(`/bookings/${target.id}/break`, caregiver, "POST", { action: "end" });
+    const records = await request("/bookings/caregiver/timekeeping", caregiver);
+    expect(records.activities.find((a: any) => a.shift_id === target.id && a.type === "clock_in").location).toEqual(location);
+    expect((await request("/bookings/caregiver/timekeeping", replacement)).activities.filter((a: any) => a.shift_id === target.id)).toHaveLength(1);
+    await database.query("UPDATE shift_activities SET timestamp = CURRENT_TIMESTAMP - INTERVAL '8 hours' WHERE shift_id = $1 AND type = 'clock_in'", [target.id]);
+    const completed = await request(`/bookings/${target.id}/clock-out`, caregiver, "POST", { notes: "Overnight handover completed" });
+    expect(completed.timesheet.worked_minutes).toBe(480);
+    expect((await request("/bookings/employer/my", employer)).shifts.find((s: any) => s.id === target.id).status).toBe("in_progress");
+    expect((await request("/bookings/activities", employer)).activeCount).toBe(1);
+    await request(`/bookings/${target.id}/clock-in`, caregiver, "POST", {}, 409);
+    const sheetId = completed.timesheet.id;
+    await request(`/bookings/employer/timesheets/${sheetId}`, otherEmployer, "PATCH", { status: "approved" }, 404);
+    await request(`/bookings/employer/timesheets/${sheetId}`, employer, "PATCH", { status: "correction_requested" }, 400);
+    await request(`/bookings/employer/timesheets/${sheetId}`, employer, "PATCH", { status: "correction_requested", note: "Confirm handover time" });
+    await request(`/bookings/caregiver/timesheets/${sheetId}/resubmit`, replacement, "POST", { notes: "Wrong user" }, 404);
+    await request(`/bookings/caregiver/timesheets/${sheetId}/resubmit`, caregiver, "POST", { notes: "Handover finished before clock-out" });
+    await request(`/bookings/employer/timesheets/${sheetId}`, employer, "PATCH", { status: "approved" });
+    const approved = (await request("/bookings/caregiver/timekeeping", caregiver)).timesheets.find((t: any) => t.id === sheetId);
+    expect(approved.status).toBe("approved");
+    expect(approved.worked_minutes).toBe(480);
+    expect((await database.query("SELECT * FROM timesheet_reviews WHERE timesheet_id = $1", [sheetId])).rows).toHaveLength(3);
+    const outAttempts = await Promise.all([1, 2].map(() => fetch(`${base}/api/bookings/${target.id}/clock-out`, { method: "POST", headers: { Authorization: `Bearer ${replacement.token}`, "Content-Type": "application/json" }, body: "{}" })));
+    expect(outAttempts.map(r => r.status).sort()).toEqual([200, 403]);
+    expect((await request("/bookings/employer/my", employer)).shifts.find((s: any) => s.id === target.id).status).toBe("completed");
+    expect((await request("/bookings/activities", employer)).activeCount).toBe(0);
+  });
+  it("keeps remaining review positions available and blocks overlapping assignments", async () => {
+    const target = (await request("/bookings", employer, "POST", shift("review", { numberOfCaregivers: 2 }), 201)).shift;
+    const one = (await request(`/bookings/${target.id}/apply`, caregiver, "POST", {}, 201)).application;
+    const two = (await request(`/bookings/${target.id}/apply`, replacement, "POST", {}, 201)).application;
+    await request(`/bookings/employer/applications/${one.id}`, employer, "PATCH", { status: "approved" });
+    expect((await request("/bookings/employer/applications", employer)).applications.find((a: any) => a.id === two.id).status).toBe("pending");
+    const conflict = (await request("/bookings", employer, "POST", shift("instant"), 201)).shift;
+    await request(`/bookings/${conflict.id}/claim`, caregiver, "POST", {}, 409);
+    await request(`/bookings/employer/applications/${two.id}`, employer, "PATCH", { status: "approved" });
+    await request(`/bookings/${target.id}/callout`, caregiver, "POST", { reason: "other" }, 201);
+    expect((await request("/bookings/employer/my", employer)).shifts.find((s: any) => s.id === target.id)).toMatchObject({ assignedCaregivers: 1, remainingPositions: 1 });
+    await request(`/bookings/employer/${target.id}/cancel`, employer, "PATCH", {}, 204);
   });
   it("deletes test accounts and dependent records", async () => {
     for (const account of [caregiver, replacement, employer, otherEmployer]) await request("/auth/account", account, "DELETE", undefined, 204);

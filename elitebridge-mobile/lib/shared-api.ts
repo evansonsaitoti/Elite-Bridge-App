@@ -1,4 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Location from "expo-location";
+import type { ClockLocation } from "./timekeeping";
 
 const TOKEN_KEY = "elitebridge-caregiver-api-token-v1";
 const API_BASE_URL = (process.env.EXPO_PUBLIC_API_URL || "").replace(/\/$/, "");
@@ -21,6 +23,10 @@ export type CaregiverShift = {
   careRecipientName?: string;
   startTime: string;
   endTime: string;
+  timeZone?: string;
+  numberOfCaregivers: number;
+  assignedCaregivers: number;
+  remainingPositions: number;
   location: { type: string; address: string; city: string; state: string; zipCode: string };
   hourlyRate: number;
   requirements: string[];
@@ -144,7 +150,7 @@ export async function applyToShift(shiftId: number, note = "") {
 }
 
 export async function claimMatchedShift(shiftId: number) {
-  return request<{ application: { id: number; status: "approved" }; shift: { id: number; status: "assigned" } }>(`/api/bookings/${shiftId}/claim`, {
+  return request<{ application: { id: number; status: "approved" }; shift: { id: number; status: string } }>(`/api/bookings/${shiftId}/claim`, {
     method: "POST",
   });
 }
@@ -168,18 +174,46 @@ export async function callOutOfShift(shiftId: number, reason: CalloutReason, not
   );
 }
 
-export async function clockInToShift(shiftId: number) {
+export async function captureClockLocation(): Promise<ClockLocation | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const permission = await Location.requestForegroundPermissionsAsync();
+    if (!permission.granted) return null;
+    const current = await Promise.race([
+      Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.High }),
+      new Promise<never>((_, reject) => { timer = setTimeout(() => reject(new Error("Location timeout")), 12000); }),
+    ]);
+    return { latitude: current.coords.latitude, longitude: current.coords.longitude, accuracy: current.coords.accuracy, capturedAt: new Date(current.timestamp).toISOString() };
+  } catch { return null; }
+  finally { if (timer) clearTimeout(timer); }
+}
+
+export async function clockInToShift(shiftId: number, location?: ClockLocation | null) {
+  const captured = location === undefined ? await captureClockLocation() : location;
   return request<{ message: string; activity: { id: number; type: string; timestamp: string } }>(
     `/api/bookings/${shiftId}/clock-in`,
-    { method: "POST" },
+    { method: "POST", body: JSON.stringify({ location: captured }) },
   );
 }
 
-export async function clockOutOfShift(shiftId: number, notes = "") {
+export async function clockOutOfShift(shiftId: number, notes = "", location?: ClockLocation | null) {
+  const captured = location === undefined ? await captureClockLocation() : location;
   return request<{ message: string; timesheet: { id: number; status: string; worked_minutes: number; total_amount: string } }>(
     `/api/bookings/${shiftId}/clock-out`,
-    { method: "POST", body: JSON.stringify({ notes }) },
+    { method: "POST", body: JSON.stringify({ notes, location: captured }) },
   );
+}
+
+export type SharedTimeActivity = { id: number; shift_id: number; caregiver_id: number; type: string; timestamp: string; location: ClockLocation | null; notes: string | null };
+export type SharedTimesheet = { id: number; shift_id: number; clock_in_at: string; clock_out_at: string; status: string; notes: string | null; agency_note: string | null; approved_at: string | null; created_at: string; updated_at: string };
+export function fetchMyTimekeeping() {
+  return request<{ activities: SharedTimeActivity[]; timesheets: SharedTimesheet[] }>("/api/bookings/caregiver/timekeeping");
+}
+export function recordShiftBreak(shiftId: number, action: "start" | "end") {
+  return request(`/api/bookings/${shiftId}/break`, { method: "POST", body: JSON.stringify({ action }) });
+}
+export function resubmitTimesheet(timesheetId: number, notes: string) {
+  return request(`/api/bookings/caregiver/timesheets/${timesheetId}/resubmit`, { method: "POST", body: JSON.stringify({ notes }) });
 }
 
 export async function fetchRescueOffers(): Promise<RescueOffer[]> {

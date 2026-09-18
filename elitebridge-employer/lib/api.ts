@@ -23,6 +23,10 @@ export type Shift = {
   careRecipientName?: string;
   startTime: string;
   endTime: string;
+  timeZone?: string;
+  numberOfCaregivers: number;
+  assignedCaregivers: number;
+  remainingPositions: number;
   location: { address: string; city: string; state: string; zipCode: string };
   hourlyRate: number;
   responsibilities: string;
@@ -36,6 +40,9 @@ export type ShiftInput = {
   serviceType: string;
   caregiverType: string;
   startDate: string;
+  endDate?: string;
+  timeZone?: string;
+  numberOfCaregivers?: number;
   startTime: string;
   endTime: string;
   address: string;
@@ -119,6 +126,7 @@ export type ShiftActivity = {
   first_name: string;
   last_name: string;
   notes?: string;
+  location?: { latitude: number; longitude: number; accuracy: number | null } | null;
 };
 
 export type EmployerTimesheet = {
@@ -139,6 +147,8 @@ export type EmployerTimesheet = {
   first_name: string;
   last_name: string;
   email: string;
+  notes?: string | null;
+  agency_note?: string | null;
 };
 
 type ApiError = Error & { status?: number };
@@ -262,6 +272,8 @@ export async function createEmployerShift(input: ShiftInput): Promise<{ shift: S
       careRecipientName: input.careRecipientName,
       scheduleType: "one_time",
       startDate: input.startDate,
+      endDate: input.endDate || undefined,
+      timeZone: input.timeZone || "America/New_York",
       startTime: input.startTime,
       endTime: input.endTime,
       location: {
@@ -272,7 +284,7 @@ export async function createEmployerShift(input: ShiftInput): Promise<{ shift: S
         zipCode: input.zipCode,
       },
       pay: { hourlyRate: input.hourlyRate, currency: "USD" },
-      numberOfCaregivers: 1,
+      numberOfCaregivers: input.numberOfCaregivers || 1,
       requirements: [],
       responsibilities: input.responsibilities,
       contact: { name: input.contactName, phone: input.contactPhone },
@@ -295,6 +307,14 @@ export async function getEmployerTeam(): Promise<TeamMember[]> {
 export async function getEmployerActivities(): Promise<ShiftActivity[]> {
   const result = await request<{ activities: ShiftActivity[] }>("/api/bookings/activities");
   return result.activities;
+}
+
+export async function getEmployerAttendance() {
+  return request<{ activities: ShiftActivity[]; activeCount: number }>("/api/bookings/activities");
+}
+
+export async function reviewTimesheet(id: number, status: "approved" | "correction_requested", note = "") {
+  return request(`/api/bookings/employer/timesheets/${id}`, { method: "PATCH", body: JSON.stringify({ status, note }) });
 }
 
 export async function getEmployerTimesheets(): Promise<EmployerTimesheet[]> {

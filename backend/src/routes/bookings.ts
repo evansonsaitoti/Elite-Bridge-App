@@ -7,8 +7,64 @@ import { caregivers, employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import { sendPushToUsers, sendOperationsAlert } from "../services/notifications";
+import { shiftSchedule } from "../services/shift-schedule";
 
 const router = Router();
+type ShiftTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+
+async function refreshShiftStatus(tx: ShiftTransaction, shiftId: number) {
+  await tx.execute(sql`
+    UPDATE shift_posts sp SET status = CASE
+      WHEN (SELECT COUNT(*) FROM shift_timesheets st JOIN shift_applications a ON a.shift_id = st.shift_id AND a.caregiver_id = st.caregiver_id
+            WHERE st.shift_id = sp.id AND a.status = 'approved') >= sp.number_of_caregivers THEN 'completed'
+      WHEN EXISTS (SELECT 1 FROM shift_activities i WHERE i.shift_id = sp.id AND i.type = 'clock_in'
+                   AND NOT EXISTS (SELECT 1 FROM shift_activities o WHERE o.shift_id = i.shift_id AND o.caregiver_id = i.caregiver_id AND o.type = 'clock_out' AND o.id > i.id)) THEN 'in_progress'
+      WHEN (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') >= sp.number_of_caregivers THEN 'assigned'
+      ELSE 'open' END, updated_at = CURRENT_TIMESTAMP
+    WHERE sp.id = ${shiftId} AND sp.status NOT IN ('cancelled', 'closed')
+  `);
+}
+
+async function assignCaregiver(shiftId: number, caregiverId: number, applicationId?: number) {
+  return db.transaction(async tx => {
+    // All assignment and clock mutations use the same lock order.
+    await tx.execute(sql`SELECT id FROM caregivers WHERE id = ${caregiverId} FOR UPDATE`);
+    const shift = (await tx.execute(sql`SELECT * FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`) as any).rows[0];
+    if (!shift || !['open', 'assigned', 'in_progress'].includes(shift.status)) throw new AppError(409, "This shift is no longer available");
+    const existing = (await tx.execute(sql`SELECT * FROM shift_applications WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiverId} FOR UPDATE`) as any).rows[0];
+    if (existing?.status === 'approved') throw new AppError(409, "This caregiver is already assigned");
+    if (applicationId && (existing?.id !== applicationId || existing.status !== 'pending')) throw new AppError(409, "This application has already been decided");
+    const filled = Number((await tx.execute(sql`SELECT COUNT(*) AS total FROM shift_applications WHERE shift_id = ${shiftId} AND status = 'approved'`) as any).rows[0].total);
+    if (filled >= shift.number_of_caregivers) throw new AppError(409, "All positions on this shift are filled");
+    const overlap = (await tx.execute(sql`
+      SELECT a.id FROM shift_applications a JOIN shift_posts sp ON sp.id = a.shift_id
+      WHERE a.caregiver_id = ${caregiverId} AND a.status = 'approved' AND sp.id <> ${shiftId}
+        AND sp.status NOT IN ('cancelled', 'closed', 'completed')
+        AND sp.start_time < ${new Date(utcTimestamp(shift.end_time)!)} AND sp.end_time > ${new Date(utcTimestamp(shift.start_time)!)} LIMIT 1
+    `) as any).rows[0];
+    if (overlap) throw new AppError(409, "This caregiver already has an overlapping shift");
+    const application = (await tx.execute(sql`
+      INSERT INTO shift_applications (shift_id, caregiver_id, status, note)
+      VALUES (${shiftId}, ${caregiverId}, 'approved', 'Claimed a matched instant shift offer.')
+      ON CONFLICT (shift_id, caregiver_id) DO UPDATE SET status = 'approved', updated_at = CURRENT_TIMESTAMP RETURNING *
+    `) as any).rows[0];
+    const total = ((new Date(utcTimestamp(shift.end_time)!).getTime() - new Date(utcTimestamp(shift.start_time)!).getTime()) / 3600000 * Number(shift.hourly_rate)).toFixed(2);
+    await tx.execute(sql`
+      INSERT INTO bookings (caregiver_id, employer_id, start_time, end_time, service_type, status, hourly_rate, total_amount, notes)
+      VALUES (${caregiverId}, ${shift.employer_id}, ${new Date(utcTimestamp(shift.start_time)!)}, ${new Date(utcTimestamp(shift.end_time)!)}, ${shift.service_type}, 'confirmed', ${String(shift.hourly_rate)}, ${total}, ${shift.notes || null})
+    `);
+    let competingUserIds: number[] = [];
+    if (filled + 1 >= shift.number_of_caregivers) {
+      competingUserIds = (await tx.execute(sql`SELECT c.user_id FROM shift_applications a JOIN caregivers c ON c.id = a.caregiver_id WHERE a.shift_id = ${shiftId} AND a.status = 'pending'`) as any).rows.map((r: any) => r.user_id);
+      await tx.execute(sql`UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE shift_id = ${shiftId} AND status = 'pending'`);
+      await tx.execute(sql`UPDATE shift_callouts SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP WHERE shift_id = ${shiftId} AND status = 'open'`);
+      await tx.execute(sql`UPDATE replacement_offers SET status = CASE WHEN caregiver_id = ${caregiverId} THEN 'accepted' ELSE 'expired' END, responded_at = CURRENT_TIMESTAMP WHERE shift_id = ${shiftId} AND status IN ('offered', 'accepted')`);
+    }
+    await refreshShiftStatus(tx, shiftId);
+    const updated = (await tx.execute(sql`SELECT status FROM shift_posts WHERE id = ${shiftId}`) as any).rows[0];
+    return { application, competingUserIds, status: updated.status };
+  });
+}
 
 const shiftSchema = z.object({
   title: z.string().min(2),
@@ -17,6 +73,8 @@ const shiftSchema = z.object({
   careRecipientName: z.string().optional(),
   scheduleType: z.enum(["one_time", "recurring"]).default("one_time"),
   startDate: z.string().min(1),
+  endDate: z.string().optional(),
+  timeZone: z.string().max(100).optional(),
   startTime: z.string().min(1),
   endTime: z.string().min(1),
   location: z.object({
@@ -30,7 +88,7 @@ const shiftSchema = z.object({
     hourlyRate: z.number().positive(),
     currency: z.literal("USD").default("USD"),
   }),
-  numberOfCaregivers: z.number().int().positive().default(1),
+  numberOfCaregivers: z.number().int().min(1).max(50).default(1),
   requirements: z.array(z.string()).default([]),
   responsibilities: z.string().min(1),
   notes: z.string().optional(),
@@ -48,6 +106,10 @@ const calloutSchema = z.object({
   note: z.string().max(500).optional(),
 });
 const offerResponseSchema = z.object({ status: z.enum(["accepted", "declined"]) });
+const clockBodySchema = z.object({
+  notes: z.string().max(4000).optional(),
+  location: z.object({ latitude: z.number().min(-90).max(90), longitude: z.number().min(-180).max(180), accuracy: z.number().nonnegative().nullable(), capturedAt: z.string().datetime() }).nullable().optional(),
+});
 
 let shiftTableReady = false;
 
@@ -89,6 +151,7 @@ async function ensureShiftPostsTable() {
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS title VARCHAR(255) NOT NULL DEFAULT 'Care shift'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS service_type VARCHAR(100) NOT NULL DEFAULT 'personal_care'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS assignment_mode VARCHAR(20) NOT NULL DEFAULT 'instant'`);
+  await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS time_zone VARCHAR(100) NOT NULL DEFAULT 'UTC'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS caregiver_type VARCHAR(100) NOT NULL DEFAULT 'caregiver'`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS care_recipient_name VARCHAR(255)`);
   await db.execute(sql`ALTER TABLE shift_posts ADD COLUMN IF NOT EXISTS schedule_type VARCHAR(50) NOT NULL DEFAULT 'one_time'`);
@@ -224,6 +287,13 @@ async function ensureShiftPostsTable() {
   await db.execute(sql`CREATE INDEX IF NOT EXISTS replacement_offers_caregiver_idx ON replacement_offers(caregiver_id, status)`);
   await db.execute(sql`CREATE UNIQUE INDEX IF NOT EXISTS shift_timesheets_shift_caregiver_idx ON shift_timesheets(shift_id, caregiver_id)`);
   await db.execute(sql`CREATE INDEX IF NOT EXISTS shift_timesheets_employer_idx ON shift_timesheets(employer_id, status)`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS agency_note TEXT`);
+  await db.execute(sql`ALTER TABLE shift_timesheets ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP`);
+  await db.execute(sql`CREATE TABLE IF NOT EXISTS timesheet_reviews (
+    id SERIAL PRIMARY KEY, timesheet_id INTEGER NOT NULL REFERENCES shift_timesheets(id) ON DELETE CASCADE,
+    actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, action VARCHAR(50) NOT NULL, note TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
 
   shiftTableReady = true;
 }
@@ -256,10 +326,18 @@ async function getOrCreateCaregiver(req: AuthRequest) {
   return created[0];
 }
 
-function combineDateAndTime(date: string, time: string) {
-  const value = new Date(`${date}T${time}:00`);
-  if (Number.isNaN(value.getTime())) throw new AppError(400, "Invalid shift date or time");
-  return value;
+function utcTimestamp(value: Date | string | null) {
+  if (!value) return value;
+  if (value instanceof Date) return value.toISOString();
+  return new Date(/[zZ]$|[+-]\d\d:\d\d$/.test(value) ? value : `${value.replace(' ', 'T')}Z`).toISOString();
+}
+
+function attendanceRecord(row: any) {
+  const result = { ...row };
+  for (const key of ['timestamp', 'clock_in_at', 'clock_out_at', 'approved_at', 'created_at', 'updated_at', 'start_time', 'end_time']) {
+    if (result[key]) result[key] = utcTimestamp(result[key]);
+  }
+  return result;
 }
 
 function mapShift(row: any) {
@@ -272,8 +350,9 @@ function mapShift(row: any) {
     caregiverType: row.caregiver_type,
     careRecipientName: row.care_recipient_name,
     scheduleType: row.schedule_type,
-    startTime: row.start_time,
-    endTime: row.end_time,
+    startTime: utcTimestamp(row.start_time),
+    endTime: utcTimestamp(row.end_time),
+    timeZone: row.time_zone || "UTC",
     location: {
       type: row.location_type,
       address: row.address,
@@ -283,6 +362,8 @@ function mapShift(row: any) {
     },
     hourlyRate: Number(row.hourly_rate),
     numberOfCaregivers: row.number_of_caregivers,
+    assignedCaregivers: Number(row.assigned_count || 0),
+    remainingPositions: Math.max(0, Number(row.number_of_caregivers) - Number(row.assigned_count || 0)),
     requirements: row.requirements || [],
     responsibilities: row.responsibilities,
     notes: row.notes,
@@ -296,8 +377,8 @@ function mapShift(row: any) {
   };
 }
 
-async function getApprovedAssignment(shiftId: number, caregiverId: number) {
-  const result = await db.execute(sql`
+async function getApprovedAssignment(shiftId: number, caregiverId: number, tx: Pick<typeof db, "execute"> = db) {
+  const result = await tx.execute(sql`
     SELECT sp.*, e.user_id AS employer_user_id
     FROM shift_posts sp
     JOIN shift_applications sa ON sa.shift_id = sp.id
@@ -305,23 +386,23 @@ async function getApprovedAssignment(shiftId: number, caregiverId: number) {
     WHERE sp.id = ${shiftId}
       AND sa.caregiver_id = ${caregiverId}
       AND sa.status = 'approved'
-      AND sp.status IN ('assigned', 'in_progress')
+      AND sp.status IN ('open', 'assigned', 'in_progress')
     LIMIT 1
   `);
   return (result as any).rows[0];
 }
 
-async function findLatestClockIn(shiftId: number, caregiverId: number) {
-  const result = await db.execute(sql`
+async function findLatestClockIn(shiftId: number, caregiverId: number, tx: Pick<typeof db, "execute"> = db) {
+  const result = await tx.execute(sql`
     SELECT id, timestamp
     FROM shift_activities
     WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiverId} AND type = 'clock_in'
-      AND timestamp > COALESCE((
-        SELECT MAX(timestamp)
+      AND id > COALESCE((
+        SELECT MAX(id)
         FROM shift_activities
         WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiverId} AND type = 'clock_out'
-      ), TIMESTAMP 'epoch')
-    ORDER BY timestamp DESC
+      ), 0)
+    ORDER BY id DESC
     LIMIT 1
   `);
   return (result as any).rows[0];
@@ -332,22 +413,20 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
     const data = shiftSchema.parse(req.body);
-    const startDateTime = combineDateAndTime(data.startDate, data.startTime);
-    const endDateTime = combineDateAndTime(data.startDate, data.endTime);
-    if (endDateTime <= startDateTime) throw new AppError(400, "Shift end time must be after start time");
+    const { start: startDateTime, end: endDateTime, zone } = shiftSchedule(data);
 
     const result = await db.execute(sql`
       INSERT INTO shift_posts (
         employer_id, title, service_type, caregiver_type, care_recipient_name,
         schedule_type, start_time, end_time, location_type, address, city, state,
         zip_code, hourly_rate, number_of_caregivers, requirements, responsibilities,
-        notes, contact_name, contact_phone, urgency, assignment_mode, status
+        notes, contact_name, contact_phone, urgency, assignment_mode, status, time_zone
       ) VALUES (
         ${employer.id}, ${data.title}, ${data.serviceType}, ${data.caregiverType}, ${data.careRecipientName || null},
         ${data.scheduleType}, ${startDateTime}, ${endDateTime}, ${data.location.type}, ${data.location.address},
         ${data.location.city}, ${data.location.state.toUpperCase()}, ${data.location.zipCode}, ${data.pay.hourlyRate.toString()},
         ${data.numberOfCaregivers}, CAST(${JSON.stringify(data.requirements)} AS json), ${data.responsibilities},
-        ${data.notes || null}, ${data.contact.name}, ${data.contact.phone}, ${data.urgency}, ${data.assignmentMode}, 'open'
+        ${data.notes || null}, ${data.contact.name}, ${data.contact.phone}, ${data.urgency}, ${data.assignmentMode}, 'open', ${zone}
       )
       RETURNING *
     `);
@@ -388,7 +467,8 @@ router.get("/employer/my", authMiddleware, async (req: AuthRequest, res, next) =
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
     const result = await db.execute(sql`
-      SELECT sp.*, e.company_name
+      SELECT sp.*, e.company_name,
+        (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') AS assigned_count
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
       WHERE sp.employer_id = ${employer.id}
@@ -403,12 +483,15 @@ router.get(["/open", "/available"], authMiddleware, async (req: AuthRequest, res
     await ensureShiftPostsTable();
     const caregiver = await getOrCreateCaregiver(req);
     const result = await db.execute(sql`
-      SELECT sp.*, e.company_name, sa.status AS application_status
+      SELECT sp.*, e.company_name, sa.status AS application_status,
+        (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') AS assigned_count
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
       JOIN caregivers c ON c.id = ${caregiver.id}
       LEFT JOIN shift_applications sa ON sa.shift_id = sp.id AND sa.caregiver_id = ${caregiver.id}
-      WHERE sp.status = 'open'
+      WHERE sp.status IN ('open', 'assigned', 'in_progress')
+        AND (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') < sp.number_of_caregivers
+        AND COALESCE(sa.status, '') <> 'approved'
         AND sp.start_time >= CURRENT_TIMESTAMP - INTERVAL '12 hours'
         AND c.is_available = true
         AND (
@@ -423,8 +506,7 @@ router.get(["/open", "/available"], authMiddleware, async (req: AuthRequest, res
   } catch (error) { next(error); }
 });
 
-// Qualified caregivers can claim instant-assignment shifts. The conditional
-// status update is the concurrency guard: only the first eligible claimant wins.
+// Each accepted caregiver occupies one position; row locks prevent overbooking.
 router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
@@ -437,7 +519,7 @@ router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, nex
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
       JOIN caregivers c ON c.id = ${caregiver.id}
-      WHERE sp.id = ${shiftId} AND sp.status = 'open' AND sp.assignment_mode = 'instant'
+      WHERE sp.id = ${shiftId} AND sp.status IN ('open', 'assigned', 'in_progress') AND sp.assignment_mode = 'instant'
         AND c.is_available = true
         AND (
           COALESCE(json_array_length(c.certifications), 0) = 0
@@ -449,31 +531,7 @@ router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, nex
     const shift = (eligibility as any).rows[0];
     if (!shift) throw new AppError(409, "This shift is unavailable or does not match your current qualifications");
 
-    const claimed = await db.execute(sql`
-      UPDATE shift_posts SET status = 'assigned', updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${shiftId} AND status = 'open' RETURNING id
-    `);
-    if (!(claimed as any).rows[0]) throw new AppError(409, "Another caregiver already claimed this shift");
-
-    const application = await db.execute(sql`
-      INSERT INTO shift_applications (shift_id, caregiver_id, status, note)
-      VALUES (${shiftId}, ${caregiver.id}, 'approved', 'Claimed a matched instant shift offer.')
-      ON CONFLICT (shift_id, caregiver_id)
-      DO UPDATE SET status = 'approved', note = EXCLUDED.note, updated_at = CURRENT_TIMESTAMP
-      RETURNING *
-    `);
-    await db.execute(sql`
-      UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
-      WHERE shift_id = ${shiftId} AND caregiver_id <> ${caregiver.id} AND status = 'pending'
-    `);
-    const start = new Date(shift.start_time);
-    const end = new Date(shift.end_time);
-    const hours = Math.max(0, (end.getTime() - start.getTime()) / 3_600_000);
-    const total = Number((hours * Number(shift.hourly_rate)).toFixed(2));
-    await db.execute(sql`
-      INSERT INTO bookings (caregiver_id, employer_id, start_time, end_time, service_type, status, hourly_rate, total_amount, notes)
-      VALUES (${caregiver.id}, ${shift.employer_id}, ${start}, ${end}, ${shift.service_type}, 'confirmed', ${String(shift.hourly_rate)}, ${String(total)}, ${shift.notes || null})
-    `);
+    const assigned = await assignCaregiver(shiftId, caregiver.id);
     await db.execute(sql`
       INSERT INTO notifications (user_id, type, title, message, related_id)
       VALUES (${shift.employer_user_id}, 'shift_claimed', 'Shift claimed', 'A qualified caregiver claimed your matched shift offer.', ${shiftId})
@@ -481,10 +539,10 @@ router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, nex
     void sendPushToUsers([shift.employer_user_id], {
       title: "Shift claimed",
       body: `A qualified caregiver claimed ${shift.title}.`,
-      data: { type: "shift_claimed", shiftId, applicationId: (application as any).rows[0].id },
+      data: { type: "shift_claimed", shiftId, applicationId: assigned.application.id },
     });
     await sendOperationsAlert("Shift claimed", `Shift #${shiftId} for employer #${shift.employer_id} has been claimed.`);
-    res.json({ application: (application as any).rows[0], shift: { id: shiftId, status: "assigned" } });
+    res.json({ application: assigned.application, shift: { id: shiftId, status: assigned.status } });
   } catch (error) { next(error); }
 });
 
@@ -527,7 +585,8 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
       SELECT sp.*, e.user_id AS employer_user_id
       FROM shift_posts sp
       JOIN employers e ON e.id = sp.employer_id
-      WHERE sp.id = ${shiftId} AND sp.status = 'open'
+      WHERE sp.id = ${shiftId} AND sp.status IN ('open', 'assigned', 'in_progress')
+        AND (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') < sp.number_of_caregivers
       LIMIT 1
     `);
     const shift = (shiftResult as any).rows[0];
@@ -538,8 +597,10 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
       VALUES (${shiftId}, ${caregiver.id}, 'pending', ${note || null})
       ON CONFLICT (shift_id, caregiver_id)
       DO UPDATE SET status = 'pending', note = EXCLUDED.note, updated_at = CURRENT_TIMESTAMP
+      WHERE shift_applications.status NOT IN ('approved', 'callout')
       RETURNING *
     `);
+    if (!(result as any).rows[0]) throw new AppError(409, "You already have an assignment or call-out for this shift");
     void sendPushToUsers([shift.employer_user_id], {
       title: "New caregiver application",
       body: `A caregiver applied for ${shift.title}.`,
@@ -556,7 +617,8 @@ router.get("/caregiver/my-applications", authMiddleware, async (req: AuthRequest
     const caregiver = await getOrCreateCaregiver(req);
     const result = await db.execute(sql`
       SELECT sa.id AS application_id, sa.status AS application_status, sa.note AS application_note,
-             sa.created_at AS applied_at, sp.*, e.company_name
+             sa.created_at AS applied_at, sp.*, e.company_name,
+             (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') AS assigned_count
       FROM shift_applications sa
       JOIN shift_posts sp ON sp.id = sa.shift_id
       JOIN employers e ON e.id = sp.employer_id
@@ -601,7 +663,7 @@ router.get("/employer/team", authMiddleware, async (req: AuthRequest, res, next)
              u.email, u.phone, c.rating, c.total_hours, c.certifications::text AS certifications,
              c.specialties::text AS specialties, c.hourly_rate, c.background_check_status, c.background_check_date,
              COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved') AS assigned_shifts,
-             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP AND sp.status IN ('assigned', 'in_progress')) AS upcoming_shifts,
+             COUNT(DISTINCT sa.shift_id) FILTER (WHERE sa.status = 'approved' AND sp.start_time >= CURRENT_TIMESTAMP AND sp.status IN ('open', 'assigned', 'in_progress')) AS upcoming_shifts,
              MAX(sa.updated_at) FILTER (WHERE sa.status = 'approved') AS last_assigned_at
       FROM users u
       LEFT JOIN caregivers c ON c.user_id = u.id
@@ -645,59 +707,12 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
     if (!application) throw new AppError(404, "Application not found");
     if (application.status === status) return res.json({ application });
     if (application.status !== "pending") throw new AppError(409, "This application has already been decided");
+    const decision = status === "approved"
+      ? await assignCaregiver(application.shift_id, application.caregiver_id, applicationId)
+      : { application: (await db.execute(sql`UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP WHERE id = ${applicationId} AND status = 'pending' RETURNING *`) as any).rows[0], competingUserIds: [] as number[] };
+    if (!decision.application) throw new AppError(409, "This application has already been decided");
     if (status === "approved") {
-      const assignment = await db.execute(sql`
-        UPDATE shift_posts SET status = 'assigned', updated_at = CURRENT_TIMESTAMP
-        WHERE id = ${application.shift_id} AND status = 'open' RETURNING id
-      `);
-      if (!(assignment as any).rows.length) throw new AppError(409, "This shift is no longer open");
-    }
-
-    const updated = await db.execute(sql`
-      UPDATE shift_applications SET status = ${status}, updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${applicationId} RETURNING *
-    `);
-
-    if (status === "approved") {
-      const competingResult = await db.execute(sql`
-        SELECT c.user_id
-        FROM shift_applications sa
-        JOIN caregivers c ON c.id = sa.caregiver_id
-        WHERE sa.shift_id = ${application.shift_id} AND sa.id <> ${applicationId} AND sa.status = 'pending'
-      `);
-      const competingUserIds = (competingResult as any).rows.map((row: any) => row.user_id);
-      await db.execute(sql`
-        UPDATE shift_applications SET status = 'rejected', updated_at = CURRENT_TIMESTAMP
-        WHERE shift_id = ${application.shift_id} AND id <> ${applicationId} AND status = 'pending'
-      `);
-      const start = new Date(application.start_time);
-      const end = new Date(application.end_time);
-      const hours = Math.max(0, (end.getTime() - start.getTime()) / 3_600_000);
-      const rate = Number(application.hourly_rate);
-      const total = Number((hours * rate).toFixed(2));
-
-      await db.execute(sql`
-        INSERT INTO bookings (caregiver_id, employer_id, start_time, end_time, service_type, status, hourly_rate, total_amount, notes)
-        SELECT ${application.caregiver_id}, ${employer.id}, ${start}, ${end}, ${application.service_type},
-               'confirmed', ${rate.toString()}, ${total.toString()}, ${application.shift_notes || null}
-        WHERE NOT EXISTS (
-          SELECT 1 FROM bookings
-          WHERE caregiver_id = ${application.caregiver_id} AND employer_id = ${employer.id}
-            AND start_time = ${start} AND end_time = ${end} AND status <> 'cancelled'
-        )
-      `);
-
-      await db.execute(sql`
-        UPDATE shift_callouts SET status = 'resolved', resolved_at = CURRENT_TIMESTAMP
-        WHERE shift_id = ${application.shift_id} AND status = 'open'
-      `);
-      await db.execute(sql`
-        UPDATE replacement_offers
-        SET status = CASE WHEN caregiver_id = ${application.caregiver_id} THEN 'accepted' ELSE 'expired' END,
-            responded_at = CASE WHEN caregiver_id = ${application.caregiver_id} THEN COALESCE(responded_at, CURRENT_TIMESTAMP) ELSE responded_at END
-        WHERE shift_id = ${application.shift_id} AND status IN ('offered', 'accepted')
-      `);
-
+      const competingUserIds = decision.competingUserIds;
       await db.execute(sql`
         INSERT INTO notifications (user_id, type, title, message, related_id)
         VALUES (${application.caregiver_user_id}, 'shift_application', 'Shift approved',
@@ -739,7 +754,7 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
     }
 
     await sendOperationsAlert(`Shift application ${status}`, `Employer #${employer.id} ${status} application #${applicationId} for shift #${application.shift_id}.`);
-    res.json({ application: (updated as any).rows[0] });
+    res.json({ application: decision.application });
   } catch (error) { next(error); }
 });
 
@@ -752,58 +767,66 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
     const shiftId = Number(req.params.shiftId);
     const data = calloutSchema.parse(req.body);
 
-    const assignmentResult = await db.execute(sql`
+    const result = await db.transaction(async tx => {
+      await tx.execute(sql`SELECT id FROM caregivers WHERE id = ${caregiver.id} FOR UPDATE`);
+      await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`);
+    const assignmentResult = await tx.execute(sql`
       SELECT sp.*, sa.id AS application_id, e.user_id AS employer_user_id
       FROM shift_posts sp
       JOIN shift_applications sa ON sa.shift_id = sp.id
       JOIN employers e ON e.id = sp.employer_id
       WHERE sp.id = ${shiftId} AND sa.caregiver_id = ${caregiver.id}
-        AND sa.status = 'approved' AND sp.status IN ('assigned', 'in_progress')
+        AND sa.status = 'approved' AND sp.status IN ('open', 'assigned', 'in_progress')
       LIMIT 1
     `);
     const assignment = (assignmentResult as any).rows[0];
     if (!assignment) throw new AppError(404, "Active assigned shift not found");
 
-    const existing = await db.execute(sql`
+    if (await findLatestClockIn(shiftId, caregiver.id, tx)) throw new AppError(409, "Clock out before reporting a call-out so your worked time is preserved");
+    if ((await tx.execute(sql`SELECT id FROM shift_timesheets WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id}`) as any).rows[0]) throw new AppError(409, "This assignment is already completed");
+    const existing = await tx.execute(sql`
       SELECT id FROM shift_callouts WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id} AND status = 'open' LIMIT 1
     `);
     if ((existing as any).rows[0]) throw new AppError(409, "A call-out is already open for this shift");
 
-    const callout = await db.execute(sql`
+    const callout = await tx.execute(sql`
       INSERT INTO shift_callouts (shift_id, caregiver_id, reason, note, status)
       VALUES (${shiftId}, ${caregiver.id}, ${data.reason}, ${data.note || null}, 'open')
       RETURNING *
     `);
 
-    await db.execute(sql`
+    await tx.execute(sql`
       UPDATE shift_applications SET status = 'callout', updated_at = CURRENT_TIMESTAMP
       WHERE id = ${assignment.application_id}
     `);
-    void sendPushToUsers([assignment.employer_user_id], {
-      title: "Urgent shift call-out",
-      body: `A caregiver called out of ${assignment.title}. The shift has been reopened as urgent.`,
-      data: { type: "shift_callout", shiftId },
-    });
-    await db.execute(sql`
-      UPDATE shift_posts SET status = 'open', urgency = 'urgent', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}
+    await tx.execute(sql`
+      UPDATE shift_posts SET urgency = 'urgent', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}
     `);
-    await db.execute(sql`
+    await tx.execute(sql`
       UPDATE bookings
       SET status = 'cancelled', cancellation_reason = ${data.reason}, cancelled_by = 'caregiver',
           cancelled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
       WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
-        AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
+        AND start_time = ${new Date(utcTimestamp(assignment.start_time)!)} AND end_time = ${new Date(utcTimestamp(assignment.end_time)!)}
         AND status IN ('pending', 'confirmed', 'in_progress')
     `);
-    await db.execute(sql`
+    await tx.execute(sql`
       INSERT INTO notifications (user_id, type, title, message, related_id)
       VALUES (${assignment.employer_user_id}, 'callout', 'Urgent shift call-out',
         'A caregiver called out of an assigned shift. Elite reopened it as urgent and it is ready for Coverage Copilot.',
         ${shiftId})
     `);
 
-    await sendOperationsAlert("Urgent shift call-out", `Shift #${shiftId} for employer #${assignment.employer_id} needs replacement coverage.`);
-    res.status(201).json({ callout: (callout as any).rows[0], shift: { id: shiftId, status: "open", urgency: "urgent" } });
+    await refreshShiftStatus(tx, shiftId);
+    return { assignment, callout: (callout as any).rows[0], status: (await tx.execute(sql`SELECT status FROM shift_posts WHERE id = ${shiftId}`) as any).rows[0].status };
+    });
+    void sendPushToUsers([result.assignment.employer_user_id], {
+      title: "Urgent shift call-out",
+      body: `A caregiver called out of ${result.assignment.title}. The shift has been reopened as urgent.`,
+      data: { type: "shift_callout", shiftId },
+    });
+    await sendOperationsAlert("Urgent shift call-out", `Shift #${shiftId} for employer #${result.assignment.employer_id} needs replacement coverage.`);
+    res.status(201).json({ callout: result.callout, shift: { id: shiftId, status: result.status, urgency: "urgent" } });
   } catch (error) { next(error); }
 });
 
@@ -855,6 +878,7 @@ router.post("/employer/callouts/:calloutId/launch-rescue", authMiddleware, async
       FROM caregivers c
       JOIN users u ON u.id = c.user_id
       WHERE c.id <> ${callout.caregiver_id} AND c.is_available = true AND u.is_active = true
+        AND NOT EXISTS (SELECT 1 FROM shift_applications a WHERE a.shift_id = ${callout.shift_id} AND a.caregiver_id = c.id AND a.status IN ('approved', 'callout'))
       ORDER BY c.rating DESC NULLS LAST, c.total_hours ASC NULLS FIRST
       LIMIT 8
     `);
@@ -918,7 +942,9 @@ router.get("/caregiver/offers", authMiddleware, async (req: AuthRequest, res, ne
       JOIN shift_posts sp ON sp.id = ro.shift_id
       JOIN employers e ON e.id = sp.employer_id
       WHERE ro.caregiver_id = ${caregiver.id} AND ro.status IN ('offered', 'accepted')
-        AND sp.status = 'open'
+        AND sp.status IN ('open', 'assigned', 'in_progress')
+        AND (SELECT COUNT(*) FROM shift_applications a WHERE a.shift_id = sp.id AND a.status = 'approved') < sp.number_of_caregivers
+        AND NOT EXISTS (SELECT 1 FROM shift_applications a WHERE a.shift_id = sp.id AND a.caregiver_id = ${caregiver.id} AND a.status = 'approved')
       ORDER BY ro.created_at DESC
     `);
     res.json({ offers: (result as any).rows.map((row: any) => ({
@@ -947,7 +973,7 @@ router.post("/caregiver/offers/:offerId/respond", authMiddleware, async (req: Au
     `);
     const offer = (lookup as any).rows[0];
     if (!offer) throw new AppError(404, "Priority offer not found");
-    if (offer.shift_status !== "open") throw new AppError(409, "This shift is no longer available");
+    if (!['open', 'assigned', 'in_progress'].includes(offer.shift_status)) throw new AppError(409, "This shift is no longer available");
 
     await db.execute(sql`
       UPDATE replacement_offers SET status = ${status}, responded_at = CURRENT_TIMESTAMP WHERE id = ${offerId}
@@ -959,6 +985,7 @@ router.post("/caregiver/offers/:offerId/respond", authMiddleware, async (req: Au
         VALUES (${offer.shift_id}, ${caregiver.id}, 'pending', 'Accepted a Coverage Copilot priority rescue offer.')
         ON CONFLICT (shift_id, caregiver_id)
         DO UPDATE SET status = 'pending', note = EXCLUDED.note, updated_at = CURRENT_TIMESTAMP
+        WHERE shift_applications.status NOT IN ('approved', 'callout')
       `);
     }
 
@@ -977,9 +1004,14 @@ router.get("/activities", authMiddleware, async (req: AuthRequest, res, next) =>
       JOIN caregivers c ON sa.caregiver_id = c.id
       JOIN users u ON c.user_id = u.id
       WHERE sp.employer_id = ${employer.id}
-      ORDER BY sa.timestamp DESC LIMIT 50
+      ORDER BY sa.timestamp DESC, sa.id DESC LIMIT 50
     `);
-    res.json({ activities: (result as any).rows });
+    const active = await db.execute(sql`
+      SELECT COUNT(DISTINCT i.caregiver_id) AS total FROM shift_activities i JOIN shift_posts sp ON sp.id = i.shift_id
+      WHERE sp.employer_id = ${employer.id} AND i.type = 'clock_in'
+        AND NOT EXISTS (SELECT 1 FROM shift_activities o WHERE o.shift_id = i.shift_id AND o.caregiver_id = i.caregiver_id AND o.type = 'clock_out' AND o.id > i.id)
+    `);
+    res.json({ activities: (result as any).rows.map(attendanceRecord), activeCount: Number((active as any).rows[0].total) });
   } catch (error) { next(error); }
 });
 
@@ -999,7 +1031,7 @@ router.get("/employer/timesheets", authMiddleware, async (req: AuthRequest, res,
       LIMIT 100
     `);
     res.json({ timesheets: (result as any).rows.map((row: any) => ({
-      ...row,
+      ...attendanceRecord(row),
       worked_hours: Number((Number(row.worked_minutes || 0) / 60).toFixed(2)),
       hourly_rate: Number(row.hourly_rate),
       total_amount: Number(row.total_amount),
@@ -1007,31 +1039,106 @@ router.get("/employer/timesheets", authMiddleware, async (req: AuthRequest, res,
   } catch (error) { next(error); }
 });
 
+router.get("/caregiver/timekeeping", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const activities = await db.execute(sql`SELECT * FROM shift_activities WHERE caregiver_id = ${caregiver.id} ORDER BY id ASC`);
+    const timesheets = await db.execute(sql`SELECT * FROM shift_timesheets WHERE caregiver_id = ${caregiver.id} ORDER BY clock_in_at DESC`);
+    res.json({ activities: (activities as any).rows.map(attendanceRecord), timesheets: (timesheets as any).rows.map(attendanceRecord) });
+  } catch (error) { next(error); }
+});
+
+router.post("/:shiftId/break", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const shiftId = z.coerce.number().int().positive().parse(req.params.shiftId);
+    const { action } = z.object({ action: z.enum(['start', 'end']) }).parse(req.body);
+    const activity = await db.transaction(async tx => {
+      await tx.execute(sql`SELECT id FROM caregivers WHERE id = ${caregiver.id} FOR UPDATE`);
+      await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`);
+      if (!await getApprovedAssignment(shiftId, caregiver.id, tx)) throw new AppError(403, "Assigned caregiver access required");
+      if (!await findLatestClockIn(shiftId, caregiver.id, tx)) throw new AppError(409, "Clock in before recording a break");
+      const last = (await tx.execute(sql`SELECT type FROM shift_activities WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id} ORDER BY id DESC LIMIT 1`) as any).rows[0];
+      if ((action === 'start' && last.type === 'break_start') || (action === 'end' && last.type !== 'break_start')) throw new AppError(409, "Break state changed. Refresh your time clock.");
+      return (await tx.execute(sql`INSERT INTO shift_activities (shift_id, caregiver_id, type, timestamp) VALUES (${shiftId}, ${caregiver.id}, ${action === 'start' ? 'break_start' : 'break_end'}, clock_timestamp() AT TIME ZONE 'UTC') RETURNING *`) as any).rows[0];
+    });
+    res.json({ activity });
+  } catch (error) { next(error); }
+});
+
+router.patch("/employer/timesheets/:timesheetId", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const id = z.coerce.number().int().positive().parse(req.params.timesheetId);
+    const data = z.object({ status: z.enum(['approved', 'correction_requested']), note: z.string().trim().max(2000).default('') }).parse(req.body);
+    if (data.status === 'correction_requested' && !data.note) throw new AppError(400, "Explain what needs clarification");
+    const timesheet = await db.transaction(async tx => {
+      const current = (await tx.execute(sql`SELECT * FROM shift_timesheets WHERE id = ${id} AND employer_id = ${employer.id} FOR UPDATE`) as any).rows[0];
+      if (!current) throw new AppError(404, "Timesheet not found");
+      if (current.status !== 'pending_approval') throw new AppError(409, "This timesheet is no longer pending review");
+      const sheet = (await tx.execute(sql`UPDATE shift_timesheets SET status = ${data.status}, agency_note = ${data.note || null}, approved_at = CASE WHEN ${data.status} = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END, updated_at = CURRENT_TIMESTAMP WHERE id = ${id} RETURNING *`) as any).rows[0];
+      await tx.execute(sql`INSERT INTO timesheet_reviews (timesheet_id, actor_user_id, action, note) VALUES (${id}, ${req.user!.id}, ${data.status}, ${data.note || null})`);
+      await tx.execute(sql`INSERT INTO notifications (user_id, type, title, message, related_id) SELECT c.user_id, 'timesheet_review', 'Timesheet review', ${data.status === 'approved' ? 'Your timesheet has been approved.' : 'Your employer requested clarification. Open your time clock to respond.'}, ${current.shift_id} FROM caregivers c WHERE c.id = ${current.caregiver_id}`);
+      return sheet;
+    });
+    res.json({ timesheet });
+  } catch (error) { next(error); }
+});
+
+router.post("/caregiver/timesheets/:timesheetId/resubmit", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const caregiver = await getOrCreateCaregiver(req);
+    const id = z.coerce.number().int().positive().parse(req.params.timesheetId);
+    const { notes } = z.object({ notes: z.string().trim().min(1).max(2000) }).parse(req.body);
+    const timesheet = await db.transaction(async tx => {
+      const current = (await tx.execute(sql`SELECT * FROM shift_timesheets WHERE id = ${id} AND caregiver_id = ${caregiver.id} FOR UPDATE`) as any).rows[0];
+      if (!current) throw new AppError(404, "Timesheet not found");
+      if (current.status !== 'correction_requested') throw new AppError(409, "This timesheet does not need clarification");
+      await tx.execute(sql`INSERT INTO timesheet_reviews (timesheet_id, actor_user_id, action, note) VALUES (${id}, ${req.user!.id}, 'resubmitted', ${notes})`);
+      return (await tx.execute(sql`UPDATE shift_timesheets SET status = 'pending_approval', notes = CONCAT(COALESCE(notes, ''), E'\nClarification: ', CAST(${notes} AS text)), updated_at = CURRENT_TIMESTAMP WHERE id = ${id} RETURNING *`) as any).rows[0];
+    });
+    res.json({ timesheet });
+  } catch (error) { next(error); }
+});
+
 router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
     const caregiver = await getOrCreateCaregiver(req);
-    const shiftId = parseInt(req.params.shiftId);
+    const shiftId = Number(req.params.shiftId);
     if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
 
-    const assignment = await getApprovedAssignment(shiftId, caregiver.id);
+    const data = clockBodySchema.parse(req.body || {});
+    const result = await db.transaction(async tx => {
+      await tx.execute(sql`SELECT id FROM caregivers WHERE id = ${caregiver.id} FOR UPDATE`);
+      await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`);
+    const assignment = await getApprovedAssignment(shiftId, caregiver.id, tx);
     if (!assignment) throw new AppError(403, "Only the assigned caregiver can clock in for this shift");
-    const openClockIn = await findLatestClockIn(shiftId, caregiver.id);
+    if ((await tx.execute(sql`SELECT id FROM shift_timesheets WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id}`) as any).rows[0]) throw new AppError(409, "This assignment already has a completed timesheet");
+    const active = (await tx.execute(sql`SELECT i.id FROM shift_activities i WHERE i.caregiver_id = ${caregiver.id} AND i.type = 'clock_in' AND NOT EXISTS (SELECT 1 FROM shift_activities o WHERE o.shift_id = i.shift_id AND o.caregiver_id = i.caregiver_id AND o.type = 'clock_out' AND o.id > i.id) LIMIT 1`) as any).rows[0];
+    if (active) throw new AppError(409, "Clock out of your active shift before starting another");
+    const openClockIn = await findLatestClockIn(shiftId, caregiver.id, tx);
     if (openClockIn) throw new AppError(409, "You are already clocked in for this shift");
 
-    const activity = await db.execute(sql`
-      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes)
-      VALUES (${shiftId}, ${caregiver.id}, 'clock_in', CAST(${req.body?.location ? JSON.stringify(req.body.location) : null} AS jsonb), ${req.body?.notes || null})
+    const activity = await tx.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes, timestamp)
+      VALUES (${shiftId}, ${caregiver.id}, 'clock_in', CAST(${data.location ? JSON.stringify(data.location) : null} AS jsonb), ${data.notes || null}, clock_timestamp() AT TIME ZONE 'UTC')
       RETURNING *
     `);
-    await db.execute(sql`UPDATE shift_posts SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);
-    await db.execute(sql`
+    await tx.execute(sql`UPDATE shift_posts SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);
+    await tx.execute(sql`
       UPDATE bookings SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP
       WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
-        AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
+        AND start_time = ${new Date(utcTimestamp(assignment.start_time)!)} AND end_time = ${new Date(utcTimestamp(assignment.end_time)!)}
         AND status = 'confirmed'
     `);
-    res.json({ message: "Clocked in successfully", activity: (activity as any).rows[0] });
+    return { message: "Clocked in successfully", activity: (activity as any).rows[0] };
+    });
+    res.json(result);
   } catch (error) { next(error); }
 });
 
@@ -1039,61 +1146,64 @@ router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res,
   try {
     await ensureShiftPostsTable();
     const caregiver = await getOrCreateCaregiver(req);
-    const shiftId = parseInt(req.params.shiftId);
+    const shiftId = Number(req.params.shiftId);
     if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
 
-    const assignment = await getApprovedAssignment(shiftId, caregiver.id);
+    const data = clockBodySchema.parse(req.body || {});
+    const result = await db.transaction(async tx => {
+      await tx.execute(sql`SELECT id FROM caregivers WHERE id = ${caregiver.id} FOR UPDATE`);
+      await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`);
+    const assignment = await getApprovedAssignment(shiftId, caregiver.id, tx);
     if (!assignment) throw new AppError(403, "Only the assigned caregiver can clock out for this shift");
-    const clockIn = await findLatestClockIn(shiftId, caregiver.id);
+    const clockIn = await findLatestClockIn(shiftId, caregiver.id, tx);
     if (!clockIn) throw new AppError(409, "Clock in before clocking out of this shift");
 
-    const clockOut = await db.execute(sql`
-      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes)
-      VALUES (${shiftId}, ${caregiver.id}, 'clock_out', CAST(${req.body?.location ? JSON.stringify(req.body.location) : null} AS jsonb), ${req.body?.notes || null})
+    const last = (await tx.execute(sql`SELECT type FROM shift_activities WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id} ORDER BY id DESC LIMIT 1`) as any).rows[0];
+    if (last?.type === 'break_start') throw new AppError(409, "End your break before clocking out");
+    const clockOut = await tx.execute(sql`
+      INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes, timestamp)
+      VALUES (${shiftId}, ${caregiver.id}, 'clock_out', CAST(${data.location ? JSON.stringify(data.location) : null} AS jsonb), ${data.notes || null}, clock_timestamp() AT TIME ZONE 'UTC')
       RETURNING *
     `);
-    const clockInAt = new Date(clockIn.timestamp);
-    const clockOutAt = new Date((clockOut as any).rows[0].timestamp);
-    const workedMinutes = Math.max(1, Math.round((clockOutAt.getTime() - clockInAt.getTime()) / 60000));
+    const clockInAt = new Date(utcTimestamp(clockIn.timestamp)!);
+    const clockOutAt = new Date(utcTimestamp((clockOut as any).rows[0].timestamp)!);
+    const workedMinutes = Math.max(0, Math.round((clockOutAt.getTime() - clockInAt.getTime()) / 60000));
     const rate = Number(assignment.hourly_rate);
     const total = Number(((workedMinutes / 60) * rate).toFixed(2));
 
-    const timesheet = await db.execute(sql`
+    const timesheet = await tx.execute(sql`
       INSERT INTO shift_timesheets (
         shift_id, caregiver_id, employer_id, clock_in_at, clock_out_at, worked_minutes,
         hourly_rate, total_amount, status, notes
       ) VALUES (
         ${shiftId}, ${caregiver.id}, ${assignment.employer_id}, ${clockInAt}, ${clockOutAt}, ${workedMinutes},
-        ${rate.toString()}, ${total.toString()}, 'pending_approval', ${req.body?.notes || null}
+        ${rate.toString()}, ${total.toString()}, 'pending_approval', ${data.notes || null}
       )
-      ON CONFLICT (shift_id, caregiver_id)
-      DO UPDATE SET clock_in_at = EXCLUDED.clock_in_at, clock_out_at = EXCLUDED.clock_out_at,
-                    worked_minutes = EXCLUDED.worked_minutes, hourly_rate = EXCLUDED.hourly_rate,
-                    total_amount = EXCLUDED.total_amount, status = 'pending_approval',
-                    notes = EXCLUDED.notes, updated_at = CURRENT_TIMESTAMP
       RETURNING *
     `);
 
-    await db.execute(sql`UPDATE shift_posts SET status = 'completed', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);
-    await db.execute(sql`
+    await refreshShiftStatus(tx, shiftId);
+    await tx.execute(sql`
       UPDATE bookings SET status = 'completed', total_amount = ${total.toString()}, updated_at = CURRENT_TIMESTAMP
       WHERE caregiver_id = ${caregiver.id} AND employer_id = ${assignment.employer_id}
-        AND start_time = ${new Date(assignment.start_time)} AND end_time = ${new Date(assignment.end_time)}
+        AND start_time = ${new Date(utcTimestamp(assignment.start_time)!)} AND end_time = ${new Date(utcTimestamp(assignment.end_time)!)}
         AND status IN ('confirmed', 'in_progress')
     `);
-    await db.execute(sql`
+    await tx.execute(sql`
       UPDATE caregivers SET total_hours = COALESCE(total_hours, 0) + ${String(workedMinutes / 60)}, updated_at = CURRENT_TIMESTAMP
       WHERE id = ${caregiver.id}
     `);
-    await db.execute(sql`
+    await tx.execute(sql`
       INSERT INTO notifications (user_id, type, title, message, related_id)
       VALUES (${assignment.employer_user_id}, 'timesheet_ready', 'Timesheet ready',
         'A caregiver completed a shift and the timesheet is ready for review.',
         ${shiftId})
     `);
 
-    await sendOperationsAlert("Timesheet ready", `Shift #${shiftId} for employer #${assignment.employer_id} is completed. The timesheet is ready for review.`);
-    res.json({ message: "Clocked out successfully", timesheet: (timesheet as any).rows[0] });
+    return { assignment, timesheet: (timesheet as any).rows[0] };
+    });
+    await sendOperationsAlert("Timesheet ready", `Shift #${shiftId} for employer #${result.assignment.employer_id} has a completed assignment. The timesheet is ready for review.`);
+    res.json({ message: "Clocked out successfully", timesheet: result.timesheet });
   } catch (error) { next(error); }
 });
 
@@ -1101,10 +1211,14 @@ router.put("/:shiftId/close", authMiddleware, async (req: AuthRequest, res, next
   try {
     await ensureShiftPostsTable();
     const employer = await getOrCreateEmployer(req);
-    const result = await db.execute(sql`
+    const result = await db.transaction(async tx => {
+      await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${Number(req.params.shiftId)} AND employer_id = ${employer.id} FOR UPDATE`);
+      return tx.execute(sql`
       UPDATE shift_posts SET status = 'closed', updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${Number(req.params.shiftId)} AND employer_id = ${employer.id} RETURNING *
-    `);
+      WHERE id = ${Number(req.params.shiftId)} AND employer_id = ${employer.id} AND status = 'open'
+        AND NOT EXISTS (SELECT 1 FROM shift_applications a WHERE a.shift_id = shift_posts.id AND a.status = 'approved') RETURNING *
+      `);
+    });
     if (!(result as any).rows[0]) throw new AppError(404, "Shift not found");
     res.json({ shift: mapShift((result as any).rows[0]) });
   } catch (error) { next(error); }
