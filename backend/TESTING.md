@@ -77,8 +77,62 @@ not transfer money; clarification adds an audited note without changing hours.
 - These API tests do not replace tapping through the installed TestFlight apps.
 - The local browser preview could not be opened by the available cloud browser;
   JSDOM interaction checks do not substitute for visual/device acceptance testing.
-- Native Time Clock and employer review changes require new app binaries. This
-  increment does not itself submit TestFlight or Google Play releases.
+- Native Time Clock and employer review changes require the new caregiver 58 and
+  employer 35 binaries. Both platforms built successfully and both iOS uploads
+  succeeded; store processing and physical-device acceptance are separate checks.
 - Multi-home roles, configured geofences, offline queues, unpaid-break policies,
   adjustments to recorded hours, payroll exports, SMS delivery, and approved payroll
   provider integrations remain separate roadmap increments.
+
+## September 18 release evidence
+
+- PR #37 merged as `764b91f`; backend and web Vercel deployments are ready.
+- The production backend health check returned 200 with database status `ok`.
+- Production `dashboard.js` matched the tested file byte-for-byte (SHA-256
+  `3c7022512251b73964e98ea62539861eb46a85150da297760201b177b599d1c9`).
+- The shared timekeeping route returned 401 without authentication, as expected.
+- A read-only audit found one future open legacy shift, labeled for App Review.
+  Historical schedules were not rewritten.
+- PR #38 increments both platforms to caregiver 58 and employer 35. PR #39 fixes
+  obsolete Android validation identities and stops the duplicate legacy iOS trigger.
+- Registered Play package names were checked in Play Console:
+  `com.elitebridgestaffing.caregiver` and `com.elitebridgestaffing.employer`.
+- Android release workflow: https://github.com/evansonsaitoti/Elite-Bridge-App/actions/runs/35302475854
+- TestFlight release workflow: https://github.com/evansonsaitoti/Elite-Bridge-App/actions/runs/35302215318
+- Both iOS jobs succeeded. Their logs confirm App Store Connect upload of employer
+  1.3.3 (35) at 03:18 UTC and caregiver 1.2.5 (58) at 03:23 UTC. Apple processing
+  and actual device installation are not established by an upload acknowledgement.
+- Both signed Android builds succeeded. The workflow retains `elite-work-35-aab`
+  and `elite-care-58-aab` artifacts for 30 days. Both new builds are confirmed
+  available to internal testers in Play Console. The existing production builds
+  57/34 remain in review; the new binaries were released on the internal tracks.
+- Play accepted both bundles with non-blocking warnings about missing optional
+  deobfuscation files, plus increased caregiver download size relative to the old
+  internal release. No supported devices were lost in either release comparison.
+- All PR #38 quality checks passed, including the iOS simulator compile.
+
+## Device acceptance after installation
+
+Use dedicated test accounts in an isolated test environment for shift posting;
+production shift broadcasts can reach real caregivers. Automated tests above use
+an isolated database and intercept outbound notifications.
+
+1. Invite a caregiver, accept with the matching email, and confirm team membership
+   on both employer web and the employer app.
+2. Post an overnight shift with an explicit facility timezone and two positions.
+   Confirm the dates, local times and available positions agree across clients.
+3. Approve two caregivers. Verify a third approval cannot overfill the shift and
+   an overlapping assignment is refused for an already-booked caregiver.
+4. Clock in on a device and refresh employer web. Verify attendance appears once.
+   Try a repeated clock-in; it must not create a second active session.
+5. Start/end a paid break, retain a note, and clock out. Confirm actual duration,
+   notes and the resulting timesheet agree across web and mobile.
+6. Request clarification as the employer, resubmit a caregiver note, then approve.
+   Confirm status and history agree without changing the original worked hours.
+7. Confirm the second caregiver remains active after the first finishes, and the
+   shift completes only after all filled positions finish.
+8. Exercise missing location permission and loss of connectivity. Missing GPS must
+   remain visible, and an unacknowledged clock action must not appear as saved.
+9. Check actual email and push receipt separately from provider acceptance. A
+   configured geofence, payroll settlement and SMS delivery are not claimed by
+   this release.
