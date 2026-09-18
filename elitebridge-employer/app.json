@@ -14,14 +14,14 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgeemployer",
-      "buildNumber": "34",
+      "buildNumber": "35",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.elitebridgestaffing.employer",
-      "versionCode": 34
+      "versionCode": 35
     },
     "plugins": [
       "expo-notifications",
