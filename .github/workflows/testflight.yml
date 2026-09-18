@@ -1,12 +1,9 @@
-name: Upload Elite Bridge to TestFlight
+name: Legacy caregiver TestFlight (manual only)
 
 on:
+  # Releases use testflight-split.yml, which prepares signing and both apps.
+  # Keep this legacy entry point manual to prevent duplicate build submissions.
   workflow_dispatch:
-  push:
-    branches: [main]
-    paths:
-      - "elitebridge-mobile/**"
-      - ".github/workflows/testflight.yml"
 
 concurrency:
   group: elite-bridge-testflight
