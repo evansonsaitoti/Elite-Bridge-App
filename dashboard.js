@@ -126,6 +126,18 @@
     catch (_) { window.prompt('Copy this caregiver invitation link:', link); }
   });
 
+  document.getElementById('shareInvite')?.addEventListener('click', async () => {
+    const link = document.getElementById('inviteLink')?.value;
+    if (!link) return;
+    const shareData = { title: 'Elite Care invitation', text: 'Join our care team on Elite Care.', url: link };
+    if (navigator.share) {
+      try { await navigator.share(shareData); return; }
+      catch (error) { if (error?.name === 'AbortError') return; }
+    }
+    try { await navigator.clipboard.writeText(link); notify('Invitation link copied. You can paste it into any app.'); }
+    catch (_) { window.prompt('Copy this caregiver invitation link:', link); }
+  });
+
   inviteForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(inviteForm);
@@ -329,6 +341,73 @@
     }).join('');
   }
 
+  function renderEmployerSetup(profile, invitations, shifts) {
+    const address = profile?.billingAddress || profile?.billing_address || {};
+    const services = profile?.servicesOffered || profile?.serviceArea || profile?.service_area || [];
+    const checks = {
+      organization: Boolean(profile?.companyName || profile?.company_name),
+      location: Boolean(address.address && address.city && address.state && address.zipCode),
+      services: Array.isArray(services) && services.length > 0,
+      invitation: invitations.length > 0,
+      shift: shifts.length > 0,
+    };
+    const completed = Object.values(checks).filter(Boolean).length;
+    const percent = Math.round((completed / Object.keys(checks).length) * 100);
+    setText('employerSetupPercent', `${percent}%`);
+    const progress = document.getElementById('employerSetupProgress');
+    if (progress) progress.style.width = `${percent}%`;
+    document.querySelectorAll('#employerSetupList [data-setup]').forEach((step) => {
+      step.classList.toggle('done', Boolean(checks[step.dataset.setup]));
+    });
+
+    const action = document.getElementById('employerSetupAction');
+    if (!action) return;
+    action.dataset.setupAction = !checks.organization || !checks.location || !checks.services
+      ? 'profile'
+      : !checks.invitation
+        ? 'invite'
+        : !checks.shift
+          ? 'shift'
+          : 'complete';
+    action.textContent = action.dataset.setupAction === 'profile'
+      ? 'Complete organization setup'
+      : action.dataset.setupAction === 'invite'
+        ? 'Invite your first caregiver'
+        : action.dataset.setupAction === 'shift'
+          ? 'Publish your first shift'
+          : 'Setup complete';
+  }
+
+  function renderCaregiverSetup(profile) {
+    const availability = profile?.availability || {};
+    const hasAvailability = Object.values(availability).some((values) => Array.isArray(values) && values.length > 0);
+    const checks = {
+      account: true,
+      services: Array.isArray(profile?.specialties) && profile.specialties.length > 0,
+      availability: hasAvailability,
+      profile: Boolean(profile?.bio && Number(profile?.hourlyRate) > 0),
+      verification: profile?.backgroundCheckStatus === 'verified',
+    };
+    const completed = Object.values(checks).filter(Boolean).length;
+    const percent = Math.round((completed / Object.keys(checks).length) * 100);
+    setText('caregiverSetupPercent', `${percent}%`);
+    const progress = document.getElementById('caregiverSetupProgress');
+    if (progress) progress.style.width = `${percent}%`;
+    document.querySelectorAll('#caregiverSetupList [data-caregiver-setup]').forEach((step) => {
+      step.classList.toggle('done', Boolean(checks[step.dataset.caregiverSetup]));
+    });
+    const action = document.getElementById('caregiverSetupAction');
+    if (action) action.textContent = checks.verification && completed === Object.keys(checks).length ? 'Profile ready' : 'Complete your profile';
+  }
+
+  document.getElementById('employerSetupAction')?.addEventListener('click', (event) => {
+    const action = event.currentTarget.dataset.setupAction;
+    if (action === 'profile') window.location.assign('/onboarding');
+    else if (action === 'invite') document.querySelector('[data-invite-caregiver]')?.click();
+    else if (action === 'shift') activateView('shifts');
+    else activateView('caregivers');
+  });
+
   async function loadEmployer() {
     const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult] = await Promise.allSettled([
       api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications')
@@ -372,6 +451,7 @@
     else renderEmpty(document.getElementById('applicationList'), 'Applications unavailable', 'Refresh to try again.');
     renderInvitations(document.getElementById('invitationList'), invitations);
     renderCompliance(document.getElementById('complianceList'), caregivers);
+    renderEmployerSetup(profile, invitations, shifts);
     setText('payrollTotal', money(payroll.stats?.total_spent));
     setText('payrollPending', money(payroll.stats?.pending_amount));
     setText('payrollPaid', money(payroll.stats?.paid_amount));
@@ -400,6 +480,7 @@
     setText('metricRating', Number(profile?.rating || 0) ? Number(profile.rating).toFixed(1) : 'New');
     setText('profileRate', `${money(profile?.hourlyRate || 0)}/hr`);
     setText('profileServices', (profile?.specialties || []).join(', ') || 'Complete setup to add your services');
+    renderCaregiverSetup(profile);
     renderShiftRows(document.getElementById('availableShiftList'), shifts, false);
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 3), false);
     renderConversations(document.getElementById('conversationList'), conversations);

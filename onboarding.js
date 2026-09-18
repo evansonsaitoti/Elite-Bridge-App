@@ -43,7 +43,56 @@
     document.getElementById('detailsTitle').textContent = 'Shape your organization workspace';
     document.getElementById('detailsIntro').textContent = 'These details make scheduling, matching and team management more useful.';
     document.getElementById('reviewTitle').textContent = 'Employer workspace';
+    document.getElementById('locationReviewStep').textContent = 'Primary care location and scheduling contact added';
     document.getElementById('companyName').value = session.user.companyName || '';
+  }
+
+  function setValue(id, value) {
+    const input = document.getElementById(id);
+    if (input && value !== undefined && value !== null) input.value = String(value);
+  }
+
+  function normalizePhone(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('+')) return trimmed.replace(/[^\d+]/g, '');
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    return trimmed;
+  }
+
+  async function hydrateExistingProfile() {
+    try {
+      const endpoint = role === 'employer' ? '/employers/me' : `/caregivers/${session.user.id}`;
+      const response = await fetch(`${API_BASE}${endpoint}`, { headers: { Authorization: `Bearer ${session.token}` } });
+      if (!response.ok) return;
+      const result = await response.json();
+      const profile = result.profile || result;
+      if (role === 'employer') {
+        const address = profile.billingAddress || profile.billing_address || {};
+        setValue('companyName', profile.companyName || profile.company_name);
+        setValue('companyDescription', profile.companyDescription || profile.company_description);
+        setValue('website', profile.website);
+        setValue('organizationType', profile.industry);
+        setValue('teamSize', profile.teamSize);
+        setValue('organizationPhone', profile.phone || session.user.phone);
+        setValue('facilityAddress', address.address);
+        setValue('facilityCity', address.city);
+        setValue('facilityState', address.state);
+        setValue('zipCode', address.zipCode || address.zip_code);
+        const services = profile.servicesOffered || profile.serviceArea || profile.service_area || [];
+        form.querySelectorAll('input[name="services"]').forEach((input) => { input.checked = services.includes(input.value); });
+      } else {
+        setValue('caregiverBio', profile.bio);
+        setValue('hourlyRate', profile.hourlyRate);
+        setValue('yearsExperience', profile.yearsExperience);
+        setValue('certifications', (profile.certifications || []).join(', '));
+        form.querySelectorAll('input[name="services"]').forEach((input) => { input.checked = (profile.specialties || []).includes(input.value); });
+      }
+    } catch (_) {
+      // Existing details are a convenience; setup remains usable if they cannot be loaded.
+    }
   }
 
   function selectedServices() {
@@ -102,14 +151,18 @@
         availability: { preference: [document.getElementById('availability').value] }
       };
     } else {
-      endpoint = `${API_BASE}/employers/${session.user.id}`;
+      endpoint = `${API_BASE}/employers/me`;
       body = {
         companyName: document.getElementById('companyName').value.trim(),
         companyDescription: document.getElementById('companyDescription').value.trim(),
         website: document.getElementById('website').value.trim(),
         industry: document.getElementById('organizationType').value,
         teamSize: Number(document.getElementById('teamSize').value || 1),
+        address: document.getElementById('facilityAddress').value.trim(),
+        city: document.getElementById('facilityCity').value.trim(),
+        state: document.getElementById('facilityState').value.trim().toUpperCase(),
         zipCode: document.getElementById('zipCode').value.trim(),
+        phone: normalizePhone(document.getElementById('organizationPhone').value),
         servicesOffered: selectedServices()
       };
     }
@@ -158,4 +211,5 @@
   skipButton.addEventListener('click', skipSetup);
   exitLink.addEventListener('click', skipSetup);
   renderStep();
+  void hydrateExistingProfile();
 })();

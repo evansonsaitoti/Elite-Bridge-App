@@ -14,6 +14,7 @@ const updateProfileSchema = z.object({
   yearsExperience: z.number().min(0).optional(),
   specialties: z.array(z.string()).min(1),
   certifications: z.array(z.string()).optional(),
+  availability: z.record(z.array(z.string())).optional(),
 });
 
 const matchingProfileSchema = z.object({
@@ -105,6 +106,8 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
           yearsExperience: data.yearsExperience,
           specialties: data.specialties,
           certifications: data.certifications,
+          availability: data.availability,
+          isAvailable: data.availability ? true : undefined,
           updatedAt: new Date(),
         })
         .where(eq(caregivers.userId, userId));
@@ -116,6 +119,8 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
         yearsExperience: data.yearsExperience,
         specialties: data.specialties,
         certifications: data.certifications,
+        availability: data.availability,
+        isAvailable: data.availability ? true : undefined,
       });
     }
 
@@ -146,6 +151,7 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
         hourlyRate: caregivers.hourlyRate,
         specialties: caregivers.specialties,
         certifications: caregivers.certifications,
+        availability: caregivers.availability,
         yearsExperience: caregivers.yearsExperience,
         rating: caregivers.rating,
         backgroundCheckStatus: caregivers.backgroundCheckStatus,

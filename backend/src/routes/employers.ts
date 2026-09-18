@@ -153,6 +153,8 @@ function mapEmployerProfile(employer: any, user: any) {
     companyName: employer.companyName,
     companyDescription: employer.companyDescription ?? "",
     website: employer.website ?? "",
+    industry: employer.industry ?? "",
+    teamSize: employer.teamSize ?? null,
     servicesOffered: employer.serviceArea ?? [],
     billingAddress: employer.billingAddress ?? {},
     verificationStatus: employer.verificationStatus,

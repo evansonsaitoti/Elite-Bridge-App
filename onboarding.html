@@ -161,6 +161,19 @@
                 <label for="companyDescription">Tell caregivers about your care setting</label>
                 <textarea id="companyDescription" name="companyDescription" placeholder="Describe your clients, care environment and what makes your team a good place to work."></textarea>
               </div>
+              <div class="field full">
+                <label for="facilityAddress">Primary facility or care location</label>
+                <input id="facilityAddress" name="facilityAddress" autocomplete="street-address" placeholder="Street address">
+                <small>This becomes the default location when you create shifts. Exact addresses are only shared with assigned caregivers.</small>
+              </div>
+              <div class="field">
+                <label for="facilityCity">City</label>
+                <input id="facilityCity" name="facilityCity" autocomplete="address-level2" placeholder="Lowell">
+              </div>
+              <div class="field">
+                <label for="facilityState">State</label>
+                <input id="facilityState" name="facilityState" autocomplete="address-level1" maxlength="2" placeholder="MA">
+              </div>
               <div class="field">
                 <label for="website">Website (optional)</label>
                 <input id="website" name="website" type="url" placeholder="https://example.com">
@@ -168,6 +181,10 @@
               <div class="field">
                 <label for="zipCode">Primary service ZIP code</label>
                 <input id="zipCode" name="zipCode" inputmode="numeric" autocomplete="postal-code" placeholder="01852">
+              </div>
+              <div class="field full">
+                <label for="organizationPhone">Scheduling phone number</label>
+                <input id="organizationPhone" name="organizationPhone" type="tel" autocomplete="tel" placeholder="(978) 555-0123">
               </div>
             </div>
           </div>
@@ -179,10 +196,10 @@
           <p class="step-intro">The mobile app and web portal use the same account. Changes you make to connected profile information will be available across both.</p>
           <div class="surface surface-pad setup-card">
             <div class="setup-top"><h2 id="reviewTitle">Caregiver workspace</h2><span class="status">Ready</span></div>
-            <div class="setup-list" style="margin-top:18px">
-              <div class="setup-step done">Role and profile preferences added</div>
+            <div class="setup-list" id="onboardingReviewList" style="margin-top:18px">
+              <div class="setup-step done">Account and profile details added</div>
               <div class="setup-step done">Care services selected</div>
-              <div class="setup-step done">Dashboard personalized for your work</div>
+              <div class="setup-step done" id="locationReviewStep">Work preferences saved</div>
             </div>
           </div>
         </section>
