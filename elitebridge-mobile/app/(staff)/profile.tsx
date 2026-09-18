@@ -316,7 +316,6 @@ export default function StaffProfile() {
         </View>
         {[
           { key: "pushAlerts" as const, label: "Push notifications", detail: "Priority shifts, assignments and call-outs" },
-          { key: "smsAlerts" as const, label: "SMS alerts", detail: "Urgent schedule messages" },
           { key: "emailSummary" as const, label: "Email summaries", detail: "Weekly activity and submission updates" },
           { key: "locationClock" as const, label: "Location for clock in/out", detail: "Used only when recording visit time" },
         ].map((item) => (
@@ -340,6 +339,7 @@ export default function StaffProfile() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18, paddingBottom: 128 }}>
       <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>ELITE BRIDGE CAREGIVER</Text>
         <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>Profile</Text>
+        <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/operations")} style={{ padding: 16, backgroundColor: "#07533c", borderRadius: 12, marginVertical: 12 }}><Text style={{ color: "#fff", fontWeight: "800" }}>Incident reports & SMS alerts</Text></TouchableOpacity>
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>Manage your caregiver profile, requests, settings and agency connection.</Text>
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>

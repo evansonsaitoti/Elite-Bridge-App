@@ -54,7 +54,7 @@ beforeAll(async () => {
   await ensureCoreTables();
   const app = express();
   app.use(express.json());
-  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll"]) {
+  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms"]) {
     app.use(`/api/${route}`, (await import(`../src/routes/${route}.ts`)).default);
   }
   app.use((await import("../src/middleware/errorHandler")).errorHandler);
@@ -328,6 +328,101 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     await request(`/bookings/${target.id}/callout`, caregiver, "POST", { reason: "other" }, 201);
     expect((await request("/bookings/employer/my", employer)).shifts.find((s: any) => s.id === target.id)).toMatchObject({ assignedCaregivers: 1, remainingPositions: 1 });
     await request(`/bookings/employer/${target.id}/cancel`, employer, "PATCH", {}, 204);
+  });
+  it("enforces location checks and tenant boundaries, and persists incident review history", async () => {
+    await request("/operations/incidents", undefined, "GET", undefined, 401);
+    const target = (await request("/bookings", employer, "POST", shift("instant", {startDate:"2027-03-12"}), 201)).shift;
+    const fence = {latitude:42.6334,longitude:-71.3162,radiusMeters:150};
+    await request(`/operations/shifts/${target.id}/geofence`, otherEmployer,"PUT",fence,409);
+    await request(`/operations/shifts/${target.id}/geofence`, caregiver,"PUT",fence,403);
+    await request(`/operations/shifts/${target.id}/geofence`, employer,"PUT",fence);
+    await request(`/bookings/${target.id}/claim`,caregiver,"POST",{});
+    await request(`/bookings/${target.id}/clock-in`,caregiver,"POST",{},422);
+    await request(`/bookings/${target.id}/clock-in`,caregiver,"POST",{location:{latitude:0,longitude:0,accuracy:5,capturedAt:new Date().toISOString()}},422);
+    await request(`/bookings/${target.id}/clock-in`,caregiver,"POST",{location:{latitude:fence.latitude,longitude:fence.longitude,accuracy:5,capturedAt:new Date(Date.now()-300000).toISOString()}},422);
+    await request(`/bookings/${target.id}/clock-in`,caregiver,"POST",{location:{latitude:fence.latitude,longitude:fence.longitude,accuracy:5,capturedAt:new Date().toISOString()}});
+    await request(`/operations/shifts/${target.id}/geofence`,employer,"PUT",fence,409);
+    await request(`/bookings/${target.id}/clock-out`,caregiver,"POST",{});
+    const report={shiftId:target.id,category:"safety",severity:"high",description:"ISOLATED TEST incident narrative",occurredAt:new Date().toISOString()};
+    await request("/operations/incidents",replacement,"POST",report,404);
+    const created=await request("/operations/incidents",caregiver,"POST",report,201);
+    expect(created.employerEmailSent).toBe(true);
+    expect((await request("/operations/incidents",otherEmployer)).incidents).toEqual([]);
+    expect((await request("/operations/incidents",replacement)).incidents).toEqual([]);
+    await request(`/operations/incidents/${created.incident.id}`,otherEmployer,"PATCH",{status:"resolved",note:"Not authorized"},404);
+    await request(`/operations/incidents/${created.incident.id}`,caregiver,"PATCH",{status:"resolved",note:"Not authorized"},403);
+    await request(`/operations/incidents/${created.incident.id}`,employer,"PATCH",{status:"investigating",note:"Review started"});
+    await request(`/operations/incidents/${created.incident.id}`,employer,"PATCH",{status:"resolved",note:"Verified corrective action"});
+    const result=(await request("/operations/incidents",caregiver)).incidents[0];
+    expect(result.status).toBe("resolved");
+    expect(result.updates.map((r:any)=>r.note)).toEqual(["Review started","Verified corrective action"]);
+    const sent=outbound.post.mock.calls.filter(([,body])=>body?.subject?.includes("Incident"));
+    expect(JSON.stringify(sent)).not.toContain(report.description);
+  });
+  it("exports only this employer's approved actual hours and reports provider activation truthfully", async () => {
+    const records=(await request("/bookings/employer/timesheets",employer)).timesheets;
+    const pending=records.find((r:any)=>r.status==="pending_approval");
+    await request(`/bookings/employer/timesheets/${pending.id}`,employer,"PATCH",{status:"approved"});
+    const day=new Date().toISOString().slice(0,10);
+    const exportFor=async(account:any)=>fetch(`${base}/api/payroll/export?from=${day}&to=${day}`,{headers:{Authorization:`Bearer ${account.token}`}});
+    const response=await exportFor(employer);
+    expect(response.status).toBe(200);
+    const csv=await response.text();
+    expect(csv).toContain('"approved"');
+    expect(csv).not.toContain('pending_approval');
+    expect(csv).not.toContain('correction_requested');
+    expect((await (await exportFor(otherEmployer)).text()).trim().split("\r\n")).toHaveLength(1);
+    await request("/payroll/export?from=2026-02-31&to=2026-03-01",employer,"GET",undefined,400);
+    await request("/payroll/export?from=2026-01-01&to=2026-12-01",employer,"GET",undefined,400);
+    expect((await request("/payroll/integrations",employer)).integrations.every((p:any)=>p.status==="requires_provider_setup")).toBe(true);
+  });
+  it("keeps SMS off without configuration and rejects unsigned provider callbacks", async () => {
+    expect((await request("/sms/preferences",caregiver)).configured).toBe(false);
+    await request("/sms/verify/start",caregiver,"POST",{phone:"+12025550147"},503);
+    await request("/sms/status",undefined,"POST",{MessageSid:"forged",MessageStatus:"delivered"},403);
+    await request("/sms/inbound",undefined,"POST",{From:"+12025550147",Body:"STOP"},403);
+    await request("/sms/preferences",caregiver,"DELETE",undefined,204);
+  });
+  it("verifies SMS ownership, records consent, deduplicates shift alerts and honors signed STOP callbacks", async () => {
+    const { config }=await import("../src/config/env");
+    const { sendShiftSms }=await import("../src/services/sms");
+    const { getExpectedTwilioSignature }=await import("twilio");
+    const old={sid:config.TWILIO_ACCOUNT_SID,token:config.TWILIO_AUTH_TOKEN,phone:config.TWILIO_PHONE_NUMBER};
+    config.TWILIO_ACCOUNT_SID="ACisolated";
+    config.TWILIO_AUTH_TOKEN="isolated-provider-token";
+    config.TWILIO_PHONE_NUMBER="+12025550100";
+    vi.stubEnv("SMS_ENABLED","true");
+    vi.stubEnv("SMS_WEBHOOK_BASE_URL","https://isolated.example");
+    outbound.post.mockResolvedValue({data:{sid:"SMisolated",status:"queued"}});
+    try {
+      await request("/sms/verify/start",caregiver,"POST",{phone:"+12025550147"});
+      await request("/sms/verify/start",caregiver,"POST",{phone:"+12025550147"},429);
+      const call=outbound.post.mock.calls.filter(([url])=>url.includes("api.twilio.com")).at(-1)!;
+      const text=new URLSearchParams(call[1]).get("Body")!;
+      const code=text.match(/code: (\d{6})/)![1];
+      await request("/sms/verify/complete",caregiver,"POST",{code:"000000",consent:true},400);
+      await request("/sms/verify/complete",caregiver,"POST",{code,consent:false},400);
+      await request("/sms/verify/complete",caregiver,"POST",{code,consent:true});
+      expect((await request("/sms/preferences",caregiver)).preference).toMatchObject({verified:true,opted_in:true});
+      await sendShiftSms([caregiver.user.id],999);
+      await sendShiftSms([caregiver.user.id],999);
+      expect((await request("/sms/preferences",caregiver)).deliveries).toHaveLength(1);
+      const callback=async(path:string,body:any)=>{
+        const response=await fetch(base+"/api/sms"+path,{method:"POST",headers:{"Content-Type":"application/json","x-twilio-signature":getExpectedTwilioSignature(config.TWILIO_AUTH_TOKEN!,"https://isolated.example/api/sms"+path,body)},body:JSON.stringify(body)});
+        expect(response.status).toBe(path==="/status"?204:200);
+      };
+      await callback("/status",{MessageSid:"SMisolated",MessageStatus:"delivered"});
+      await callback("/status",{MessageSid:"SMisolated",MessageStatus:"sent"});
+      expect((await request("/sms/preferences",caregiver)).deliveries[0].status).toBe("delivered");
+      await callback("/inbound",{From:"+12025550147",Body:"STOP"});
+      expect((await request("/sms/preferences",caregiver)).preference.opted_in).toBe(false);
+      await sendShiftSms([caregiver.user.id],1000);
+      expect((await request("/sms/preferences",caregiver)).deliveries).toHaveLength(1);
+    } finally {
+      config.TWILIO_ACCOUNT_SID=old.sid;config.TWILIO_AUTH_TOKEN=old.token;config.TWILIO_PHONE_NUMBER=old.phone;
+      vi.stubEnv("SMS_ENABLED","false");
+      outbound.post.mockResolvedValue({data:{id:"intercepted-email-id"}});
+    }
   });
   it("deletes test accounts and dependent records", async () => {
     for (const account of [caregiver, replacement, employer, otherEmployer]) await request("/auth/account", account, "DELETE", undefined, 204);

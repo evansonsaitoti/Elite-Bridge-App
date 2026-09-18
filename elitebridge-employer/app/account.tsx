@@ -32,6 +32,7 @@ export default function AccountScreen() {
     <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content}>
       <View style={styles.profile}><View style={styles.avatar}><Text style={styles.avatarText}>{user?.firstName?.slice(0, 1).toUpperCase() || "E"}</Text></View><Text style={styles.name}>{user ? `${user.firstName} ${user.lastName}` : "Employer"}</Text><Text style={styles.email}>{user?.email}</Text><Text style={styles.badge}>EMPLOYER ACCOUNT</Text></View>
       <Text style={styles.section}>Account</Text>
+      <Row icon="shield-checkmark-outline" title="Care operations" detail="Incidents, clock-in locations, payroll and SMS" onPress={() => router.push("/operations")} />
       <Row icon="business-outline" title="Organization profile" detail="Edit contact, services and service area" onPress={() => router.push("/profile")} />
       <Row icon="notifications-outline" title="Notifications" detail="Review staffing and account updates" onPress={() => router.push("/notifications")} />
       <Row icon="phone-portrait-outline" title="Push notification settings" detail="Manage permissions in device settings" onPress={() => void Linking.openSettings()} />

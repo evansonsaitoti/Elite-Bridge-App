@@ -58,6 +58,10 @@ export type CalloutReason = "illness" | "family_emergency" | "transportation" | 
 
 export const sharedApiConfigured = Boolean(API_BASE_URL);
 
+export function operationsApi(path: string, method = 'GET', body?: unknown) {
+  return request<any>('/api' + path, { method, ...(body ? { body: JSON.stringify(body) } : {}) });
+}
+
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
   if (!API_BASE_URL) throw new Error("Shared API is not configured");
   const token = includeAuth ? await AsyncStorage.getItem(TOKEN_KEY) : null;

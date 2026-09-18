@@ -21,6 +21,8 @@ import payrollRoutes from "./routes/payroll";
 import adminRoutes from "./routes/admin";
 import aiRoutes from "./routes/ai";
 import notificationRoutes from "./routes/notifications";
+import operationsRoutes from "./routes/operations";
+import smsRoutes from "./routes/sms";
 
 const app = express();
 const httpServer = createServer(app);
@@ -62,6 +64,8 @@ app.use("/api/payroll", payrollRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/operations", operationsRoutes);
+app.use("/api/sms", smsRoutes);
 
 // Socket.IO for real-time features
 io.on("connection", (socket) => {

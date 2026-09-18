@@ -160,6 +160,10 @@ export async function warmEmployerService() {
   await fetch(`${API_URL}/health`).catch(() => undefined);
 }
 
+export function operationsApi(path: string, method = 'GET', body?: unknown) {
+  return request<any>('/api' + path, { method, ...(body ? { body: JSON.stringify(body) } : {}) });
+}
+
 async function request<T>(path: string, init: RequestInit = {}, authenticated = true): Promise<T> {
   if (!API_URL) throw new Error("The secure Elite Bridge service is unavailable in this build.");
   const token = authenticated ? await AsyncStorage.getItem(TOKEN_KEY) : null;

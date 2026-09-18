@@ -8,6 +8,9 @@ import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import { sendPushToUsers, sendOperationsAlert } from "../services/notifications";
 import { shiftSchedule } from "../services/shift-schedule";
+import { ensureOperations } from "../db/operations";
+import { checkGeofence } from "../services/geofence";
+import { sendShiftSms } from "../services/sms";
 
 const router = Router();
 type ShiftTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -113,7 +116,7 @@ const clockBodySchema = z.object({
 
 let shiftTableReady = false;
 
-async function ensureShiftPostsTable() {
+export async function ensureShiftPostsTable() {
   if (shiftTableReady) return;
   await ensureCoreTables();
 
@@ -456,6 +459,7 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       data: { type: "new_shift_offer", shiftId: createdShift.id, assignmentMode: data.assignmentMode },
     });
     await sendOperationsAlert("New shift posted", `Employer #${employer.id} posted shift #${createdShift.id}.`);
+    await sendShiftSms(matchedUserIds, createdShift.id).catch(() => console.warn('Shift SMS delivery could not be completed'));
     res.status(201).json({ shift: mapShift(createdShift), matchedCaregivers: matchedUserIds.length });
   } catch (error) {
     next(error);
@@ -1108,6 +1112,7 @@ router.post("/caregiver/timesheets/:timesheetId/resubmit", authMiddleware, async
 router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();
+    await ensureOperations();
     const caregiver = await getOrCreateCaregiver(req);
     const shiftId = Number(req.params.shiftId);
     if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
@@ -1118,6 +1123,8 @@ router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, 
       await tx.execute(sql`SELECT id FROM shift_posts WHERE id = ${shiftId} FOR UPDATE`);
     const assignment = await getApprovedAssignment(shiftId, caregiver.id, tx);
     if (!assignment) throw new AppError(403, "Only the assigned caregiver can clock in for this shift");
+    const fence = (await tx.execute(sql`SELECT * FROM shift_geofences WHERE shift_id=${shiftId}`) as any).rows[0];
+    const verification = checkGeofence(fence, data.location);
     if ((await tx.execute(sql`SELECT id FROM shift_timesheets WHERE shift_id = ${shiftId} AND caregiver_id = ${caregiver.id}`) as any).rows[0]) throw new AppError(409, "This assignment already has a completed timesheet");
     const active = (await tx.execute(sql`SELECT i.id FROM shift_activities i WHERE i.caregiver_id = ${caregiver.id} AND i.type = 'clock_in' AND NOT EXISTS (SELECT 1 FROM shift_activities o WHERE o.shift_id = i.shift_id AND o.caregiver_id = i.caregiver_id AND o.type = 'clock_out' AND o.id > i.id) LIMIT 1`) as any).rows[0];
     if (active) throw new AppError(409, "Clock out of your active shift before starting another");
@@ -1126,7 +1133,7 @@ router.post("/:shiftId/clock-in", authMiddleware, async (req: AuthRequest, res, 
 
     const activity = await tx.execute(sql`
       INSERT INTO shift_activities (shift_id, caregiver_id, type, location, notes, timestamp)
-      VALUES (${shiftId}, ${caregiver.id}, 'clock_in', CAST(${data.location ? JSON.stringify(data.location) : null} AS jsonb), ${data.notes || null}, clock_timestamp() AT TIME ZONE 'UTC')
+      VALUES (${shiftId}, ${caregiver.id}, 'clock_in', CAST(${data.location ? JSON.stringify({ ...data.location, ...(verification ? { geofence: verification } : {}) }) : null} AS jsonb), ${data.notes || null}, clock_timestamp() AT TIME ZONE 'UTC')
       RETURNING *
     `);
     await tx.execute(sql`UPDATE shift_posts SET status = 'in_progress', updated_at = CURRENT_TIMESTAMP WHERE id = ${shiftId}`);

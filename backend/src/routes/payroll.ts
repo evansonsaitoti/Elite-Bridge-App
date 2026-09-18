@@ -6,6 +6,9 @@ import { authMiddleware, AuthRequest } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { requireRole } from "../middleware/auth.js";
 import { z } from "zod";
+import { ensureShiftPostsTable } from "./bookings";
+import { ensureOperations } from "../db/operations";
+import { payrollCsv } from "../services/payroll-export";
 
 const router = Router();
 router.use(authMiddleware, requireRole("employer"));
@@ -90,6 +93,39 @@ router.post("/:paymentId/process", authMiddleware, async (req: AuthRequest, res,
     if (!payment) throw new AppError(404, "Payment not found");
     throw new AppError(501, "Payment processing is not configured. No charge or payout was made.");
   } catch (error) { next(error); }
+});
+
+router.get("/export", async (req: AuthRequest, res, next) => {
+  try {
+    const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v);
+    const range = z.object({ from: date, to: date }).parse(req.query);
+    const start = Date.parse(range.from), end = Date.parse(range.to) + 86400000;
+    if (end <= start || end-start > 93*86400000) throw new AppError(400, "Choose a period of 1 to 93 days");
+    await ensureShiftPostsTable(); await ensureOperations();
+    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    if (!employer) throw new AppError(404, "Employer not found");
+    const records = await db.transaction(async tx => {
+      const result = (await tx.execute(sql`SELECT st.id,st.caregiver_id,u.first_name,u.last_name,u.email,
+        to_char(st.clock_in_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS clock_in_utc,
+        to_char(st.clock_out_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS clock_out_utc,
+        st.worked_minutes,st.hourly_rate,st.total_amount,st.status
+        FROM shift_timesheets st JOIN caregivers c ON c.id=st.caregiver_id JOIN users u ON u.id=c.user_id
+        WHERE st.employer_id=${employer.id} AND st.status='approved' AND st.clock_in_at>=${new Date(start)} AND st.clock_in_at<${new Date(end)} ORDER BY st.id`) as any).rows;
+      await tx.execute(sql`INSERT INTO operation_audit (employer_id,user_id,action,detail) VALUES (${employer.id},${req.user!.id},'payroll_export',${JSON.stringify({ ...range, timesheetIds: result.map((r: any) => r.id) })}::jsonb)`);
+      return result;
+    });
+    res.setHeader('Cache-Control','no-store');
+    res.setHeader('Content-Disposition',`attachment; filename="elite-payroll-${range.from}-${range.to}.csv"`);
+    res.type('text/csv').send(payrollCsv(records));
+  } catch (e) { next(e); }
+});
+
+router.get("/integrations", async (_req: AuthRequest, res) => {
+  res.json({ integrations: [
+    { provider: 'gusto', name: 'Gusto', status: 'requires_provider_setup', message: 'Partner API approval, OAuth credentials and employee mapping are required before direct synchronization.' },
+    { provider: 'adp', name: 'ADP', status: 'requires_provider_setup', message: 'An ADP API subscription, organization authorization and client certificate are required before direct synchronization.' },
+    { provider: 'quickbooks', name: 'QuickBooks', status: 'requires_provider_setup', message: 'An Intuit production application, OAuth authorization and employee mapping are required before time activity synchronization.' }
+  ], export: { status: 'available', format: 'Elite Bridge CSV', basis: 'Approved timesheets selected by clock-in date in UTC. Review overtime, taxes and pay-period allocation in your payroll system. This export does not send payments or mark records as paid.' } });
 });
 
 export default router;

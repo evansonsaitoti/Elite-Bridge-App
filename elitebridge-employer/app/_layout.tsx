@@ -39,6 +39,7 @@ export default function RootLayout() {
         <Stack.Screen name="account" options={{ title: "Employer account" }} />
         <Stack.Screen name="profile" options={{ title: "Organization profile" }} />
         <Stack.Screen name="notifications" options={{ title: "Notifications" }} />
+        <Stack.Screen name="operations" options={{ title: "Care operations" }} />
       </Stack>
     </>
   );

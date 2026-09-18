@@ -2,7 +2,7 @@
   "expo": {
     "name": "Elite Care",
     "slug": "elitebridge-mobile",
-    "version": "1.2.5",
+    "version": "1.2.6",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "elitebridge",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgemobile",
-      "buildNumber": "58",
+      "buildNumber": "59",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSMicrophoneUsageDescription": "Elite Bridge needs microphone access for voice communication.",
@@ -19,7 +19,7 @@
     },
     "android": {
       "package": "com.elitebridgestaffing.caregiver",
-      "versionCode": 58,
+      "versionCode": 59,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
