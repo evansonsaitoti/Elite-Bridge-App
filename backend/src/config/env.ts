@@ -54,6 +54,7 @@ const envSchema = z.object({
   EMPLOYER_APP_URL: z.string().url().optional(),
   ADMIN_APP_URL: z.string().url().optional(),
   WEB_APP_URL: z.string().url().default("https://app.elitebridgestaffing.com"),
+  OWNER_SETUP_CODE: z.string().min(12).optional(),
 });
 
 export type Env = z.infer<typeof envSchema>;
