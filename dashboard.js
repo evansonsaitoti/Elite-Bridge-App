@@ -83,6 +83,171 @@
     return data;
   }
 
+
+  function todayInputValue() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function contractFieldValue(id, fallback = '') {
+    const el = document.getElementById(id);
+    return (el?.value || '').trim() || fallback;
+  }
+
+  function formatContractDate(value) {
+    if (!value) return 'To be confirmed';
+    const date = new Date(value + 'T12:00:00');
+    return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
+  }
+
+  function contractListItems(value) {
+    return value
+      .split(/\n|,/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 6)
+      .map((item) => '<li>' + escapeHtml(item) + '</li>')
+      .join('');
+  }
+
+  function renderContractPreview() {
+    const preview = document.getElementById('contractPreview');
+    if (!preview) return;
+
+    const clientName = contractFieldValue('contractClientName', 'Client Name');
+    const clientEmail = contractFieldValue('contractClientEmail', 'client@example.com');
+    const clientPhone = contractFieldValue('contractClientPhone', 'Client phone');
+    const clientAddress = contractFieldValue('contractClientAddress', 'Client address');
+    const startDate = formatContractDate(contractFieldValue('contractStartDate'));
+    const agreementDate = formatContractDate(contractFieldValue('contractDate', todayInputValue()));
+    const schedule = contractFieldValue('contractSchedule', 'To be scheduled with Elite Bridge Staffing');
+    const rate = contractFieldValue('contractRate', 'Rates to be confirmed in writing');
+    const services = contractFieldValue('contractServices', 'Personal care, companionship, meal preparation, respite care, transportation support as requested.');
+    const billing = contractFieldValue('contractBilling', 'Invoices are due upon receipt unless otherwise agreed in writing.');
+    const cancellation = contractFieldValue('contractCancellation', 'Please provide at least 24 hours notice for schedule changes or cancellations.');
+    const companySigner = contractFieldValue('contractCompanySigner', 'Elite Bridge Staffing');
+
+    preview.innerHTML = `
+      <header class="contract-letterhead">
+        <img src="/logo.png" alt="Elite Bridge Staffing" class="contract-logo">
+        <div>
+          <strong>Elite Bridge Staffing</strong>
+          <span>Professional home care staffing and client support</span>
+          <span>elitebridgestaffing.com</span>
+        </div>
+      </header>
+      <div class="contract-title-row">
+        <div>
+          <p class="eyebrow">Service agreement</p>
+          <h2>Client Care Services Contract</h2>
+        </div>
+        <p class="contract-date">Agreement date: ${escapeHtml(agreementDate)}</p>
+      </div>
+      <section class="contract-summary">
+        <div>
+          <span>Client</span>
+          <strong>${escapeHtml(clientName)}</strong>
+          <p>${escapeHtml(clientAddress)}</p>
+        </div>
+        <div>
+          <span>Contact</span>
+          <strong>${escapeHtml(clientEmail)}</strong>
+          <p>${escapeHtml(clientPhone)}</p>
+        </div>
+        <div>
+          <span>Start date</span>
+          <strong>${escapeHtml(startDate)}</strong>
+          <p>${escapeHtml(schedule)}</p>
+        </div>
+      </section>
+      <section class="contract-copy">
+        <p>This Client Care Services Contract is entered into by Elite Bridge Staffing and ${escapeHtml(clientName)} for non-medical care staffing and support services. Services will begin on ${escapeHtml(startDate)} or another date agreed to in writing.</p>
+        <div class="contract-clause-grid">
+          <div>
+            <h3>Services</h3>
+            <ul>${contractListItems(services)}</ul>
+          </div>
+          <div>
+            <h3>Rates and billing</h3>
+            <p><strong>${escapeHtml(rate)}</strong></p>
+            <p>${escapeHtml(billing)}</p>
+          </div>
+        </div>
+        <h3>Client responsibilities</h3>
+        <p>The client agrees to provide accurate service information, a safe care environment, reasonable access for scheduled caregivers, and timely notice of service changes.</p>
+        <h3>Schedule changes and cancellation</h3>
+        <p>${escapeHtml(cancellation)}</p>
+        <h3>Term and acknowledgement</h3>
+        <p>This agreement remains active until services end or either party provides written notice. The signatures below confirm that both parties understand and accept these service terms.</p>
+      </section>
+      <footer class="signature-grid">
+        <div>
+          <span>Client signature</span>
+          <strong>${escapeHtml(clientName)}</strong>
+          <small>Date</small>
+        </div>
+        <div>
+          <span>Elite Bridge signature</span>
+          <strong>${escapeHtml(companySigner)}</strong>
+          <small>Date</small>
+        </div>
+      </footer>
+    `;
+  }
+
+  function printContractPdf() {
+    renderContractPreview();
+    window.print();
+  }
+
+  function emailContractToClient() {
+    renderContractPreview();
+    const email = contractFieldValue('contractClientEmail');
+    const clientName = contractFieldValue('contractClientName', 'your care services');
+    const subject = 'Elite Bridge Staffing service agreement';
+    const body = [
+      'Hello ' + clientName + ',',
+      '',
+      'Attached is the Elite Bridge Staffing service agreement for your review and signature.',
+      '',
+      'Please reply with any questions.',
+      '',
+      'Thank you,',
+      'Elite Bridge Staffing'
+    ].join('\n');
+
+    if (!email) {
+      notify('Add a client email first.');
+      return;
+    }
+
+    window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+    notify('Email draft opened. Attach the saved PDF before sending.');
+  }
+
+  function initializeContractGenerator() {
+    const form = document.getElementById('contractForm');
+    if (!form) return;
+
+    const contractDate = document.getElementById('contractDate');
+    if (contractDate && !contractDate.value) contractDate.value = todayInputValue();
+
+    form.addEventListener('submit', (event) => {
+      event.preventDefault();
+      renderContractPreview();
+      notify('Contract preview updated.');
+    });
+
+    form.querySelectorAll('input, textarea').forEach((field) => {
+      field.addEventListener('input', renderContractPreview);
+    });
+
+    document.getElementById('printContract')?.addEventListener('click', printContractPdf);
+    document.getElementById('printContractTop')?.addEventListener('click', printContractPdf);
+    document.getElementById('emailContract')?.addEventListener('click', emailContractToClient);
+
+    renderContractPreview();
+  }
+
   function activateView(viewName) {
     const view = document.querySelector(`[data-view-panel="${viewName}"]`) || document.querySelector('[data-view-panel="overview"]');
     document.querySelectorAll('[data-view-panel]').forEach((panel) => { panel.hidden = panel !== view; });
