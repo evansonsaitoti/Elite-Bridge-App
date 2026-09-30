@@ -268,11 +268,11 @@
                 <div class="role-selector">
                     <div class="role-option">
                         <input type="radio" id="caregiver" name="role" value="caregiver" required onchange="updateCompanySection()">
-                        <label for="caregiver">👵 Caregiver</label>
+                        <label for="caregiver"><span class="role-icon">🫶</span> Caregiver</label>
                     </div>
                     <div class="role-option">
                         <input type="radio" id="employer" name="role" value="employer" required onchange="updateCompanySection()">
-                        <label for="employer">🏢 Employer</label>
+                        <label for="employer"><span class="role-icon">🏡</span> Employer / Family</label>
                     </div>
                 </div>
             </div>
@@ -300,12 +300,12 @@
 
             <div class="form-group">
                 <label for="password">Password</label>
-                <input type="password" id="password" name="password" placeholder="••••••••" required minlength="8">
+                <div class="password-wrap"><input type="password" id="password" name="password" placeholder="••••••••" required minlength="8"><button class="show-password" type="button" data-toggle-password="password" aria-pressed="false">Show</button></div>
             </div>
 
             <div class="form-group">
                 <label for="confirmPassword">Confirm Password</label>
-                <input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required minlength="8">
+                <div class="password-wrap"><input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required minlength="8"><button class="show-password" type="button" data-toggle-password="confirmPassword" aria-pressed="false">Show</button></div>
             </div>
 
             <div class="company-section" id="companySection">
@@ -323,6 +323,20 @@
 
             <div class="loading" id="loading">Creating account...</div>
         </form>
+
+        <section class="sms-verification" id="smsVerification" aria-live="polite">
+            <h3>Verify mobile number</h3>
+            <p id="smsHelp">We can send a 6-digit code by text so trial users do not get stuck later.</p>
+            <div class="form-group">
+                <label for="smsCode">Verification Code</label>
+                <input type="text" id="smsCode" inputmode="numeric" maxlength="6" placeholder="123456">
+            </div>
+            <div class="sms-actions">
+                <button type="button" id="sendSmsCode">Send verification code</button>
+                <button type="button" id="verifySmsCode">Verify code</button>
+                <button type="button" class="secondary" id="skipSms">Skip for now</button>
+            </div>
+        </section>
 
         <div class="signin-link">
             Already have an account? <a href="/">Sign in here</a>
@@ -444,19 +458,23 @@
             // Store token
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
+            createdUser = data.user;
+            createdToken = data.token;
+            createdPhone = phone;
 
-            // Show success message
-            successDiv.textContent = 'Account created successfully! Redirecting...';
+            // Show success message and offer text verification before onboarding.
+            successDiv.textContent = 'Account created successfully.';
             successDiv.style.display = 'block';
 
-            // New members complete role-specific setup before opening the dashboard.
-            setTimeout(() => {
-                if (role === 'caregiver' || role === 'employer') {
-                    window.location.href = '/onboarding';
-                } else {
-                    window.location.href = 'index.html';
-                }
-            }, 1500);
+            if (createdPhone) {
+                document.getElementById('smsVerification').classList.add('show');
+                document.getElementById('smsHelp').textContent = `We will send a 6-digit code to ${createdPhone}. Standard text message rates may apply.`;
+                submitBtn.style.display = 'none';
+                loading.style.display = 'none';
+                await requestSmsCode();
+            } else {
+                setTimeout(redirectAfterSignup, 900);
+            }
 
         } catch (error) {
             errorDiv.textContent = error.message || 'An error occurred. Please try again.';
@@ -465,6 +483,56 @@
             loading.style.display = 'none';
         }
     }
+
+    async function requestSmsCode() {
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        if (!createdToken || !createdPhone) return;
+        try {
+            const response = await fetch(`${API_BASE}/sms/verify/start`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${createdToken}` },
+                body: JSON.stringify({ phone: createdPhone }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(getApiErrorMessage(data) || 'Could not send verification code.');
+            successDiv.textContent = data.message || 'Verification code sent.';
+            successDiv.style.display = 'block';
+        } catch (error) {
+            errorDiv.textContent = error.message || 'SMS is not ready yet. You can skip this step and verify later.';
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    async function completeSmsVerification() {
+        const code = document.getElementById('smsCode').value.trim();
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        if (!/^\d{6}$/.test(code)) {
+            errorDiv.textContent = 'Enter the 6-digit code from the text message.';
+            errorDiv.style.display = 'block';
+            return;
+        }
+        try {
+            const response = await fetch(`${API_BASE}/sms/verify/complete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${createdToken}` },
+                body: JSON.stringify({ code, consent: true }),
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(getApiErrorMessage(data) || 'Could not verify this code.');
+            successDiv.textContent = data.message || 'Mobile number verified.';
+            successDiv.style.display = 'block';
+            setTimeout(redirectAfterSignup, 700);
+        } catch (error) {
+            errorDiv.textContent = error.message || 'Code verification failed.';
+            errorDiv.style.display = 'block';
+        }
+    }
+
+    document.getElementById('sendSmsCode')?.addEventListener('click', requestSmsCode);
+    document.getElementById('verifySmsCode')?.addEventListener('click', completeSmsVerification);
+    document.getElementById('skipSms')?.addEventListener('click', redirectAfterSignup);
 
     function normalizePhone(value) {
         const trimmed = value.trim();
