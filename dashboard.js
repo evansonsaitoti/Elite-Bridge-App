@@ -678,5 +678,6 @@
   window.addEventListener('focus', () => {
     if (!savingTime && !document.querySelector('textarea:not(:placeholder-shown)') && !['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) void refreshShared();
   });
+  initializeContractGenerator();
   (expectedRole === 'employer' ? loadEmployer() : loadCaregiver()).catch(() => notify('Some live information could not be loaded. Please refresh to try again.'));
 })();
