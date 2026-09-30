@@ -217,9 +217,30 @@ router.post("/reset-password", async (req, res, next) => {
     await db
       .update(passwordResetTokens)
       .set({ usedAt: new Date() })
-      .where(eq(passwordResetTokens.id, resetToken.id));
+      .where(eq(passwordResetTokens.userId, resetToken.userId));
 
-    res.json({ message: "Your password has been updated. You can now sign in." });
+    const updatedUserList = await db.select().from(users).where(eq(users.id, resetToken.userId)).limit(1);
+    const updatedUser = updatedUserList[0];
+    if (!updatedUser || !updatedUser.isActive) {
+      throw new AppError(403, "User account is disabled");
+    }
+    const token = generateToken({ id: updatedUser.id, email: updatedUser.email, role: updatedUser.role });
+
+    res.json({
+      message: "Your password has been updated. You are now signed in.",
+      token,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        verificationStatus: updatedUser.verificationStatus,
+        emailVerified: updatedUser.emailVerified,
+        profileImage: updatedUser.profileImage,
+      },
+    });
   } catch (error) {
     next(error);
   }
