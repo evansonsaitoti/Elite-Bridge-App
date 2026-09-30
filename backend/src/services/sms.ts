@@ -37,14 +37,17 @@ export function smsReady() {
 }
 export async function sendSms(phone: string, body: string) {
   if (!smsReady()) throw new Error("SMS is not configured");
+  const callbackBase = process.env.SMS_WEBHOOK_BASE_URL?.replace(/\/$/, "");
+  const payload = new URLSearchParams({
+    To: phone,
+    From: config.TWILIO_PHONE_NUMBER!,
+    Body: body,
+  });
+  if (callbackBase) payload.set("StatusCallback", `${callbackBase}/api/sms/status`);
+
   const response = await axios.post(
     `https://api.twilio.com/2010-04-01/Accounts/${config.TWILIO_ACCOUNT_SID}/Messages.json`,
-    new URLSearchParams({
-      To: phone,
-      From: config.TWILIO_PHONE_NUMBER!,
-      Body: body,
-      StatusCallback: `${process.env.SMS_WEBHOOK_BASE_URL!.replace(/\/$/, "")}/api/sms/status`,
-    }).toString(),
+    payload.toString(),
     {
       auth: {
         username: config.TWILIO_ACCOUNT_SID!,
