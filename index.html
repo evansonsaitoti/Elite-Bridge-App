@@ -305,12 +305,32 @@
     tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
 
+
+    function forgotPasswordUrl() {
+      const email = emailInput.value.trim();
+      return email ? `/forgot-password?email=${encodeURIComponent(email)}` : '/forgot-password';
+    }
+
+    function showLoginRecovery(message) {
+      showMessage(errorMessage, message);
+      const reset = document.createElement('div');
+      reset.className = 'reset-actions';
+      const resetLink = document.createElement('a');
+      resetLink.className = 'reset-button';
+      resetLink.href = forgotPasswordUrl();
+      resetLink.textContent = 'Reset password';
+      const hint = document.createElement('span');
+      hint.textContent = 'If this keeps happening, reset the password and try again.';
+      reset.append(resetLink, hint);
+      errorMessage.appendChild(reset);
+    }
+
     const forgotPasswordLink = document.getElementById('forgotPasswordLink');
-    const updateForgotLink = () => { forgotPasswordLink.href = forgotPasswordUrl(); };
-    emailInput.addEventListener('input', updateForgotLink);
+    const updateForgotLink = () => { if (forgotPasswordLink) forgotPasswordLink.href = forgotPasswordUrl(); };
+    emailInput?.addEventListener('input', updateForgotLink);
     updateForgotLink();
 
-    togglePassword.addEventListener('click', () => {
+    togglePassword?.addEventListener('click', () => {
       const showing = passwordInput.type === 'text';
       passwordInput.type = showing ? 'password' : 'text';
       togglePassword.textContent = showing ? 'Show' : 'Hide';
