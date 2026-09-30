@@ -109,6 +109,9 @@
     .message { display: none; margin: 21px 0 -3px; padding: 12px 14px; border: 1px solid transparent; border-radius: 11px; font-size: 13px; line-height: 1.45; }
     .message.error { color: var(--danger); background: var(--danger-bg); border-color: #f3cccc; }
     .message.success { color: var(--success); background: var(--success-bg); border-color: #cde8d7; }
+    .reset-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+    .reset-button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 0 14px; border-radius: 999px; color: #fff; background: var(--forest); font-size: 12px; font-weight: 850; text-decoration: none; }
+    .reset-actions span { color: var(--muted); font-size: 12px; font-weight: 650; }
     form { margin-top: 27px; }
     .field { margin-bottom: 18px; }
     .field-head { display: flex; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
@@ -246,7 +249,7 @@
               <input id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="name@example.com" required>
             </div>
             <div class="field">
-              <div class="field-head"><label for="password">Password</label><a class="help-link" href="/forgot-password">Forgot password?</a></div>
+              <div class="field-head"><label for="password">Password</label><a class="help-link" id="forgotPasswordLink" href="/forgot-password">Forgot password?</a></div>
               <div class="input-wrap">
                 <input class="password-input" id="password" name="password" type="password" autocomplete="current-password" placeholder="Enter your password" minlength="6" required>
                 <button class="show-password" id="togglePassword" type="button" aria-label="Show password" aria-pressed="false">Show</button>
@@ -302,6 +305,11 @@
     tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
 
+    const forgotPasswordLink = document.getElementById('forgotPasswordLink');
+    const updateForgotLink = () => { forgotPasswordLink.href = forgotPasswordUrl(); };
+    emailInput.addEventListener('input', updateForgotLink);
+    updateForgotLink();
+
     togglePassword.addEventListener('click', () => {
       const willShow = passwordInput.type === 'password';
       passwordInput.type = willShow ? 'text' : 'password';
@@ -348,7 +356,11 @@
         window.setTimeout(() => window.location.assign(destination), 500);
       } catch (error) {
         const message = error instanceof TypeError ? 'We could not reach Elite Bridge right now. Please try again in a moment.' : error.message;
-        showMessage(errorMessage, message);
+        if (error instanceof TypeError) {
+          showMessage(errorMessage, message);
+        } else {
+          showLoginRecovery(message || 'The email or password you entered is not correct.');
+        }
         setLoading(false);
       }
     });
