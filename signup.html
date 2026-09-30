@@ -125,6 +125,45 @@
             box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
         }
 
+        .form-group .password-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .form-group .password-field input {
+            width: 100%;
+            padding-right: 78px !important;
+        }
+
+        .form-group .password-field .show-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: auto !important;
+            min-width: 54px;
+            height: 32px;
+            margin: 0 !important;
+            padding: 0 10px;
+            border: 0;
+            border-radius: 6px;
+            background: rgba(11, 55, 38, 0.08);
+            color: var(--primary-dark);
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .form-group .password-field .show-password:hover,
+        .form-group .password-field .show-password:focus {
+            background: rgba(11, 55, 38, 0.14);
+            outline: none;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -324,20 +363,6 @@
             <div class="loading" id="loading">Creating account...</div>
         </form>
 
-        <section class="sms-verification" id="smsVerification" aria-live="polite">
-            <h3>Verify mobile number</h3>
-            <p id="smsHelp">We can send a 6-digit code by text so trial users do not get stuck later.</p>
-            <div class="form-group">
-                <label for="smsCode">Verification Code</label>
-                <input type="text" id="smsCode" inputmode="numeric" maxlength="6" placeholder="123456">
-            </div>
-            <div class="sms-actions">
-                <button type="button" id="sendSmsCode">Send verification code</button>
-                <button type="button" id="verifySmsCode">Verify code</button>
-                <button type="button" class="secondary" id="skipSms">Skip for now</button>
-            </div>
-        </section>
-
         <div class="signin-link">
             Already have an account? <a href="/">Sign in here</a>
         </div>
@@ -458,23 +483,11 @@
             // Store token
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
-            createdUser = data.user;
-            createdToken = data.token;
-            createdPhone = phone;
 
-            // Show success message and offer text verification before onboarding.
-            successDiv.textContent = 'Account created successfully.';
+            successDiv.textContent = 'Account created successfully. Redirecting...';
             successDiv.style.display = 'block';
 
-            if (createdPhone) {
-                document.getElementById('smsVerification').classList.add('show');
-                document.getElementById('smsHelp').textContent = `We will send a 6-digit code to ${createdPhone}. Standard text message rates may apply.`;
-                submitBtn.style.display = 'none';
-                loading.style.display = 'none';
-                await requestSmsCode();
-            } else {
-                setTimeout(redirectAfterSignup, 900);
-            }
+            setTimeout(redirectAfterSignup, 900);
 
         } catch (error) {
             errorDiv.textContent = error.message || 'An error occurred. Please try again.';
@@ -484,55 +497,20 @@
         }
     }
 
-    async function requestSmsCode() {
-        const errorDiv = document.getElementById('errorMessage');
-        const successDiv = document.getElementById('successMessage');
-        if (!createdToken || !createdPhone) return;
-        try {
-            const response = await fetch(`${API_BASE}/sms/verify/start`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${createdToken}` },
-                body: JSON.stringify({ phone: createdPhone }),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(getApiErrorMessage(data) || 'Could not send verification code.');
-            successDiv.textContent = data.message || 'Verification code sent.';
-            successDiv.style.display = 'block';
-        } catch (error) {
-            errorDiv.textContent = error.message || 'SMS is not ready yet. You can skip this step and verify later.';
-            errorDiv.style.display = 'block';
-        }
-    }
 
-    async function completeSmsVerification() {
-        const code = document.getElementById('smsCode').value.trim();
-        const errorDiv = document.getElementById('errorMessage');
-        const successDiv = document.getElementById('successMessage');
-        if (!/^\d{6}$/.test(code)) {
-            errorDiv.textContent = 'Enter the 6-digit code from the text message.';
-            errorDiv.style.display = 'block';
-            return;
-        }
-        try {
-            const response = await fetch(`${API_BASE}/sms/verify/complete`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${createdToken}` },
-                body: JSON.stringify({ code, consent: true }),
-            });
-            const data = await response.json().catch(() => ({}));
-            if (!response.ok) throw new Error(getApiErrorMessage(data) || 'Could not verify this code.');
-            successDiv.textContent = data.message || 'Mobile number verified.';
-            successDiv.style.display = 'block';
-            setTimeout(redirectAfterSignup, 700);
-        } catch (error) {
-            errorDiv.textContent = error.message || 'Code verification failed.';
-            errorDiv.style.display = 'block';
-        }
-    }
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-toggle-password]');
+        if (!button) return;
 
-    document.getElementById('sendSmsCode')?.addEventListener('click', requestSmsCode);
-    document.getElementById('verifySmsCode')?.addEventListener('click', completeSmsVerification);
-    document.getElementById('skipSms')?.addEventListener('click', redirectAfterSignup);
+        const input = document.getElementById(button.dataset.togglePassword);
+        if (!input) return;
+
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        button.textContent = isHidden ? 'Hide' : 'Show';
+        button.setAttribute('aria-pressed', String(isHidden));
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
 
     function normalizePhone(value) {
         const trimmed = value.trim();
