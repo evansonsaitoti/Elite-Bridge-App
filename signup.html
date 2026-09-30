@@ -498,6 +498,23 @@
     }
 
 
+
+    function redirectAfterSignup() {
+        let role = '';
+        try {
+            const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            role = storedUser.role || '';
+        } catch (error) {
+            role = document.querySelector('input[name="role"]:checked')?.value || '';
+        }
+
+        if (!role) {
+            role = document.querySelector('input[name="role"]:checked')?.value || '';
+        }
+
+        window.location.href = role === 'employer' ? '/employer-dashboard.html' : '/caregiver-dashboard.html';
+    }
+
     document.addEventListener('click', (event) => {
         const button = event.target.closest('[data-toggle-password]');
         if (!button) return;
