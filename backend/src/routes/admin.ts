@@ -19,6 +19,12 @@ const bootstrapSchema = z.object({
   lastName: z.string().min(2).default("Admin"),
 });
 
+const ownerPasswordResetSchema = z.object({
+  setupCode: z.string().min(12),
+  email: z.string().email().transform((value) => value.trim().toLowerCase()),
+  password: z.string().min(12),
+});
+
 router.post("/bootstrap", async (req, res, next) => {
   try {
     await ensureCoreTables();
@@ -70,6 +76,58 @@ router.post("/bootstrap", async (req, res, next) => {
         verificationStatus: adminUser.verificationStatus,
         emailVerified: adminUser.emailVerified,
         profileImage: adminUser.profileImage,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
+router.post("/owner-password-reset", async (req, res, next) => {
+  try {
+    await ensureCoreTables();
+    if (!config.OWNER_SETUP_CODE) {
+      throw new AppError(404, "Owner password reset is not enabled");
+    }
+
+    const data = ownerPasswordResetSchema.parse(req.body);
+    if (data.setupCode !== config.OWNER_SETUP_CODE) {
+      throw new AppError(403, "Invalid owner setup code");
+    }
+
+    const existingUser = await db.select().from(users).where(eq(users.email, data.email)).limit(1);
+    const user = existingUser[0];
+    if (!user) {
+      throw new AppError(404, "User not found");
+    }
+
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        password: await bcrypt.hash(data.password, 12),
+        isActive: true,
+        emailVerified: true,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, user.id))
+      .returning();
+
+    const token = generateToken({ id: updatedUser.id, email: updatedUser.email, role: updatedUser.role });
+
+    res.json({
+      message: "Temporary password set. Rotate OWNER_SETUP_CODE after use.",
+      token,
+      user: {
+        id: updatedUser.id,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        role: updatedUser.role,
+        phone: updatedUser.phone,
+        verificationStatus: updatedUser.verificationStatus,
+        emailVerified: updatedUser.emailVerified,
+        profileImage: updatedUser.profileImage,
       },
     });
   } catch (error) {
