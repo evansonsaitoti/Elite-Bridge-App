@@ -677,7 +677,7 @@ a { color: inherit; }
 
 .template-value {
   font-family: Cambria, Georgia, "Times New Roman", serif;
-  font-size: clamp(9px, 1.22vw, 14px);
+  font-size: clamp(8px, 1.08vw, 13px);
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -691,16 +691,16 @@ a { color: inherit; }
 
 .template-signature {
   font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
-  font-size: clamp(13px, 1.75vw, 22px);
+  font-size: clamp(11px, 1.42vw, 18px);
   line-height: 1;
   white-space: nowrap;
 }
 
-.value-client { left: 24.6%; top: 28.85%; }
-.value-recipient { left: 26.7%; top: 31.7%; }
-.value-start { left: 22.8%; top: 45.72%; }
-.value-day-rate { left: 47.7%; top: 63.55%; }
-.value-evening-rate { left: 43.7%; top: 65.65%; }
+.value-client { left: 24.6%; top: 28.48%; }
+.value-recipient { left: 26.7%; top: 31.33%; }
+.value-start { left: 22.8%; top: 45.28%; }
+.value-day-rate { left: 47.7%; top: 63.16%; }
+.value-evening-rate { left: 43.7%; top: 65.26%; }
 .mark-mon { left: 13.62%; top: 50.37%; }
 .mark-tue { left: 36.94%; top: 50.37%; }
 .mark-wed { left: 60.37%; top: 50.37%; }
@@ -712,10 +712,10 @@ a { color: inherit; }
 .mark-evening { left: 13.62%; top: 65.82%; }
 .mark-weekly { left: 27.85%; top: 68.48%; }
 .mark-biweekly { left: 39.45%; top: 68.48%; }
-.sig-client { left: 25.2%; top: 73.25%; }
-.date-client { left: 56.3%; top: 73.15%; }
-.sig-agency { left: 31.7%; top: 76.58%; }
-.date-agency { left: 56.8%; top: 76.47%; }
+.sig-client { left: 25.2%; top: 72.82%; }
+.date-client { left: 56.3%; top: 72.76%; }
+.sig-agency { left: 31.7%; top: 76.15%; }
+.date-agency { left: 56.8%; top: 76.08%; }
 
 .contract-empty-state {
   display: grid;

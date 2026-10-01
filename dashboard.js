@@ -152,7 +152,7 @@
 
     preview.innerHTML = `
       <section class="contract-template-page" aria-label="Contract page 1">
-        <img src="/elite-contract-template-1.png?v=blank-contract-20261001" alt="Elite Bridge contract page 1">
+        <img src="/elite-contract-template-1.png?v=contract-align-20261001" alt="Elite Bridge contract page 1">
         <span class="template-value value-client">${escapeHtml(clientName)}</span>
         <span class="template-value value-recipient">${escapeHtml(careRecipient)}</span>
         <span class="template-value value-start">${escapeHtml(startDate)}</span>
@@ -171,7 +171,7 @@
         <span class="template-value value-evening-rate">${escapeHtml(eveningRate)}</span>
       </section>
       <section class="contract-template-page" aria-label="Contract page 2">
-        <img src="/elite-contract-template-2.png?v=blank-contract-20261001" alt="Elite Bridge contract page 2">
+        <img src="/elite-contract-template-2.png?v=contract-align-20261001" alt="Elite Bridge contract page 2">
         <span class="template-signature sig-client">${escapeHtml(clientSigner)}</span>
         <span class="template-value date-client">${escapeHtml(clientDate)}</span>
         <span class="template-signature sig-agency">${escapeHtml(agencySigner)}</span>
