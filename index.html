@@ -466,6 +466,39 @@
         color: var(--forest-2);
         text-decoration: none;
       }
+      body.app-entry:not(.mobile-login-open) .auth-side {
+        background:
+          radial-gradient(circle at 12% 0%, rgba(6,62,44,.1), transparent 28%),
+          radial-gradient(circle at 88% 10%, rgba(200,139,44,.12), transparent 30%),
+          #f4f7f6;
+      }
+      body.app-entry:not(.mobile-login-open) .mobile-welcome-actions {
+        display: flex;
+      }
+      body.app-entry:not(.mobile-login-open) .auth-header,
+      body.app-entry:not(.mobile-login-open) #loginForm,
+      body.app-entry:not(.mobile-login-open) .join,
+      body.app-entry:not(.mobile-login-open) .auth-footer,
+      body.app-entry:not(.mobile-login-open) .message {
+        display: none !important;
+      }
+      body.app-entry:not(.mobile-login-open) .mobile-logo {
+        width: 170px;
+        margin: 0 auto 22px;
+      }
+      body.app-entry.mobile-login-open .mobile-welcome-actions {
+        display: none;
+      }
+      body.app-entry.mobile-login-open .auth-side {
+        background: #fff;
+      }
+      body.app-entry.mobile-login-open .mobile-logo {
+        width: 156px;
+        margin-bottom: 26px;
+      }
+      body[data-preview="caregiver"] .mobile-welcome-actions p::after {
+        content: "Caregiver access";
+      }
       .auth-shell { justify-content: flex-start; }
       .auth-header { text-align: center; }
       .auth-header h2 {
@@ -608,11 +641,11 @@
 
       <section class="auth-side">
         <div class="auth-shell">
-          <div class="mobile-welcome-actions" aria-label="Elite Bridge employer welcome actions">
-            <h2>Care organizations start here</h2>
-            <p>A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.</p>
+          <div class="mobile-welcome-actions" aria-label="Elite Bridge app welcome actions">
+            <h2 id="mobileWelcomeTitle">Care organizations start here</h2>
+            <p id="mobileWelcomeCopy">A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.</p>
             <div class="mobile-entry-buttons">
-              <a class="mobile-entry-button" href="/signup?role=employer">Sign up</a>
+              <a class="mobile-entry-button" id="mobileSignupButton" href="/signup?role=employer">Sign up</a>
               <button class="mobile-entry-button primary" id="mobileLoginButton" type="button">Log in</button>
             </div>
             <div class="mobile-policy-links">
@@ -670,14 +703,35 @@
     const errorMessage = document.getElementById('errorMessage');
     const successMessage = document.getElementById('successMessage');
     const mobileLoginButton = document.getElementById('mobileLoginButton');
+    const mobileSignupButton = document.getElementById('mobileSignupButton');
+    const mobileWelcomeTitle = document.getElementById('mobileWelcomeTitle');
+    const mobileWelcomeCopy = document.getElementById('mobileWelcomeCopy');
     const tabs = [document.getElementById('caregiverTab'), document.getElementById('employerTab')];
     const previews = [document.getElementById('caregiverPreview'), document.getElementById('employerPreview')];
     let previewIndex = 0;
     let previewTimer;
 
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.body.dataset.preview = 'employer';
-    if (new URLSearchParams(window.location.search).get('login') === '1') document.body.classList.add('mobile-login-open');
+    const params = new URLSearchParams(window.location.search);
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    const isWebLoginRoute = path === '/login';
+    const isAppEntry = !isWebLoginRoute || params.get('app') === '1';
+    const entryRole = params.get('role') === 'caregiver' ? 'caregiver' : 'employer';
+
+    if (isAppEntry) document.body.classList.add('app-entry');
+    if (params.get('login') === '1') document.body.classList.add('mobile-login-open');
+
+    function applyEntryRole(role) {
+      if (role === 'caregiver') {
+        mobileWelcomeTitle.textContent = 'Caregivers start here';
+        mobileWelcomeCopy.textContent = 'A dedicated caregiver app connected to Elite Bridge staffing requests.';
+        mobileSignupButton.href = '/signup?role=caregiver';
+        return;
+      }
+      mobileWelcomeTitle.textContent = 'Care organizations start here';
+      mobileWelcomeCopy.textContent = 'A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.';
+      mobileSignupButton.href = '/signup?role=employer';
+    }
 
     function selectPreview(index, restart = true) {
       previewIndex = index;
@@ -693,13 +747,14 @@
     }
 
     tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
-    selectPreview(1, false);
+    applyEntryRole(entryRole);
+    selectPreview(entryRole === 'caregiver' ? 0 : 1, false);
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
 
     mobileLoginButton?.addEventListener('click', () => {
       document.body.classList.add('mobile-login-open');
       window.clearInterval(previewTimer);
-      selectPreview(1, false);
+      selectPreview(previewIndex, false);
       window.setTimeout(() => emailInput.focus(), 120);
     });
 
