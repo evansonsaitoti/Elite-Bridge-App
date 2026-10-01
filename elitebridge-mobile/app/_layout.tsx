@@ -21,6 +21,10 @@ import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
 import { TimekeepingProvider } from "@/lib/timekeeping-context";
 
+export const unstable_settings = {
+  initialRouteName: "(root)",
+};
+
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldPlaySound: true,

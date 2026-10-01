@@ -64,8 +64,10 @@ requireSource("app/(staff)/home.tsx", "Call-out reported");
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
 if (config.expo.version !== "1.2.6") throw new Error("Caregiver release version must be 1.2.6");
 if (config.expo.ios.buildNumber !== "59") throw new Error("Caregiver iOS build number must be 59");
+requireSource("app/_layout.tsx", 'initialRouteName: "(root)"');
 requireSource("app/(root)/index.tsx", "Care professionals start here");
 requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
+requireSource("app/(staff)/_layout.tsx", 'router.replace("/(root)")');
 
 const loginSource = fs.readFileSync(path.join(root, "app/(auth)/login.tsx"), "utf8");
 if (/review access|REVIEW_PASSWORD|demo:\s*true/i.test(loginSource)) {
