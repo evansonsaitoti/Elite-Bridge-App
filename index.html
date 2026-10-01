@@ -240,62 +240,10 @@
       body { background: #fff; }
       .site-shell { width: 100%; padding: 0; }
       .portal-card { min-height: 100vh; }
-      body:not(.mobile-login-open) .portal-card {
-        min-height: 100svh;
-        background: url("/employer-auth-exact.jpeg") center top / cover no-repeat;
-      }
-      body:not(.mobile-login-open) .product-side {
-        display: none;
-      }
-      body:not(.mobile-login-open) .auth-side {
-        position: fixed;
-        inset: 0;
-        z-index: 10;
-        margin: 0;
-        padding: 0;
-        border-radius: 0;
-        background: transparent;
-        box-shadow: none;
-      }
-      body:not(.mobile-login-open) .auth-shell {
-        position: relative;
-        width: 100%;
-        max-width: none;
-        height: 100%;
-      }
-      body:not(.mobile-login-open) .mobile-welcome-actions {
-        position: absolute;
-        inset: 0;
-        display: block;
-      }
-      body:not(.mobile-login-open) .mobile-welcome-actions h2,
-      body:not(.mobile-login-open) .mobile-welcome-actions p,
-      body:not(.mobile-login-open) .mobile-policy-links {
-        display: none;
-      }
-      body:not(.mobile-login-open) .mobile-entry-buttons {
-        position: absolute;
-        right: 5.1%;
-        bottom: calc(env(safe-area-inset-bottom) + 78px);
-        left: 5.1%;
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        height: 82px;
-        margin: 0;
-      }
-      body:not(.mobile-login-open) .mobile-entry-button {
-        min-height: 0;
-        border: 0;
-        border-radius: 21px;
-        color: transparent;
-        background: transparent;
-        box-shadow: none;
-      }
       .product-side {
-        min-height: 100vh;
+        min-height: 100svh;
         justify-content: space-between;
-        padding: max(34px, env(safe-area-inset-top)) 39px 370px;
+        padding: max(34px, env(safe-area-inset-top)) 39px 358px;
         border-radius: 0;
         background:
           linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .18) 42%, rgba(4, 25, 18, .96) 100%),
@@ -409,7 +357,7 @@
       .auth-side {
         position: relative;
         z-index: 2;
-        margin-top: -364px;
+        margin-top: -350px;
         padding: 31px 35px max(28px, calc(env(safe-area-inset-bottom) + 18px));
         border-radius: 38px 38px 0 0;
         box-shadow: 0 -20px 45px rgba(0,0,0,.16);
@@ -479,7 +427,7 @@
         display: none;
       }
       body.mobile-login-open .auth-side {
-        margin-top: -320px;
+        margin-top: -330px;
         padding-top: 30px;
       }
       .auth-header { text-align: center; }
