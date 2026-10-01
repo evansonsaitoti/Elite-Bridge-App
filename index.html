@@ -352,10 +352,7 @@
         min-height: 100svh;
         padding: max(32px, env(safe-area-inset-top)) 22px max(24px, calc(env(safe-area-inset-bottom) + 18px));
         border-radius: 0;
-        background:
-          radial-gradient(circle at 12% 0%, rgba(6,62,44,.1), transparent 28%),
-          radial-gradient(circle at 88% 10%, rgba(200,139,44,.12), transparent 30%),
-          #f4f7f6;
+        background: #fff;
         box-shadow: none;
       }
       .auth-shell {
@@ -368,12 +365,12 @@
       }
       .mobile-logo {
         display: block;
-        width: 170px;
-        margin: 0 auto 22px;
+        width: 190px;
+        margin: 38px auto 28px;
         filter: none;
       }
       .mobile-welcome-actions {
-        display: flex;
+        display: none;
         flex: 1;
         flex-direction: column;
         justify-content: center;
@@ -469,32 +466,19 @@
         color: var(--forest-2);
         text-decoration: none;
       }
-      body:not(.mobile-login-open) .auth-header,
-      body:not(.mobile-login-open) #loginForm,
-      body:not(.mobile-login-open) .join,
-      body:not(.mobile-login-open) .auth-footer,
-      body:not(.mobile-login-open) .message {
-        display: none !important;
-      }
-      body.mobile-login-open .mobile-welcome-actions {
-        display: none;
-      }
-      body.mobile-login-open .auth-side {
-        background: #fff;
-      }
-      body.mobile-login-open .auth-shell {
-        justify-content: flex-start;
-      }
-      body.mobile-login-open .mobile-logo {
-        width: 156px;
-        margin-bottom: 26px;
-        filter: none;
-      }
+      .auth-shell { justify-content: flex-start; }
       .auth-header { text-align: center; }
       .auth-header h2 {
         color: #111d18;
-        font-size: 29px;
+        font-size: 34px;
         letter-spacing: -.04em;
+      }
+      .auth-header > p {
+        max-width: 340px;
+        margin-inline: auto;
+        color: #6a756f;
+        font-size: 16px;
+        line-height: 1.45;
       }
       .app-sync-copy { display: none; }
       .field-head { margin-bottom: 7px; }
@@ -502,22 +486,39 @@
       input[type="password"],
       input[type="text"],
       .submit {
-        height: 58px;
+        height: 60px;
         border-radius: 18px;
       }
+      input[type="email"],
+      input[type="password"],
+      input[type="text"] {
+        border-color: #dce6e1;
+        font-size: 16px;
+      }
+      input[type="email"]:focus,
+      input[type="password"]:focus,
+      input[type="text"]:focus {
+        border-color: var(--forest-2);
+        box-shadow: 0 0 0 4px rgba(6,62,44,.1);
+      }
       .submit {
-        margin-top: 20px;
+        margin-top: 22px;
         border-radius: 18px;
         font-size: 16px;
       }
-      .join { margin-top: 22px; padding-top: 20px; }
+      .join { margin-top: 28px; padding-top: 26px; }
       .join > p { text-align: center; }
       .join-options { grid-template-columns: 1fr 1fr; }
       .join-card {
-        min-height: 76px;
+        min-height: 84px;
         align-items: center;
-        border-radius: 18px;
+        border-color: #dde7e2;
+        border-radius: 20px;
         box-shadow: 0 9px 20px rgba(6,62,44,.07);
+      }
+      .join-icon {
+        color: #fff;
+        background: var(--forest-2);
       }
     }
 
@@ -642,8 +643,8 @@
           <div class="join">
             <p>New to Elite Bridge? Choose the account you need.</p>
             <div class="join-options">
-              <a class="join-card" href="/signup?role=caregiver"><span class="join-icon" aria-hidden="true">🫶</span><span><strong>Caregiver account</strong><span>Work and manage shifts</span></span></a>
-              <a class="join-card" href="/signup?role=employer"><span class="join-icon" aria-hidden="true">🏡</span><span><strong>Employer account</strong><span>Hire and manage care</span></span></a>
+              <a class="join-card" href="/signup?role=caregiver"><span class="join-icon" aria-hidden="true">CG</span><span><strong>Caregiver account</strong><span>Work and manage shifts</span></span></a>
+              <a class="join-card" href="/signup?role=employer"><span class="join-icon" aria-hidden="true">ER</span><span><strong>Employer account</strong><span>Hire and manage care</span></span></a>
             </div>
           </div>
 
