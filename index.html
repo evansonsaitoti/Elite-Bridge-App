@@ -241,9 +241,9 @@
       .site-shell { width: 100%; padding: 0; }
       .portal-card { min-height: 100vh; }
       .product-side {
-        min-height: calc(100vh - 220px);
+        min-height: 100vh;
         justify-content: space-between;
-        padding: 94px 39px 245px;
+        padding: max(34px, env(safe-area-inset-top)) 39px 370px;
         border-radius: 0;
         background:
           linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .18) 42%, rgba(4, 25, 18, .96) 100%),
@@ -260,7 +260,7 @@
       .sync-note { display: none; }
       .mobile-hero-brand {
         position: absolute;
-        top: 34px;
+        top: max(34px, env(safe-area-inset-top));
         left: 39px;
         display: flex;
         align-items: center;
@@ -357,8 +357,8 @@
       .auth-side {
         position: relative;
         z-index: 2;
-        margin-top: -220px;
-        padding: 32px 35px 29px;
+        margin-top: -364px;
+        padding: 31px 35px max(28px, calc(env(safe-area-inset-bottom) + 18px));
         border-radius: 38px 38px 0 0;
         box-shadow: 0 -20px 45px rgba(0,0,0,.16);
       }
@@ -427,7 +427,7 @@
         display: none;
       }
       body.mobile-login-open .auth-side {
-        margin-top: -150px;
+        margin-top: -320px;
         padding-top: 30px;
       }
       .auth-header { text-align: center; }
