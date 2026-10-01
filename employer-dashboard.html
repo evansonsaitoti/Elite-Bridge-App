@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=mobile-dashboard-20261001">
+  <link rel="stylesheet" href="/app-shell.css?v=mobile-tabs-20261001">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -27,10 +27,11 @@
 
     <aside class="app-sidebar"><nav class="nav-shell" aria-label="Employer workspace">
       <a class="nav-link" href="/operations.html"><span class="nav-icon">✓</span>Care operations</a>
-      <div class="nav-section"><p class="nav-label">Workspace</p><a class="nav-link active" href="#overview" data-view="overview"><span class="nav-icon">⌂</span>Overview</a><a class="nav-link" href="#activity" data-view="activity"><span class="nav-icon">◎</span>Live activity</a></div>
-      <div class="nav-section"><p class="nav-label">Care operations</p><a class="nav-link" href="#shifts" data-view="shifts"><span class="nav-icon">▦</span>Shifts</a><a class="nav-link" href="#clients" data-view="clients"><span class="nav-icon">◇</span>Clients</a><a class="nav-link" href="#caregivers" data-view="caregivers"><span class="nav-icon">○</span>Caregivers</a><a class="nav-link" href="#timesheets" data-view="timesheets"><span class="nav-icon">◷</span>Timesheets</a></div>
+      <div class="nav-section"><p class="nav-label">Workspace</p><a class="nav-link active mobile-primary" href="#overview" data-view="overview"><span class="nav-icon">⌂</span>Overview</a><a class="nav-link" href="#activity" data-view="activity"><span class="nav-icon">◎</span>Live activity</a></div>
+      <div class="nav-section"><p class="nav-label">Care operations</p><a class="nav-link mobile-primary" href="#shifts" data-view="shifts"><span class="nav-icon">▦</span>Shifts</a><a class="nav-link" href="#clients" data-view="clients"><span class="nav-icon">◇</span>Clients</a><a class="nav-link mobile-primary" href="#caregivers" data-view="caregivers"><span class="nav-icon">○</span>Caregivers</a><a class="nav-link" href="#timesheets" data-view="timesheets"><span class="nav-icon">◷</span>Timesheets</a></div>
       <div class="nav-section"><p class="nav-label">Communication</p><a class="nav-link" href="#messages" data-view="messages"><span class="nav-icon">✉</span>Messages</a><a class="nav-link" href="#updates" data-view="updates"><span class="nav-icon">↗</span>Team updates</a></div>
-      <div class="nav-section"><p class="nav-label">Business</p><a class="nav-link" href="#payroll" data-view="payroll"><span class="nav-icon">$</span>Payroll & invoices</a><a class="nav-link" href="#contracts" data-view="contracts"><span class="nav-icon">§</span>Contracts</a><a class="nav-link" href="#compliance" data-view="compliance"><span class="nav-icon">✓</span>Compliance</a><a class="nav-link" href="#reports" data-view="reports"><span class="nav-icon">≋</span>Reports</a></div>
+      <div class="nav-section"><p class="nav-label">Business</p><a class="nav-link" href="#payroll" data-view="payroll"><span class="nav-icon">$</span>Payroll & invoices</a><a class="nav-link mobile-primary" href="#contracts" data-view="contracts"><span class="nav-icon">§</span>Contracts</a><a class="nav-link" href="#compliance" data-view="compliance"><span class="nav-icon">✓</span>Compliance</a><a class="nav-link" href="#reports" data-view="reports"><span class="nav-icon">≋</span>Reports</a></div>
+      <button class="mobile-more-tab" id="mobileMoreTab" type="button" aria-expanded="false"><span class="nav-icon">⋯</span>More</button>
       <div class="sidebar-foot"><strong>Web and mobile connected</strong><p>Coordinate your care operation from either screen with the same Elite Bridge account.</p><a href="/onboarding">Review organization setup →</a></div>
     </nav></aside>
     <button class="mobile-overlay" id="mobileOverlay" aria-label="Close navigation"></button>
@@ -152,6 +153,6 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=mobile-dashboard-20261001"></script>
+  <script src="/dashboard.js?v=mobile-tabs-20261001"></script>
 </body>
 </html>

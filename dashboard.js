@@ -34,6 +34,7 @@
   const accountMenu = document.getElementById('accountMenu');
   const menuToggle = document.getElementById('menuToggle');
   const mobileOverlay = document.getElementById('mobileOverlay');
+  const mobileMoreTab = document.getElementById('mobileMoreTab');
   const toast = document.getElementById('toast');
   const search = document.getElementById('globalSearch');
   const inviteDialog = document.getElementById('inviteDialog');
@@ -48,8 +49,15 @@
     toastTimer = setTimeout(() => { toast.hidden = true; }, 3600);
   }
 
-  function closeMobileNav() { document.body.classList.remove('nav-open'); }
+  function closeMobileNav() {
+    document.body.classList.remove('nav-open', 'mobile-more-open');
+    mobileMoreTab?.setAttribute('aria-expanded', 'false');
+  }
   menuToggle?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  mobileMoreTab?.addEventListener('click', () => {
+    const expanded = document.body.classList.toggle('mobile-more-open');
+    mobileMoreTab.setAttribute('aria-expanded', String(expanded));
+  });
   mobileOverlay?.addEventListener('click', closeMobileNav);
   accountButton?.addEventListener('click', () => {
     const expanded = accountButton.getAttribute('aria-expanded') === 'true';
