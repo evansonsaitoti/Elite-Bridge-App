@@ -292,10 +292,72 @@ a { color: inherit; }
   margin-top: 18px;
 }
 
+.page-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
 .form-note {
   margin: 10px 0 0;
   color: var(--muted);
   font-size: 0.88rem;
+}
+
+.contract-form .form-grid label {
+  color: var(--ink);
+  font-weight: 750;
+}
+
+.contract-form input,
+.contract-form textarea {
+  border-radius: 7px;
+  border: 1px solid rgba(6, 62, 44, 0.24);
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  margin-top: 6px;
+  padding: 10px 11px;
+  width: 100%;
+}
+
+.contract-form textarea {
+  min-height: 88px;
+  resize: vertical;
+}
+
+.classic-checks {
+  border: 1px solid rgba(6, 62, 44, 0.18);
+  border-radius: 10px;
+  display: grid;
+  gap: 9px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+  padding: 13px;
+}
+
+.classic-checks legend {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 6px;
+  text-transform: uppercase;
+}
+
+.classic-checks label {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 650;
+}
+
+.classic-checks input {
+  accent-color: #064832;
+  margin: 0;
+  width: auto;
 }
 
 .contract-preview-wrap {
@@ -308,15 +370,16 @@ a { color: inherit; }
 
 .contract-page {
   background: #fff;
-  color: #17352a;
-  width: min(100%, 816px);
-  min-height: 1056px;
+  color: #101f1a;
+  width: min(100%, 794px);
+  min-height: 1123px;
   margin: 0 auto;
-  padding: 34px 38px;
+  padding: 40px 52px 34px;
   border: 1px solid rgba(23, 53, 42, 0.12);
   box-shadow: 0 24px 70px rgba(18, 38, 31, 0.16);
-  font-size: 0.82rem;
-  line-height: 1.32;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.9rem;
+  line-height: 1.35;
 }
 
 .contract-letterhead {
@@ -324,27 +387,52 @@ a { color: inherit; }
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  border-bottom: 3px solid #0a573c;
-  padding-bottom: 18px;
-  margin-bottom: 24px;
+  border-bottom: 0;
+  padding-bottom: 12px;
+  margin-bottom: 18px;
 }
 
 .contract-logo {
-  width: 154px;
-  max-height: 68px;
+  width: 150px;
+  max-height: 82px;
   object-fit: contain;
 }
 
-.contract-letterhead div {
+.contract-letterhead div,
+.contract-contact {
   display: grid;
   gap: 4px;
-  text-align: right;
-  color: #49665c;
+  color: #203a32;
 }
 
 .contract-letterhead strong {
   color: #063e2c;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.contract-brand {
+  align-items: start;
+}
+
+.contract-contact {
+  align-self: end;
+  color: #506760;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.72rem;
+  text-align: right;
+}
+
+.contract-main-title {
+  color: #17261f;
+  font-family: Georgia, "Times New Roman", serif;
   font-size: 1.08rem;
+  letter-spacing: 0.03em;
+  margin: 14px 0 18px;
+  text-align: center;
+  text-transform: uppercase;
 }
 
 .contract-title-row {
@@ -415,14 +503,39 @@ a { color: inherit; }
 }
 
 .contract-copy h3 {
-  color: #063e2c;
+  color: #111f1a;
+  font-family: Inter, system-ui, sans-serif;
   font-size: 0.78rem;
-  margin: 8px 0 4px;
+  font-weight: 900;
+  margin: 9px 0 5px;
   text-transform: uppercase;
 }
 
 .contract-copy p {
   margin: 0 0 6px;
+}
+
+.contract-fill-line {
+  align-items: baseline;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 180px minmax(0, 1fr);
+  margin: 5px 0;
+}
+
+.contract-fill-line span,
+.contract-schedule-box > span {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 800;
+}
+
+.contract-fill-line strong {
+  border-bottom: 1px solid #17261f;
+  color: #17261f;
+  display: block;
+  font-weight: 600;
+  min-height: 20px;
+  padding: 0 6px 2px;
 }
 
 .contract-clause-grid {
@@ -453,10 +566,18 @@ a { color: inherit; }
   font-weight: 720;
 }
 
+.contract-schedule-box {
+  margin-top: 7px;
+}
+
 .contract-legal-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 2px 16px;
+}
+
+.contract-numbered-grid {
+  margin-top: 2px;
 }
 
 .contract-clause-grid ul {
@@ -468,12 +589,12 @@ a { color: inherit; }
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 28px;
-  margin-top: 20px;
+  margin-top: 8px;
 }
 
 .signature-grid div {
   border-top: 1.5px solid #17352a;
-  padding-top: 10px;
+  padding-top: 7px;
 }
 
 .signature-grid small {
@@ -489,9 +610,19 @@ a { color: inherit; }
 
 .script-signature {
   min-height: 35px;
-  font-size: 1.55rem;
+  font-size: 1.45rem;
   font-weight: 400;
   line-height: 1.15;
+}
+
+.contract-signatures-title {
+  color: #111f1a;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.03em;
+  margin: 11px 0 8px;
+  text-transform: uppercase;
 }
 
 .contract-empty-state {
