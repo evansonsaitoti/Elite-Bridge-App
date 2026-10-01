@@ -684,7 +684,7 @@ a { color: inherit; }
 
 .template-mark {
   font-family: Arial, sans-serif;
-  font-size: clamp(12px, 1.55vw, 19px);
+  font-size: clamp(9px, 1.15vw, 14px);
   font-weight: 900;
   line-height: 1;
 }
@@ -696,38 +696,26 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-.cover-client { left: 13.2%; top: 28.34%; width: 38.2%; height: 1.9%; }
-.cover-recipient { left: 13.2%; top: 31.0%; width: 40.2%; height: 1.9%; }
-.cover-day-rate { left: 33.2%; top: 61.75%; width: 20%; height: 1.7%; }
-.cover-evening-rate { left: 29.2%; top: 63.95%; width: 20%; height: 1.7%; }
-.cover-mon { left: 15.25%; top: 47.35%; width: 17.5%; height: 1.75%; }
-.cover-tue { left: 38.55%; top: 47.35%; width: 17.5%; height: 1.75%; }
-.cover-wed { left: 61.95%; top: 47.35%; width: 28%; height: 1.75%; }
-.cover-thu { left: 15.25%; top: 49.45%; width: 17.5%; height: 1.75%; }
-.cover-fri { left: 38.55%; top: 49.45%; width: 17.5%; height: 1.75%; }
-.cover-sat { left: 61.95%; top: 49.45%; width: 17.5%; height: 1.75%; }
-.cover-sun { left: 15.25%; top: 51.48%; width: 17.5%; height: 1.75%; }
-.cover-custom { left: 13.2%; top: 53.5%; width: 52%; height: 1.75%; }
-.value-client { left: 23.4%; top: 28.58%; }
-.value-recipient { left: 32.5%; top: 31.24%; }
-.value-start { left: 23.3%; top: 45.25%; }
-.value-day-rate { left: 37.1%; top: 62.02%; }
-.value-evening-rate { left: 33.9%; top: 64.22%; }
-.mark-mon { left: 13.78%; top: 47.82%; }
-.mark-tue { left: 37.0%; top: 47.82%; }
-.mark-wed { left: 60.45%; top: 47.82%; }
-.mark-thu { left: 13.78%; top: 49.9%; }
-.mark-fri { left: 37.0%; top: 49.9%; }
-.mark-sat { left: 60.45%; top: 49.9%; }
-.mark-sun { left: 13.78%; top: 51.95%; }
-.mark-morning { left: 13.78%; top: 61.98%; }
-.mark-evening { left: 13.78%; top: 64.18%; }
-.mark-weekly { left: 28.2%; top: 66.45%; }
-.mark-biweekly { left: 39.7%; top: 66.45%; }
-.sig-client { left: 25.0%; top: 73.15%; }
-.date-client { left: 55.6%; top: 73.25%; }
-.sig-agency { left: 30.0%; top: 76.18%; }
-.date-agency { left: 55.6%; top: 76.22%; }
+.value-client { left: 24.6%; top: 28.85%; }
+.value-recipient { left: 26.7%; top: 31.7%; }
+.value-start { left: 22.8%; top: 45.72%; }
+.value-day-rate { left: 47.7%; top: 63.55%; }
+.value-evening-rate { left: 43.7%; top: 65.65%; }
+.mark-mon { left: 13.62%; top: 50.37%; }
+.mark-tue { left: 36.94%; top: 50.37%; }
+.mark-wed { left: 60.37%; top: 50.37%; }
+.mark-thu { left: 13.62%; top: 52.40%; }
+.mark-fri { left: 36.94%; top: 52.40%; }
+.mark-sat { left: 60.37%; top: 52.40%; }
+.mark-sun { left: 13.62%; top: 54.43%; }
+.mark-morning { left: 13.62%; top: 63.68%; }
+.mark-evening { left: 13.62%; top: 65.82%; }
+.mark-weekly { left: 27.85%; top: 68.48%; }
+.mark-biweekly { left: 39.45%; top: 68.48%; }
+.sig-client { left: 25.2%; top: 73.25%; }
+.date-client { left: 56.3%; top: 73.15%; }
+.sig-agency { left: 31.7%; top: 76.58%; }
+.date-agency { left: 56.8%; top: 76.47%; }
 
 .contract-empty-state {
   display: grid;

@@ -152,17 +152,7 @@
 
     preview.innerHTML = `
       <section class="contract-template-page" aria-label="Contract page 1">
-        <img src="/elite-contract-template-1.png" alt="Elite Bridge contract page 1">
-        <span class="template-cover cover-client"></span>
-        <span class="template-cover cover-recipient"></span>
-        <span class="template-cover cover-mon"></span>
-        <span class="template-cover cover-tue"></span>
-        <span class="template-cover cover-wed"></span>
-        <span class="template-cover cover-thu"></span>
-        <span class="template-cover cover-fri"></span>
-        <span class="template-cover cover-sat"></span>
-        <span class="template-cover cover-sun"></span>
-        <span class="template-cover cover-custom"></span>
+        <img src="/elite-contract-template-1.png?v=blank-contract-20261001" alt="Elite Bridge contract page 1">
         <span class="template-value value-client">${escapeHtml(clientName)}</span>
         <span class="template-value value-recipient">${escapeHtml(careRecipient)}</span>
         <span class="template-value value-start">${escapeHtml(startDate)}</span>
@@ -177,13 +167,11 @@
         <span class="template-mark mark-evening">${rateCheckmark('Evening')}</span>
         <span class="template-mark mark-weekly">${contractCheckmark('contractBilling', 'Weekly')}</span>
         <span class="template-mark mark-biweekly">${contractCheckmark('contractBilling', 'Biweekly')}</span>
-        <span class="template-cover cover-day-rate"></span>
-        <span class="template-cover cover-evening-rate"></span>
         <span class="template-value value-day-rate">${escapeHtml(dayRate)}</span>
         <span class="template-value value-evening-rate">${escapeHtml(eveningRate)}</span>
       </section>
       <section class="contract-template-page" aria-label="Contract page 2">
-        <img src="/elite-contract-template-2.png" alt="Elite Bridge contract page 2">
+        <img src="/elite-contract-template-2.png?v=blank-contract-20261001" alt="Elite Bridge contract page 2">
         <span class="template-signature sig-client">${escapeHtml(clientSigner)}</span>
         <span class="template-value date-client">${escapeHtml(clientDate)}</span>
         <span class="template-signature sig-agency">${escapeHtml(agencySigner)}</span>
