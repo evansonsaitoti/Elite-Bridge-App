@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=contract-template-20261001">
+  <link rel="stylesheet" href="/app-shell.css?v=clean-contract-20261001">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -92,14 +92,14 @@
               </fieldset>
               <fieldset class="classic-checks full">
                 <legend>Hourly rates</legend>
-                <label><input type="checkbox" name="contractRates" value="Morning" checked> Morning / day rate</label>
-                <label><input type="text" id="contractDayRate" value="$40" aria-label="Morning day rate amount"></label>
-                <label><input type="checkbox" name="contractRates" value="Evening" checked> Evening rate</label>
-                <label><input type="text" id="contractEveningRate" value="$45" aria-label="Evening rate amount"></label>
+                <label><input type="checkbox" name="contractRates" value="Morning"> Morning / day rate</label>
+                <label><input type="text" id="contractDayRate" placeholder="$40" aria-label="Morning day rate amount"></label>
+                <label><input type="checkbox" name="contractRates" value="Evening"> Evening rate</label>
+                <label><input type="text" id="contractEveningRate" placeholder="$45" aria-label="Evening rate amount"></label>
               </fieldset>
               <fieldset class="classic-checks full">
                 <legend>Billing cycle</legend>
-                <label><input type="checkbox" name="contractBilling" value="Weekly" checked> Weekly</label>
+                <label><input type="checkbox" name="contractBilling" value="Weekly"> Weekly</label>
                 <label><input type="checkbox" name="contractBilling" value="Biweekly"> Biweekly</label>
               </fieldset>
               <label>Client signature name<input class="signature-input" id="contractClientSigner" type="text" placeholder="Client full name"></label>

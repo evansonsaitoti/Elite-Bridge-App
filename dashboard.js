@@ -99,6 +99,10 @@
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
   }
 
+  function formatContractDateOrBlank(value) {
+    return value ? formatContractDate(value) : '';
+  }
+
   function contractLines(value, fallback = 'To be confirmed') {
     return value
       .split(/\n/)
@@ -132,50 +136,107 @@
     return document.querySelector(`input[name="contractRates"][value="${value}"]:checked`) ? '✓' : '';
   }
 
+  function contractBox(name, value) {
+    return document.querySelector(`input[name="${name}"][value="${value}"]:checked`) ? 'is-checked' : '';
+  }
+
   function renderContractPreview() {
     const preview = document.getElementById('contractPreview');
     if (!preview) return;
 
     const clientName = contractFieldValue('contractClientName', '');
     const careRecipient = contractFieldValue('contractCareRecipient', '');
-    const startDate = formatContractDate(contractFieldValue('contractStartDate', ''));
-    const dayRate = contractFieldValue('contractDayRate', '$40');
-    const eveningRate = contractFieldValue('contractEveningRate', '$45');
+    const startDate = formatContractDateOrBlank(contractFieldValue('contractStartDate', ''));
+    const dayRate = contractFieldValue('contractDayRate', '');
+    const eveningRate = contractFieldValue('contractEveningRate', '');
     const clientSigner = contractFieldValue('contractClientSigner', clientName);
-    const clientDate = formatContractDate(contractFieldValue('contractClientDate', ''));
+    const clientDate = formatContractDateOrBlank(contractFieldValue('contractClientDate', ''));
     const agencySigner = contractFieldValue('contractAgencySigner', '');
-    const agencyDate = formatContractDate(contractFieldValue('contractAgencyDate', ''));
+    const agencyDate = formatContractDateOrBlank(contractFieldValue('contractAgencyDate', ''));
 
     preview.innerHTML = `
-      <section class="contract-template-page" aria-label="Contract page 1">
-        <img src="/elite-contract-template-1.png" alt="Elite Bridge contract page 1">
-        <span class="template-cover cover-client"></span>
-        <span class="template-cover cover-recipient"></span>
-        <span class="template-value value-client">${escapeHtml(clientName)}</span>
-        <span class="template-value value-recipient">${escapeHtml(careRecipient)}</span>
-        <span class="template-value value-start">${escapeHtml(startDate)}</span>
-        <span class="template-mark mark-mon">${contractCheckmark('contractDays', 'Monday')}</span>
-        <span class="template-mark mark-tue">${contractCheckmark('contractDays', 'Tuesday')}</span>
-        <span class="template-mark mark-wed">${contractCheckmark('contractDays', 'Wednesday')}</span>
-        <span class="template-mark mark-thu">${contractCheckmark('contractDays', 'Thursday')}</span>
-        <span class="template-mark mark-fri">${contractCheckmark('contractDays', 'Friday')}</span>
-        <span class="template-mark mark-sat">${contractCheckmark('contractDays', 'Saturday')}</span>
-        <span class="template-mark mark-sun">${contractCheckmark('contractDays', 'Sunday')}</span>
-        <span class="template-mark mark-morning">${rateCheckmark('Morning')}</span>
-        <span class="template-mark mark-evening">${rateCheckmark('Evening')}</span>
-        <span class="template-mark mark-weekly">${contractCheckmark('contractBilling', 'Weekly')}</span>
-        <span class="template-mark mark-biweekly">${contractCheckmark('contractBilling', 'Biweekly')}</span>
-        <span class="template-cover cover-day-rate"></span>
-        <span class="template-cover cover-evening-rate"></span>
-        <span class="template-value value-day-rate">${escapeHtml(dayRate)}</span>
-        <span class="template-value value-evening-rate">${escapeHtml(eveningRate)}</span>
+      <section class="contract-template-page clean-contract-page" aria-label="Contract page 1">
+        <div class="clean-contract-header">
+          <img src="/elite-bridge-logo.png" alt="Elite Bridge Staffing">
+          <span></span>
+        </div>
+        <h2>NON-MEDICAL HOME CARE SERVICES AGREEMENT</h2>
+        <div class="clean-contract-body">
+          <h3>1. PARTIES</h3>
+          <p>This Agreement is entered into between Elite Bridge Staffing, LLC ("Agency") and the Client below.</p>
+          <p class="contract-fill-row"><strong>Client Name:</strong><span>${escapeHtml(clientName)}</span></p>
+          <p class="contract-fill-row"><strong>Care Recipient:</strong><span>${escapeHtml(careRecipient)}</span></p>
+
+          <h3>2. SERVICES</h3>
+          <p>Agency provides non-medical home care services including personal care, companionship, meal preparation, light housekeeping, transportation, and medication reminders. No medical services are provided.</p>
+
+          <h3>3. SCHEDULE</h3>
+          <p><strong>Days / Regular Service Schedule:</strong></p>
+          <div class="contract-checkbox-grid">
+            <span><i class="${contractBox('contractDays', 'Monday')}"></i> Monday</span>
+            <span><i class="${contractBox('contractDays', 'Tuesday')}"></i> Tuesday</span>
+            <span><i class="${contractBox('contractDays', 'Wednesday')}"></i> Wednesday</span>
+            <span><i class="${contractBox('contractDays', 'Thursday')}"></i> Thursday</span>
+            <span><i class="${contractBox('contractDays', 'Friday')}"></i> Friday</span>
+            <span><i class="${contractBox('contractDays', 'Saturday')}"></i> Saturday</span>
+            <span><i class="${contractBox('contractDays', 'Sunday')}"></i> Sunday</span>
+          </div>
+          <p class="contract-fill-row"><strong>Start Date:</strong><span>${escapeHtml(startDate)}</span></p>
+
+          <h3>4. PAYMENT TERMS</h3>
+          <p><strong>Applicable Hourly Rates:</strong></p>
+          <div class="contract-rate-grid">
+            <span><i class="${contractBox('contractRates', 'Morning')}"></i> Morning / Day Rate:</span>
+            <span class="contract-amount">${escapeHtml(dayRate)}</span>
+            <span><i class="${contractBox('contractRates', 'Evening')}"></i> Evening Rate:</span>
+            <span class="contract-amount">${escapeHtml(eveningRate)}</span>
+          </div>
+          <p class="contract-billing"><strong>Billing Cycle:</strong> <span><i class="${contractBox('contractBilling', 'Weekly')}"></i> Weekly</span> <span><i class="${contractBox('contractBilling', 'Biweekly')}"></i> Biweekly</span></p>
+
+          <h3>5. CANCELLATION POLICY</h3>
+          <p>Minimum 24-hour notice required. Late cancellations may be charged.</p>
+        </div>
+        <div class="clean-contract-footer">
+          <div><strong>+1 (978) 355-1799</strong><br>info@elitebridgestaffing.com<br>www.elitebridgestaffing.com<br>144 Thissell Avenue<br>Dracut, MA 01826</div>
+        </div>
       </section>
-      <section class="contract-template-page" aria-label="Contract page 2">
-        <img src="/elite-contract-template-2.png" alt="Elite Bridge contract page 2">
-        <span class="template-signature sig-client">${escapeHtml(clientSigner)}</span>
-        <span class="template-value date-client">${escapeHtml(clientDate)}</span>
-        <span class="template-signature sig-agency">${escapeHtml(agencySigner)}</span>
-        <span class="template-value date-agency">${escapeHtml(agencyDate)}</span>
+      <section class="contract-template-page clean-contract-page" aria-label="Contract page 2">
+        <div class="clean-contract-header">
+          <img src="/elite-bridge-logo.png" alt="Elite Bridge Staffing">
+          <span></span>
+        </div>
+        <h2>NON-MEDICAL HOME CARE SERVICES AGREEMENT</h2>
+        <div class="clean-contract-body page-two">
+          <h3>6. LIABILITY</h3>
+          <p>Agency liability is limited to fees paid in the last 30 days. No liability for indirect damages.</p>
+
+          <h3>7. INDEMNIFICATION</h3>
+          <p>Client agrees to indemnify Agency against claims arising from unsafe conditions or misuse of services.</p>
+
+          <h3>8. NON-SOLICITATION</h3>
+          <p>Client shall not hire caregiver directly for 12 months. Violation fee: $5,000 or 3 months service value.</p>
+
+          <h3>9. SAFETY</h3>
+          <p>Client must provide a safe environment. Agency may remove caregiver if unsafe.</p>
+
+          <h3>10. TERMINATION</h3>
+          <p>Either party may terminate this agreement with 30 days' written notice.</p>
+          <p>Agency may terminate services immediately for breach of this agreement, non-payment, unsafe conditions, or any situation that prevents safe delivery of care. Client remains responsible for services provided and approved charges up to the termination date.</p>
+
+          <h3>11. GOVERNING LAW</h3>
+          <p>This agreement is governed by Massachusetts law.</p>
+
+          <h3>SIGNATURES</h3>
+          <div class="clean-signature-grid">
+            <div><strong>Client Signature:</strong><span class="signature-line script-signature">${escapeHtml(clientSigner)}</span></div>
+            <div><strong>Date:</strong><span class="signature-line">${escapeHtml(clientDate)}</span></div>
+            <div><strong>Agency Representative:</strong><span class="signature-line script-signature">${escapeHtml(agencySigner)}</span></div>
+            <div><strong>Date:</strong><span class="signature-line">${escapeHtml(agencyDate)}</span></div>
+          </div>
+        </div>
+        <div class="clean-contract-footer">
+          <div><strong>+1 (978) 355-1799</strong><br>info@elitebridgestaffing.com<br>www.elitebridgestaffing.com<br>144 Thissell Avenue<br>Dracut, MA 01826</div>
+        </div>
       </section>
     `;
   }

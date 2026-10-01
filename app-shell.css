@@ -721,6 +721,172 @@ a { color: inherit; }
 .sig-agency { left: 30.0%; top: 76.18%; }
 .date-agency { left: 55.6%; top: 76.22%; }
 
+.clean-contract-page {
+  aspect-ratio: 210 / 297;
+  box-sizing: border-box;
+  color: #161616;
+  display: flex;
+  flex-direction: column;
+  font-family: Cambria, Georgia, "Times New Roman", serif;
+  overflow: hidden;
+  padding: 54px 70px 0;
+}
+
+.clean-contract-header {
+  align-items: center;
+  display: grid;
+  gap: 24px;
+  grid-template-columns: 290px 1fr;
+  margin: 0 -70px 50px 0;
+}
+
+.clean-contract-header img {
+  display: block;
+  height: auto;
+  width: 290px;
+}
+
+.clean-contract-header span {
+  background: #7bd11f;
+  display: block;
+  height: 46px;
+}
+
+.clean-contract-page h2 {
+  color: #7bd11f;
+  font-family: Montserrat, Inter, Arial, sans-serif;
+  font-size: clamp(16px, 2vw, 28px);
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  margin: 0 0 38px;
+  text-align: center;
+}
+
+.clean-contract-body {
+  flex: 1;
+  font-size: clamp(10px, 1.17vw, 18px);
+  line-height: 1.32;
+}
+
+.clean-contract-body h3 {
+  color: #1d1d1d;
+  font-family: Cambria, Georgia, "Times New Roman", serif;
+  font-size: 1.12em;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 16px 0 12px;
+  text-transform: uppercase;
+}
+
+.clean-contract-body p {
+  margin: 0 0 12px;
+}
+
+.contract-fill-row {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: max-content 1fr;
+  max-width: 560px;
+}
+
+.contract-fill-row span,
+.signature-line,
+.contract-amount {
+  border-bottom: 1px solid #333;
+  display: inline-block;
+  min-height: 1.2em;
+  padding: 0 6px 1px;
+}
+
+.contract-checkbox-grid {
+  display: grid;
+  gap: 10px 24px;
+  grid-template-columns: repeat(3, 1fr);
+  margin: 10px 0 16px;
+}
+
+.contract-checkbox-grid span,
+.contract-rate-grid span,
+.contract-billing span {
+  align-items: center;
+  display: inline-flex;
+  gap: 6px;
+}
+
+.contract-checkbox-grid i,
+.contract-rate-grid i,
+.contract-billing i {
+  border: 1.5px solid #222;
+  display: inline-grid;
+  font-style: normal;
+  height: 12px;
+  line-height: 1;
+  place-items: center;
+  width: 12px;
+}
+
+.contract-checkbox-grid i.is-checked::after,
+.contract-rate-grid i.is-checked::after,
+.contract-billing i.is-checked::after {
+  content: "X";
+  font-family: Arial, sans-serif;
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.contract-rate-grid {
+  display: grid;
+  gap: 10px 14px;
+  grid-template-columns: max-content 150px;
+  margin: 10px 0 14px;
+}
+
+.contract-billing {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+}
+
+.clean-signature-grid {
+  display: grid;
+  gap: 22px 28px;
+  grid-template-columns: 1fr 180px;
+  margin-top: 28px;
+}
+
+.clean-signature-grid div {
+  align-items: end;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: max-content 1fr;
+}
+
+.clean-contract-footer {
+  background: #7bd11f;
+  border-bottom: 38px solid #103f29;
+  border-radius: 0 160px 0 0;
+  color: #fff;
+  font-family: Montserrat, Inter, Arial, sans-serif;
+  font-size: clamp(9px, 1vw, 15px);
+  line-height: 1.32;
+  margin-left: -42px;
+  min-height: 150px;
+  padding: 42px 34px 24px 110px;
+  position: relative;
+  width: 360px;
+}
+
+.clean-contract-footer::after {
+  background: #103f29;
+  bottom: -38px;
+  content: "";
+  height: 38px;
+  left: 360px;
+  position: absolute;
+  width: 900px;
+}
+
 .contract-empty-state {
   display: grid;
   place-items: center;
