@@ -91,16 +91,12 @@
                 <label><input type="checkbox" name="contractDays" value="Sunday"> Sunday</label>
               </fieldset>
               <fieldset class="classic-checks full">
-                <legend>Hours</legend>
-                <label><input type="checkbox" name="contractHours" value="Morning"> Morning</label>
-                <label><input type="checkbox" name="contractHours" value="Afternoon"> Afternoon</label>
-                <label><input type="checkbox" name="contractHours" value="Evening"> Evening</label>
-                <label><input type="checkbox" name="contractHours" value="Overnight"> Overnight</label>
+                <legend>Hourly rates</legend>
+                <label><input type="checkbox" name="contractRates" value="Morning" checked> Morning / day rate</label>
+                <label><input type="text" id="contractDayRate" value="$40" aria-label="Morning day rate amount"></label>
+                <label><input type="checkbox" name="contractRates" value="Evening" checked> Evening rate</label>
+                <label><input type="text" id="contractEveningRate" value="$45" aria-label="Evening rate amount"></label>
               </fieldset>
-              <label class="full">Regular service schedule<textarea id="contractSchedule" rows="5" placeholder="Monday: 6 PM - 10 PM&#10;Tuesday: 6 PM - 10 PM&#10;Wednesday: 12 PM - 9 PM"></textarea></label>
-              <label class="full">Custom time / notes<textarea id="contractCustomTime" rows="3" placeholder="Additional notes or custom time"></textarea></label>
-              <label class="full">Hourly rates<textarea id="contractRates" rows="4">Morning / Day Rate: 8:30 AM - 5:00 PM = $40 per hour
-Evening Rate: 5:00 PM - 10:00 PM = $45 per hour</textarea></label>
               <fieldset class="classic-checks full">
                 <legend>Billing cycle</legend>
                 <label><input type="checkbox" name="contractBilling" value="Weekly" checked> Weekly</label>

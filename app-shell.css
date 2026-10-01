@@ -364,6 +364,11 @@ a { color: inherit; }
   width: auto;
 }
 
+.classic-checks input[type="text"] {
+  margin-top: 0;
+  width: 100%;
+}
+
 .contract-preview-wrap {
   background: linear-gradient(145deg, rgba(8, 77, 52, 0.08), rgba(213, 176, 95, 0.12));
   border: 1px solid var(--line);
@@ -691,27 +696,30 @@ a { color: inherit; }
   white-space: nowrap;
 }
 
-.cover-client { left: 13.3%; top: 28.2%; width: 33%; height: 2.2%; }
-.cover-recipient { left: 13.3%; top: 31.2%; width: 35%; height: 2.2%; }
-.value-client { left: 24.4%; top: 28.45%; }
-.value-recipient { left: 31.5%; top: 31.45%; }
+.cover-client { left: 13.2%; top: 28.35%; width: 34%; height: 1.8%; }
+.cover-recipient { left: 13.2%; top: 31.0%; width: 35%; height: 1.8%; }
+.cover-day-rate { left: 39.3%; top: 62.05%; width: 8%; height: 1.25%; }
+.cover-evening-rate { left: 37.8%; top: 64.25%; width: 8%; height: 1.25%; }
+.value-client { left: 24.0%; top: 28.6%; }
+.value-recipient { left: 31.0%; top: 31.25%; }
 .value-start { left: 23.3%; top: 45.25%; }
-.value-custom { left: 27.2%; top: 54.38%; max-width: 35%; overflow: hidden; text-overflow: ellipsis; }
-.mark-mon { left: 13.85%; top: 47.98%; }
-.mark-tue { left: 37.05%; top: 47.98%; }
-.mark-wed { left: 60.55%; top: 47.98%; }
-.mark-thu { left: 13.85%; top: 50.0%; }
-.mark-fri { left: 37.05%; top: 50.0%; }
-.mark-sat { left: 60.55%; top: 50.0%; }
-.mark-sun { left: 13.85%; top: 52.05%; }
-.mark-morning { left: 13.85%; top: 62.1%; }
-.mark-evening { left: 13.85%; top: 64.3%; }
-.mark-weekly { left: 28.5%; top: 66.6%; }
-.mark-biweekly { left: 40.0%; top: 66.6%; }
-.sig-client { left: 25.0%; top: 73.35%; }
-.date-client { left: 56.0%; top: 73.45%; }
-.sig-agency { left: 30.0%; top: 76.35%; }
-.date-agency { left: 56.0%; top: 76.42%; }
+.value-day-rate { left: 39.8%; top: 62.05%; }
+.value-evening-rate { left: 38.35%; top: 64.25%; }
+.mark-mon { left: 13.78%; top: 47.82%; }
+.mark-tue { left: 37.0%; top: 47.82%; }
+.mark-wed { left: 60.45%; top: 47.82%; }
+.mark-thu { left: 13.78%; top: 49.9%; }
+.mark-fri { left: 37.0%; top: 49.9%; }
+.mark-sat { left: 60.45%; top: 49.9%; }
+.mark-sun { left: 13.78%; top: 51.95%; }
+.mark-morning { left: 13.78%; top: 61.98%; }
+.mark-evening { left: 13.78%; top: 64.18%; }
+.mark-weekly { left: 28.2%; top: 66.45%; }
+.mark-biweekly { left: 39.7%; top: 66.45%; }
+.sig-client { left: 25.0%; top: 73.15%; }
+.date-client { left: 55.6%; top: 73.25%; }
+.sig-agency { left: 30.0%; top: 76.18%; }
+.date-agency { left: 55.6%; top: 76.22%; }
 
 .contract-empty-state {
   display: grid;

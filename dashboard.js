@@ -129,8 +129,7 @@
   }
 
   function rateCheckmark(value) {
-    const rates = contractFieldValue('contractRates', '');
-    return rates.toLowerCase().includes(value.toLowerCase()) ? '✓' : '';
+    return document.querySelector(`input[name="contractRates"][value="${value}"]:checked`) ? '✓' : '';
   }
 
   function renderContractPreview() {
@@ -140,7 +139,8 @@
     const clientName = contractFieldValue('contractClientName', 'Client Name');
     const careRecipient = contractFieldValue('contractCareRecipient', 'Same as client');
     const startDate = formatContractDate(contractFieldValue('contractStartDate', ''));
-    const customTime = contractFieldValue('contractCustomTime', '');
+    const dayRate = contractFieldValue('contractDayRate', '$40');
+    const eveningRate = contractFieldValue('contractEveningRate', '$45');
     const clientSigner = contractFieldValue('contractClientSigner', clientName);
     const clientDate = formatContractDate(contractFieldValue('contractClientDate', todayInputValue()));
     const agencySigner = contractFieldValue('contractAgencySigner', 'Elite Bridge Staffing');
@@ -165,7 +165,10 @@
         <span class="template-mark mark-evening">${rateCheckmark('Evening')}</span>
         <span class="template-mark mark-weekly">${contractCheckmark('contractBilling', 'Weekly')}</span>
         <span class="template-mark mark-biweekly">${contractCheckmark('contractBilling', 'Biweekly')}</span>
-        <span class="template-value value-custom">${escapeHtml(customTime)}</span>
+        <span class="template-cover cover-day-rate"></span>
+        <span class="template-cover cover-evening-rate"></span>
+        <span class="template-value value-day-rate">${escapeHtml(dayRate)}</span>
+        <span class="template-value value-evening-rate">${escapeHtml(eveningRate)}</span>
       </section>
       <section class="contract-template-page" aria-label="Contract page 2">
         <img src="/elite-contract-template-2.png" alt="Elite Bridge contract page 2">
