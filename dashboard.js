@@ -99,13 +99,23 @@
     return Number.isNaN(date.getTime()) ? value : date.toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' });
   }
 
-  function contractListItems(value) {
+  function contractLines(value, fallback = 'To be confirmed') {
     return value
-      .split(/\n|,/)
+      .split(/\n/)
+      .map((item) => item.trim())
+      .filter(Boolean)
+      .slice(0, 8)
+      .map((item) => '<span>' + escapeHtml(item) + '</span>')
+      .join('') || '<span>' + escapeHtml(fallback) + '</span>';
+  }
+
+  function contractRateLines(value) {
+    return value
+      .split(/\n/)
       .map((item) => item.trim())
       .filter(Boolean)
       .slice(0, 6)
-      .map((item) => '<li>' + escapeHtml(item) + '</li>')
+      .map((item) => '<p>' + escapeHtml(item) + '</p>')
       .join('');
   }
 
@@ -114,81 +124,84 @@
     if (!preview) return;
 
     const clientName = contractFieldValue('contractClientName', 'Client Name');
-    const clientEmail = contractFieldValue('contractClientEmail', 'client@example.com');
-    const clientPhone = contractFieldValue('contractClientPhone', 'Client phone');
-    const clientAddress = contractFieldValue('contractClientAddress', 'Client address');
-    const startDate = formatContractDate(contractFieldValue('contractStartDate'));
-    const agreementDate = formatContractDate(contractFieldValue('contractDate', todayInputValue()));
-    const schedule = contractFieldValue('contractSchedule', 'To be scheduled with Elite Bridge Staffing');
-    const rate = contractFieldValue('contractRate', 'Rates to be confirmed in writing');
-    const services = contractFieldValue('contractServices', 'Personal care, companionship, meal preparation, respite care, transportation support as requested.');
-    const billing = contractFieldValue('contractBilling', 'Invoices are due upon receipt unless otherwise agreed in writing.');
-    const cancellation = contractFieldValue('contractCancellation', 'Please provide at least 24 hours notice for schedule changes or cancellations.');
-    const companySigner = contractFieldValue('contractCompanySigner', 'Elite Bridge Staffing');
+    const careRecipient = contractFieldValue('contractCareRecipient', 'Same as client');
+    const schedule = contractFieldValue('contractSchedule', 'Regular service schedule to be confirmed');
+    const rates = contractFieldValue('contractRates', 'Morning / Day Rate: 8:30 AM - 5:00 PM = $40 per hour\nEvening Rate: 5:00 PM - 10:00 PM = $45 per hour');
+    const clientSigner = contractFieldValue('contractClientSigner', clientName);
+    const clientDate = formatContractDate(contractFieldValue('contractClientDate', todayInputValue()));
+    const agencySigner = contractFieldValue('contractAgencySigner', 'Elite Bridge Staffing');
+    const agencyDate = formatContractDate(contractFieldValue('contractAgencyDate', todayInputValue()));
 
     preview.innerHTML = `
       <header class="contract-letterhead">
         <img src="/logo.png" alt="Elite Bridge Staffing" class="contract-logo">
         <div>
-          <strong>Elite Bridge Staffing</strong>
-          <span>Professional home care staffing and client support</span>
-          <span>elitebridgestaffing.com</span>
+          <strong>ELITE BRIDGE STAFFING, LLC</strong>
+          <span>144 Thissell Avenue, Dracut, MA 01826</span>
+          <span>+1 (978) 355-1799 · info@elitebridgestaffing.com</span>
+          <span>www.elitebridgestaffing.com</span>
         </div>
       </header>
       <div class="contract-title-row">
         <div>
           <p class="eyebrow">Service agreement</p>
-          <h2>Client Care Services Contract</h2>
+          <h2>Non-Medical Home Care Services Agreement</h2>
         </div>
-        <p class="contract-date">Agreement date: ${escapeHtml(agreementDate)}</p>
+        <p class="contract-date">Massachusetts</p>
       </div>
-      <section class="contract-summary">
+      <section class="contract-summary contract-summary-two">
         <div>
-          <span>Client</span>
+          <span>Client name</span>
           <strong>${escapeHtml(clientName)}</strong>
-          <p>${escapeHtml(clientAddress)}</p>
         </div>
         <div>
-          <span>Contact</span>
-          <strong>${escapeHtml(clientEmail)}</strong>
-          <p>${escapeHtml(clientPhone)}</p>
-        </div>
-        <div>
-          <span>Start date</span>
-          <strong>${escapeHtml(startDate)}</strong>
-          <p>${escapeHtml(schedule)}</p>
+          <span>Care recipient if different</span>
+          <strong>${escapeHtml(careRecipient)}</strong>
         </div>
       </section>
       <section class="contract-copy">
-        <p>This Client Care Services Contract is entered into by Elite Bridge Staffing and ${escapeHtml(clientName)} for non-medical care staffing and support services. Services will begin on ${escapeHtml(startDate)} or another date agreed to in writing.</p>
-        <div class="contract-clause-grid">
+        <div class="contract-clause">
+          <h3>1. Parties</h3>
+          <p>This Agreement is entered into between Elite Bridge Staffing, LLC (“Agency”) and the client named above (“Client”).</p>
+        </div>
+        <div class="contract-clause">
+          <h3>2. Services</h3>
+          <p>Agency provides non-medical home care services including personal care, companionship, meal preparation, light housekeeping, transportation, and medication reminders. No medical services are provided.</p>
+        </div>
+        <div class="contract-clause-grid compact">
           <div>
-            <h3>Services</h3>
-            <ul>${contractListItems(services)}</ul>
+            <h3>3. Regular service schedule</h3>
+            <div class="contract-lines">${contractLines(schedule)}</div>
           </div>
           <div>
-            <h3>Rates and billing</h3>
-            <p><strong>${escapeHtml(rate)}</strong></p>
-            <p>${escapeHtml(billing)}</p>
+            <h3>4. Applicable hourly rates</h3>
+            <div class="contract-rates">${contractRateLines(rates)}</div>
+            <p><strong>Billing cycle:</strong> Weekly or biweekly, as agreed by Agency and Client.</p>
           </div>
         </div>
-        <h3>Client responsibilities</h3>
-        <p>The client agrees to provide accurate service information, a safe care environment, reasonable access for scheduled caregivers, and timely notice of service changes.</p>
-        <h3>Schedule changes and cancellation</h3>
-        <p>${escapeHtml(cancellation)}</p>
-        <h3>Term and acknowledgement</h3>
-        <p>This agreement remains active until services end or either party provides written notice. The signatures below confirm that both parties understand and accept these service terms.</p>
+        <div class="contract-legal-grid">
+          <div><h3>5. Cancellation</h3><p>Minimum 24-hour notice required. Late cancellations may be charged.</p></div>
+          <div><h3>6. Liability</h3><p>Agency liability is limited to fees paid in the last 30 days. No liability for indirect damages.</p></div>
+          <div><h3>7. Indemnification</h3><p>Client agrees to indemnify Agency against claims arising from unsafe conditions or misuse of services.</p></div>
+          <div><h3>8. Non-solicitation</h3><p>Client shall not hire caregiver directly for 12 months. Violation fee: $5,000 or 3 months service value.</p></div>
+          <div><h3>9. Safety</h3><p>Client must provide a safe environment. Agency may remove caregiver if unsafe.</p></div>
+          <div><h3>10. Termination</h3><p>Either party may terminate this agreement with 30 days' written notice. Agency may terminate services immediately for breach, non-payment, unsafe conditions, or any situation that prevents safe delivery of care. Client remains responsible for services provided and approved charges up to the termination date.</p></div>
+        </div>
+        <div class="contract-clause">
+          <h3>11. Governing law</h3>
+          <p>This agreement is governed by Massachusetts law.</p>
+        </div>
       </section>
       <footer class="signature-grid">
         <div>
           <span>Client signature</span>
-          <strong>${escapeHtml(clientName)}</strong>
-          <small>Date</small>
+          <strong class="script-signature">${escapeHtml(clientSigner)}</strong>
+          <small>Date: ${escapeHtml(clientDate)}</small>
         </div>
         <div>
-          <span>Elite Bridge signature</span>
-          <strong>${escapeHtml(companySigner)}</strong>
-          <small>Date</small>
+          <span>Agency representative</span>
+          <strong class="script-signature">${escapeHtml(agencySigner)}</strong>
+          <small>Date: ${escapeHtml(agencyDate)}</small>
         </div>
       </footer>
     `;
@@ -199,37 +212,14 @@
     window.print();
   }
 
-  function emailContractToClient() {
-    renderContractPreview();
-    const email = contractFieldValue('contractClientEmail');
-    const clientName = contractFieldValue('contractClientName', 'your care services');
-    const subject = 'Elite Bridge Staffing service agreement';
-    const body = [
-      'Hello ' + clientName + ',',
-      '',
-      'Attached is the Elite Bridge Staffing service agreement for your review and signature.',
-      '',
-      'Please reply with any questions.',
-      '',
-      'Thank you,',
-      'Elite Bridge Staffing'
-    ].join('\n');
-
-    if (!email) {
-      notify('Add a client email first.');
-      return;
-    }
-
-    window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
-    notify('Email draft opened. Attach the saved PDF before sending.');
-  }
-
   function initializeContractGenerator() {
     const form = document.getElementById('contractForm');
     if (!form) return;
 
-    const contractDate = document.getElementById('contractDate');
-    if (contractDate && !contractDate.value) contractDate.value = todayInputValue();
+    ['contractClientDate', 'contractAgencyDate'].forEach((id) => {
+      const field = document.getElementById(id);
+      if (field && !field.value) field.value = todayInputValue();
+    });
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
@@ -243,7 +233,6 @@
 
     document.getElementById('printContract')?.addEventListener('click', printContractPdf);
     document.getElementById('printContractTop')?.addEventListener('click', printContractPdf);
-    document.getElementById('emailContract')?.addEventListener('click', emailContractToClient);
 
     renderContractPreview();
   }
