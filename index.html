@@ -241,37 +241,53 @@
       .site-shell { width: 100%; padding: 0; }
       .portal-card { min-height: 100svh; display: block; background: #fff; }
       .product-side {
-        min-height: 58svh;
+        min-height: 0;
         justify-content: flex-start;
-        padding: max(120px, env(safe-area-inset-top)) 28px 42px;
+        padding: max(28px, env(safe-area-inset-top)) 24px 32px;
         border-radius: 0;
-        background-color: #052d22;
-        background-image:
-          linear-gradient(180deg, rgba(2, 16, 11, .02) 0%, rgba(2, 16, 11, .1) 32%, rgba(2, 16, 11, .74) 63%, rgba(1, 35, 25, .98) 100%),
-          url("/employer-auth-pro.png");
-        background-position: center top, center 78px;
-        background-size: cover, 112% auto;
-        background-repeat: no-repeat;
+        background:
+          radial-gradient(circle at 18% 8%, rgba(242, 201, 111, .2), transparent 32%),
+          linear-gradient(160deg, #052f24 0%, #063e2c 52%, #021b14 100%);
       }
       body[data-preview="employer"] .product-side {
-        background-color: #052d22;
-        background-image:
-          linear-gradient(180deg, rgba(2, 16, 11, .02) 0%, rgba(2, 16, 11, .1) 32%, rgba(2, 16, 11, .74) 63%, rgba(1, 35, 25, .98) 100%),
-          url("/employer-auth-pro.png");
-        background-position: center top, center 78px;
-        background-size: cover, 112% auto;
-        background-repeat: no-repeat;
+        background:
+          radial-gradient(circle at 18% 8%, rgba(242, 201, 111, .2), transparent 32%),
+          linear-gradient(160deg, #052f24 0%, #063e2c 52%, #021b14 100%);
       }
-      .product-side::before,
-      .product-side::after,
       .device-stage,
       .sync-note { display: none; }
+      .product-side::before {
+        display: block;
+        width: auto;
+        height: 214px;
+        inset: 92px 24px auto;
+        border: 1px solid rgba(255,255,255,.18);
+        border-radius: 28px;
+        background:
+          linear-gradient(180deg, rgba(2,16,11,.02), rgba(2,16,11,.18)),
+          url("/employer-auth-pro.png") center 18% / cover no-repeat;
+        box-shadow: 0 26px 52px rgba(0,0,0,.26);
+        opacity: 1;
+      }
+      .product-side::after {
+        display: block;
+        width: 180px;
+        height: 180px;
+        right: -64px;
+        bottom: 22px;
+        left: auto;
+        top: auto;
+        border: 1px solid rgba(242,201,111,.2);
+        border-radius: 999px;
+        background: rgba(242,201,111,.08);
+      }
       .mobile-hero-brand {
         position: relative;
         display: flex;
         align-items: center;
         gap: 12px;
         color: #fff;
+        z-index: 2;
         text-shadow: 0 2px 18px rgba(0,0,0,.28);
       }
       .mobile-hero-brand img {
@@ -296,7 +312,7 @@
         font-size: 11px;
         letter-spacing: .34em;
       }
-      .product-copy { margin-top: auto; text-align: left; }
+      .product-copy { position: relative; z-index: 2; margin-top: 246px; text-align: left; }
       .product-kicker {
         display: block;
         margin-bottom: 8px;
@@ -307,16 +323,16 @@
       .product-kicker::before,
       .product-kicker::after { display: none; }
       .product-copy h1 {
-        max-width: 360px;
+        max-width: 340px;
         margin: 0;
         color: #fff;
-        font-size: clamp(32px, 8.5vw, 42px);
+        font-size: clamp(31px, 8vw, 40px);
         line-height: 1.02;
         letter-spacing: -.055em;
         text-shadow: 0 4px 22px rgba(0,0,0,.32);
       }
       .product-copy p {
-        max-width: 335px;
+        max-width: 330px;
         margin: 10px 0 0;
         color: rgba(255,255,255,.9);
         font-size: 15px;
@@ -368,9 +384,9 @@
       .auth-side {
         position: relative;
         z-index: 2;
-        margin-top: -28px;
+        margin-top: 0;
         padding: 26px 24px max(24px, calc(env(safe-area-inset-bottom) + 16px));
-        border-radius: 30px 30px 0 0;
+        border-radius: 28px 28px 0 0;
         box-shadow: 0 -14px 34px rgba(0,0,0,.14);
       }
       .mobile-logo { display: none; }
@@ -438,10 +454,14 @@
         display: none;
       }
       body.mobile-login-open .product-side {
-        min-height: 38svh;
-        padding-top: max(96px, env(safe-area-inset-top));
-        padding-bottom: 30px;
-        background-position: center top, center 54px;
+        padding-bottom: 28px;
+      }
+      body.mobile-login-open .product-side::before {
+        height: 142px;
+        top: 84px;
+      }
+      body.mobile-login-open .product-copy {
+        margin-top: 168px;
       }
       body.mobile-login-open .mobile-service-pills {
         display: none;
