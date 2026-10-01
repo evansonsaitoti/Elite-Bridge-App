@@ -240,6 +240,58 @@
       body { background: #fff; }
       .site-shell { width: 100%; padding: 0; }
       .portal-card { min-height: 100vh; }
+      body:not(.mobile-login-open) .portal-card {
+        min-height: 100svh;
+        background: url("/employer-auth-exact.jpeg") center top / cover no-repeat;
+      }
+      body:not(.mobile-login-open) .product-side {
+        display: none;
+      }
+      body:not(.mobile-login-open) .auth-side {
+        position: fixed;
+        inset: 0;
+        z-index: 10;
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      body:not(.mobile-login-open) .auth-shell {
+        position: relative;
+        width: 100%;
+        max-width: none;
+        height: 100%;
+      }
+      body:not(.mobile-login-open) .mobile-welcome-actions {
+        position: absolute;
+        inset: 0;
+        display: block;
+      }
+      body:not(.mobile-login-open) .mobile-welcome-actions h2,
+      body:not(.mobile-login-open) .mobile-welcome-actions p,
+      body:not(.mobile-login-open) .mobile-policy-links {
+        display: none;
+      }
+      body:not(.mobile-login-open) .mobile-entry-buttons {
+        position: absolute;
+        right: 5.1%;
+        bottom: calc(env(safe-area-inset-bottom) + 78px);
+        left: 5.1%;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        height: 82px;
+        margin: 0;
+      }
+      body:not(.mobile-login-open) .mobile-entry-button {
+        min-height: 0;
+        border: 0;
+        border-radius: 21px;
+        color: transparent;
+        background: transparent;
+        box-shadow: none;
+      }
       .product-side {
         min-height: 100vh;
         justify-content: space-between;
