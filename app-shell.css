@@ -310,6 +310,10 @@ a { color: inherit; }
   font-weight: 750;
 }
 
+.contract-form .full {
+  grid-column: 1 / -1;
+}
+
 .contract-form input,
 .contract-form textarea {
   border-radius: 7px;
@@ -625,6 +629,90 @@ a { color: inherit; }
   text-transform: uppercase;
 }
 
+.contract-page {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  display: grid;
+  gap: 24px;
+  min-height: auto;
+  padding: 0;
+  width: min(100%, 794px);
+}
+
+.contract-template-page {
+  background: #fff;
+  box-shadow: 0 24px 70px rgba(18, 38, 31, 0.16);
+  display: block;
+  position: relative;
+  width: 100%;
+}
+
+.contract-template-page img {
+  display: block;
+  height: auto;
+  width: 100%;
+}
+
+.template-cover {
+  background: #fff;
+  display: block;
+  position: absolute;
+}
+
+.template-value,
+.template-mark,
+.template-signature {
+  color: #111;
+  display: block;
+  position: absolute;
+  z-index: 2;
+}
+
+.template-value {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(8px, 1.28vw, 14px);
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.template-mark {
+  font-family: Arial, sans-serif;
+  font-size: clamp(12px, 1.55vw, 19px);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.template-signature {
+  font-family: "Segoe Script", "Brush Script MT", "Lucida Handwriting", cursive;
+  font-size: clamp(13px, 1.75vw, 22px);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cover-client { left: 13.3%; top: 28.2%; width: 33%; height: 2.2%; }
+.cover-recipient { left: 13.3%; top: 31.2%; width: 35%; height: 2.2%; }
+.value-client { left: 24.4%; top: 28.45%; }
+.value-recipient { left: 31.5%; top: 31.45%; }
+.value-start { left: 23.3%; top: 45.25%; }
+.value-custom { left: 27.2%; top: 54.38%; max-width: 35%; overflow: hidden; text-overflow: ellipsis; }
+.mark-mon { left: 13.85%; top: 47.98%; }
+.mark-tue { left: 37.05%; top: 47.98%; }
+.mark-wed { left: 60.55%; top: 47.98%; }
+.mark-thu { left: 13.85%; top: 50.0%; }
+.mark-fri { left: 37.05%; top: 50.0%; }
+.mark-sat { left: 60.55%; top: 50.0%; }
+.mark-sun { left: 13.85%; top: 52.05%; }
+.mark-morning { left: 13.85%; top: 62.1%; }
+.mark-evening { left: 13.85%; top: 64.3%; }
+.mark-weekly { left: 28.5%; top: 66.6%; }
+.mark-biweekly { left: 40.0%; top: 66.6%; }
+.sig-client { left: 25.0%; top: 73.35%; }
+.date-client { left: 56.0%; top: 73.45%; }
+.sig-agency { left: 30.0%; top: 76.35%; }
+.date-agency { left: 56.0%; top: 76.42%; }
+
 .contract-empty-state {
   display: grid;
   place-items: center;
@@ -678,8 +766,8 @@ a { color: inherit; }
 
 @media print {
   @page {
-    size: letter;
-    margin: 0.35in;
+    size: A4;
+    margin: 0;
   }
 
   body {
@@ -731,6 +819,30 @@ a { color: inherit; }
     box-shadow: none !important;
     font-size: 8.35pt;
     line-height: 1.24;
+  }
+
+  .contract-template-page {
+    box-shadow: none !important;
+    height: 297mm !important;
+    margin: 0 !important;
+    page-break-after: always;
+    width: 210mm !important;
+  }
+
+  .contract-template-page:last-child {
+    page-break-after: auto;
+  }
+
+  .template-value {
+    font-size: 10pt !important;
+  }
+
+  .template-mark {
+    font-size: 14pt !important;
+  }
+
+  .template-signature {
+    font-size: 16pt !important;
   }
 
   .contract-title-row h2 {

@@ -124,6 +124,15 @@
     return values.length ? values.join(', ') : fallback;
   }
 
+  function contractCheckmark(name, value) {
+    return document.querySelector(`input[name="${name}"][value="${value}"]:checked`) ? '✓' : '';
+  }
+
+  function rateCheckmark(value) {
+    const rates = contractFieldValue('contractRates', '');
+    return rates.toLowerCase().includes(value.toLowerCase()) ? '✓' : '';
+  }
+
   function renderContractPreview() {
     const preview = document.getElementById('contractPreview');
     if (!preview) return;
@@ -131,85 +140,40 @@
     const clientName = contractFieldValue('contractClientName', 'Client Name');
     const careRecipient = contractFieldValue('contractCareRecipient', 'Same as client');
     const startDate = formatContractDate(contractFieldValue('contractStartDate', ''));
-    const days = checkedContractValues('contractDays');
-    const hours = checkedContractValues('contractHours');
-    const schedule = contractFieldValue('contractSchedule', 'Regular service schedule to be confirmed');
-    const customTime = contractFieldValue('contractCustomTime', 'None');
-    const rates = contractFieldValue('contractRates', 'Morning / Day Rate: 8:30 AM - 5:00 PM = $40 per hour\nEvening Rate: 5:00 PM - 10:00 PM = $45 per hour');
-    const billingCycle = checkedContractValues('contractBilling', 'Weekly');
+    const customTime = contractFieldValue('contractCustomTime', '');
     const clientSigner = contractFieldValue('contractClientSigner', clientName);
     const clientDate = formatContractDate(contractFieldValue('contractClientDate', todayInputValue()));
     const agencySigner = contractFieldValue('contractAgencySigner', 'Elite Bridge Staffing');
     const agencyDate = formatContractDate(contractFieldValue('contractAgencyDate', todayInputValue()));
 
     preview.innerHTML = `
-      <header class="contract-letterhead contract-pdf-head">
-        <div class="contract-brand">
-          <img src="/logo.png" alt="Elite Bridge Staffing" class="contract-logo">
-          <strong>STAFFING YOU CAN RELY ON</strong>
-        </div>
-        <div class="contract-contact">
-          <span>+1 (978) 355-1799</span>
-          <span>info@elitebridgestaffing.com</span>
-          <span>www.elitebridgestaffing.com</span>
-          <span>144 Thissell Avenue, Dracut, MA 01826</span>
-        </div>
-      </header>
-      <h2 class="contract-main-title">NON-MEDICAL HOME CARE SERVICES AGREEMENT</h2>
-      <section class="contract-copy">
-        <div class="contract-clause">
-          <h3>1. Parties</h3>
-          <p>This Agreement is entered into between Elite Bridge Staffing, LLC ("Agency") and the Client below.</p>
-          <div class="contract-fill-line"><span>Client Name:</span><strong>${escapeHtml(clientName)}</strong></div>
-          <div class="contract-fill-line"><span>Care Recipient (if different):</span><strong>${escapeHtml(careRecipient)}</strong></div>
-        </div>
-        <div class="contract-clause">
-          <h3>2. Services</h3>
-          <p>Agency provides non-medical home care services including personal care, companionship, meal preparation, light housekeeping, transportation, and medication reminders. No medical services are provided.</p>
-        </div>
-        <div class="contract-clause">
-          <h3>3. Schedule</h3>
-          <div class="contract-fill-line"><span>Start Date:</span><strong>${escapeHtml(startDate)}</strong></div>
-          <div class="contract-fill-line"><span>Days:</span><strong>${escapeHtml(days)}</strong></div>
-          <div class="contract-fill-line"><span>Hours:</span><strong>${escapeHtml(hours)}</strong></div>
-          <div class="contract-fill-line"><span>Custom Time / Notes:</span><strong>${escapeHtml(customTime)}</strong></div>
-          <div class="contract-schedule-box">
-            <span>Regular Service Schedule:</span>
-            <div class="contract-lines">${contractLines(schedule)}</div>
-          </div>
-        </div>
-        <div class="contract-clause">
-          <h3>4. Payment Terms</h3>
-          <p><strong>Applicable Hourly Rates:</strong></p>
-          <div class="contract-rates">${contractRateLines(rates)}</div>
-          <div class="contract-fill-line"><span>Billing Cycle:</span><strong>${escapeHtml(billingCycle)}</strong></div>
-        </div>
-        <div class="contract-legal-grid contract-numbered-grid">
-          <div><h3>5. Cancellation Policy</h3><p>Minimum 24-hour notice required. Late cancellations may be charged.</p></div>
-          <div><h3>6. Liability</h3><p>Agency liability is limited to fees paid in the last 30 days. No liability for indirect damages.</p></div>
-          <div><h3>7. Indemnification</h3><p>Client agrees to indemnify Agency against claims arising from unsafe conditions or misuse of services.</p></div>
-          <div><h3>8. Non-Solicitation</h3><p>Client shall not hire caregiver directly for 12 months. Violation fee: $5,000 or 3 months service value.</p></div>
-          <div><h3>9. Safety</h3><p>Client must provide a safe environment. Agency may remove caregiver if unsafe.</p></div>
-          <div><h3>10. Termination</h3><p>Either party may terminate this agreement with 30 days' written notice. Agency may terminate services immediately for breach of this agreement, non-payment, unsafe conditions, or any situation that prevents safe delivery of care. Client remains responsible for services provided and approved charges up to the termination date.</p></div>
-        </div>
-        <div class="contract-clause">
-          <h3>11. Governing Law</h3>
-          <p>This agreement is governed by Massachusetts law.</p>
-        </div>
+      <section class="contract-template-page" aria-label="Contract page 1">
+        <img src="/assets/elite-contract-template-1.png" alt="Elite Bridge contract page 1">
+        <span class="template-cover cover-client"></span>
+        <span class="template-cover cover-recipient"></span>
+        <span class="template-value value-client">${escapeHtml(clientName)}</span>
+        <span class="template-value value-recipient">${escapeHtml(careRecipient)}</span>
+        <span class="template-value value-start">${escapeHtml(startDate)}</span>
+        <span class="template-mark mark-mon">${contractCheckmark('contractDays', 'Monday')}</span>
+        <span class="template-mark mark-tue">${contractCheckmark('contractDays', 'Tuesday')}</span>
+        <span class="template-mark mark-wed">${contractCheckmark('contractDays', 'Wednesday')}</span>
+        <span class="template-mark mark-thu">${contractCheckmark('contractDays', 'Thursday')}</span>
+        <span class="template-mark mark-fri">${contractCheckmark('contractDays', 'Friday')}</span>
+        <span class="template-mark mark-sat">${contractCheckmark('contractDays', 'Saturday')}</span>
+        <span class="template-mark mark-sun">${contractCheckmark('contractDays', 'Sunday')}</span>
+        <span class="template-mark mark-morning">${rateCheckmark('Morning')}</span>
+        <span class="template-mark mark-evening">${rateCheckmark('Evening')}</span>
+        <span class="template-mark mark-weekly">${contractCheckmark('contractBilling', 'Weekly')}</span>
+        <span class="template-mark mark-biweekly">${contractCheckmark('contractBilling', 'Biweekly')}</span>
+        <span class="template-value value-custom">${escapeHtml(customTime)}</span>
       </section>
-      <h3 class="contract-signatures-title">Signatures</h3>
-      <footer class="signature-grid">
-        <div>
-          <strong class="script-signature">${escapeHtml(clientSigner)}</strong>
-          <span>Client Signature</span>
-          <small>Date: ${escapeHtml(clientDate)}</small>
-        </div>
-        <div>
-          <strong class="script-signature">${escapeHtml(agencySigner)}</strong>
-          <span>Agency Representative</span>
-          <small>Date: ${escapeHtml(agencyDate)}</small>
-        </div>
-      </footer>
+      <section class="contract-template-page" aria-label="Contract page 2">
+        <img src="/assets/elite-contract-template-2.png" alt="Elite Bridge contract page 2">
+        <span class="template-signature sig-client">${escapeHtml(clientSigner)}</span>
+        <span class="template-value date-client">${escapeHtml(clientDate)}</span>
+        <span class="template-signature sig-agency">${escapeHtml(agencySigner)}</span>
+        <span class="template-value date-agency">${escapeHtml(agencyDate)}</span>
+      </section>
     `;
   }
 
