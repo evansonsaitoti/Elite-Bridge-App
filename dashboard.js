@@ -136,8 +136,8 @@
     const preview = document.getElementById('contractPreview');
     if (!preview) return;
 
-    const clientName = contractFieldValue('contractClientName', 'Client Name');
-    const careRecipient = contractFieldValue('contractCareRecipient', 'Same as client');
+    const clientName = contractFieldValue('contractClientName', '');
+    const careRecipient = contractFieldValue('contractCareRecipient', '');
     const startDate = formatContractDate(contractFieldValue('contractStartDate', ''));
     const dayRate = contractFieldValue('contractDayRate', '$40');
     const eveningRate = contractFieldValue('contractEveningRate', '$45');
