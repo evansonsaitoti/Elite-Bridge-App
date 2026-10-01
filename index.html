@@ -234,6 +234,118 @@
       .auth-footer { flex-direction: column; align-items: center; }
     }
 
+    @media (max-width: 680px) {
+      body { background: #fff; }
+      .site-shell { width: 100%; padding: 0; }
+      .portal-card { min-height: 100vh; }
+      .product-side {
+        min-height: 72vh;
+        justify-content: space-between;
+        padding: 34px 24px 118px;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(4, 25, 18, .12) 0%, rgba(4, 25, 18, .28) 38%, rgba(4, 25, 18, .88) 100%),
+          url("/elitebridge-mobile/assets/images/caregiver-welcome-hero.jpg") center / cover no-repeat;
+      }
+      body[data-preview="employer"] .product-side {
+        background:
+          linear-gradient(180deg, rgba(4, 25, 18, .12) 0%, rgba(4, 25, 18, .28) 38%, rgba(4, 25, 18, .88) 100%),
+          url("/elitebridge-employer/assets/images/employer-welcome-hero.jpg") center / cover no-repeat;
+      }
+      .product-side::before,
+      .product-side::after,
+      .device-stage,
+      .sync-note { display: none; }
+      .product-copy { margin-top: auto; text-align: left; }
+      .product-kicker {
+        display: block;
+        margin-bottom: 14px;
+        color: #f2c96f;
+        font-size: 12px;
+        letter-spacing: .22em;
+      }
+      .product-kicker::before,
+      .product-kicker::after { display: none; }
+      .product-copy h1 {
+        max-width: 340px;
+        margin: 0;
+        color: #fff;
+        font-size: clamp(42px, 13vw, 58px);
+        line-height: .98;
+        letter-spacing: -.065em;
+      }
+      .product-copy p {
+        max-width: 330px;
+        margin: 18px 0 0;
+        color: rgba(255,255,255,.9);
+        font-size: 17px;
+        line-height: 1.42;
+      }
+      .view-switch {
+        width: 100%;
+        justify-content: space-between;
+        gap: 10px;
+        margin-top: 26px;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        backdrop-filter: none;
+      }
+      .view-switch button {
+        min-width: 0;
+        flex: 1;
+        padding: 13px 12px;
+        border: 1px solid rgba(255,255,255,.42);
+        border-radius: 999px;
+        color: #fff;
+        background: rgba(255,255,255,.09);
+        font-size: 12px;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
+      }
+      .view-switch button.active {
+        color: var(--forest);
+        background: #fff;
+      }
+      .auth-side {
+        position: relative;
+        z-index: 2;
+        margin-top: -84px;
+        padding: 28px 22px 26px;
+        border-radius: 30px 30px 0 0;
+        box-shadow: 0 -20px 45px rgba(0,0,0,.16);
+      }
+      .mobile-logo { display: none; }
+      .auth-header { text-align: center; }
+      .auth-header h2 {
+        color: #111d18;
+        font-size: 29px;
+        letter-spacing: -.04em;
+      }
+      .app-sync-copy { display: none; }
+      .field-head { margin-bottom: 7px; }
+      input[type="email"],
+      input[type="password"],
+      input[type="text"],
+      .submit {
+        height: 58px;
+        border-radius: 18px;
+      }
+      .submit {
+        margin-top: 20px;
+        border-radius: 18px;
+        font-size: 16px;
+      }
+      .join { margin-top: 22px; padding-top: 20px; }
+      .join > p { text-align: center; }
+      .join-options { grid-template-columns: 1fr 1fr; }
+      .join-card {
+        min-height: 76px;
+        align-items: center;
+        border-radius: 18px;
+        box-shadow: 0 9px 20px rgba(6,62,44,.07);
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
   </style>
 </head>
@@ -361,9 +473,11 @@
     let previewTimer;
 
     document.getElementById('year').textContent = new Date().getFullYear();
+    document.body.dataset.preview = 'caregiver';
 
     function selectPreview(index, restart = true) {
       previewIndex = index;
+      document.body.dataset.preview = index === 1 ? 'employer' : 'caregiver';
       tabs.forEach((tab, i) => { tab.classList.toggle('active', i === index); tab.setAttribute('aria-selected', String(i === index)); });
       previews.forEach((preview, i) => preview.classList.toggle('active', i === index));
       if (restart && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();

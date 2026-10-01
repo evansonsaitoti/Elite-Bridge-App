@@ -13,12 +13,12 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #0b3726 0%, #1a5a3f 100%);
+            background: #f4f7f5;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 28px;
         }
 
         :root {
@@ -26,18 +26,117 @@
             --accent-gold: #c08530;
             --white: #ffffff;
             --gray-light: #e9ecef;
+            --muted: #66736c;
         }
 
         .container {
             width: 100%;
-            max-width: 500px;
+            max-width: 1120px;
+        }
+
+        .signup-shell {
+            display: grid;
+            grid-template-columns: minmax(420px, .9fr) minmax(460px, 1fr);
+            min-height: 760px;
+            overflow: hidden;
+            border-radius: 30px;
+            background: var(--white);
+            box-shadow: 0 28px 80px rgba(12, 48, 35, .16);
+        }
+
+        .app-hero {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 100%;
+            padding: 42px;
+            color: #fff;
+            background:
+                linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .22) 34%, rgba(4, 25, 18, .9) 100%),
+                url("/elitebridge-mobile/assets/images/caregiver-welcome-hero.jpg") center / cover no-repeat;
+        }
+
+        body[data-signup-role="employer"] .app-hero {
+            background:
+                linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .22) 34%, rgba(4, 25, 18, .9) 100%),
+                url("/elitebridge-employer/assets/images/employer-welcome-hero.jpg") center / cover no-repeat;
+        }
+
+        .hero-brand {
+            position: absolute;
+            top: 38px;
+            left: 38px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 900;
+            letter-spacing: .12em;
+        }
+
+        .hero-brand img {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            background: #fff;
+            object-fit: contain;
+            padding: 8px;
+        }
+
+        .hero-brand span {
+            display: block;
+            color: #f2c96f;
+            font-size: .82rem;
+            letter-spacing: .28em;
+            margin-top: 5px;
+        }
+
+        .hero-copy small {
+            display: block;
+            margin-bottom: 16px;
+            color: #f2c96f;
+            font-weight: 900;
+            letter-spacing: .24em;
+            text-transform: uppercase;
+        }
+
+        .hero-copy h2 {
+            max-width: 420px;
+            margin: 0;
+            font-size: clamp(2.8rem, 5.2vw, 4.8rem);
+            line-height: .96;
+            letter-spacing: -.065em;
+        }
+
+        .hero-copy p {
+            max-width: 390px;
+            margin: 20px 0 0;
+            color: rgba(255,255,255,.9);
+            font-size: 1.08rem;
+            line-height: 1.45;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        .hero-tags span {
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,.44);
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            font-size: .88rem;
+            font-weight: 800;
         }
 
         .form-card {
             background: var(--white);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            border-radius: 0;
+            padding: 52px;
+            box-shadow: none;
         }
 
         .logo-section {
@@ -58,7 +157,7 @@
         }
 
         .logo-section p {
-            color: #999;
+            color: var(--muted);
             font-size: 0.95rem;
         }
 
@@ -78,21 +177,35 @@
         }
 
         .role-option label {
-            display: block;
-            padding: 15px;
+            display: grid;
+            min-height: 98px;
+            padding: 17px;
             border: 2px solid var(--gray-light);
-            border-radius: 8px;
-            text-align: center;
+            border-radius: 18px;
+            text-align: left;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: 600;
             color: #666;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(11,55,38,.05);
         }
 
         .role-option input:checked + label {
             border-color: var(--primary-dark);
-            background: rgba(11, 55, 38, 0.05);
+            background: #f2faf6;
             color: var(--primary-dark);
+        }
+
+        .role-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            background: rgba(11,55,38,.09);
+            font-size: 1.35rem;
         }
 
         .form-group {
@@ -112,7 +225,7 @@
             width: 100%;
             padding: 12px 15px;
             border: 1px solid var(--gray-light);
-            border-radius: 6px;
+            border-radius: 14px;
             font-size: 1rem;
             font-family: inherit;
             transition: all 0.3s ease;
@@ -172,11 +285,12 @@
 
         .btn-signup {
             width: 100%;
-            padding: 12px;
+            min-height: 56px;
+            padding: 14px;
             background: var(--primary-dark);
             color: var(--white);
             border: none;
-            border-radius: 6px;
+            border-radius: 17px;
             font-weight: 700;
             font-size: 1rem;
             cursor: pointer;
@@ -273,8 +387,53 @@
         .invite-banner.active { display: block; }
 
         @media (max-width: 480px) {
+            body {
+                display: block;
+                padding: 0;
+                background: #fff;
+            }
+
+            .container {
+                max-width: none;
+            }
+
+            .signup-shell {
+                display: block;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .app-hero {
+                min-height: 62vh;
+                padding: 32px 24px 112px;
+            }
+
+            .hero-brand {
+                top: 30px;
+                left: 24px;
+            }
+
+            .hero-brand img {
+                width: 56px;
+                height: 56px;
+            }
+
+            .hero-copy h2 {
+                font-size: clamp(3rem, 13vw, 4rem);
+            }
+
+            .hero-copy p {
+                font-size: 1rem;
+            }
+
             .form-card {
-                padding: 30px 20px;
+                position: relative;
+                z-index: 2;
+                margin-top: -78px;
+                padding: 30px 22px 34px;
+                border-radius: 30px 30px 0 0;
+                box-shadow: 0 -20px 45px rgba(0,0,0,.16);
             }
 
             .logo-section h1 {
@@ -290,6 +449,23 @@
 <body>
 
 <div class="container">
+    <main class="signup-shell">
+    <section class="app-hero" aria-label="Elite Bridge app welcome">
+        <div class="hero-brand">
+            <img src="/logo-icon.png" alt="">
+            <strong>ELITE BRIDGE <span id="heroRoleLabel">CAREGIVER</span></strong>
+        </div>
+        <div class="hero-copy">
+            <small id="heroKicker">Meaningful shifts</small>
+            <h2 id="heroTitle">Care work that fits your life.</h2>
+            <p id="heroCopy">Create your caregiver profile, find nearby shifts, and manage your Elite Bridge work from mobile or web.</p>
+            <div class="hero-tags" aria-label="Elite Bridge highlights">
+                <span id="heroTagOne">Flexible shifts</span>
+                <span id="heroTagTwo">Clock in</span>
+                <span id="heroTagThree">Get matched</span>
+            </div>
+        </div>
+    </section>
     <div class="form-card">
         <div class="logo-section">
             <img src="logo.webp" alt="Elite Bridge Logo">
@@ -307,11 +483,11 @@
                 <div class="role-selector">
                     <div class="role-option">
                         <input type="radio" id="caregiver" name="role" value="caregiver" required onchange="updateCompanySection()">
-                        <label for="caregiver"><span class="role-icon">🫶</span> Caregiver</label>
+                        <label for="caregiver"><span class="role-icon">🩺</span> Caregiver</label>
                     </div>
                     <div class="role-option">
                         <input type="radio" id="employer" name="role" value="employer" required onchange="updateCompanySection()">
-                        <label for="employer"><span class="role-icon">🏡</span> Employer / Family</label>
+                        <label for="employer"><span class="role-icon">🏥</span> Employer / Family</label>
                     </div>
                 </div>
             </div>
@@ -367,10 +543,27 @@
             Already have an account? <a href="/">Sign in here</a>
         </div>
     </div>
+    </main>
 </div>
 
 <script>
     const API_BASE = window.ELITE_BRIDGE_API_BASE || 'https://elite-bridge-shared-api-evans.vercel.app/api';
+    const signupHeroContent = {
+        caregiver: {
+            role: 'CAREGIVER',
+            kicker: 'Meaningful shifts',
+            title: 'Care work that fits your life.',
+            copy: 'Create your caregiver profile, find nearby shifts, and manage your Elite Bridge work from mobile or web.',
+            tags: ['Flexible shifts', 'Clock in', 'Get matched']
+        },
+        employer: {
+            role: 'EMPLOYER',
+            kicker: 'Smarter care staffing',
+            title: 'Fill the right shift faster.',
+            copy: 'Create an opportunity once and reach active caregivers whose profile matches your care needs.',
+            tags: ['Personal care', 'Companionship', 'Respite']
+        }
+    };
 
     const params = new URLSearchParams(window.location.search);
     const requestedRole = params.get('role');
@@ -411,9 +604,20 @@
     }
 
     function updateCompanySection() {
-        const role = document.querySelector('input[name="role"]:checked').value;
+        const checkedRole = document.querySelector('input[name="role"]:checked');
+        const role = checkedRole ? checkedRole.value : 'caregiver';
         const companySection = document.getElementById('companySection');
         const companyInput = document.getElementById('companyName');
+        const hero = signupHeroContent[role] || signupHeroContent.caregiver;
+
+        document.body.dataset.signupRole = role;
+        document.getElementById('heroRoleLabel').textContent = hero.role;
+        document.getElementById('heroKicker').textContent = hero.kicker;
+        document.getElementById('heroTitle').textContent = hero.title;
+        document.getElementById('heroCopy').textContent = hero.copy;
+        document.getElementById('heroTagOne').textContent = hero.tags[0];
+        document.getElementById('heroTagTwo').textContent = hero.tags[1];
+        document.getElementById('heroTagThree').textContent = hero.tags[2];
 
         if (role === 'employer') {
             companySection.classList.add('active');
@@ -423,6 +627,8 @@
             companyInput.required = false;
         }
     }
+
+    updateCompanySection();
 
     async function handleSignup(event) {
         event.preventDefault();
