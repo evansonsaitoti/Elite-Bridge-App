@@ -39,7 +39,7 @@
       <section data-view-panel="overview">
         <div class="page-head"><div><p class="eyebrow">Employer workspace</p><h1><span data-company-name>Your care workspace</span></h1><p>Coordinate people, shifts and care delivery without losing the day’s priorities.</p></div><span class="sync-status">Operations synchronized</span></div>
         <div class="dashboard-grid"><div class="dashboard-main">
-          <section class="surface surface-pad"><div class="surface-head"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div></div><div class="quick-grid"><button class="quick-card" type="button" data-go-view="shifts"><span class="quick-icon">＋</span><span class="quick-copy"><strong>Post a shift</strong><span>Create a care opportunity</span></span></button><button class="quick-card" type="button" data-go-view="clients"><span class="quick-icon">◇</span><span class="quick-copy"><strong>Add a client</strong><span>Prepare a care record</span></span></button><button class="quick-card" type="button" data-invite-caregiver><span class="quick-icon">○</span><span class="quick-copy"><strong>Invite caregiver</strong><span>Copy a secure signup link</span></span></button><button class="quick-card" type="button" data-go-view="updates"><span class="quick-icon">✉</span><span class="quick-copy"><strong>Send an update</strong><span>Keep the care team aligned</span></span></button></div></section>
+          <section class="surface surface-pad"><div class="surface-head"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div></div><div class="quick-grid"><button class="quick-card" type="button" data-go-view="shifts"><span class="quick-icon">＋</span><span class="quick-copy"><strong>Post a shift</strong><span>Create a care opportunity</span></span></button><button class="quick-card" type="button" data-go-view="clients"><span class="quick-icon">◇</span><span class="quick-copy"><strong>Add a client</strong><span>Prepare a care record</span></span></button><button class="quick-card" type="button" data-go-view="contracts"><span class="quick-icon">§</span><span class="quick-copy"><strong>Create contract</strong><span>Generate a client PDF</span></span></button><button class="quick-card" type="button" data-invite-caregiver><span class="quick-icon">○</span><span class="quick-copy"><strong>Invite caregiver</strong><span>Copy a secure signup link</span></span></button></div></section>
           <section class="metric-grid" aria-label="Employer summary"><article class="metric-card"><span class="metric-label">Open shifts <i class="metric-dot"></i></span><strong class="metric-value" id="metricOpenShifts">—</strong><span class="metric-foot">Seeking caregivers</span></article><article class="metric-card"><span class="metric-label">On duty now <i class="metric-dot"></i></span><strong class="metric-value" id="metricOnDuty">—</strong><span class="metric-foot">Latest clock-in activity</span></article><article class="metric-card"><span class="metric-label">Caregiver network <i class="metric-dot"></i></span><strong class="metric-value" id="metricCaregivers">—</strong><span class="metric-foot">Visible caregiver profiles</span></article><article class="metric-card"><span class="metric-label">Pending payroll <i class="metric-dot"></i></span><strong class="metric-value" id="metricPendingPayroll">—</strong><span class="metric-foot">Recorded pending payments</span></article></section>
           <section class="operations-grid"><div class="surface surface-pad"><div class="surface-head"><div><h2>Shift operations</h2><p>Your latest published care shifts</p></div><button class="text-link" type="button" data-go-view="shifts">Manage shifts</button></div><div id="overviewShiftList"><div class="empty-state"><div><span class="empty-mark">▦</span><strong>Loading shifts</strong><p>Checking your care operation now.</p></div></div></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Activity rhythm</h2><p>Care activity over seven days</p></div></div><div class="timeline"><div class="bar-wrap"><div class="bar" style="height:34px"></div><span>Mon</span></div><div class="bar-wrap"><div class="bar" style="height:62px"></div><span>Tue</span></div><div class="bar-wrap"><div class="bar" style="height:45px"></div><span>Wed</span></div><div class="bar-wrap"><div class="bar" style="height:78px"></div><span>Thu</span></div><div class="bar-wrap"><div class="bar" style="height:52px"></div><span>Fri</span></div><div class="bar-wrap"><div class="bar" style="height:26px"></div><span>Sat</span></div><div class="bar-wrap"><div class="bar" style="height:18px"></div><span>Sun</span></div></div></div></section>
         </div><aside class="dashboard-rail"><section class="surface surface-pad"><div class="surface-head"><div><h2>Needs your attention</h2><p>Items that may block care</p></div></div><div class="attention-list"><button class="attention-item" type="button" data-go-view="timesheets"><span class="row-icon">◷</span><span class="row-copy"><strong>Timesheet activity</strong><span>Review recent clock events</span></span><span class="attention-count" id="attentionTimesheets">0</span></button><button class="attention-item" type="button" data-go-view="shifts"><span class="row-icon">▦</span><span class="row-copy"><strong>Open shifts</strong><span>Still seeking coverage</span></span><span class="attention-count" id="attentionShifts">0</span></button></div></section><section class="surface setup-card"><div class="setup-banner"><div class="setup-top"><h2>Organization setup</h2><span class="setup-percent" id="employerSetupPercent">0%</span></div><div class="progress-track"><span id="employerSetupProgress" style="width:0%"></span></div><div class="setup-list" id="employerSetupList"><div class="setup-step" data-setup="organization">Organization profile</div><div class="setup-step" data-setup="location">Primary care location</div><div class="setup-step" data-setup="services">Care services selected</div><div class="setup-step" data-setup="invitation">Invite your first caregiver</div><div class="setup-step" data-setup="shift">Publish your first shift</div></div><button class="primary-button" id="employerSetupAction" type="button">Complete organization setup</button></div></section></aside></div>
@@ -58,8 +58,8 @@
         <div class="page-head">
           <div>
             <p class="eyebrow">Client agreements</p>
-            <h1>Service contract generator</h1>
-            <p>Create a polished one-page Elite Bridge service agreement, save it as a PDF, and send it to your client.</p>
+            <h1>Elite Bridge contract</h1>
+            <p>Fill only the client details. The professional one-page service agreement stays prefilled with Elite Bridge terms and letterhead.</p>
           </div>
           <button class="primary-button" type="button" id="printContractTop">Download PDF</button>
         </div>
@@ -68,29 +68,25 @@
           <form class="surface surface-pad contract-form" id="contractForm">
             <div class="section-heading">
               <div>
-                <p class="eyebrow">Client details</p>
-                <h2>Fill in the agreement</h2>
+                <p class="eyebrow">Agreement details</p>
+                <h2>Only fill these fields</h2>
               </div>
             </div>
             <div class="form-grid">
-              <label>Client name<input id="contractClientName" type="text" placeholder="Client or family name" required></label>
-              <label>Client email<input id="contractClientEmail" type="email" placeholder="client@example.com"></label>
-              <label>Client phone<input id="contractClientPhone" type="tel" placeholder="(555) 123-4567"></label>
-              <label>Start date<input id="contractStartDate" type="date"></label>
-              <label class="full">Client address<textarea id="contractClientAddress" rows="2" placeholder="Street, city, state, ZIP"></textarea></label>
-              <label>Care schedule<input id="contractSchedule" type="text" value="To be scheduled with Elite Bridge Staffing"></label>
-              <label>Rate / package<input id="contractRate" type="text" value="$35/hr daytime, $40/hr evening, $300 overnight"></label>
-              <label class="full">Services included<textarea id="contractServices" rows="3">Personal care, meal preparation, companionship, respite care, transportation support as requested.</textarea></label>
-              <label class="full">Billing terms<textarea id="contractBilling" rows="2">Invoices are due upon receipt unless otherwise agreed in writing.</textarea></label>
-              <label class="full">Cancellation terms<textarea id="contractCancellation" rows="2">Please provide at least 24 hours notice for schedule changes or cancellations.</textarea></label>
-              <label>Elite Bridge signer<input id="contractCompanySigner" type="text" value="Elite Bridge Staffing"></label>
-              <label>Agreement date<input id="contractDate" type="date"></label>
+              <label>Client name<input id="contractClientName" type="text" placeholder="Edward Kowaloff" required></label>
+              <label>Care recipient if different<input id="contractCareRecipient" type="text" placeholder="Hollis Kowaloff"></label>
+              <label class="full">Schedule<textarea id="contractSchedule" rows="5" placeholder="Monday: 6 PM - 10 PM&#10;Tuesday: 6 PM - 10 PM&#10;Wednesday: 12 PM - 9 PM"></textarea></label>
+              <label class="full">Hourly rates<textarea id="contractRates" rows="4">Morning / Day Rate: 8:30 AM - 5:00 PM = $40 per hour
+Evening Rate: 5:00 PM - 10:00 PM = $45 per hour</textarea></label>
+              <label>Client signature name<input class="signature-input" id="contractClientSigner" type="text" placeholder="Client full name"></label>
+              <label>Client date<input id="contractClientDate" type="date"></label>
+              <label>Agency representative<input class="signature-input" id="contractAgencySigner" type="text" value="Elite Bridge Staffing"></label>
+              <label>Agency date<input id="contractAgencyDate" type="date"></label>
             </div>
-            <p class="form-note">Template draft for operational use. Review the final PDF before sending.</p>
+            <p class="form-note">The signature names are shown in a signature style on the PDF. Review before sending for signature.</p>
             <div class="form-actions">
               <button class="secondary-button" type="submit">Update preview</button>
               <button class="primary-button" type="button" id="printContract">Download PDF</button>
-              <button class="secondary-button" type="button" id="emailContract">Email client</button>
             </div>
           </form>
 
@@ -107,7 +103,7 @@
               <div class="contract-title-row">
                 <div>
                   <p class="eyebrow">Service agreement</p>
-                  <h2>Client Care Services Contract</h2>
+                  <h2>Non-Medical Home Care Services Agreement</h2>
                 </div>
                 <p class="contract-date">Prepared today</p>
               </div>
