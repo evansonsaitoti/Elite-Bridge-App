@@ -59,9 +59,12 @@
           <div>
             <p class="eyebrow">Client agreements</p>
             <h1>Elite Bridge contract</h1>
-            <p>Fill only the client details. The professional one-page service agreement stays prefilled with Elite Bridge terms and letterhead.</p>
+            <p>Fill the client details on the left. The contract preview on the right stays formatted like the Elite Bridge agreement.</p>
           </div>
-          <button class="primary-button" type="button" id="printContractTop">Download PDF</button>
+          <div class="page-actions">
+            <button class="secondary-button" type="button" id="emailContractTop">Email client</button>
+            <button class="primary-button" type="button" id="printContractTop">Download PDF</button>
+          </div>
         </div>
 
         <div class="contract-builder">
@@ -69,24 +72,50 @@
             <div class="section-heading">
               <div>
                 <p class="eyebrow">Agreement details</p>
-                <h2>Only fill these fields</h2>
+                <h2>Fill in the agreement</h2>
               </div>
             </div>
             <div class="form-grid">
               <label>Client name<input id="contractClientName" type="text" placeholder="Edward Kowaloff" required></label>
               <label>Care recipient if different<input id="contractCareRecipient" type="text" placeholder="Hollis Kowaloff"></label>
-              <label class="full">Schedule<textarea id="contractSchedule" rows="5" placeholder="Monday: 6 PM - 10 PM&#10;Tuesday: 6 PM - 10 PM&#10;Wednesday: 12 PM - 9 PM"></textarea></label>
+              <label>Start date<input id="contractStartDate" type="date"></label>
+              <label>Client email<input id="contractClientEmail" type="email" placeholder="client@example.com"></label>
+              <fieldset class="classic-checks full">
+                <legend>Service days</legend>
+                <label><input type="checkbox" name="contractDays" value="Monday"> Monday</label>
+                <label><input type="checkbox" name="contractDays" value="Tuesday"> Tuesday</label>
+                <label><input type="checkbox" name="contractDays" value="Wednesday"> Wednesday</label>
+                <label><input type="checkbox" name="contractDays" value="Thursday"> Thursday</label>
+                <label><input type="checkbox" name="contractDays" value="Friday"> Friday</label>
+                <label><input type="checkbox" name="contractDays" value="Saturday"> Saturday</label>
+                <label><input type="checkbox" name="contractDays" value="Sunday"> Sunday</label>
+              </fieldset>
+              <fieldset class="classic-checks full">
+                <legend>Hours</legend>
+                <label><input type="checkbox" name="contractHours" value="Morning"> Morning</label>
+                <label><input type="checkbox" name="contractHours" value="Afternoon"> Afternoon</label>
+                <label><input type="checkbox" name="contractHours" value="Evening"> Evening</label>
+                <label><input type="checkbox" name="contractHours" value="Overnight"> Overnight</label>
+              </fieldset>
+              <label class="full">Regular service schedule<textarea id="contractSchedule" rows="5" placeholder="Monday: 6 PM - 10 PM&#10;Tuesday: 6 PM - 10 PM&#10;Wednesday: 12 PM - 9 PM"></textarea></label>
+              <label class="full">Custom time / notes<textarea id="contractCustomTime" rows="3" placeholder="Additional notes or custom time"></textarea></label>
               <label class="full">Hourly rates<textarea id="contractRates" rows="4">Morning / Day Rate: 8:30 AM - 5:00 PM = $40 per hour
 Evening Rate: 5:00 PM - 10:00 PM = $45 per hour</textarea></label>
+              <fieldset class="classic-checks full">
+                <legend>Billing cycle</legend>
+                <label><input type="checkbox" name="contractBilling" value="Weekly" checked> Weekly</label>
+                <label><input type="checkbox" name="contractBilling" value="Biweekly"> Biweekly</label>
+              </fieldset>
               <label>Client signature name<input class="signature-input" id="contractClientSigner" type="text" placeholder="Client full name"></label>
               <label>Client date<input id="contractClientDate" type="date"></label>
               <label>Agency representative<input class="signature-input" id="contractAgencySigner" type="text" value="Elite Bridge Staffing"></label>
               <label>Agency date<input id="contractAgencyDate" type="date"></label>
             </div>
-            <p class="form-note">The signature names are shown in a signature style on the PDF. Review before sending for signature.</p>
+            <p class="form-note">The signature names appear in a signature style. Review the preview before downloading or emailing.</p>
             <div class="form-actions">
               <button class="secondary-button" type="submit">Update preview</button>
               <button class="primary-button" type="button" id="printContract">Download PDF</button>
+              <button class="secondary-button" type="button" id="emailContract">Email client</button>
             </div>
           </form>
 
