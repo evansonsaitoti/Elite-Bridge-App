@@ -145,19 +145,91 @@
     .auth-footer a:hover { text-decoration: underline; }
 
     @media (max-width: 940px) {
-      .site-shell { width: min(680px, calc(100% - 30px)); padding-top: 24px; }
+      body { background: var(--forest); }
+      .site-shell { width: min(680px, calc(100% - 30px)); padding: 18px 0 28px; }
       .topbar { display: none; }
-      .portal-card { display: block; min-height: 0; }
-      .product-side { display: none; }
-      .auth-side { min-height: calc(100vh - 48px); padding: 35px 28px; }
-      .mobile-logo { display: block; width: 185px; margin: 0 0 46px; }
+      .portal-card { display: block; min-height: 0; overflow: visible; border: 0; border-radius: 30px; background: transparent; box-shadow: none; }
+      .product-side {
+        display: flex;
+        min-height: 0;
+        padding: 23px 22px 18px;
+        border-radius: 30px 30px 0 0;
+        background:
+          linear-gradient(180deg, rgba(6,62,44,.58), rgba(6,62,44,.18)),
+          radial-gradient(circle at 12% 8%, rgba(200,139,44,.28), transparent 30%),
+          linear-gradient(145deg, #0a4a35 0%, #0f6548 48%, #123e31 100%);
+      }
+      .product-side::before { width: 300px; height: 300px; top: -190px; left: -135px; border-color: rgba(255,255,255,.14); }
+      .product-side::after { width: 250px; height: 250px; right: -150px; bottom: -125px; border-color: rgba(255,255,255,.11); }
+      .product-kicker { color: #f0cc82; font-size: 10px; }
+      .product-copy h1 { color: #fff; font-size: clamp(27px, 7.4vw, 37px); letter-spacing: -.05em; }
+      .product-copy p { color: rgba(255,255,255,.82); font-size: 13px; }
+      .view-switch { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.18); }
+      .view-switch button { color: rgba(255,255,255,.74); }
+      .view-switch button.active { color: var(--forest); background: #fff; box-shadow: 0 7px 18px rgba(0,0,0,.16); }
+      .device-stage { min-height: 310px; padding-top: 17px; place-items: center; }
+      .phone { width: 214px; height: 368px; border-width: 3px; border-bottom-width: 0; border-radius: 31px 31px 0 0; box-shadow: 0 22px 36px rgba(4,23,16,.28), 0 0 0 1px rgba(255,255,255,.18) inset; }
+      .phone::before { top: 7px; width: 62px; height: 17px; }
+      .phone-screen { border-radius: 21px 21px 0 0; }
+      .app-view { padding: 24px 11px 0; }
+      .welcome { margin: 13px 0 10px; }
+      .welcome h3 { font-size: 14px; }
+      .stats { gap: 5px; }
+      .stat { min-height: 48px; padding: 7px 8px; border-radius: 10px; }
+      .stat strong { font-size: 13px; }
+      .shift-card,
+      .activity-card { padding: 9px; border-radius: 11px; }
+      .section-title { margin: 11px 2px 6px; }
+      .quick-actions { gap: 5px; }
+      .quick-action { padding: 7px 3px; }
+      .bottom-nav { padding: 6px 5px 7px; }
+      .sync-note { color: rgba(255,255,255,.82); font-size: 11px; }
+      .auth-side {
+        align-items: flex-start;
+        min-height: 0;
+        margin-top: -2px;
+        padding: 30px 28px 32px;
+        border-radius: 26px 26px 30px 30px;
+        background: #fff;
+      }
+      .mobile-logo { display: block; width: 174px; margin: 0 0 26px; }
+      .auth-header h2 { font-size: 34px; }
+      .app-sync-copy { border-color: #d9ece2; background: #f6fbf8; }
     }
 
     @media (max-width: 520px) {
       .site-shell { width: 100%; padding: 0; }
-      .portal-card { min-height: 100vh; border: 0; border-radius: 0; box-shadow: none; }
-      .auth-side { align-items: flex-start; min-height: 100vh; padding: 25px 21px; }
-      .mobile-logo { width: 164px; margin-bottom: 37px; }
+      .portal-card { min-height: 100vh; border-radius: 0; }
+      .product-side { padding: 18px 16px 15px; border-radius: 0; }
+      .product-kicker { margin-bottom: 8px; }
+      .product-copy h1 { max-width: 330px; }
+      .product-copy p { max-width: 325px; margin-top: 9px; }
+      .view-switch { margin-top: 14px; }
+      .view-switch button { min-width: 96px; padding: 8px 12px; }
+      .device-stage { min-height: 285px; padding-top: 14px; }
+      .phone { width: 196px; height: 334px; padding: 8px; border-radius: 28px 28px 0 0; }
+      .phone-screen { border-radius: 19px 19px 0 0; }
+      .app-view { padding: 22px 10px 0; }
+      .app-brand { font-size: 9px; }
+      .mini-logo { width: 22px; height: 22px; border-radius: 7px; }
+      .notification { width: 23px; height: 23px; border-radius: 8px; }
+      .welcome small { font-size: 7px; }
+      .welcome h3 { font-size: 13px; }
+      .stat { min-height: 43px; padding: 6px; }
+      .stat-top { font-size: 6px; }
+      .stat-icon { width: 16px; height: 16px; font-size: 8px; }
+      .stat strong { margin-top: 3px; font-size: 12px; }
+      .shift-head strong,
+      .section-title strong { font-size: 9px; }
+      .quick-action b { width: 20px; height: 20px; margin-bottom: 4px; }
+      .sync-note { margin-top: 10px; }
+      .auth-side { min-height: 0; padding: 25px 21px 30px; border-radius: 24px 24px 0 0; }
+      .mobile-logo { width: 158px; margin-bottom: 24px; }
+      .auth-header h2 { font-size: 31px; }
+      .auth-header > p { font-size: 14px; }
+      form { margin-top: 23px; }
+      input[type="email"], input[type="password"], input[type="text"], .submit { height: 56px; border-radius: 14px; }
+      .join-card { border-radius: 14px; }
       .join-options { grid-template-columns: 1fr; }
       .auth-footer { flex-direction: column; align-items: center; }
     }
