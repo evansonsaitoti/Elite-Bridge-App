@@ -43,7 +43,8 @@
     .product-side::before, .product-side::after { content: ""; position: absolute; border: 1px solid rgba(6,62,44,.1); border-radius: 50%; }
     .product-side::before { width: 420px; height: 420px; top: -255px; left: -170px; }
     .product-side::after { width: 340px; height: 340px; right: -215px; bottom: -160px; }
-    .product-copy, .device-stage, .sync-note { position: relative; z-index: 1; }
+    .product-copy, .device-stage, .sync-note, .mobile-hero-brand { position: relative; z-index: 1; }
+    .mobile-hero-brand, .mobile-service-pills { display: none; }
     .product-copy { text-align: center; }
     .product-kicker { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--gold); font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
     .product-kicker::before, .product-kicker::after { content: ""; width: 22px; height: 1px; background: currentColor; }
@@ -102,6 +103,7 @@
     .auth-side { display: flex; align-items: center; justify-content: center; padding: 50px clamp(36px, 5vw, 72px); background: #fff; }
     .auth-shell { width: 100%; max-width: 440px; }
     .mobile-logo { display: none; }
+    .mobile-welcome-actions { display: none; }
     .auth-header h2 { margin: 0; color: var(--forest); font-size: clamp(32px, 3vw, 43px); letter-spacing: -.045em; }
     .auth-header > p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }
     .app-sync-copy { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #dceae3; border-radius: 12px; color: #506058; background: #f4f9f6; font-size: 12px; line-height: 1.5; }
@@ -239,23 +241,53 @@
       .site-shell { width: 100%; padding: 0; }
       .portal-card { min-height: 100vh; }
       .product-side {
-        min-height: 72vh;
+        min-height: calc(100vh - 220px);
         justify-content: space-between;
-        padding: 34px 24px 118px;
+        padding: 112px 39px 265px;
         border-radius: 0;
         background:
-          linear-gradient(180deg, rgba(4, 25, 18, .12) 0%, rgba(4, 25, 18, .28) 38%, rgba(4, 25, 18, .88) 100%),
-          url("/elitebridge-mobile/assets/images/caregiver-welcome-hero.jpg") center / cover no-repeat;
+          linear-gradient(180deg, rgba(4, 25, 18, .04) 0%, rgba(4, 25, 18, .14) 38%, rgba(4, 25, 18, .94) 100%),
+          url("/employer-auth-welcome.jpeg") center top / cover no-repeat;
       }
       body[data-preview="employer"] .product-side {
         background:
-          linear-gradient(180deg, rgba(4, 25, 18, .12) 0%, rgba(4, 25, 18, .28) 38%, rgba(4, 25, 18, .88) 100%),
-          url("/elitebridge-employer/assets/images/employer-welcome-hero.jpg") center / cover no-repeat;
+          linear-gradient(180deg, rgba(4, 25, 18, .04) 0%, rgba(4, 25, 18, .14) 38%, rgba(4, 25, 18, .94) 100%),
+          url("/employer-auth-welcome.jpeg") center top / cover no-repeat;
       }
       .product-side::before,
       .product-side::after,
       .device-stage,
       .sync-note { display: none; }
+      .mobile-hero-brand {
+        position: absolute;
+        top: 38px;
+        left: 39px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        color: #fff;
+      }
+      .mobile-hero-brand img {
+        width: 58px;
+        height: 58px;
+        padding: 8px;
+        border-radius: 18px;
+        background: #fff;
+        object-fit: contain;
+      }
+      .mobile-hero-brand strong {
+        display: block;
+        font-size: 27px;
+        line-height: 1;
+        letter-spacing: .12em;
+      }
+      .mobile-hero-brand span {
+        display: block;
+        margin-top: 9px;
+        color: #f2c96f;
+        font-size: 14px;
+        letter-spacing: .32em;
+      }
       .product-copy { margin-top: auto; text-align: left; }
       .product-kicker {
         display: block;
@@ -267,25 +299,26 @@
       .product-kicker::before,
       .product-kicker::after { display: none; }
       .product-copy h1 {
-        max-width: 340px;
+        max-width: 530px;
         margin: 0;
         color: #fff;
-        font-size: clamp(42px, 13vw, 58px);
-        line-height: .98;
+        font-size: clamp(43px, 11vw, 64px);
+        line-height: 1.04;
         letter-spacing: -.065em;
       }
       .product-copy p {
-        max-width: 330px;
+        max-width: 620px;
         margin: 18px 0 0;
         color: rgba(255,255,255,.9);
-        font-size: 17px;
+        font-size: clamp(18px, 4.8vw, 27px);
         line-height: 1.42;
       }
       .view-switch {
+        display: none;
         width: 100%;
         justify-content: space-between;
         gap: 10px;
-        margin-top: 26px;
+        margin-top: 32px;
         padding: 0;
         border: 0;
         background: transparent;
@@ -294,27 +327,109 @@
       .view-switch button {
         min-width: 0;
         flex: 1;
-        padding: 13px 12px;
+        padding: 10px 13px;
         border: 1px solid rgba(255,255,255,.42);
         border-radius: 999px;
         color: #fff;
         background: rgba(255,255,255,.09);
-        font-size: 12px;
+        font-size: 14px;
         box-shadow: inset 0 0 0 1px rgba(255,255,255,.08);
       }
       .view-switch button.active {
         color: var(--forest);
         background: #fff;
       }
+      .mobile-service-pills {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 11px;
+        margin-top: 29px;
+      }
+      .mobile-service-pills span {
+        padding: 10px 15px;
+        border: 1px solid rgba(255,255,255,.42);
+        border-radius: 999px;
+        color: #fff;
+        background: rgba(255,255,255,.08);
+        font-size: clamp(14px, 3.8vw, 18px);
+        font-weight: 900;
+      }
       .auth-side {
         position: relative;
         z-index: 2;
-        margin-top: -84px;
-        padding: 28px 22px 26px;
-        border-radius: 30px 30px 0 0;
+        margin-top: -220px;
+        padding: 32px 35px 29px;
+        border-radius: 38px 38px 0 0;
         box-shadow: 0 -20px 45px rgba(0,0,0,.16);
       }
       .mobile-logo { display: none; }
+      .mobile-welcome-actions { display: block; text-align: center; }
+      .mobile-welcome-actions h2 {
+        margin: 0;
+        color: #111d18;
+        font-size: clamp(27px, 7vw, 34px);
+        line-height: 1.12;
+        letter-spacing: -.045em;
+      }
+      .mobile-welcome-actions p {
+        max-width: 560px;
+        margin: 12px auto 0;
+        color: #6c746f;
+        font-size: clamp(15px, 4.2vw, 20px);
+        line-height: 1.45;
+      }
+      .mobile-entry-buttons {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 27px;
+      }
+      .mobile-entry-button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 82px;
+        border: 3px solid var(--forest-2);
+        border-radius: 21px;
+        color: var(--forest-2);
+        background: #fff;
+        font-size: clamp(20px, 5.5vw, 27px);
+        font-weight: 900;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .mobile-entry-button.primary {
+        color: #fff;
+        background: var(--forest-2);
+      }
+      .mobile-policy-links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+        margin-top: 24px;
+        color: #6f7881;
+        font-size: 16px;
+        font-weight: 800;
+      }
+      .mobile-policy-links a {
+        color: var(--forest-2);
+        text-decoration: none;
+      }
+      body:not(.mobile-login-open) .auth-header,
+      body:not(.mobile-login-open) #loginForm,
+      body:not(.mobile-login-open) .join,
+      body:not(.mobile-login-open) .auth-footer,
+      body:not(.mobile-login-open) .message {
+        display: none !important;
+      }
+      body.mobile-login-open .mobile-welcome-actions {
+        display: none;
+      }
+      body.mobile-login-open .auth-side {
+        margin-top: -150px;
+        padding-top: 30px;
+      }
       .auth-header { text-align: center; }
       .auth-header h2 {
         color: #111d18;
@@ -358,10 +473,20 @@
 
     <main class="portal-card">
       <section class="product-side" aria-label="Elite Bridge app preview">
+        <div class="mobile-hero-brand">
+          <img src="/logo-icon.png" alt="">
+          <strong>ELITE BRIDGE <span>EMPLOYER</span></strong>
+        </div>
         <div class="product-copy">
-          <p class="product-kicker">The Elite Bridge app</p>
-          <h1>Your app, now on the web.</h1>
-          <p>Move between mobile and web with the same account. Your shifts, profiles, messages and activity stay together.</p>
+          <p class="product-kicker">Smarter care staffing</p>
+          <h1>Fill the right shift—faster.</h1>
+          <p>Create an opportunity once and reach active caregivers whose profile matches your care needs.</p>
+          <div class="mobile-service-pills" aria-label="Care services">
+            <span>Personal care</span>
+            <span>Companionship</span>
+            <span>Respite</span>
+            <span>Meal support</span>
+          </div>
           <div class="view-switch" role="tablist" aria-label="Preview app view">
             <button class="active" id="caregiverTab" type="button" role="tab" aria-selected="true" aria-controls="caregiverPreview">Caregiver app</button>
             <button id="employerTab" type="button" role="tab" aria-selected="false" aria-controls="employerPreview">Employer app</button>
@@ -417,6 +542,17 @@
 
       <section class="auth-side">
         <div class="auth-shell">
+          <div class="mobile-welcome-actions" aria-label="Elite Bridge employer welcome actions">
+            <h2>Care organizations start here</h2>
+            <p>A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.</p>
+            <div class="mobile-entry-buttons">
+              <a class="mobile-entry-button" href="/signup?role=employer">Sign up</a>
+              <button class="mobile-entry-button primary" id="mobileLoginButton" type="button">Log in</button>
+            </div>
+            <div class="mobile-policy-links">
+              <a href="/privacy">Privacy</a><span>·</span><a href="/terms">Terms</a><span>·</span><span>Employer access only</span>
+            </div>
+          </div>
           <a href="https://elitebridgestaffing.com" aria-label="Elite Bridge home"><img class="mobile-logo" src="/logo.png" alt="Elite Bridge"></a>
           <header class="auth-header">
             <h2>Welcome back</h2>
@@ -467,13 +603,15 @@
     const submitLabel = document.getElementById('submitLabel');
     const errorMessage = document.getElementById('errorMessage');
     const successMessage = document.getElementById('successMessage');
+    const mobileLoginButton = document.getElementById('mobileLoginButton');
     const tabs = [document.getElementById('caregiverTab'), document.getElementById('employerTab')];
     const previews = [document.getElementById('caregiverPreview'), document.getElementById('employerPreview')];
     let previewIndex = 0;
     let previewTimer;
 
     document.getElementById('year').textContent = new Date().getFullYear();
-    document.body.dataset.preview = 'caregiver';
+    document.body.dataset.preview = 'employer';
+    if (new URLSearchParams(window.location.search).get('login') === '1') document.body.classList.add('mobile-login-open');
 
     function selectPreview(index, restart = true) {
       previewIndex = index;
@@ -489,7 +627,15 @@
     }
 
     tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
+    selectPreview(1, false);
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
+
+    mobileLoginButton?.addEventListener('click', () => {
+      document.body.classList.add('mobile-login-open');
+      window.clearInterval(previewTimer);
+      selectPreview(1, false);
+      window.setTimeout(() => emailInput.focus(), 120);
+    });
 
 
     function forgotPasswordUrl() {
