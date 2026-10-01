@@ -142,9 +142,9 @@
     const dayRate = contractFieldValue('contractDayRate', '$40');
     const eveningRate = contractFieldValue('contractEveningRate', '$45');
     const clientSigner = contractFieldValue('contractClientSigner', clientName);
-    const clientDate = formatContractDate(contractFieldValue('contractClientDate', todayInputValue()));
-    const agencySigner = contractFieldValue('contractAgencySigner', 'Elite Bridge Staffing');
-    const agencyDate = formatContractDate(contractFieldValue('contractAgencyDate', todayInputValue()));
+    const clientDate = formatContractDate(contractFieldValue('contractClientDate', ''));
+    const agencySigner = contractFieldValue('contractAgencySigner', '');
+    const agencyDate = formatContractDate(contractFieldValue('contractAgencyDate', ''));
 
     preview.innerHTML = `
       <section class="contract-template-page" aria-label="Contract page 1">
@@ -198,11 +198,6 @@
   function initializeContractGenerator() {
     const form = document.getElementById('contractForm');
     if (!form) return;
-
-    ['contractClientDate', 'contractAgencyDate'].forEach((id) => {
-      const field = document.getElementById(id);
-      if (field && !field.value) field.value = todayInputValue();
-    });
 
     form.addEventListener('submit', (event) => {
       event.preventDefault();
