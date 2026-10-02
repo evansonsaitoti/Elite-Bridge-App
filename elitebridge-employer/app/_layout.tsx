@@ -32,6 +32,7 @@ export default function RootLayout() {
         <Stack.Screen name="register" options={{ title: "Create employer account" }} />
         <Stack.Screen name="dashboard" options={{ headerShown: false }} />
         <Stack.Screen name="shifts" options={{ title: "Posted shifts" }} />
+        <Stack.Screen name="clients" options={{ title: "Client records" }} />
         <Stack.Screen name="post-shift" options={{ title: "Post a shift" }} />
         <Stack.Screen name="applications" options={{ title: "Applications" }} />
         <Stack.Screen name="team" options={{ title: "Team directory" }} />

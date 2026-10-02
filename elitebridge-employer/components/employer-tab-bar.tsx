@@ -6,9 +6,9 @@ import { colors } from "../lib/theme";
 
 const tabs = [
   { label: "Home", icon: "home-outline", activeIcon: "home", route: "/dashboard", match: "/dashboard" },
-  { label: "Schedule", icon: "calendar-outline", activeIcon: "calendar", route: "/shifts", match: "/shifts" },
-  { label: "Team", icon: "people-outline", activeIcon: "people", route: "/team", match: "/team" },
-  { label: "Time", icon: "time-outline", activeIcon: "time", route: "/time", match: "/time" },
+  { label: "Shifts", icon: "calendar-outline", activeIcon: "calendar", route: "/shifts", match: "/shifts" },
+  { label: "Clients", icon: "briefcase-outline", activeIcon: "briefcase", route: "/clients", match: "/clients" },
+  { label: "Caregivers", icon: "people-outline", activeIcon: "people", route: "/team", match: "/team" },
   { label: "More", icon: "grid-outline", activeIcon: "grid", route: "/account", match: "/account" },
 ] as const;
 
