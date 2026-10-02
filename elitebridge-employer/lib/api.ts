@@ -298,6 +298,13 @@ export async function createEmployerShift(input: ShiftInput): Promise<{ shift: S
   });
 }
 
+export async function assignCaregiverToShift(shiftId: number, caregiverId: number) {
+  return request<{ application: unknown; shift: { id: number; status: string } }>(`/api/bookings/employer/${shiftId}/assign`, {
+    method: "POST",
+    body: JSON.stringify({ caregiverId }),
+  });
+}
+
 export async function getEmployerApplications(): Promise<Application[]> {
   const result = await request<{ applications: Application[] }>("/api/bookings/employer/applications");
   return result.applications;
