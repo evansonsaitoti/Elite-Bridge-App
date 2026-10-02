@@ -643,15 +643,14 @@
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.message || data.error || 'The email or password you entered is not correct.');
+        ['token', 'user'].forEach((key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); });
         const storage = document.getElementById('remember').checked ? localStorage : sessionStorage;
         storage.setItem('token', data.token);
         storage.setItem('user', JSON.stringify(data.user));
         showMessage(successMessage, 'Signed in. Opening your Elite Bridge app…');
         const role = data.user?.role;
         const dashboard = role === 'caregiver' ? '/caregiver-dashboard' : role === 'employer' ? '/employer-dashboard' : '/marketplace';
-        const onboardingKey = `eliteBridgeOnboarding:${data.user?.id}:${role}`;
-        const destination = (role === 'caregiver' || role === 'employer') && !localStorage.getItem(onboardingKey) ? '/onboarding' : dashboard;
-        window.setTimeout(() => window.location.assign(destination), 500);
+        window.setTimeout(() => window.location.replace(dashboard), 500);
       } catch (error) {
         const message = error instanceof TypeError ? 'We could not reach Elite Bridge right now. Please try again in a moment.' : error.message;
         if (error instanceof TypeError) {
