@@ -313,6 +313,29 @@ router.get("/1099/overview", async (req: AuthRequest, res, next) => {
   } catch (error) { next(error); }
 });
 
+router.get("/1099/audit", async (req: AuthRequest, res, next) => {
+  try {
+    await ensureOperations();
+    const employer = await currentEmployer(req);
+    requirePayrollOwner(req, employer);
+    const events = (await db.execute(sql`
+      SELECT oa.id, oa.action, oa.record_id, oa.detail, oa.created_at,
+        u.first_name, u.last_name, u.email
+      FROM operation_audit oa
+      LEFT JOIN users u ON u.id=oa.user_id
+      WHERE oa.employer_id=${employer.id}
+        AND (
+          oa.action LIKE 'contractor_%'
+          OR oa.action='payroll_export'
+        )
+      ORDER BY oa.created_at DESC
+      LIMIT 75
+    `) as any).rows;
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ events });
+  } catch (error) { next(error); }
+});
+
 router.patch("/1099/contractors/:caregiverId", async (req: AuthRequest, res, next) => {
   try {
     await ensure1099Payroll(); await ensureOperations();
