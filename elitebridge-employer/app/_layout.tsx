@@ -34,6 +34,8 @@ export default function RootLayout() {
         <Stack.Screen name="shifts" options={{ title: "Posted shifts" }} />
         <Stack.Screen name="clients" options={{ title: "Client records" }} />
         <Stack.Screen name="post-shift" options={{ title: "Post a shift" }} />
+        <Stack.Screen name="client-schedule" options={{ title: "New client schedule" }} />
+        <Stack.Screen name="allocate-staff" options={{ title: "Allocate staff" }} />
         <Stack.Screen name="applications" options={{ title: "Applications" }} />
         <Stack.Screen name="team" options={{ title: "Team directory" }} />
         <Stack.Screen name="time" options={{ title: "Time & attendance" }} />
