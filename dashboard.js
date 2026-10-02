@@ -471,6 +471,7 @@
     const runs = data?.runs || [];
     const contractors = data?.contractors || [];
     const summary = data?.summary || {};
+    const blockedCount = approved.filter(item => item.w9_status !== 'received').length;
     setText('payrollDraft', money(summary.draft_total));
     setText('payrollPaid', money(summary.paid_total));
     setText('payrollYear', money(summary.year_paid_total));
@@ -479,13 +480,15 @@
     const approvedList = document.getElementById('approvedPayoutList');
     if (approvedList) {
       if (!approved.length) renderEmpty(approvedList, 'No approved unpaid timesheets', 'Approve timesheets first, or everything approved has already been placed into a payout run.');
-      else approvedList.innerHTML = approved.map((item) => `
+      else approvedList.innerHTML = `${blockedCount ? `<p class="form-note warning-note">${blockedCount} approved timesheet${blockedCount === 1 ? '' : 's'} cannot be batched until W-9 is marked received.</p>` : ''}${approved.map((item) => {
+        const ready = item.w9_status === 'received';
+        return `
         <div class="list-row" data-searchable>
           <span class="row-icon">1099</span>
           <span class="row-copy"><strong>${escapeHtml(`${item.first_name || ''} ${item.last_name || ''}`.trim())}</strong><span>${escapeHtml(item.shift_title || item.service_type || 'Care shift')} · ${formatDateOnly(item.clock_in_utc)} · ${(Number(item.worked_minutes || 0) / 60).toFixed(2)} hrs</span></span>
-          <span class="row-meta">${money(item.total_amount)}<br><span class="status ${item.w9_status === 'received' ? '' : 'warning'}">${escapeHtml(item.w9_status || 'not_collected')}</span></span>
+          <span class="row-meta">${money(item.total_amount)}<br><span class="status ${ready ? '' : 'warning'}">${ready ? 'Ready' : `Blocked: ${escapeHtml(item.w9_status || 'not_collected')}`}</span></span>
         </div>
-      `).join('');
+      `; }).join('')}`;
     }
 
     const runList = document.getElementById('payoutRunList');
@@ -509,6 +512,18 @@
           <span class="avatar">${escapeHtml(`${person.first_name?.[0] || ''}${person.last_name?.[0] || ''}`)}</span>
           <span class="row-copy"><strong>${escapeHtml(`${person.first_name || ''} ${person.last_name || ''}`.trim())}</strong><span>${escapeHtml(person.email || '')} · ${escapeHtml(person.payment_method || 'manual payment')}</span></span>
           <span class="row-meta">${money(person.year_paid)}<br><span class="status ${person.w9_status === 'received' ? '' : 'warning'}">W-9 ${escapeHtml(String(person.w9_status || 'not_collected').replaceAll('_', ' '))}</span></span>
+          <span class="row-actions payroll-controls">
+            <label>W-9
+              <select data-w9-caregiver="${person.caregiver_id}">
+                ${['not_collected', 'requested', 'received', 'blocked'].map(status => `<option value="${status}" ${person.w9_status === status ? 'selected' : ''}>${status.replaceAll('_', ' ')}</option>`).join('')}
+              </select>
+            </label>
+            <label>Pay by
+              <select data-payment-caregiver="${person.caregiver_id}">
+                ${['manual', 'ach', 'check', 'zelle', 'cashapp', 'venmo'].map(method => `<option value="${method}" ${person.payment_method === method ? 'selected' : ''}>${method}</option>`).join('')}
+              </select>
+            </label>
+          </span>
         </div>
       `).join('');
     }
@@ -786,7 +801,7 @@
     event.preventDefault();
     const form = event.currentTarget;
     if (!form.checkValidity()) { form.reportValidity(); return; }
-    if (!window.confirm('Create a 1099 payout run from approved unpaid timesheets for this date range?')) return;
+    if (!window.confirm('Create a 1099 payout run from approved unpaid timesheets for this date range? Contractors must have W-9 marked received.')) return;
     const data = new FormData(form);
     const submit = form.querySelector('[type="submit"]');
     submit.disabled = true;
@@ -803,15 +818,34 @@
   document.addEventListener('click', async (event) => {
     const button = event.target.closest('[data-mark-payout-paid]');
     if (!button || savingTime) return;
-    if (!window.confirm('Mark this contractor payout run as paid? Do this only after you have actually paid the contractors.')) return;
+    const confirmation = window.prompt('Type MARK PAID to confirm these contractors were actually paid.');
+    if (confirmation !== 'MARK PAID') { notify('Payout was not marked paid.'); return; }
     savingTime = true;
     button.disabled = true;
     try {
-      await api(`/payroll/1099/runs/${button.dataset.markPayoutPaid}/mark-paid`, { method: 'POST', body: JSON.stringify({}) });
+      await api(`/payroll/1099/runs/${button.dataset.markPayoutPaid}/mark-paid`, { method: 'POST', body: JSON.stringify({ confirmation }) });
       notify('Payout run marked paid.');
       await loadEmployer();
     } catch (error) { notify(error.message); }
     finally { savingTime = false; button.disabled = false; }
+  });
+
+  document.addEventListener('change', async (event) => {
+    const target = event.target;
+    const w9Caregiver = target.closest?.('[data-w9-caregiver]');
+    const paymentCaregiver = target.closest?.('[data-payment-caregiver]');
+    const caregiverId = w9Caregiver?.dataset.w9Caregiver || paymentCaregiver?.dataset.paymentCaregiver;
+    if (!caregiverId) return;
+    target.disabled = true;
+    try {
+      await api(`/payroll/1099/contractors/${caregiverId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(w9Caregiver ? { w9Status: target.value } : { paymentMethod: target.value })
+      });
+      notify('Contractor payroll setting saved.');
+      await loadEmployer();
+    } catch (error) { notify(error.message); }
+    finally { target.disabled = false; }
   });
 
   document.addEventListener('click', async (event) => {

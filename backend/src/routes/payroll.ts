@@ -13,6 +13,18 @@ import { csvCell, payrollCsv } from "../services/payroll-export";
 const router = Router();
 router.use(authMiddleware, requireRole("employer"));
 
+const PAID_CONFIRMATION = "MARK PAID";
+
+const payrollDateSchema = z.string()
+  .regex(/^\d{4}-\d{2}-\d{2}$/)
+  .refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0, 10) === v, "Use YYYY-MM-DD");
+
+const paymentNoteSchema = z.string()
+  .trim()
+  .max(280)
+  .refine(value => !/\d{6,}/.test(value), "Do not store full bank, SSN, routing, or account numbers here")
+  .optional();
+
 async function ensure1099Payroll() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS contractor_profiles (
@@ -66,6 +78,14 @@ async function ensure1099Payroll() {
   await db.execute(sql`CREATE INDEX IF NOT EXISTS contractor_payout_items_employer_idx ON contractor_payout_items(employer_id, caregiver_id)`);
 }
 
+async function auditPayrollAction(employerId: number, userId: number, action: string, detail: Record<string, unknown>) {
+  await ensureOperations();
+  await db.execute(sql`
+    INSERT INTO operation_audit (employer_id,user_id,action,detail)
+    VALUES (${employerId},${userId},${action},${JSON.stringify(detail)}::jsonb)
+  `);
+}
+
 async function currentEmployer(req: AuthRequest) {
   const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
   if (!employer) throw new AppError(404, "Employer not found");
@@ -73,8 +93,7 @@ async function currentEmployer(req: AuthRequest) {
 }
 
 function parsePayrollRange(query: unknown) {
-  const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(v => !Number.isNaN(Date.parse(v)) && new Date(v).toISOString().slice(0,10) === v);
-  const range = z.object({ from: date, to: date }).parse(query);
+  const range = z.object({ from: payrollDateSchema, to: payrollDateSchema }).parse(query);
   const start = Date.parse(range.from), end = Date.parse(range.to) + 86400000;
   if (end <= start || end-start > 366*86400000) throw new AppError(400, "Choose a period of 1 to 366 days");
   return { ...range, start, end };
@@ -253,13 +272,13 @@ router.get("/1099/overview", async (req: AuthRequest, res, next) => {
 
 router.patch("/1099/contractors/:caregiverId", async (req: AuthRequest, res, next) => {
   try {
-    await ensure1099Payroll();
+    await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
     const caregiverId = z.coerce.number().int().positive().parse(req.params.caregiverId);
     const data = z.object({
       w9Status: z.enum(["not_collected", "requested", "received", "blocked"]).optional(),
       paymentMethod: z.enum(["manual", "ach", "check", "zelle", "cashapp", "venmo"]).optional(),
-      paymentNote: z.string().max(1000).optional(),
+      paymentNote: paymentNoteSchema,
     }).parse(req.body);
     const caregiver = (await db.execute(sql`
       SELECT c.id FROM caregivers c
@@ -278,6 +297,12 @@ router.patch("/1099/contractors/:caregiverId", async (req: AuthRequest, res, nex
           updated_at=CURRENT_TIMESTAMP
       RETURNING *
     `) as any).rows[0];
+    await auditPayrollAction(employer.id, req.user!.id, "contractor_1099_profile_updated", {
+      caregiverId,
+      w9Status: data.w9Status,
+      paymentMethod: data.paymentMethod,
+      paymentNoteUpdated: data.paymentNote !== undefined
+    });
     res.json({ contractor: result });
   } catch (error) { next(error); }
 });
@@ -286,16 +311,20 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable(); await ensureOperations(); await ensure1099Payroll();
     const employer = await currentEmployer(req);
-    const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
-    const data = z.object({ from: date, to: date, memo: z.string().max(1000).optional() }).parse(req.body);
+    const data = z.object({ from: payrollDateSchema, to: payrollDateSchema, memo: z.string().trim().max(1000).optional() }).parse(req.body);
     const { start, end } = parsePayrollRange({ from: data.from, to: data.to });
     const run = await db.transaction(async tx => {
       const rows = (await tx.execute(sql`
         SELECT st.id, st.caregiver_id, st.worked_minutes, st.hourly_rate, st.total_amount,
           sp.title AS shift_title, sp.service_type,
-          to_char(st.clock_in_at, 'YYYY-MM-DD') AS service_date
+          to_char(st.clock_in_at, 'YYYY-MM-DD') AS service_date,
+          u.first_name, u.last_name,
+          COALESCE(cp.w9_status, 'not_collected') AS w9_status
         FROM shift_timesheets st
+        JOIN caregivers c ON c.id=st.caregiver_id
+        JOIN users u ON u.id=c.user_id
         LEFT JOIN shift_posts sp ON sp.id=st.shift_id
+        LEFT JOIN contractor_profiles cp ON cp.employer_id=st.employer_id AND cp.caregiver_id=st.caregiver_id
         LEFT JOIN contractor_payout_items pi ON pi.timesheet_id=st.id
         WHERE st.employer_id=${employer.id} AND st.status='approved'
           AND st.clock_in_at>=${new Date(start)} AND st.clock_in_at<${new Date(end)}
@@ -303,7 +332,13 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
         ORDER BY st.clock_in_at ASC, st.id ASC
       `) as any).rows;
       if (!rows.length) throw new AppError(409, "No approved unpaid timesheets found for this period");
+      const blocked = rows.filter((row: any) => row.w9_status !== "received");
+      if (blocked.length) {
+        const names = [...new Set(blocked.map((row: any) => `${row.first_name || ""} ${row.last_name || ""}`.trim()).filter(Boolean))].slice(0, 3).join(", ");
+        throw new AppError(409, `W-9 must be marked received before creating payout${names ? ` for ${names}` : ""}`);
+      }
       const gross = rows.reduce((sum: number, row: any) => sum + Number(row.total_amount || 0), 0);
+      if (!Number.isFinite(gross) || gross <= 0 || gross > 100000) throw new AppError(400, "Payout total is outside the allowed range");
       const created = (await tx.execute(sql`
         INSERT INTO contractor_payout_runs (employer_id, period_start, period_end, status, gross_amount, total_amount, approved_by, memo)
         VALUES (${employer.id}, ${data.from}::date, ${data.to}::date, 'draft', ${gross.toFixed(2)}, ${gross.toFixed(2)}, ${req.user!.id}, ${data.memo || null})
@@ -316,7 +351,10 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
           VALUES (${created.id}, ${employer.id}, ${row.caregiver_id}, ${row.id}, ${description}, ${row.worked_minutes || 0}, ${String(row.hourly_rate || "0")}, ${String(row.total_amount || "0")}, ${String(row.total_amount || "0")})
         `);
       }
-      await tx.execute(sql`INSERT INTO operation_audit (employer_id,user_id,action,detail) VALUES (${employer.id},${req.user!.id},'contractor_payout_run_created',${JSON.stringify({ runId: created.id, ...data, timesheetIds: rows.map((r: any) => r.id) })}::jsonb)`);
+      await tx.execute(sql`
+        INSERT INTO operation_audit (employer_id,user_id,action,detail)
+        VALUES (${employer.id},${req.user!.id},'contractor_payout_run_created',${JSON.stringify({ runId: created.id, ...data, timesheetIds: rows.map((r: any) => r.id), gross: gross.toFixed(2) })}::jsonb)
+      `);
       return created;
     });
     res.status(201).json({ payoutRun: run });
@@ -325,24 +363,34 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
 
 router.post("/1099/runs/:runId/mark-paid", async (req: AuthRequest, res, next) => {
   try {
-    await ensure1099Payroll();
+    await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
-    const data = z.object({ memo: z.string().max(1000).optional() }).parse(req.body || {});
-    const run = (await db.execute(sql`
-      UPDATE contractor_payout_runs
-      SET status='paid', paid_at=CURRENT_TIMESTAMP, memo=COALESCE(${data.memo || null}, memo), updated_at=CURRENT_TIMESTAMP
-      WHERE id=${runId} AND employer_id=${employer.id} AND status='draft'
-      RETURNING *
-    `) as any).rows[0];
-    if (!run) throw new AppError(404, "Draft payout run not found");
+    const data = z.object({
+      confirmation: z.literal(PAID_CONFIRMATION),
+      memo: z.string().trim().max(1000).optional()
+    }).parse(req.body || {});
+    const run = await db.transaction(async tx => {
+      const updated = (await tx.execute(sql`
+        UPDATE contractor_payout_runs
+        SET status='paid', paid_at=CURRENT_TIMESTAMP, memo=COALESCE(${data.memo || null}, memo), updated_at=CURRENT_TIMESTAMP
+        WHERE id=${runId} AND employer_id=${employer.id} AND status='draft'
+        RETURNING *
+      `) as any).rows[0];
+      if (!updated) throw new AppError(404, "Draft payout run not found");
+      await tx.execute(sql`
+        INSERT INTO operation_audit (employer_id,user_id,action,detail)
+        VALUES (${employer.id},${req.user!.id},'contractor_payout_run_marked_paid',${JSON.stringify({ runId, totalAmount: updated.total_amount, confirmation: PAID_CONFIRMATION })}::jsonb)
+      `);
+      return updated;
+    });
     res.json({ payoutRun: run });
   } catch (error) { next(error); }
 });
 
 router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
   try {
-    await ensure1099Payroll();
+    await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
     const rows = (await db.execute(sql`
@@ -360,6 +408,7 @@ router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
     if (!rows.length) throw new AppError(404, "Payout run not found");
     const header = ["Run ID","Period start","Period end","Status","Paid at","Contractor","Email","W-9 status","Payment method","Description","Worked minutes","Hours","Hourly rate","Gross","Reimbursement","Total"];
     const csv = [header, ...rows.map((r: any) => [r.run_id, r.period_start, r.period_end, r.status, r.paid_at || "", `${r.first_name} ${r.last_name}`, r.email, r.w9_status || "not_collected", r.payment_method || "manual", r.description, r.worked_minutes, (Number(r.worked_minutes || 0) / 60).toFixed(4), r.hourly_rate, r.gross_amount, r.reimbursement_amount, r.total_amount])].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+    await auditPayrollAction(employer.id, req.user!.id, "contractor_payout_run_exported", { runId, itemCount: rows.length, status: rows[0].status });
     res.setHeader('Cache-Control','no-store');
     res.setHeader('Content-Disposition',`attachment; filename="elite-1099-payout-run-${runId}.csv"`);
     res.type('text/csv').send(csv);

@@ -227,6 +227,10 @@ a { color: inherit; }
 .list-row:first-child { border-top: 0; }
 .row-actions { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
 .row-actions .primary-button, .row-actions .secondary-button { min-height: 38px; padding: 0 13px; white-space: nowrap; }
+.warning-note { border: 1px solid rgba(180, 83, 9, 0.25); border-radius: 12px; background: #fff7ed; color: #92400e; padding: 10px 12px; }
+.payroll-controls { align-items: stretch; gap: 8px; }
+.payroll-controls label { color: #51615a; display: grid; font-size: .72rem; font-weight: 800; gap: 4px; text-transform: uppercase; }
+.payroll-controls select { border: 1px solid rgba(20, 77, 48, .18); border-radius: 10px; color: #143b2b; min-height: 38px; padding: 0 10px; }
 .shift-row { flex-wrap: wrap; }
 .shift-row .row-copy { min-width: 170px; }
 #caregiverClock textarea { display: block; width: 100%; min-height: 90px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font: inherit; }
