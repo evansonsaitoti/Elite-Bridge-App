@@ -460,6 +460,60 @@
     }).join('');
   }
 
+  function formatDateOnly(value) {
+    if (!value) return '—';
+    const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function render1099Payroll(data) {
+    const approved = data?.approvedTimesheets || [];
+    const runs = data?.runs || [];
+    const contractors = data?.contractors || [];
+    const summary = data?.summary || {};
+    setText('payrollDraft', money(summary.draft_total));
+    setText('payrollPaid', money(summary.paid_total));
+    setText('payrollYear', money(summary.year_paid_total));
+    setText('payrollUnbatched', approved.length);
+
+    const approvedList = document.getElementById('approvedPayoutList');
+    if (approvedList) {
+      if (!approved.length) renderEmpty(approvedList, 'No approved unpaid timesheets', 'Approve timesheets first, or everything approved has already been placed into a payout run.');
+      else approvedList.innerHTML = approved.map((item) => `
+        <div class="list-row" data-searchable>
+          <span class="row-icon">1099</span>
+          <span class="row-copy"><strong>${escapeHtml(`${item.first_name || ''} ${item.last_name || ''}`.trim())}</strong><span>${escapeHtml(item.shift_title || item.service_type || 'Care shift')} · ${formatDateOnly(item.clock_in_utc)} · ${(Number(item.worked_minutes || 0) / 60).toFixed(2)} hrs</span></span>
+          <span class="row-meta">${money(item.total_amount)}<br><span class="status ${item.w9_status === 'received' ? '' : 'warning'}">${escapeHtml(item.w9_status || 'not_collected')}</span></span>
+        </div>
+      `).join('');
+    }
+
+    const runList = document.getElementById('payoutRunList');
+    if (runList) {
+      if (!runs.length) renderEmpty(runList, 'No payout runs yet', 'Create your first 1099 payout run from approved unpaid timesheets.');
+      else runList.innerHTML = runs.map((run) => `
+        <article class="list-row payout-run" data-searchable>
+          <span class="row-icon">$</span>
+          <span class="row-copy"><strong>Run #${run.id} · ${formatDateOnly(run.period_start)} – ${formatDateOnly(run.period_end)}</strong><span>${escapeHtml(run.memo || '1099 contractor payout')} · ${run.paid_at ? `Paid ${dateTime(run.paid_at)}` : 'Not marked paid yet'}</span></span>
+          <span class="row-meta">${money(run.total_amount)}<br><span class="status ${run.status === 'paid' ? '' : 'neutral'}">${escapeHtml(run.status)}</span></span>
+          <span class="row-actions"><button class="secondary-button" type="button" data-export-run="${run.id}">Export CSV</button>${run.status === 'draft' ? `<button class="primary-button" type="button" data-mark-payout-paid="${run.id}">Mark paid</button>` : ''}</span>
+        </article>
+      `).join('');
+    }
+
+    const contractorList = document.getElementById('contractor1099List');
+    if (contractorList) {
+      if (!contractors.length) renderEmpty(contractorList, 'No connected contractors', 'Invite caregivers first. Their 1099 totals will appear here after payout runs are paid.');
+      else contractorList.innerHTML = contractors.map((person) => `
+        <div class="list-row" data-searchable>
+          <span class="avatar">${escapeHtml(`${person.first_name?.[0] || ''}${person.last_name?.[0] || ''}`)}</span>
+          <span class="row-copy"><strong>${escapeHtml(`${person.first_name || ''} ${person.last_name || ''}`.trim())}</strong><span>${escapeHtml(person.email || '')} · ${escapeHtml(person.payment_method || 'manual payment')}</span></span>
+          <span class="row-meta">${money(person.year_paid)}<br><span class="status ${person.w9_status === 'received' ? '' : 'warning'}">W-9 ${escapeHtml(String(person.w9_status || 'not_collected').replaceAll('_', ' '))}</span></span>
+        </div>
+      `).join('');
+    }
+  }
+
   async function captureLocation() {
     if (!navigator.geolocation) return null;
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp).toISOString() }), () => resolve(null), { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 }));
@@ -625,8 +679,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult, contractorPayrollResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`)
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -651,7 +705,7 @@
     setText('metricOpenShifts', unfilled);
     setText('metricOnDuty', activityResult.status === 'fulfilled' ? activityResult.value.activeCount : 'Unavailable');
     setText('metricCaregivers', caregivers.length);
-    setText('metricPendingPayroll', money(payroll.stats?.pending_amount));
+    setText('metricPendingPayroll', contractorPayrollResult.status === 'fulfilled' ? money(contractorPayrollResult.value.summary?.draft_total) : money(payroll.stats?.pending_amount));
     setText('priorityOpenShifts', unfilled);
     setText('priorityApplications', pendingApplications);
     setText('priorityTimesheets', timesheetResult.status === 'fulfilled' ? pendingTimesheets : '—');
@@ -673,9 +727,8 @@
     renderInvitations(document.getElementById('invitationList'), invitations);
     renderCompliance(document.getElementById('complianceList'), caregivers);
     renderEmployerSetup(profile, invitations, shifts);
-    setText('payrollTotal', money(payroll.stats?.total_spent));
-    setText('payrollPending', money(payroll.stats?.pending_amount));
-    setText('payrollPaid', money(payroll.stats?.paid_amount));
+    if (contractorPayrollResult.status === 'fulfilled') render1099Payroll(contractorPayrollResult.value);
+    else render1099Payroll({ summary: {}, approvedTimesheets: [], contractors: [], runs: [] });
   }
 
   async function loadCaregiver() {
@@ -727,6 +780,63 @@
       await loadEmployer();
     } catch (error) { notify(error.message); }
     finally { submit.disabled = false; submit.textContent = 'Publish shift'; }
+  });
+
+  document.getElementById('payoutRunForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    if (!window.confirm('Create a 1099 payout run from approved unpaid timesheets for this date range?')) return;
+    const data = new FormData(form);
+    const submit = form.querySelector('[type="submit"]');
+    submit.disabled = true;
+    submit.textContent = 'Creating…';
+    try {
+      await api('/payroll/1099/runs', { method: 'POST', body: JSON.stringify({ from: data.get('from'), to: data.get('to'), memo: data.get('memo') }) });
+      notify('1099 payout run created.');
+      form.reset();
+      await loadEmployer();
+    } catch (error) { notify(error.message); }
+    finally { submit.disabled = false; submit.textContent = 'Create 1099 payout run'; }
+  });
+
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-mark-payout-paid]');
+    if (!button || savingTime) return;
+    if (!window.confirm('Mark this contractor payout run as paid? Do this only after you have actually paid the contractors.')) return;
+    savingTime = true;
+    button.disabled = true;
+    try {
+      await api(`/payroll/1099/runs/${button.dataset.markPayoutPaid}/mark-paid`, { method: 'POST', body: JSON.stringify({}) });
+      notify('Payout run marked paid.');
+      await loadEmployer();
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; button.disabled = false; }
+  });
+
+  document.addEventListener('click', async (event) => {
+    const button = event.target.closest('[data-export-run]');
+    if (!button || savingTime) return;
+    savingTime = true;
+    button.disabled = true;
+    try {
+      const response = await fetch(`${API_BASE}/payroll/1099/runs/${button.dataset.exportRun}/export`, { headers: { Authorization: `Bearer ${session.token}` } });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || error.error || 'Export failed.');
+      }
+      const blob = await response.blob();
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `elite-1099-payout-run-${button.dataset.exportRun}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      notify('Payout CSV downloaded.');
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; button.disabled = false; }
   });
 
   const refreshShared = () => (expectedRole === 'employer' ? loadEmployer() : loadCaregiver()).catch(() => notify('Could not refresh shared records.'));

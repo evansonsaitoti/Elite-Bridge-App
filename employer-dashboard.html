@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=dashboard-polish-20261002">
+  <link rel="stylesheet" href="/app-shell.css?v=contractor-payroll-20261002">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -69,7 +69,7 @@
         </div>
         <div class="dashboard-grid"><div class="dashboard-main">
           <section class="surface surface-pad"><div class="surface-head"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div></div><div class="quick-grid"><button class="quick-card" type="button" data-go-view="shifts"><span class="quick-icon">＋</span><span class="quick-copy"><strong>Post a shift</strong><span>Create a care opportunity</span></span></button><button class="quick-card" type="button" data-go-view="clients"><span class="quick-icon">◇</span><span class="quick-copy"><strong>Client record</strong><span>Prepare care details</span></span></button><button class="quick-card" type="button" data-go-view="contracts"><span class="quick-icon">§</span><span class="quick-copy"><strong>Create contract</strong><span>Generate a client PDF</span></span></button><button class="quick-card" type="button" data-invite-caregiver><span class="quick-icon">○</span><span class="quick-copy"><strong>Invite caregiver</strong><span>Send signup link</span></span></button></div></section>
-          <section class="metric-grid" aria-label="Employer summary"><article class="metric-card"><span class="metric-label">Open shifts <i class="metric-dot"></i></span><strong class="metric-value" id="metricOpenShifts">—</strong><span class="metric-foot">Seeking caregivers</span></article><article class="metric-card"><span class="metric-label">On duty now <i class="metric-dot"></i></span><strong class="metric-value" id="metricOnDuty">—</strong><span class="metric-foot">Latest clock-in activity</span></article><article class="metric-card"><span class="metric-label">Caregiver network <i class="metric-dot"></i></span><strong class="metric-value" id="metricCaregivers">—</strong><span class="metric-foot">Visible caregiver profiles</span></article><article class="metric-card"><span class="metric-label">Pending payroll <i class="metric-dot"></i></span><strong class="metric-value" id="metricPendingPayroll">—</strong><span class="metric-foot">Recorded pending payments</span></article></section>
+          <section class="metric-grid" aria-label="Employer summary"><article class="metric-card"><span class="metric-label">Open shifts <i class="metric-dot"></i></span><strong class="metric-value" id="metricOpenShifts">—</strong><span class="metric-foot">Seeking caregivers</span></article><article class="metric-card"><span class="metric-label">On duty now <i class="metric-dot"></i></span><strong class="metric-value" id="metricOnDuty">—</strong><span class="metric-foot">Latest clock-in activity</span></article><article class="metric-card"><span class="metric-label">Caregiver network <i class="metric-dot"></i></span><strong class="metric-value" id="metricCaregivers">—</strong><span class="metric-foot">Visible caregiver profiles</span></article><article class="metric-card"><span class="metric-label">Draft payouts <i class="metric-dot"></i></span><strong class="metric-value" id="metricPendingPayroll">—</strong><span class="metric-foot">1099 batches ready</span></article></section>
           <section class="operations-grid"><div class="surface surface-pad"><div class="surface-head"><div><h2>Shift operations</h2><p>Your latest published care shifts</p></div><button class="text-link" type="button" data-go-view="shifts">Manage shifts</button></div><div id="overviewShiftList"><div class="empty-state"><div><span class="empty-mark">▦</span><strong>Loading shifts</strong><p>Checking your care operation now.</p></div></div></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Activity rhythm</h2><p>Care activity over seven days</p></div></div><div class="timeline"><div class="bar-wrap"><div class="bar" style="height:34px"></div><span>Mon</span></div><div class="bar-wrap"><div class="bar" style="height:62px"></div><span>Tue</span></div><div class="bar-wrap"><div class="bar" style="height:45px"></div><span>Wed</span></div><div class="bar-wrap"><div class="bar" style="height:78px"></div><span>Thu</span></div><div class="bar-wrap"><div class="bar" style="height:52px"></div><span>Fri</span></div><div class="bar-wrap"><div class="bar" style="height:26px"></div><span>Sat</span></div><div class="bar-wrap"><div class="bar" style="height:18px"></div><span>Sun</span></div></div></div></section>
         </div><aside class="dashboard-rail"><section class="surface surface-pad"><div class="surface-head"><div><h2>Needs your attention</h2><p>Items that may block care</p></div></div><div class="attention-list"><button class="attention-item" type="button" data-go-view="timesheets"><span class="row-icon">◷</span><span class="row-copy"><strong>Timesheet activity</strong><span>Review recent clock events</span></span><span class="attention-count" id="attentionTimesheets">0</span></button><button class="attention-item" type="button" data-go-view="shifts"><span class="row-icon">▦</span><span class="row-copy"><strong>Open shifts</strong><span>Still seeking coverage</span></span><span class="attention-count" id="attentionShifts">0</span></button></div></section><section class="surface setup-card"><div class="setup-banner"><div class="setup-top"><h2>Organization setup</h2><span class="setup-percent" id="employerSetupPercent">0%</span></div><div class="progress-track"><span id="employerSetupProgress" style="width:0%"></span></div><div class="setup-list" id="employerSetupList"><div class="setup-step" data-setup="organization">Organization profile</div><div class="setup-step" data-setup="location">Primary care location</div><div class="setup-step" data-setup="services">Care services selected</div><div class="setup-step" data-setup="invitation">Invite your first caregiver</div><div class="setup-step" data-setup="shift">Publish your first shift</div></div><button class="primary-button" id="employerSetupAction" type="button">Complete organization setup</button></div></section></aside></div>
       </section>
@@ -81,7 +81,47 @@
       <section data-view-panel="timesheets" hidden><div class="page-head"><div><p class="eyebrow">Timekeeping</p><h1>Timesheets</h1><p>Review recorded hours, approve timesheets, or request clarification. Approval does not send payment.</p></div></div><div class="surface surface-pad"><div id="timesheetList"></div></div></section>
       <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div id="conversationList"></div></div></section>
       <section data-view-panel="updates" hidden><div class="page-head"><div><p class="eyebrow">Team communication</p><h1>Team updates</h1><p>Share important operational information with your care team.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">↗</span><strong>No updates published yet</strong><p>Connected team announcements will be added here.</p><button class="secondary-button" type="button" data-notify="Team updates are being prepared for the web portal.">Create an update</button></div></div></div></section>
-      <section data-view-panel="payroll" hidden><div class="page-head"><div><p class="eyebrow">Finance</p><h1>Payroll & invoices</h1><p>Review payment totals recorded by Elite Bridge.</p></div></div><div class="metric-grid"><article class="metric-card"><span class="metric-label">Total recorded <i class="metric-dot"></i></span><strong class="metric-value" id="payrollTotal">—</strong><span class="metric-foot">All payments</span></article><article class="metric-card"><span class="metric-label">Pending <i class="metric-dot"></i></span><strong class="metric-value" id="payrollPending">—</strong><span class="metric-foot">Awaiting payment</span></article><article class="metric-card"><span class="metric-label">Paid <i class="metric-dot"></i></span><strong class="metric-value" id="payrollPaid">—</strong><span class="metric-foot">Completed payments</span></article></div></section>
+      <section data-view-panel="payroll" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Finance</p>
+            <h1>1099 contractor payouts</h1>
+            <p>Create payout batches from approved timesheets. Elite Bridge does not withhold taxes or treat contractors as W-2 employees.</p>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span class="metric-label">Draft payouts <i class="metric-dot"></i></span><strong class="metric-value" id="payrollDraft">—</strong><span class="metric-foot">Ready to pay</span></article>
+          <article class="metric-card"><span class="metric-label">Paid total <i class="metric-dot"></i></span><strong class="metric-value" id="payrollPaid">—</strong><span class="metric-foot">All marked paid</span></article>
+          <article class="metric-card"><span class="metric-label">This year <i class="metric-dot"></i></span><strong class="metric-value" id="payrollYear">—</strong><span class="metric-foot">1099 report total</span></article>
+          <article class="metric-card"><span class="metric-label">Unbatched hours <i class="metric-dot"></i></span><strong class="metric-value" id="payrollUnbatched">—</strong><span class="metric-foot">Approved not in payout</span></article>
+        </div>
+        <div class="operations-grid">
+          <form class="surface surface-pad" id="payoutRunForm">
+            <div class="surface-head"><div><h2>Create payout run</h2><p>Pull approved unpaid timesheets into one contractor payout batch.</p></div></div>
+            <div class="form-grid">
+              <label>From<input id="payoutFrom" name="from" type="date" required></label>
+              <label>To<input id="payoutTo" name="to" type="date" required></label>
+              <label class="full">Memo<input id="payoutMemo" name="memo" placeholder="Example: September caregiver payouts"></label>
+            </div>
+            <p class="form-note">Use only after reviewing and approving timesheets. Contractors handle their own taxes; keep W-9 records before payment.</p>
+            <button class="primary-button" type="submit">Create 1099 payout run</button>
+          </form>
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Approved unpaid timesheets</h2><p>These can be batched into a 1099 payout run.</p></div></div>
+            <div id="approvedPayoutList"></div>
+          </div>
+        </div>
+        <div class="operations-grid">
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Payout runs</h2><p>Export pay statements or mark draft runs paid after you pay contractors.</p></div></div>
+            <div id="payoutRunList"></div>
+          </div>
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Contractor 1099 totals</h2><p>Year-to-date totals for 1099-NEC preparation.</p></div></div>
+            <div id="contractor1099List"></div>
+          </div>
+        </div>
+      </section>
 
       <section data-view-panel="contracts" hidden>
         <div class="page-head">
@@ -212,6 +252,6 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=dashboard-polish-20261002"></script>
+  <script src="/dashboard.js?v=contractor-payroll-20261002"></script>
 </body>
 </html>

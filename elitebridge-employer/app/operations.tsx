@@ -298,7 +298,7 @@ export default function Operations() {
                   );
                 }),
             )}
-            {heading("Payroll integrations")}
+            {heading("1099 contractor payouts")}
             {providers.map((p) => (
               <View key={p.provider} style={{ marginBottom: 12 }}>
                 <Text style={{ fontWeight: "800" }}>{p.name}</Text>
@@ -306,8 +306,8 @@ export default function Operations() {
               </View>
             ))}
             <Text>
-              Download approved hours CSV and manage payroll preparation in the
-              web workspace. Sign in with the same account.
+              Create contractor payout runs from approved timesheets, export CSV
+              records, and track year-end 1099 totals in the web workspace.
             </Text>
             {button(
               "Open payroll workspace",
