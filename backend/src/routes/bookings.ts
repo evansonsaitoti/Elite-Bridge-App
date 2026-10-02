@@ -104,6 +104,7 @@ const shiftSchema = z.object({
 });
 
 const applicationActionSchema = z.object({ status: z.enum(["approved", "rejected"]) });
+const directAssignmentSchema = z.object({ caregiverId: z.coerce.number().int().positive() });
 const calloutSchema = z.object({
   reason: z.enum(["illness", "family_emergency", "transportation", "schedule_conflict", "other"]),
   note: z.string().max(500).optional(),
@@ -574,6 +575,46 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
     void sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
     await sendOperationsAlert("Shift cancelled", `Employer #${employer.id} cancelled shift #${shiftId}.`);
     res.status(204).send();
+  } catch (error) { next(error); }
+});
+
+router.post("/employer/:shiftId/assign", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const shiftId = Number(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+    const { caregiverId } = directAssignmentSchema.parse(req.body);
+
+    const lookup = await db.execute(sql`
+      SELECT sp.*, c.user_id AS caregiver_user_id
+      FROM shift_posts sp
+      JOIN caregivers c ON c.id = ${caregiverId}
+      JOIN users u ON u.id = c.user_id
+      WHERE sp.id = ${shiftId}
+        AND sp.employer_id = ${employer.id}
+        AND sp.status IN ('open', 'assigned', 'in_progress')
+        AND u.role = 'caregiver'
+        AND u.is_active = true
+      LIMIT 1
+    `);
+    const shift = (lookup as any).rows[0];
+    if (!shift) throw new AppError(404, "Open shift or active caregiver not found");
+
+    const assigned = await assignCaregiver(shiftId, caregiverId);
+    await db.execute(sql`
+      INSERT INTO notifications (user_id, type, title, message, related_id)
+      VALUES (${shift.caregiver_user_id}, 'shift_application', 'New shift assignment',
+        'Elite Bridge assigned you to a care visit. Open the caregiver app for details.',
+        ${shiftId})
+    `);
+    void sendPushToUsers([shift.caregiver_user_id], {
+      title: "New shift assignment",
+      body: `You were assigned to ${shift.title}.`,
+      data: { type: "direct_shift_assignment", shiftId, applicationId: assigned.application.id },
+    });
+    await sendOperationsAlert("Direct shift assignment", `Employer #${employer.id} assigned caregiver #${caregiverId} to shift #${shiftId}.`);
+    res.json({ application: assigned.application, shift: { id: shiftId, status: assigned.status } });
   } catch (error) { next(error); }
 });
 
