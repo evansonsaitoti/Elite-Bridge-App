@@ -103,7 +103,6 @@
     .auth-side { display: flex; align-items: center; justify-content: center; padding: 50px clamp(36px, 5vw, 72px); background: #fff; }
     .auth-shell { width: 100%; max-width: 440px; }
     .mobile-logo { display: none; }
-    .mobile-welcome-actions { display: none; }
     .auth-header h2 { margin: 0; color: var(--forest); font-size: clamp(32px, 3vw, 43px); letter-spacing: -.045em; }
     .auth-header > p { margin: 10px 0 0; color: var(--muted); line-height: 1.55; }
     .app-sync-copy { margin: 18px 0 0; padding: 13px 14px; border: 1px solid #dceae3; border-radius: 12px; color: #506058; background: #f4f9f6; font-size: 12px; line-height: 1.5; }
@@ -369,136 +368,6 @@
         margin: 38px auto 28px;
         filter: none;
       }
-      .mobile-welcome-actions {
-        display: none;
-        flex: 1;
-        flex-direction: column;
-        justify-content: center;
-        min-height: 0;
-        padding: 28px 22px 24px;
-        border: 1px solid rgba(9,58,42,.08);
-        border-radius: 32px;
-        background: rgba(255,255,255,.94);
-        box-shadow: 0 24px 70px rgba(10,47,34,.12);
-        text-align: center;
-      }
-      .mobile-welcome-actions::before {
-        content: "";
-        display: block;
-        width: 76px;
-        height: 76px;
-        margin: 0 auto 22px;
-        border-radius: 22px;
-        background:
-          url("/logo-icon.png") center / 46px auto no-repeat,
-          var(--forest-2);
-        box-shadow: 0 18px 34px rgba(6,62,44,.22);
-      }
-      .mobile-welcome-actions h2 {
-        margin: 0;
-        color: #111d18;
-        font-size: clamp(31px, 8vw, 38px);
-        line-height: 1.06;
-        letter-spacing: -.055em;
-      }
-      .mobile-welcome-actions p {
-        max-width: 330px;
-        margin: 12px auto 0;
-        color: #64716b;
-        font-size: 15px;
-        line-height: 1.45;
-      }
-      .mobile-welcome-actions p::after {
-        content: "Employer access only";
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 30px;
-        margin-top: 18px;
-        padding: 0 13px;
-        border: 1px solid #d8e6df;
-        border-radius: 999px;
-        color: var(--forest-2);
-        background: #f6fbf8;
-        font-size: 12px;
-        font-weight: 900;
-      }
-      .mobile-entry-buttons {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 12px;
-        margin-top: 28px;
-      }
-      .mobile-entry-button {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-height: 60px;
-        border: 2px solid var(--forest-2);
-        border-radius: 18px;
-        color: var(--forest-2);
-        background: #fff;
-        font-size: 18px;
-        font-weight: 900;
-        text-decoration: none;
-        cursor: pointer;
-      }
-      .mobile-entry-button:not(.primary) {
-        color: var(--forest-2);
-        background: #fff;
-      }
-      .mobile-entry-button.primary {
-        color: #fff;
-        background: var(--forest-2);
-        box-shadow: 0 14px 28px rgba(6,62,44,.18);
-      }
-      .mobile-policy-links {
-        display: flex;
-        flex-wrap: wrap;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 22px;
-        color: #6f7881;
-        font-size: 13px;
-        font-weight: 800;
-      }
-      .mobile-policy-links a {
-        color: var(--forest-2);
-        text-decoration: none;
-      }
-      body.app-entry:not(.mobile-login-open) .auth-side {
-        background:
-          radial-gradient(circle at 12% 0%, rgba(6,62,44,.1), transparent 28%),
-          radial-gradient(circle at 88% 10%, rgba(200,139,44,.12), transparent 30%),
-          #f4f7f6;
-      }
-      body.app-entry:not(.mobile-login-open) .mobile-welcome-actions {
-        display: flex;
-      }
-      body.app-entry:not(.mobile-login-open) .auth-header,
-      body.app-entry:not(.mobile-login-open) #loginForm,
-      body.app-entry:not(.mobile-login-open) .join,
-      body.app-entry:not(.mobile-login-open) .auth-footer,
-      body.app-entry:not(.mobile-login-open) .message {
-        display: none !important;
-      }
-      body.app-entry:not(.mobile-login-open) .mobile-logo {
-        width: 170px;
-        margin: 0 auto 22px;
-      }
-      body.app-entry.mobile-login-open .mobile-welcome-actions {
-        display: none;
-      }
-      body.app-entry.mobile-login-open .auth-side {
-        background: #fff;
-      }
-      body.app-entry.mobile-login-open .mobile-logo {
-        width: 156px;
-        margin-bottom: 26px;
-      }
-      body[data-preview="caregiver"] .mobile-welcome-actions p::after {
-        content: "Caregiver access";
-      }
       .auth-shell { justify-content: flex-start; }
       .auth-header { text-align: center; }
       .auth-header h2 {
@@ -641,17 +510,6 @@
 
       <section class="auth-side">
         <div class="auth-shell">
-          <div class="mobile-welcome-actions" aria-label="Elite Bridge app welcome actions">
-            <h2 id="mobileWelcomeTitle">Care organizations start here</h2>
-            <p id="mobileWelcomeCopy">A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.</p>
-            <div class="mobile-entry-buttons">
-              <a class="mobile-entry-button" id="mobileSignupButton" href="/signup?role=employer">Sign up</a>
-              <button class="mobile-entry-button primary" id="mobileLoginButton" type="button">Log in</button>
-            </div>
-            <div class="mobile-policy-links">
-              <a href="/privacy">Privacy</a><span>·</span><a href="/terms">Terms</a><span>·</span><span>Employer access only</span>
-            </div>
-          </div>
           <a href="https://elitebridgestaffing.com" aria-label="Elite Bridge home"><img class="mobile-logo" src="/logo.png" alt="Elite Bridge"></a>
           <header class="auth-header">
             <h2>Welcome back</h2>
@@ -702,37 +560,13 @@
     const submitLabel = document.getElementById('submitLabel');
     const errorMessage = document.getElementById('errorMessage');
     const successMessage = document.getElementById('successMessage');
-    const mobileLoginButton = document.getElementById('mobileLoginButton');
-    const mobileSignupButton = document.getElementById('mobileSignupButton');
-    const mobileWelcomeTitle = document.getElementById('mobileWelcomeTitle');
-    const mobileWelcomeCopy = document.getElementById('mobileWelcomeCopy');
     const tabs = [document.getElementById('caregiverTab'), document.getElementById('employerTab')];
     const previews = [document.getElementById('caregiverPreview'), document.getElementById('employerPreview')];
     let previewIndex = 0;
     let previewTimer;
 
     document.getElementById('year').textContent = new Date().getFullYear();
-    const params = new URLSearchParams(window.location.search);
-    const path = window.location.pathname.replace(/\/+$/, '') || '/';
-    const isWebLoginRoute = path === '/login';
-    const isAppEntry = !isWebLoginRoute || params.get('app') === '1';
-    const entryRole = params.get('role') === 'caregiver' ? 'caregiver' : 'employer';
-
-    if (isAppEntry) document.body.classList.add('app-entry');
-    if (params.get('login') === '1') document.body.classList.add('mobile-login-open');
-
-    function applyEntryRole(role) {
-      if (role === 'caregiver') {
-        mobileWelcomeTitle.textContent = 'Caregivers start here';
-        mobileWelcomeCopy.textContent = 'A dedicated caregiver app connected to Elite Bridge staffing requests.';
-        mobileSignupButton.href = '/signup?role=caregiver';
-        return;
-      }
-      mobileWelcomeTitle.textContent = 'Care organizations start here';
-      mobileWelcomeCopy.textContent = 'A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.';
-      mobileSignupButton.href = '/signup?role=employer';
-    }
-
+    document.body.dataset.preview = 'employer';
     function selectPreview(index, restart = true) {
       previewIndex = index;
       document.body.dataset.preview = index === 1 ? 'employer' : 'caregiver';
@@ -747,17 +581,8 @@
     }
 
     tabs.forEach((tab, index) => tab.addEventListener('click', () => selectPreview(index)));
-    applyEntryRole(entryRole);
-    selectPreview(entryRole === 'caregiver' ? 0 : 1, false);
+    selectPreview(1, false);
     if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) startPreviewTimer();
-
-    mobileLoginButton?.addEventListener('click', () => {
-      document.body.classList.add('mobile-login-open');
-      window.clearInterval(previewTimer);
-      selectPreview(previewIndex, false);
-      window.setTimeout(() => emailInput.focus(), 120);
-    });
-
 
     function forgotPasswordUrl() {
       const email = emailInput.value.trim();
