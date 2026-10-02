@@ -25,6 +25,8 @@ const paymentNoteSchema = z.string()
   .refine(value => !/\d{6,}/.test(value), "Do not store full bank, SSN, routing, or account numbers here")
   .optional();
 
+const payoutExportFormatSchema = z.enum(["standard", "chase", "melio"]).default("standard");
+
 async function ensure1099Payroll() {
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS contractor_profiles (
@@ -92,11 +94,51 @@ async function currentEmployer(req: AuthRequest) {
   return employer;
 }
 
+function requirePayrollOwner(req: AuthRequest, employer: { userId: number }) {
+  if (req.user!.id !== employer.userId && req.user!.role !== "admin") {
+    throw new AppError(403, "Only the employer account owner can manage payroll payouts");
+  }
+}
+
 function parsePayrollRange(query: unknown) {
   const range = z.object({ from: payrollDateSchema, to: payrollDateSchema }).parse(query);
   const start = Date.parse(range.from), end = Date.parse(range.to) + 86400000;
   if (end <= start || end-start > 366*86400000) throw new AppError(400, "Choose a period of 1 to 366 days");
   return { ...range, start, end };
+}
+
+function payoutExportCsv(rows: any[], format: z.infer<typeof payoutExportFormatSchema>) {
+  if (format === "standard") {
+    const header = ["Run ID","Period start","Period end","Status","Paid at","Contractor","Email","W-9 status","Payment method","Description","Worked minutes","Hours","Hourly rate","Gross","Reimbursement","Total"];
+    return [header, ...rows.map((r: any) => [r.run_id, r.period_start, r.period_end, r.status, r.paid_at || "", `${r.first_name} ${r.last_name}`, r.email, r.w9_status || "not_collected", r.payment_method || "manual", r.description, r.worked_minutes, (Number(r.worked_minutes || 0) / 60).toFixed(4), r.hourly_rate, r.gross_amount, r.reimbursement_amount, r.total_amount])].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  }
+
+  const byContractor = new Map<string, any>();
+  for (const row of rows) {
+    const key = `${row.email || ""}::${row.first_name || ""}::${row.last_name || ""}`;
+    const existing = byContractor.get(key) || {
+      runId: row.run_id,
+      periodStart: row.period_start,
+      periodEnd: row.period_end,
+      name: `${row.first_name || ""} ${row.last_name || ""}`.trim(),
+      email: row.email || "",
+      paymentMethod: row.payment_method || "manual",
+      total: 0,
+      descriptions: [] as string[]
+    };
+    existing.total += Number(row.total_amount || 0);
+    if (row.description) existing.descriptions.push(row.description);
+    byContractor.set(key, existing);
+  }
+
+  const records = [...byContractor.values()];
+  if (format === "chase") {
+    const header = ["Recipient Name","Recipient Email","Amount","Payment Method","Memo","Period Start","Period End","Elite Bridge Run ID"];
+    return [header, ...records.map(r => [r.name, r.email, r.total.toFixed(2), r.paymentMethod, `Elite Bridge 1099 payout run ${r.runId}`, r.periodStart, r.periodEnd, r.runId])].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
+  }
+
+  const header = ["Vendor Name","Vendor Email","Payment Amount","Payment Method","Bill Memo","Due Date","Category","Elite Bridge Run ID"];
+  return [header, ...records.map(r => [r.name, r.email, r.total.toFixed(2), r.paymentMethod, `1099 contractor payout: ${r.descriptions.slice(0, 3).join("; ")}`, r.periodEnd, "Contract labor", r.runId])].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
 
 // Get payroll overview for employer
@@ -190,6 +232,7 @@ router.get("/export", async (req: AuthRequest, res, next) => {
     await ensureShiftPostsTable(); await ensureOperations();
     const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
     if (!employer) throw new AppError(404, "Employer not found");
+    requirePayrollOwner(req, employer);
     const records = await db.transaction(async tx => {
       const result = (await tx.execute(sql`SELECT st.id,st.caregiver_id,u.first_name,u.last_name,u.email,
         to_char(st.clock_in_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS clock_in_utc,
@@ -274,6 +317,7 @@ router.patch("/1099/contractors/:caregiverId", async (req: AuthRequest, res, nex
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
+    requirePayrollOwner(req, employer);
     const caregiverId = z.coerce.number().int().positive().parse(req.params.caregiverId);
     const data = z.object({
       w9Status: z.enum(["not_collected", "requested", "received", "blocked"]).optional(),
@@ -311,6 +355,7 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable(); await ensureOperations(); await ensure1099Payroll();
     const employer = await currentEmployer(req);
+    requirePayrollOwner(req, employer);
     const data = z.object({ from: payrollDateSchema, to: payrollDateSchema, memo: z.string().trim().max(1000).optional() }).parse(req.body);
     const { start, end } = parsePayrollRange({ from: data.from, to: data.to });
     const run = await db.transaction(async tx => {
@@ -365,6 +410,7 @@ router.post("/1099/runs/:runId/mark-paid", async (req: AuthRequest, res, next) =
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
+    requirePayrollOwner(req, employer);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
     const data = z.object({
       confirmation: z.literal(PAID_CONFIRMATION),
@@ -392,7 +438,9 @@ router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
+    requirePayrollOwner(req, employer);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
+    const format = payoutExportFormatSchema.parse(req.query.format);
     const rows = (await db.execute(sql`
       SELECT pr.id AS run_id, pr.period_start, pr.period_end, pr.status, pr.paid_at,
         pi.id AS item_id, pi.description, pi.worked_minutes, pi.hourly_rate, pi.gross_amount, pi.reimbursement_amount, pi.total_amount,
@@ -406,11 +454,10 @@ router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
       ORDER BY u.first_name, u.last_name, pi.id
     `) as any).rows;
     if (!rows.length) throw new AppError(404, "Payout run not found");
-    const header = ["Run ID","Period start","Period end","Status","Paid at","Contractor","Email","W-9 status","Payment method","Description","Worked minutes","Hours","Hourly rate","Gross","Reimbursement","Total"];
-    const csv = [header, ...rows.map((r: any) => [r.run_id, r.period_start, r.period_end, r.status, r.paid_at || "", `${r.first_name} ${r.last_name}`, r.email, r.w9_status || "not_collected", r.payment_method || "manual", r.description, r.worked_minutes, (Number(r.worked_minutes || 0) / 60).toFixed(4), r.hourly_rate, r.gross_amount, r.reimbursement_amount, r.total_amount])].map(row => row.map(csvCell).join(",")).join("\r\n") + "\r\n";
-    await auditPayrollAction(employer.id, req.user!.id, "contractor_payout_run_exported", { runId, itemCount: rows.length, status: rows[0].status });
+    const csv = payoutExportCsv(rows, format);
+    await auditPayrollAction(employer.id, req.user!.id, "contractor_payout_run_exported", { runId, itemCount: rows.length, status: rows[0].status, format });
     res.setHeader('Cache-Control','no-store');
-    res.setHeader('Content-Disposition',`attachment; filename="elite-1099-payout-run-${runId}.csv"`);
+    res.setHeader('Content-Disposition',`attachment; filename="elite-1099-payout-run-${runId}-${format}.csv"`);
     res.type('text/csv').send(csv);
   } catch (error) { next(error); }
 });
@@ -418,9 +465,11 @@ router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
 router.get("/integrations", async (_req: AuthRequest, res) => {
   res.json({ integrations: [
     { provider: 'elite_1099', name: 'Elite Bridge 1099 payouts', status: 'available', message: 'Approved timesheets can be batched into contractor payout runs, exported, and marked paid without employee tax withholding.' },
+    { provider: 'chase_export', name: 'Chase payment CSV', status: 'available', message: 'Payout runs can be exported as a Chase-friendly payable file. Elite Bridge does not store bank account numbers or transmit ACH payments.' },
+    { provider: 'melio_export', name: 'Melio payment CSV', status: 'available', message: 'Payout runs can be exported as a Melio-friendly vendor payment file for low-cost contractor payments.' },
     { provider: 'year_end_1099', name: 'Year-end 1099 report', status: 'available', message: 'Paid contractor totals are tracked by calendar year for 1099-NEC preparation.' },
     { provider: 'external_payroll', name: 'External payroll software', status: 'optional', message: 'Gusto, ADP, and QuickBooks are optional only if you later add W-2 employees or want outside filing support.' }
-  ], export: { status: 'available', format: 'Elite Bridge 1099 CSV', basis: 'Approved timesheets selected by service date. This export does not withhold taxes, send payments, or file 1099 forms.' } });
+  ], export: { status: 'available', formats: ['standard', 'chase', 'melio'], basis: 'Approved timesheets selected by service date. These exports do not withhold taxes, send payments, store bank account numbers, or file 1099 forms.' } });
 });
 
 export default router;

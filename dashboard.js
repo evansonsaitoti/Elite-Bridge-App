@@ -499,7 +499,12 @@
           <span class="row-icon">$</span>
           <span class="row-copy"><strong>Run #${run.id} · ${formatDateOnly(run.period_start)} – ${formatDateOnly(run.period_end)}</strong><span>${escapeHtml(run.memo || '1099 contractor payout')} · ${run.paid_at ? `Paid ${dateTime(run.paid_at)}` : 'Not marked paid yet'}</span></span>
           <span class="row-meta">${money(run.total_amount)}<br><span class="status ${run.status === 'paid' ? '' : 'neutral'}">${escapeHtml(run.status)}</span></span>
-          <span class="row-actions"><button class="secondary-button" type="button" data-export-run="${run.id}">Export CSV</button>${run.status === 'draft' ? `<button class="primary-button" type="button" data-mark-payout-paid="${run.id}">Mark paid</button>` : ''}</span>
+          <span class="row-actions">
+            <button class="secondary-button" type="button" data-export-run="${run.id}" data-export-format="standard">Audit CSV</button>
+            <button class="secondary-button" type="button" data-export-run="${run.id}" data-export-format="chase">Chase CSV</button>
+            <button class="secondary-button" type="button" data-export-run="${run.id}" data-export-format="melio">Melio CSV</button>
+            ${run.status === 'draft' ? `<button class="primary-button" type="button" data-mark-payout-paid="${run.id}">Mark paid</button>` : ''}
+          </span>
         </article>
       `).join('');
     }
@@ -853,8 +858,9 @@
     if (!button || savingTime) return;
     savingTime = true;
     button.disabled = true;
+    const format = button.dataset.exportFormat || 'standard';
     try {
-      const response = await fetch(`${API_BASE}/payroll/1099/runs/${button.dataset.exportRun}/export`, { headers: { Authorization: `Bearer ${session.token}` } });
+      const response = await fetch(`${API_BASE}/payroll/1099/runs/${button.dataset.exportRun}/export?format=${encodeURIComponent(format)}`, { headers: { Authorization: `Bearer ${session.token}` } });
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
         throw new Error(error.message || error.error || 'Export failed.');
@@ -863,12 +869,12 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `elite-1099-payout-run-${button.dataset.exportRun}.csv`;
+      link.download = `elite-1099-payout-run-${button.dataset.exportRun}-${format}.csv`;
       document.body.appendChild(link);
       link.click();
       link.remove();
       URL.revokeObjectURL(url);
-      notify('Payout CSV downloaded.');
+      notify(`${format === 'standard' ? 'Audit' : format === 'chase' ? 'Chase payment' : 'Melio payment'} CSV downloaded.`);
     } catch (error) { notify(error.message); }
     finally { savingTime = false; button.disabled = false; }
   });
