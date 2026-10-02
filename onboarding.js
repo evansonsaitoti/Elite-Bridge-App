@@ -1,12 +1,19 @@
 (function () {
   const API_BASE = 'https://elite-bridge-shared-api-evans.vercel.app/api';
   const readSession = () => {
-    const storage = localStorage.getItem('user') ? localStorage : sessionStorage;
-    try {
-      return { storage, user: JSON.parse(storage.getItem('user') || 'null'), token: storage.getItem('token') };
-    } catch (_) {
-      return { storage, user: null, token: null };
+    const stores = [localStorage, sessionStorage];
+    for (const storage of stores) {
+      const token = storage.getItem('token');
+      const rawUser = storage.getItem('user');
+      if (!token || !rawUser) continue;
+      try {
+        return { storage, user: JSON.parse(rawUser), token };
+      } catch (_) {
+        storage.removeItem('token');
+        storage.removeItem('user');
+      }
     }
+    return { storage: sessionStorage, user: null, token: null };
   };
 
   const session = readSession();
