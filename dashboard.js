@@ -534,6 +534,42 @@
     }
   }
 
+  function renderPayrollAudit(data) {
+    const container = document.getElementById('payrollAuditList');
+    if (!container) return;
+    const events = data?.events || [];
+    if (!events.length) {
+      renderEmpty(container, 'No payroll security events yet', 'W-9 updates, payout creation, exports, and paid confirmations will appear here.');
+      return;
+    }
+    const labels = {
+      contractor_1099_profile_updated: 'Contractor payroll profile updated',
+      contractor_payout_run_created: 'Payout run created',
+      contractor_payout_run_exported: 'Payout run exported',
+      contractor_payout_run_marked_paid: 'Payout run marked paid',
+      payroll_export: 'Legacy payroll export'
+    };
+    container.innerHTML = events.map((event) => {
+      const detail = event.detail || {};
+      const actor = `${event.first_name || ''} ${event.last_name || ''}`.trim() || event.email || 'Unknown user';
+      const pieces = [];
+      if (detail.runId) pieces.push(`Run #${detail.runId}`);
+      if (detail.format) pieces.push(`${String(detail.format).toUpperCase()} export`);
+      if (detail.w9Status) pieces.push(`W-9 ${String(detail.w9Status).replaceAll('_', ' ')}`);
+      if (detail.paymentMethod) pieces.push(`Pay by ${detail.paymentMethod}`);
+      if (detail.gross) pieces.push(money(detail.gross));
+      if (detail.totalAmount) pieces.push(money(detail.totalAmount));
+      if (detail.timesheetIds?.length) pieces.push(`${detail.timesheetIds.length} timesheet${detail.timesheetIds.length === 1 ? '' : 's'}`);
+      return `
+        <article class="list-row" data-searchable>
+          <span class="row-icon">LOG</span>
+          <span class="row-copy"><strong>${escapeHtml(labels[event.action] || event.action)}</strong><span>${escapeHtml(actor)} · ${dateTime(event.created_at)}</span></span>
+          <span class="row-meta">${escapeHtml(pieces.join(' · ') || 'Recorded')}</span>
+        </article>
+      `;
+    }).join('');
+  }
+
   async function captureLocation() {
     if (!navigator.geolocation) return null;
     return new Promise(resolve => navigator.geolocation.getCurrentPosition(position => resolve({ latitude: position.coords.latitude, longitude: position.coords.longitude, accuracy: position.coords.accuracy, capturedAt: new Date(position.timestamp).toISOString() }), () => resolve(null), { enableHighAccuracy: true, maximumAge: 0, timeout: 12000 }));
@@ -699,8 +735,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult, contractorPayrollResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`)
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -749,6 +785,8 @@
     renderEmployerSetup(profile, invitations, shifts);
     if (contractorPayrollResult.status === 'fulfilled') render1099Payroll(contractorPayrollResult.value);
     else render1099Payroll({ summary: {}, approvedTimesheets: [], contractors: [], runs: [] });
+    if (payrollAuditResult.status === 'fulfilled') renderPayrollAudit(payrollAuditResult.value);
+    else renderPayrollAudit({ events: [] });
   }
 
   async function loadCaregiver() {
