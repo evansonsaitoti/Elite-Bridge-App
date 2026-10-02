@@ -524,6 +524,75 @@ a { color: inherit; }
   width: 100%;
 }
 
+.contract-nudge-panel {
+  background: #f8fbf9;
+  border: 1px solid rgba(6, 62, 44, 0.18);
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 13px;
+}
+
+.contract-nudge-panel legend {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  padding: 0 6px;
+  text-transform: uppercase;
+}
+
+.contract-nudge-panel label {
+  color: var(--ink);
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.contract-nudge-panel select {
+  appearance: none;
+  background: #fff;
+  border: 1px solid rgba(6, 62, 44, 0.24);
+  border-radius: 7px;
+  color: var(--ink);
+  font: inherit;
+  margin-top: 6px;
+  padding: 10px 11px;
+  width: 100%;
+}
+
+.nudge-grid {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: repeat(3, 44px);
+  justify-content: center;
+}
+
+.nudge-button {
+  align-items: center;
+  background: #fff;
+  border: 1px solid rgba(6, 62, 44, 0.22);
+  border-radius: 10px;
+  color: var(--forest-900);
+  cursor: pointer;
+  display: inline-flex;
+  font-size: 1.1rem;
+  font-weight: 900;
+  height: 42px;
+  justify-content: center;
+}
+
+.nudge-button:hover {
+  background: var(--mint-50);
+  border-color: #b5c7be;
+}
+
+.nudge-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .contract-preview-wrap {
   background: linear-gradient(145deg, rgba(8, 77, 52, 0.08), rgba(213, 176, 95, 0.12));
   border: 1px solid var(--line);

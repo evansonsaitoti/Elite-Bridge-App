@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=contract-align-20261001c">
+  <link rel="stylesheet" href="/app-shell.css?v=contract-nudge-20261002">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -107,6 +107,37 @@
               <label>Client date<input id="contractClientDate" type="date"></label>
               <label>Agency representative<input class="signature-input" id="contractAgencySigner" type="text" placeholder="Agency representative"></label>
               <label>Agency date<input id="contractAgencyDate" type="date"></label>
+              <fieldset class="contract-nudge-panel full">
+                <legend>Fine tune alignment</legend>
+                <label>Move field
+                  <select id="contractNudgeTarget">
+                    <option value="client-name">Client name</option>
+                    <option value="care-recipient">Care recipient</option>
+                    <option value="start-date">Start date</option>
+                    <option value="service-days">Service day checkmarks</option>
+                    <option value="rate-checks">Hourly rate checkmarks</option>
+                    <option value="rate-amounts">Hourly rate amounts</option>
+                    <option value="billing">Billing checkmarks</option>
+                    <option value="client-signature">Client signature name</option>
+                    <option value="client-date">Client date</option>
+                    <option value="agency-signature">Agency representative</option>
+                    <option value="agency-date">Agency date</option>
+                  </select>
+                </label>
+                <div class="nudge-grid" aria-label="Move selected contract text">
+                  <span></span>
+                  <button class="nudge-button" type="button" data-nudge-y="-1" aria-label="Move up">↑</button>
+                  <span></span>
+                  <button class="nudge-button" type="button" data-nudge-x="-1" aria-label="Move left">←</button>
+                  <button class="nudge-button" type="button" data-nudge-y="1" aria-label="Move down">↓</button>
+                  <button class="nudge-button" type="button" data-nudge-x="1" aria-label="Move right">→</button>
+                </div>
+                <div class="nudge-actions">
+                  <button class="secondary-button" type="button" id="resetContractNudge">Reset selected</button>
+                  <button class="secondary-button" type="button" id="resetAllContractNudges">Reset all</button>
+                </div>
+                <p class="form-note">Use this if typed text sits a little above, below, left, or right of the line.</p>
+              </fieldset>
             </div>
             <p class="form-note">The signature names appear in a signature style. Review the preview before downloading or emailing.</p>
             <div class="form-actions">
@@ -153,6 +184,6 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=mobile-tabs-20261001"></script>
+  <script src="/dashboard.js?v=contract-nudge-20261002"></script>
 </body>
 </html>

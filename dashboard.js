@@ -144,6 +144,64 @@
     return document.querySelector(`input[name="contractRates"][value="${value}"]:checked`) ? '✓' : '';
   }
 
+  const CONTRACT_NUDGE_STORAGE = 'eliteContractOverlayNudges';
+  const contractNudgeTargets = {
+    'client-name': ['value-client'],
+    'care-recipient': ['value-recipient'],
+    'start-date': ['value-start'],
+    'service-days': ['mark-mon', 'mark-tue', 'mark-wed', 'mark-thu', 'mark-fri', 'mark-sat', 'mark-sun'],
+    'rate-checks': ['mark-morning', 'mark-evening'],
+    'rate-amounts': ['value-day-rate', 'value-evening-rate'],
+    billing: ['mark-weekly', 'mark-biweekly'],
+    'client-signature': ['sig-client'],
+    'client-date': ['date-client'],
+    'agency-signature': ['sig-agency'],
+    'agency-date': ['date-agency']
+  };
+
+  function readContractNudges() {
+    try {
+      return JSON.parse(localStorage.getItem(CONTRACT_NUDGE_STORAGE) || '{}') || {};
+    } catch (_) {
+      return {};
+    }
+  }
+
+  function saveContractNudges(nudges) {
+    localStorage.setItem(CONTRACT_NUDGE_STORAGE, JSON.stringify(nudges));
+  }
+
+  function applyContractNudges() {
+    const nudges = readContractNudges();
+    Object.entries(contractNudgeTargets).forEach(([key, classes]) => {
+      const offset = nudges[key];
+      classes.forEach((className) => {
+        document.querySelectorAll(`.${className}`).forEach((element) => {
+          if (!offset || (!offset.x && !offset.y)) {
+            element.style.transform = '';
+            return;
+          }
+          element.style.transform = `translate(${offset.x || 0}px, ${offset.y || 0}px)`;
+        });
+      });
+    });
+  }
+
+  function nudgeContractTarget(target, dx, dy) {
+    const nudges = readContractNudges();
+    const current = nudges[target] || { x: 0, y: 0 };
+    nudges[target] = { x: (current.x || 0) + dx, y: (current.y || 0) + dy };
+    saveContractNudges(nudges);
+    applyContractNudges();
+  }
+
+  function resetContractNudge(target) {
+    const nudges = readContractNudges();
+    delete nudges[target];
+    saveContractNudges(nudges);
+    applyContractNudges();
+  }
+
   function renderContractPreview() {
     const preview = document.getElementById('contractPreview');
     if (!preview) return;
@@ -186,6 +244,7 @@
         <span class="template-value date-agency">${escapeHtml(agencyDate)}</span>
       </section>
     `;
+    applyContractNudges();
   }
 
   function printContractPdf() {
@@ -222,6 +281,20 @@
     document.getElementById('printContractTop')?.addEventListener('click', printContractPdf);
     document.getElementById('emailContract')?.addEventListener('click', emailContractClient);
     document.getElementById('emailContractTop')?.addEventListener('click', emailContractClient);
+    document.querySelectorAll('[data-nudge-x], [data-nudge-y]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = document.getElementById('contractNudgeTarget')?.value || 'client-signature';
+        nudgeContractTarget(target, Number(button.dataset.nudgeX || 0), Number(button.dataset.nudgeY || 0));
+      });
+    });
+    document.getElementById('resetContractNudge')?.addEventListener('click', () => {
+      const target = document.getElementById('contractNudgeTarget')?.value || 'client-signature';
+      resetContractNudge(target);
+    });
+    document.getElementById('resetAllContractNudges')?.addEventListener('click', () => {
+      localStorage.removeItem(CONTRACT_NUDGE_STORAGE);
+      applyContractNudges();
+    });
 
     renderContractPreview();
   }
