@@ -85,6 +85,112 @@ a { color: inherit; }
 .sync-status { display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto; padding: 8px 11px; border: 1px solid #dce8e2; border-radius: 999px; color: #4e665b; background: #f9fcfa; font-size: 11px; font-weight: 750; }
 .sync-status::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: #37a268; box-shadow: 0 0 0 4px rgba(55,162,104,.12); }
 
+.command-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 22px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  padding: 26px;
+  border: 1px solid #dbe8e2;
+  border-radius: 24px;
+  background:
+    radial-gradient(circle at 90% 0, rgba(200,139,44,.18), transparent 34%),
+    linear-gradient(135deg, #f8fcfa 0%, #ffffff 54%, #edf7f1 100%);
+  box-shadow: 0 16px 44px rgba(20, 52, 39, .06);
+}
+
+.command-hero h1 {
+  max-width: 720px;
+  margin: 0;
+  color: var(--forest-950);
+  font-size: clamp(30px, 4vw, 46px);
+  line-height: 1.04;
+  letter-spacing: -.055em;
+}
+
+.command-hero p:last-child {
+  max-width: 660px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.command-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.priority-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.priority-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 82px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  color: var(--ink);
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 7px 22px rgba(23,50,39,.035);
+}
+
+.priority-card:hover {
+  border-color: #b9cbbf;
+  transform: translateY(-1px);
+}
+
+.priority-card.urgent {
+  border-color: rgba(189, 99, 28, .28);
+  background: linear-gradient(135deg, #fffaf4, #fff);
+}
+
+.priority-icon {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  color: var(--forest-800);
+  background: var(--mint-100);
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.priority-card.urgent .priority-icon {
+  color: var(--orange-600);
+  background: var(--orange-100);
+}
+
+.priority-card strong {
+  display: block;
+  color: var(--forest-950);
+  font-size: 19px;
+  line-height: 1.1;
+}
+
+.priority-card small {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1fr) 330px; gap: 20px; }
 .dashboard-main, .dashboard-rail { display: flex; min-width: 0; flex-direction: column; gap: 20px; }
 .surface { border: 1px solid var(--line); border-radius: 19px; background: var(--white); box-shadow: 0 5px 18px rgba(23,50,39,.035); }
@@ -232,6 +338,7 @@ a { color: inherit; }
 .onboarding-error { margin: 0 0 18px; padding: 12px 14px; border: 1px solid #f1cccc; border-radius: 11px; color: #9c3030; background: #fff0f0; font-size: 12px; }
 
 @media (max-width: 1180px) {
+  .priority-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .quick-grid, .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .dashboard-grid { grid-template-columns: minmax(0, 1fr) 300px; }
   .operations-grid { grid-template-columns: 1fr; }
@@ -376,6 +483,36 @@ a { color: inherit; }
   body.mobile-more-open .nav-count { right: 10px; transform: none; }
   .app-main { padding: 82px 14px calc(108px + env(safe-area-inset-bottom)); }
   .content-shell { width: 100%; }
+  .command-hero {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 14px;
+    padding: 20px;
+    border-radius: 22px;
+  }
+  .command-hero h1 { font-size: clamp(29px, 8vw, 38px); }
+  .command-hero p:last-child { font-size: 13px; }
+  .command-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    width: 100%;
+  }
+  .priority-strip {
+    display: flex;
+    gap: 10px;
+    margin: 0 -14px 16px;
+    overflow-x: auto;
+    padding: 0 14px 2px;
+    scroll-snap-type: x proximity;
+  }
+  .priority-card {
+    flex: 0 0 78%;
+    min-height: 76px;
+    border-radius: 17px;
+    scroll-snap-align: start;
+  }
+  .priority-card strong { font-size: 17px; }
   .page-head { align-items: flex-start; flex-direction: column; gap: 12px; margin-bottom: 16px; padding: 0 2px; }
   .page-head h1 { font-size: clamp(27px, 8vw, 34px); }
   .page-head p { font-size: 13px; line-height: 1.45; }

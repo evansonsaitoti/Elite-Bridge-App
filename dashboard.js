@@ -645,12 +645,17 @@
       document.querySelectorAll('[data-company-name]').forEach((element) => { element.textContent = profile.companyName; });
     }
     const timesheets = timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : [];
+    const pendingTimesheets = timesheets.filter(t => t.status === 'pending_approval').length;
+    const pendingApplications = applicationsResult.status === 'fulfilled' ? (applicationsResult.value.applications || []).filter(a => a.status === 'pending').length : 0;
     const unfilled = shifts.filter(shift => ['open', 'assigned', 'in_progress'].includes(shift.status) && shift.remainingPositions > 0).length;
     setText('metricOpenShifts', unfilled);
     setText('metricOnDuty', activityResult.status === 'fulfilled' ? activityResult.value.activeCount : 'Unavailable');
     setText('metricCaregivers', caregivers.length);
     setText('metricPendingPayroll', money(payroll.stats?.pending_amount));
-    setText('attentionTimesheets', timesheetResult.status === 'fulfilled' ? timesheets.filter(t => t.status === 'pending_approval').length : 'Unavailable');
+    setText('priorityOpenShifts', unfilled);
+    setText('priorityApplications', pendingApplications);
+    setText('priorityTimesheets', timesheetResult.status === 'fulfilled' ? pendingTimesheets : '—');
+    setText('attentionTimesheets', timesheetResult.status === 'fulfilled' ? pendingTimesheets : 'Unavailable');
     setText('attentionShifts', unfilled);
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
