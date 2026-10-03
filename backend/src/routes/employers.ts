@@ -10,6 +10,7 @@ import { authMiddleware, AuthRequest, requireRole } from "../middleware/auth.js"
 import { AppError } from "../middleware/errorHandler.js";
 import { config } from "../config/env.js";
 import { sendEmail, escapeEmailHtml } from "../services/email.js";
+import { sendSms, smsReady } from "../services/sms.js";
 
 const router = Router();
 
@@ -39,6 +40,19 @@ const invitationSchema = z
   });
 
 const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+
+const webAppUrl = () => config.WEB_APP_URL.replace(/\/$/, "");
+
+function buildCaregiverInviteUrl(token: string) {
+  return `${webAppUrl()}/signup?role=caregiver&invite=${encodeURIComponent(token)}`;
+}
+
+function appDownloadLinks() {
+  return {
+    caregiver: config.CAREGIVER_APP_URL || `${webAppUrl()}/signup?role=caregiver`,
+    employer: config.EMPLOYER_APP_URL || webAppUrl(),
+  };
+}
 
 const backgroundCheckSchema = z.object({
   caregiverUserId: z.number().int().positive(),
@@ -122,24 +136,36 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
         expiresAt,
       })
       .returning({ id: caregiverInvitations.id });
-    const inviteUrl = `${config.WEB_APP_URL.replace(/\/$/, "")}/signup?role=caregiver&invite=${encodeURIComponent(token)}`;
+    const inviteUrl = buildCaregiverInviteUrl(token);
+    const appLinks = appDownloadLinks();
     let emailSent = false;
+    let smsSent = false;
     if (data.email) {
       try {
         emailSent = await sendEmail({
           to: data.email,
-          subject: `${employer.companyName} invited you to Elite Care`,
-          text: `${employer.companyName} invited you to join their care team on Elite Care. Accept within 7 days: ${inviteUrl}`,
-          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Care.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p>This secure invitation expires in 7 days.</p>`,
+          subject: `${employer.companyName} invited you to Elite Bridge`,
+          text: `${employer.companyName} invited you to join their care team on Elite Bridge.\n\nAccept your secure invitation within 7 days: ${inviteUrl}\nDownload the caregiver app: ${appLinks.caregiver}`,
+          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Bridge.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p><a href="${escapeEmailHtml(appLinks.caregiver)}">Download the caregiver app</a></p><p>This secure invitation expires in 7 days.</p>`,
         });
       } catch {
         console.error("Invitation email could not be delivered; check the email provider log");
       }
     }
+    if (data.phone && smsReady()) {
+      try {
+        await sendSms(data.phone, `${employer.companyName} invited you to Elite Bridge. Accept: ${inviteUrl} Download app: ${appLinks.caregiver}`);
+        smsSent = true;
+      } catch {
+        console.error("Invitation SMS could not be delivered; check the SMS provider log");
+      }
+    }
     res.status(201).json({
       invitation: { id: inserted[0].id, status: "pending", expiresAt },
       inviteUrl,
+      appLinks,
       emailSent,
+      smsSent,
     });
   } catch (error) {
     next(error);
