@@ -11,6 +11,7 @@ export interface OnboardingData {
   city: string;
   state: string;
   zip: string;
+  inviteToken: string;
 
   // Step 2: Experience & Skills
   yearsOfExperience: string;
@@ -59,6 +60,7 @@ const defaultData: OnboardingData = {
   city: "",
   state: "",
   zip: "",
+  inviteToken: "",
   yearsOfExperience: "",
   certifications: [],
   languages: [],
