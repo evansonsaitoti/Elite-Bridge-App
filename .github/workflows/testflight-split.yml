@@ -27,6 +27,7 @@ concurrency:
   group: elite-bridge-split-testflight
   cancel-in-progress: true
 
+# Release trigger markers: caregiver build 60, employer build 37.
 jobs:
   caregiver:
     if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release mobile builds 60 and 37') || startsWith(github.event.head_commit.message, 'Release caregiver build 60'))) || (github.event_name == 'workflow_dispatch' && (github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver')) }}
