@@ -333,7 +333,7 @@
   let workflowSpecPromise;
   async function getWorkflowSpec() {
     if (!workflowSpecPromise) {
-      workflowSpecPromise = fetch('/docs/elite-bridge-automation-workflows.json')
+      workflowSpecPromise = fetch('/elite-bridge-automation-workflows.json')
         .then((response) => {
           if (!response.ok) throw new Error('Workflow library could not be loaded.');
           return response.json();
