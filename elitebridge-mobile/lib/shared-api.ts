@@ -105,6 +105,7 @@ export async function registerCaregiverAccount(input: {
   phone: string;
   email: string;
   password: string;
+  inviteToken?: string;
 }): Promise<AuthUser> {
   const result = await request<{ token: string; user: AuthUser }>("/api/auth/register", {
     method: "POST",
