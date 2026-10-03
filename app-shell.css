@@ -311,6 +311,16 @@ a { color: inherit; }
 .automation-card p { margin: 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
 .automation-card button { align-self: end; min-height: 38px; border: 1px solid #d5e2dc; border-radius: 11px; color: var(--forest-900); background: var(--mint-50); font-size: 12px; font-weight: 850; cursor: pointer; }
 .automation-card button:hover { border-color: #b7c9bf; background: #fff; }
+.workflow-library { margin-top: 18px; }
+.workflow-table { display: grid; border: 1px solid #e5ece8; border-radius: 16px; overflow: hidden; }
+.workflow-row { display: grid; grid-template-columns: minmax(240px, 1.35fr) minmax(160px, .75fr) minmax(130px, .55fr) minmax(120px, .45fr); gap: 12px; align-items: center; padding: 14px 16px; border-top: 1px solid #edf2ef; background: #fff; }
+.workflow-row:first-child { border-top: 0; }
+.workflow-head { color: #74827b; background: #f7fbf8; font-size: 11px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+.workflow-row strong { display: block; color: var(--forest-950); font-size: 13px; }
+.workflow-row small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.4; }
+.workflow-row span { color: #52625a; font-size: 12px; font-weight: 700; }
+.workflow-row button { min-height: 36px; border: 1px solid #d5e2dc; border-radius: 10px; color: var(--forest-900); background: #fff; font-size: 12px; font-weight: 850; cursor: pointer; }
+.workflow-row button:hover { background: var(--mint-50); border-color: #b8c9c0; }
 .toast { position: fixed; z-index: 90; right: 24px; bottom: 24px; max-width: 360px; padding: 14px 16px; border: 1px solid #cfe2d7; border-radius: 13px; color: var(--forest-950); background: #f3fbf6; box-shadow: var(--shadow); font-size: 12px; font-weight: 700; }
 .invite-dialog { width: min(600px, calc(100% - 28px)); max-height: calc(100vh - 36px); overflow: auto; padding: 0; border: 0; border-radius: 22px; color: var(--ink); background: #fff; box-shadow: 0 28px 90px rgba(5,35,24,.28); }
 .invite-dialog::backdrop { background: rgba(4,26,18,.48); backdrop-filter: blur(3px); }
@@ -570,6 +580,10 @@ a { color: inherit; }
   .mcp-flow { grid-template-columns: 1fr; }
   .mcp-flow i { width: 2px; height: 24px; justify-self: center; }
   .automation-card { min-height: auto; }
+  .workflow-table { border: 0; gap: 10px; overflow: visible; }
+  .workflow-head { display: none; }
+  .workflow-row { grid-template-columns: 1fr; gap: 8px; padding: 15px; border: 1px solid #e5ece8; border-radius: 16px; }
+  .workflow-row button { width: 100%; }
   .dashboard-rail { grid-template-columns: 1fr; }
   .quick-card {
     min-height: 112px;
