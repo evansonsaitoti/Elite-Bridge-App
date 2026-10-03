@@ -29,6 +29,8 @@ export type Shift = {
   remainingPositions: number;
   location: { address: string; city: string; state: string; zipCode: string };
   hourlyRate: number;
+  clientBillRate?: number;
+  caregiverPayRate?: number;
   responsibilities: string;
   urgency: "standard" | "urgent";
   assignmentMode: "instant" | "review";
@@ -99,6 +101,8 @@ export type Application = {
   rating?: string | number;
   total_hours?: string | number;
   certifications?: string[];
+  caregiver_pay_rate?: string | number | null;
+  default_pay_rate?: string | number | null;
 };
 
 export type TeamMember = {
@@ -108,6 +112,7 @@ export type TeamMember = {
   last_name: string;
   email: string;
   phone?: string;
+  hourly_rate?: string | number;
   rating?: string | number;
   total_hours?: string | number;
   certifications?: string[];
@@ -298,10 +303,10 @@ export async function createEmployerShift(input: ShiftInput): Promise<{ shift: S
   });
 }
 
-export async function assignCaregiverToShift(shiftId: number, caregiverId: number) {
+export async function assignCaregiverToShift(shiftId: number, caregiverId: number, caregiverPayRate?: number) {
   return request<{ application: unknown; shift: { id: number; status: string } }>(`/api/bookings/employer/${shiftId}/assign`, {
     method: "POST",
-    body: JSON.stringify({ caregiverId }),
+    body: JSON.stringify({ caregiverId, caregiverPayRate }),
   });
 }
 
@@ -333,10 +338,10 @@ export async function getEmployerTimesheets(): Promise<EmployerTimesheet[]> {
   return result.timesheets;
 }
 
-export async function updateApplication(id: number, status: "approved" | "rejected") {
+export async function updateApplication(id: number, status: "approved" | "rejected", caregiverPayRate?: number) {
   await request(`/api/bookings/employer/applications/${id}`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, caregiverPayRate }),
   });
 }
 
