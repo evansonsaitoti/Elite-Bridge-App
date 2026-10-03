@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 
 /**
  * Onboarding Step 1: Welcome & Personal Information
@@ -12,6 +12,7 @@ export default function OnboardingWelcome() {
   const colors = useColors();
   const { data, updateData, nextStep } = useOnboarding();
   const router = useRouter();
+  const params = useLocalSearchParams<{ invite?: string }>();
 
   const [fullName, setFullName] = useState(data.fullName);
   const [email, setEmail] = useState(data.email);
@@ -23,6 +24,11 @@ export default function OnboardingWelcome() {
   const [state, setState] = useState(data.state);
   const [zip, setZip] = useState(data.zip);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    const inviteToken = Array.isArray(params.invite) ? params.invite[0] : params.invite;
+    if (inviteToken && inviteToken !== data.inviteToken) updateData({ inviteToken });
+  }, [data.inviteToken, params.invite, updateData]);
 
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
@@ -57,6 +63,7 @@ export default function OnboardingWelcome() {
         city: city.trim(),
         state: state.trim().toUpperCase(),
         zip: zip.trim(),
+        inviteToken: data.inviteToken,
       });
       nextStep();
       router.push("/(onboarding)/experience");
