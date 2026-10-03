@@ -54,7 +54,7 @@ beforeAll(async () => {
   await ensureCoreTables();
   const app = express();
   app.use(express.json());
-  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms"]) {
+  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms", "clock-reminders"]) {
     app.use(`/api/${route}`, (await import(`../src/routes/${route}.ts`)).default);
   }
   app.use((await import("../src/middleware/errorHandler")).errorHandler);
@@ -141,6 +141,41 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/bookings/caregiver/my-applications", caregiver)).applications[0].shift.status).toBe("assigned");
     expect((await request("/bookings/employer/team", employer)).team[0].assigned_shifts).toBe(1);
     expect((await database.query("SELECT * FROM bookings")).rows).toHaveLength(1);
+  });
+  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
+    const defaults = (await request("/clock-reminders/settings", employer)).settings;
+    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
+    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
+    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
+    await request("/clock-reminders/settings", employer, "PUT", settings);
+    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
+    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
+    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
+    const dueAt = new Date(Date.now() + 28 * 60_000);
+    const endsAt = new Date(dueAt.getTime() + 4 * 60 * 60_000);
+    const startValue = dueAt.toISOString().replace("Z", "");
+    const endValue = endsAt.toISOString().replace("Z", "");
+    await database.query("UPDATE shift_posts SET start_time=$1, end_time=$2, time_zone='UTC' WHERE id=$3", [
+      startValue, endValue, reviewShift.id,
+    ]);
+    const caregiverRow = (await database.query("SELECT id FROM caregivers WHERE user_id=$1", [caregiver.user.id])).rows[0];
+    const employerRow = (await database.query("SELECT id FROM employers WHERE user_id=$1", [employer.user.id])).rows[0];
+    await database.query("UPDATE bookings SET start_time=$1, end_time=$2 WHERE caregiver_id=$3 AND employer_id=$4", [
+      startValue, endValue, caregiverRow.id, employerRow.id,
+    ]);
+    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
+    const run = async () => {
+      const response = await fetch(`${base}/api/clock-reminders/run`, { headers: { Authorization: "Bearer clock-reminder-test-secret" } });
+      expect(response.status).toBe(200);
+      return response.json();
+    };
+    expect(await run()).toMatchObject({ ok: true, preShiftSent: 1, lateSent: 0 });
+    expect(await run()).toMatchObject({ ok: true, preShiftSent: 0, lateSent: 0 });
+    const notices = await database.query("SELECT id FROM notifications WHERE user_id=$1 AND type='pre_shift' AND related_id=$2", [caregiver.user.id, reviewShift.id]);
+    expect(notices.rows).toHaveLength(1);
+    vi.stubEnv("CRON_SECRET", "");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
   });
   it("enforces clock ownership, duplicate prevention, and calculates a timesheet", async () => {
     await request(`/bookings/${reviewShift.id}/clock-in`, replacement, "POST", {}, 403);
@@ -374,7 +409,7 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await (await exportFor(otherEmployer)).text()).trim().split("\r\n")).toHaveLength(1);
     await request("/payroll/export?from=2026-02-31&to=2026-03-01",employer,"GET",undefined,400);
     await request("/payroll/export?from=2026-01-01&to=2026-12-01",employer,"GET",undefined,400);
-    expect((await request("/payroll/integrations",employer)).integrations.every((p:any)=>p.status==="requires_provider_setup")).toBe(true);
+    expect((await request("/payroll/integrations",employer)).integrations.map((p:any)=>p.status)).toEqual(["available","available","available","available","optional"]);
   });
   it("keeps SMS off without configuration and rejects unsigned provider callbacks", async () => {
     expect((await request("/sms/preferences",caregiver)).configured).toBe(false);

@@ -23,6 +23,7 @@ import aiRoutes from "./routes/ai";
 import notificationRoutes from "./routes/notifications";
 import operationsRoutes from "./routes/operations";
 import smsRoutes from "./routes/sms";
+import clockReminderRoutes from "./routes/clock-reminders";
 
 const app = express();
 const httpServer = createServer(app);
@@ -66,6 +67,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/operations", operationsRoutes);
 app.use("/api/sms", smsRoutes);
+app.use("/api/clock-reminders", clockReminderRoutes);
 
 // Socket.IO for real-time features
 io.on("connection", (socket) => {

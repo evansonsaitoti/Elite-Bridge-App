@@ -11,5 +11,11 @@
       "src": "/(.*)",
       "dest": "api/index.ts"
     }
+  ],
+  "crons": [
+    {
+      "path": "/api/clock-reminders/run",
+      "schedule": "*/5 * * * *"
+    }
   ]
 }

@@ -228,3 +228,8 @@ For issues or questions, contact: info@elitebridgestaffing.com
 ## License
 
 Proprietary - Elite Bridge Staffing
+
+
+### Clock-in reminders
+
+The Vercel Cron job in `backend/vercel.json` checks for upcoming and late clock-ins every five minutes. Set a strong `CRON_SECRET` in the backend Vercel project's Production environment (and local `.env` for local testing). The processor compares the `Authorization: Bearer <CRON_SECRET>` header before reading schedules. Employer reminders are off until enabled in the Automation Center. SMS is sent only when a caregiver has verified their phone number and opted in.

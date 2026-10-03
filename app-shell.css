@@ -1329,3 +1329,23 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
     font-size: 15pt;
   }
 }
+
+
+.clock-reminder-settings { margin: 0 0 20px; }
+.clock-reminder-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.clock-reminder-option, .clock-reminder-field { display: flex; align-items: flex-start; gap: 11px; min-width: 0; padding: 14px; border: 1px solid var(--line); border-radius: 13px; background: #fff; }
+.clock-reminder-option input { width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--forest-800); flex: 0 0 auto; }
+.clock-reminder-option strong, .clock-reminder-field > span { display: block; color: var(--ink); font-size: 13px; font-weight: 750; }
+.clock-reminder-option small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.clock-reminder-field { display: flex; flex-direction: column; gap: 8px; }
+.clock-reminder-field select { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid #cad8d0; border-radius: 9px; color: var(--ink); background: #fff; font: inherit; }
+.clock-reminder-manager { grid-column: 1 / -1; }
+.clock-reminder-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 16px; }
+.clock-reminder-footer p { max-width: 620px; margin: 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.clock-reminder-footer > div { display: flex; align-items: center; gap: 12px; }
+#clockReminderStatus { color: var(--muted); font-size: 12px; }
+@media (max-width: 640px) {
+  .clock-reminder-grid { grid-template-columns: 1fr; }
+  .clock-reminder-manager { grid-column: auto; }
+  .clock-reminder-footer, .clock-reminder-footer > div { align-items: stretch; flex-direction: column; }
+}

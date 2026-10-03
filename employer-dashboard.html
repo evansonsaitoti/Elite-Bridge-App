@@ -298,6 +298,19 @@
           </div>
           <button class="primary-button" type="button" data-notify="Automation publishing will be enabled after the MCP endpoint and permissions are connected.">Prepare automation</button>
         </div>
+        <form id="clockReminderSettings" class="surface surface-pad clock-reminder-settings">
+          <div class="surface-head">
+            <div><h2>Shift clock-in reminders</h2><p>Help caregivers start on time and alert you when a shift is still unstaffed.</p></div>
+          </div>
+          <div class="clock-reminder-grid">
+            <label class="clock-reminder-option"><input id="preShiftEnabled" type="checkbox"><span><strong>Upcoming shift reminder</strong><small>Remind assigned caregivers before a scheduled visit.</small></span></label>
+            <label class="clock-reminder-field" for="preShiftMinutes"><span>Send reminder</span><select id="preShiftMinutes"><option value="15">15 minutes before</option><option value="30">30 minutes before</option><option value="45">45 minutes before</option><option value="60">1 hour before</option><option value="120">2 hours before</option><option value="240">4 hours before</option><option value="480">8 hours before</option><option value="720">12 hours before</option><option value="1440">24 hours before</option></select></label>
+            <label class="clock-reminder-option"><input id="lateAlertEnabled" type="checkbox"><span><strong>Late clock-in alert</strong><small>Alert after the caregiver has not clocked in by the grace period.</small></span></label>
+            <label class="clock-reminder-field" for="lateGraceMinutes"><span>Grace period</span><select id="lateGraceMinutes"><option value="5">5 minutes after start</option><option value="10">10 minutes after start</option><option value="15">15 minutes after start</option><option value="30">30 minutes after start</option></select></label>
+            <label class="clock-reminder-option clock-reminder-manager"><input id="notifyEmployer" type="checkbox"><span><strong>Notify employer on late clock-in</strong><small>Send the employer account an alert as well as the caregiver.</small></span></label>
+          </div>
+          <div class="clock-reminder-footer"><p>Caregivers receive an in-app alert, push notification, and email. SMS is sent only to people who verified their number and opted in.</p><div><span id="clockReminderStatus" role="status" aria-live="polite"></span><button class="primary-button" type="submit">Save reminder settings</button></div></div>
+        </form>
         <div class="automation-layout">
           <article class="surface surface-pad mcp-panel">
             <div class="surface-head"><div><h2>MCP connection plan</h2><p>Secure bridge between Elite Bridge and ChatGPT actions</p></div></div>
