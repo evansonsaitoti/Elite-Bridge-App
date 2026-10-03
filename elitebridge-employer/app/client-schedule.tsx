@@ -37,7 +37,7 @@ function addDays(date: string, days: number) {
 export default function ClientScheduleScreen() {
   const router = useRouter();
   const [startDate, setStartDate] = useState("");
-  const [rate, setRate] = useState("35");
+  const [rate, setRate] = useState("40");
   const [serviceType, setServiceType] = useState("Personal care");
   const [caregiverType, setCaregiverType] = useState("Caregiver");
   const [responsibilities, setResponsibilities] = useState("Personal care, companionship, meal support, light housekeeping, and safety monitoring.");
@@ -109,7 +109,7 @@ export default function ClientScheduleScreen() {
           <Text style={styles.section}>Care and pay</Text>
           <Field label="Service" value={serviceType} onChangeText={setServiceType} />
           <Field label="Caregiver type" value={caregiverType} onChangeText={setCaregiverType} />
-          <Field label="Hourly rate" value={rate} onChangeText={setRate} keyboardType="decimal-pad" />
+          <Field label="Client bill rate" helper="Private agency rate. Caregiver pay is set later when allocating staff." value={rate} onChangeText={setRate} keyboardType="decimal-pad" />
           <Field label="Responsibilities" value={responsibilities} onChangeText={setResponsibilities} multiline numberOfLines={4} style={styles.multiline} />
 
           <Text style={styles.section}>Staff allocation option</Text>
