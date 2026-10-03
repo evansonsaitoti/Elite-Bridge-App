@@ -111,6 +111,49 @@
   }
 
 
+
+  const clockReminderForm = document.getElementById('clockReminderSettings');
+  const clockReminderStatus = document.getElementById('clockReminderStatus');
+  async function loadClockReminderSettings() {
+    if (!clockReminderForm || expectedRole !== 'employer') return;
+    try {
+      const result = await api('/clock-reminders/settings');
+      const settings = result.settings || {};
+      document.getElementById('preShiftEnabled').checked = Boolean(settings.preShiftEnabled);
+      document.getElementById('preShiftMinutes').value = String(settings.preShiftMinutes || 15);
+      document.getElementById('lateAlertEnabled').checked = Boolean(settings.lateAlertEnabled);
+      document.getElementById('lateGraceMinutes').value = String(settings.lateGraceMinutes || 5);
+      document.getElementById('notifyEmployer').checked = settings.notifyEmployer !== false;
+    } catch (error) {
+      if (clockReminderStatus) clockReminderStatus.textContent = error.message || 'Settings could not be loaded.';
+    }
+  }
+  clockReminderForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const button = clockReminderForm.querySelector('button[type="submit"]');
+    if (button) button.disabled = true;
+    if (clockReminderStatus) clockReminderStatus.textContent = 'Saving…';
+    try {
+      await api('/clock-reminders/settings', {
+        method: 'PUT',
+        body: JSON.stringify({
+          preShiftEnabled: document.getElementById('preShiftEnabled').checked,
+          preShiftMinutes: Number(document.getElementById('preShiftMinutes').value),
+          lateAlertEnabled: document.getElementById('lateAlertEnabled').checked,
+          lateGraceMinutes: Number(document.getElementById('lateGraceMinutes').value),
+          notifyEmployer: document.getElementById('notifyEmployer').checked
+        })
+      });
+      if (clockReminderStatus) clockReminderStatus.textContent = 'Settings saved.';
+      notify('Shift reminder settings saved.');
+    } catch (error) {
+      if (clockReminderStatus) clockReminderStatus.textContent = error.message || 'Settings could not be saved.';
+    } finally {
+      if (button) button.disabled = false;
+    }
+  });
+  loadClockReminderSettings();
+
   function todayInputValue() {
     return new Date().toISOString().slice(0, 10);
   }
