@@ -330,6 +330,90 @@
   });
 
   document.querySelectorAll('[data-notify]').forEach((button) => button.addEventListener('click', () => notify(button.dataset.notify)));
+  const fallbackWorkflowSpec = {
+    version: '2026-10-03',
+    owner: 'Elite Bridge Staffing',
+    defaultSecurity: {
+      authentication: 'Bearer JWT or scoped MCP token',
+      authorization: 'Employer admin or owner role required for write actions',
+      auditRequired: true,
+      humanApprovalRequiredFor: ['sending client-facing contract emails', 'publishing shifts', 'marking payroll runs paid', 'changing caregiver pay rates'],
+      privacyRules: [
+        'Caregivers never receive client billing rates.',
+        'Client billing rate and caregiver pay rate remain separate fields.',
+        'MCP tools must only expose allowlisted actions and redact tokens from logs.'
+      ]
+    },
+    workflows: [
+      {
+        id: 'client_schedule_intake',
+        name: 'Client schedule intake',
+        description: 'Create a client record, care schedule, draft shifts, and staff allocation options from one intake.',
+        triggerSources: ['ChatGPT', 'internal_dashboard', 'mcp_server'],
+        requiredRole: 'employer_admin',
+        inputs: { clientName: 'string', careRecipient: 'string optional', address: 'string', serviceDays: 'array of weekday strings', timeWindows: 'array of { startTime, endTime }', clientBillingRate: 'number', notes: 'string optional' },
+        actions: ['create_or_update_client', 'create_schedule_template', 'draft_shift_series', 'prepare_staff_allocation_options'],
+        auditEvents: ['client.created', 'schedule.created', 'shift_series.drafted'],
+        mcpToolCandidate: 'elitebridge_create_client_schedule'
+      },
+      {
+        id: 'invite_caregiver_shift',
+        name: 'Invite caregiver to shift',
+        description: 'Invite one caregiver to a specific shift with a custom pay rate visible only to that caregiver.',
+        triggerSources: ['ChatGPT', 'internal_dashboard', 'mcp_server'],
+        requiredRole: 'employer_admin',
+        inputs: { shiftId: 'string', caregiverId: 'string', caregiverPayRate: 'number', message: 'string optional' },
+        actions: ['validate_shift_open', 'store_private_caregiver_offer', 'send_caregiver_invitation', 'log_rate_visibility'],
+        auditEvents: ['shift.offer.created', 'caregiver.invited', 'private_rate.logged'],
+        mcpToolCandidate: 'elitebridge_invite_caregiver_to_shift'
+      },
+      {
+        id: 'shift_coverage_guard',
+        name: 'Shift coverage guard',
+        description: 'Check upcoming shifts and alert the owner when coverage is missing before the start time.',
+        triggerSources: ['scheduled_job', 'ChatGPT', 'mcp_server'],
+        requiredRole: 'system_or_employer_admin',
+        inputs: { lookAheadHours: 'number default 24', minimumOpenSlots: 'number default 1', notifyChannels: 'array of email, sms, dashboard' },
+        actions: ['find_underfilled_shifts', 'rank_by_start_time', 'notify_owner', 'suggest_available_caregivers'],
+        auditEvents: ['coverage_guard.checked', 'coverage_guard.alerted'],
+        mcpToolCandidate: 'elitebridge_check_shift_coverage'
+      },
+      {
+        id: 'timesheet_reminder',
+        name: 'Timesheet reminder',
+        description: 'Remind caregivers to submit or correct timesheets after completed shifts.',
+        triggerSources: ['scheduled_job', 'internal_dashboard', 'mcp_server'],
+        requiredRole: 'employer_admin',
+        inputs: { afterShiftHours: 'number default 4', caregiverIds: 'array optional', messageTemplate: 'string optional' },
+        actions: ['find_missing_timesheets', 'send_caregiver_reminders', 'record_reminder_attempts'],
+        auditEvents: ['timesheet.reminder.sent'],
+        mcpToolCandidate: 'elitebridge_send_timesheet_reminders'
+      },
+      {
+        id: 'payroll_exception_check',
+        name: 'Payroll exception check',
+        description: 'Review approved timesheets before a 1099 payout run and flag issues that need human review.',
+        triggerSources: ['internal_dashboard', 'ChatGPT', 'mcp_server'],
+        requiredRole: 'employer_owner',
+        inputs: { periodStart: 'date', periodEnd: 'date', includeW9Check: 'boolean default true' },
+        actions: ['find_approved_unpaid_timesheets', 'detect_duplicate_hours', 'detect_missing_w9', 'detect_rate_changes', 'prepare_exception_report'],
+        auditEvents: ['payroll.exception_check.created'],
+        mcpToolCandidate: 'elitebridge_prepare_payroll_exception_report'
+      },
+      {
+        id: 'contract_generate_send',
+        name: 'Generate and send client contract',
+        description: 'Generate the Elite Bridge contract PDF from client inputs and prepare an email for approval before sending.',
+        triggerSources: ['internal_dashboard', 'ChatGPT', 'mcp_server'],
+        requiredRole: 'employer_admin',
+        inputs: { clientId: 'string', clientName: 'string', careRecipient: 'string optional', serviceDays: 'array', hourlyRates: 'object', clientEmail: 'string' },
+        actions: ['render_contract_pdf', 'prepare_email_draft', 'require_human_approval', 'send_contract_email'],
+        auditEvents: ['contract.pdf.generated', 'contract.email.approved', 'contract.email.sent'],
+        mcpToolCandidate: 'elitebridge_generate_client_contract'
+      }
+    ]
+  };
+
   let workflowSpecPromise;
   async function getWorkflowSpec() {
     if (!workflowSpecPromise) {
@@ -337,7 +421,8 @@
         .then((response) => {
           if (!response.ok) throw new Error('Workflow library could not be loaded.');
           return response.json();
-        });
+        })
+        .catch(() => fallbackWorkflowSpec);
     }
     return workflowSpecPromise;
   }
@@ -345,6 +430,16 @@
   async function copyWorkflowPayload(workflowId) {
     try {
       const spec = await getWorkflowSpec();
+      if (workflowId === 'all') {
+        const textPayload = JSON.stringify(spec, null, 2);
+        try {
+          await navigator.clipboard.writeText(textPayload);
+          notify('Copied all prepared workflow payloads.');
+        } catch (_) {
+          window.prompt('Copy these workflow payloads:', textPayload);
+        }
+        return;
+      }
       const workflow = spec.workflows?.find((item) => item.id === workflowId);
       if (!workflow) throw new Error('Workflow was not found.');
       const payload = {
