@@ -72,13 +72,13 @@ async function sendNotice(input: {
 }) {
   const claim = (await db.execute(sql`INSERT INTO clock_reminder_deliveries
     (shift_id, caregiver_id, event_type, recipient_user_id, status)
-    VALUES (\${input.shiftId}, \${input.caregiverId}, \${input.eventType}, \${input.recipientUserId}, 'claimed')
+    VALUES (${input.shiftId}, ${input.caregiverId}, ${input.eventType}, ${input.recipientUserId}, 'claimed')
     ON CONFLICT (shift_id, caregiver_id, event_type, recipient_user_id) DO NOTHING
     RETURNING id`) as any).rows[0];
   if (!claim) return false;
 
   await db.execute(sql`INSERT INTO notifications (user_id, type, title, message, related_id)
-    VALUES (\${input.recipientUserId}, \${input.eventType}, \${input.title}, \${input.message}, \${input.shiftId})`);
+    VALUES (${input.recipientUserId}, ${input.eventType}, ${input.title}, ${input.message}, ${input.shiftId})`);
 
   const appUrl = config.WEB_APP_URL.replace(/\/$/, "");
   const shiftUrl = appUrl + (input.recipientName === "caregiver" ? "/caregiver-dashboard#clock" : "/employer-dashboard#activity");
@@ -95,7 +95,7 @@ async function sendNotice(input: {
     try {
       await ensureSms();
       const preference = (await db.execute(sql`SELECT phone FROM sms_preferences
-        WHERE user_id = \${input.recipientUserId} AND verified = true AND opted_in = true`) as any).rows[0];
+        WHERE user_id = ${input.recipientUserId} AND verified = true AND opted_in = true`) as any).rows[0];
       if (preference?.phone) {
         try {
           await sendSms(preference.phone, "Elite Bridge: " + input.message + " Open " + shiftUrl + ". Reply STOP to opt out.");
@@ -109,7 +109,7 @@ async function sendNotice(input: {
   }
 
   await db.execute(sql`UPDATE clock_reminder_deliveries
-    SET status = 'sent', updated_at = CURRENT_TIMESTAMP WHERE id = \${claim.id}`);
+    SET status = 'sent', updated_at = CURRENT_TIMESTAMP WHERE id = ${claim.id}`);
   return true;
 }
 
