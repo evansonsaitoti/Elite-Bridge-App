@@ -121,6 +121,14 @@ export type TeamMember = {
   last_assigned_at?: string;
 };
 
+export type CaregiverInviteResponse = {
+  invitation: { id: number; status: string; expiresAt: string };
+  inviteUrl: string;
+  emailSent: boolean;
+  smsSent: boolean;
+  appLinks: { caregiver: string; employer?: string };
+};
+
 export type ShiftActivity = {
   id: number;
   shift_id: number;
@@ -318,6 +326,13 @@ export async function getEmployerApplications(): Promise<Application[]> {
 export async function getEmployerTeam(): Promise<TeamMember[]> {
   const result = await request<{ team: TeamMember[] }>("/api/bookings/employer/team");
   return result.team;
+}
+
+export async function inviteCaregiver(input: { firstName: string; lastName?: string; email?: string; phone?: string }): Promise<CaregiverInviteResponse> {
+  return request<CaregiverInviteResponse>("/api/employers/invitations", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
 }
 
 export async function getEmployerActivities(): Promise<ShiftActivity[]> {
