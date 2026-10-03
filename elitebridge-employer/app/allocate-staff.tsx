@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -14,6 +14,7 @@ export default function AllocateStaffScreen() {
   const [team, setTeam] = useState<TeamMember[]>([]);
   const [selectedShiftId, setSelectedShiftId] = useState<number | null>(params.shiftId ? Number(params.shiftId) : null);
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [payRates, setPayRates] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -25,6 +26,13 @@ export default function AllocateStaffScreen() {
       const openShifts = shiftRows.filter((shift) => ["open", "assigned", "in_progress"].includes(shift.status) && shift.remainingPositions > 0);
       setShifts(openShifts);
       setTeam(teamRows);
+      setPayRates((current) => {
+        const next = { ...current };
+        for (const member of teamRows) {
+          if (!next[member.caregiver_id]) next[member.caregiver_id] = String(Number(member.hourly_rate || 25) || 25);
+        }
+        return next;
+      });
       if (!selectedShiftId && openShifts[0]) setSelectedShiftId(openShifts[0].id);
     } catch (error) {
       Alert.alert("Unable to load allocation options", error instanceof Error ? error.message : "Please try again.");
@@ -37,12 +45,14 @@ export default function AllocateStaffScreen() {
 
   const assign = async (member: TeamMember) => {
     if (!selectedShift) return Alert.alert("Choose a shift", "Select an open shift first.");
-    Alert.alert("Assign caregiver?", `Assign ${member.first_name} ${member.last_name} to ${selectedShift.careRecipientName || selectedShift.serviceType}?`, [
+    const caregiverPayRate = Number(payRates[member.caregiver_id]);
+    if (!Number.isFinite(caregiverPayRate) || caregiverPayRate <= 0) return Alert.alert("Check caregiver pay", "Enter the hourly amount this caregiver should be paid for this shift.");
+    Alert.alert("Assign caregiver?", `Assign ${member.first_name} ${member.last_name} to ${selectedShift.careRecipientName || selectedShift.serviceType} at $${caregiverPayRate.toFixed(2)}/hr? The client bill rate stays private.`, [
       { text: "Cancel", style: "cancel" },
       { text: "Assign", onPress: async () => {
         setBusyId(member.caregiver_id);
         try {
-          await assignCaregiverToShift(selectedShift.id, member.caregiver_id);
+          await assignCaregiverToShift(selectedShift.id, member.caregiver_id, caregiverPayRate);
           Alert.alert("Staff assigned", `${member.first_name} was assigned and will be notified.`, [{ text: "OK", onPress: () => void load(true) }]);
         } catch (error) {
           Alert.alert("Could not assign staff", error instanceof Error ? error.message : "Please try again.");
@@ -64,7 +74,7 @@ export default function AllocateStaffScreen() {
           return <TouchableOpacity key={shift.id} onPress={() => setSelectedShiftId(shift.id)} style={[styles.shiftCard, active && styles.shiftActive]}>
             <Text style={[styles.shiftTitle, active && styles.activeText]}>{shift.careRecipientName || shift.serviceType}</Text>
             <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{new Date(shift.startTime).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} - {new Date(shift.endTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</Text>
-            <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{shift.remainingPositions} open position{shift.remainingPositions === 1 ? "" : "s"} · ${Number(shift.hourlyRate).toFixed(2)}/hr</Text>
+            <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{shift.remainingPositions} open position{shift.remainingPositions === 1 ? "" : "s"} · client bill ${Number(shift.clientBillRate || shift.hourlyRate).toFixed(2)}/hr</Text>
           </TouchableOpacity>;
         })}
 
@@ -74,7 +84,7 @@ export default function AllocateStaffScreen() {
           const initials = `${member.first_name?.[0] || ""}${member.last_name?.[0] || ""}`.toUpperCase();
           return <View key={member.caregiver_id} style={styles.memberCard}>
             <View style={styles.avatar}><Text style={styles.avatarText}>{initials || "CG"}</Text></View>
-            <View style={styles.memberCopy}><Text style={styles.memberName}>{member.first_name} {member.last_name}</Text><Text style={styles.memberMeta}>{member.upcoming_shifts || 0} upcoming · {Number(member.total_hours || 0).toFixed(1)} recorded hrs</Text></View>
+            <View style={styles.memberCopy}><Text style={styles.memberName}>{member.first_name} {member.last_name}</Text><Text style={styles.memberMeta}>{member.upcoming_shifts || 0} upcoming · {Number(member.total_hours || 0).toFixed(1)} recorded hrs</Text><View style={styles.payRow}><Text style={styles.payLabel}>Caregiver pay</Text><TextInput keyboardType="decimal-pad" value={payRates[member.caregiver_id] || ""} onChangeText={(value) => setPayRates((current) => ({ ...current, [member.caregiver_id]: value }))} placeholder="25" style={styles.payInput} /></View></View>
             <TouchableOpacity disabled={!selectedShift || busyId === member.caregiver_id} onPress={() => void assign(member)} style={[styles.assignButton, (!selectedShift || busyId === member.caregiver_id) && styles.disabled]}>{busyId === member.caregiver_id ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.assignText}>Assign</Text>}</TouchableOpacity>
           </View>;
         })}
@@ -87,6 +97,6 @@ const styles = StyleSheet.create({
   safe: { backgroundColor: colors.background, flex: 1 }, content: { padding: 20, paddingBottom: 44 }, loader: { marginTop: 40 },
   notice: { alignItems: "center", backgroundColor: colors.greenDark, borderRadius: 18, flexDirection: "row", padding: 16 }, noticeCopy: { flex: 1, marginLeft: 12 }, noticeTitle: { color: "#FFFFFF", fontSize: 17, fontWeight: "900" }, noticeBody: { color: "#CEE2D8", fontSize: 11, lineHeight: 17, marginTop: 4 },
   section: { color: colors.ink, fontSize: 19, fontWeight: "900", marginTop: 24 }, shiftCard: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, marginTop: 10, padding: 14 }, shiftActive: { backgroundColor: colors.green, borderColor: colors.green }, shiftTitle: { color: colors.ink, fontSize: 15, fontWeight: "900" }, shiftMeta: { color: colors.muted, fontSize: 12, marginTop: 5 }, activeText: { color: "#FFFFFF" }, activeSubtext: { color: "#E3EFEA" },
-  memberCard: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, flexDirection: "row", marginTop: 10, padding: 12 }, avatar: { alignItems: "center", backgroundColor: colors.greenSoft, borderRadius: 22, height: 44, justifyContent: "center", marginRight: 11, width: 44 }, avatarText: { color: colors.green, fontWeight: "900" }, memberCopy: { flex: 1 }, memberName: { color: colors.ink, fontSize: 14, fontWeight: "900" }, memberMeta: { color: colors.muted, fontSize: 11, marginTop: 4 }, assignButton: { alignItems: "center", backgroundColor: colors.green, borderRadius: 11, minWidth: 78, paddingHorizontal: 14, paddingVertical: 10 }, assignText: { color: "#FFFFFF", fontWeight: "900" }, disabled: { opacity: 0.55 },
+  memberCard: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, flexDirection: "row", marginTop: 10, padding: 12 }, avatar: { alignItems: "center", backgroundColor: colors.greenSoft, borderRadius: 22, height: 44, justifyContent: "center", marginRight: 11, width: 44 }, avatarText: { color: colors.green, fontWeight: "900" }, memberCopy: { flex: 1 }, memberName: { color: colors.ink, fontSize: 14, fontWeight: "900" }, memberMeta: { color: colors.muted, fontSize: 11, marginTop: 4 }, payRow: { alignItems: "center", flexDirection: "row", gap: 8, marginTop: 8 }, payLabel: { color: colors.green, fontSize: 10, fontWeight: "900" }, payInput: { backgroundColor: "#FFFFFF", borderColor: colors.border, borderRadius: 9, borderWidth: 1, color: colors.ink, fontSize: 13, fontWeight: "900", minWidth: 68, paddingHorizontal: 10, paddingVertical: 7 }, assignButton: { alignItems: "center", backgroundColor: colors.green, borderRadius: 11, minWidth: 78, paddingHorizontal: 14, paddingVertical: 10 }, assignText: { color: "#FFFFFF", fontWeight: "900" }, disabled: { opacity: 0.55 },
   empty: { alignItems: "center", backgroundColor: colors.card, borderColor: colors.border, borderRadius: 18, borderWidth: 1, marginTop: 10, padding: 22 }, emptyTitle: { color: colors.ink, fontSize: 16, fontWeight: "900" }, emptyBody: { color: colors.muted, fontSize: 12, lineHeight: 19, marginTop: 7, textAlign: "center" }, emptyButton: { borderColor: colors.green, borderRadius: 11, borderWidth: 1, marginTop: 14, paddingHorizontal: 16, paddingVertical: 10 }, emptyButtonText: { color: colors.green, fontWeight: "900" },
 });
