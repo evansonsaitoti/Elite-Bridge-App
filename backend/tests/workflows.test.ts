@@ -103,20 +103,6 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     await request(`/employers/invitations/${invitation.token}`, undefined, "GET", undefined, 404);
     replacement = await signup("caregiver", "replacement@example.com");
   });
-  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
-    const defaults = (await request("/clock-reminders/settings", employer)).settings;
-    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
-    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
-    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
-    await request("/clock-reminders/settings", employer, "PUT", settings);
-    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
-    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
-    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
-    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
-    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
-    vi.stubEnv("CRON_SECRET", "");
-    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
-  });
   it("updates caregiver profile and matching preferences", async () => {
     await request(`/caregivers/${caregiver.user.id}`, caregiver, "PUT", { hourlyRate: 30, specialties: ["personal_care"], certifications: ["caregiver"], bio: "Test profile" });
     await request("/caregivers/me/matching", caregiver, "PUT", { availability: ["weekdays"], preferredServices: ["personal_care"], maxDistanceMiles: 25, instantOffers: true });
@@ -155,6 +141,34 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/bookings/caregiver/my-applications", caregiver)).applications[0].shift.status).toBe("assigned");
     expect((await request("/bookings/employer/team", employer)).team[0].assigned_shifts).toBe(1);
     expect((await database.query("SELECT * FROM bookings")).rows).toHaveLength(1);
+  });
+  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
+    const defaults = (await request("/clock-reminders/settings", employer)).settings;
+    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
+    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
+    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
+    await request("/clock-reminders/settings", employer, "PUT", settings);
+    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
+    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
+    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
+    const dueAt = new Date(Date.now() + 28 * 60_000);
+    const endsAt = new Date(dueAt.getTime() + 4 * 60 * 60_000);
+    await database.query("UPDATE shift_posts SET start_time=$1, end_time=$2, time_zone='UTC' WHERE id=$3", [
+      dueAt.toISOString().replace("Z", ""), endsAt.toISOString().replace("Z", ""), reviewShift.id,
+    ]);
+    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
+    const run = async () => {
+      const response = await fetch(`${base}/api/clock-reminders/run`, { headers: { Authorization: "Bearer clock-reminder-test-secret" } });
+      expect(response.status).toBe(200);
+      return response.json();
+    };
+    expect(await run()).toMatchObject({ ok: true, preShiftSent: 1, lateSent: 0 });
+    expect(await run()).toMatchObject({ ok: true, preShiftSent: 0, lateSent: 0 });
+    const notices = await database.query("SELECT id FROM notifications WHERE user_id=$1 AND type='pre_shift' AND related_id=$2", [caregiver.user.id, reviewShift.id]);
+    expect(notices.rows).toHaveLength(1);
+    vi.stubEnv("CRON_SECRET", "");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
   });
   it("enforces clock ownership, duplicate prevention, and calculates a timesheet", async () => {
     await request(`/bookings/${reviewShift.id}/clock-in`, replacement, "POST", {}, 403);
