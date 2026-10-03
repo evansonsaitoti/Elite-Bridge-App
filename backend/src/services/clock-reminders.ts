@@ -24,7 +24,7 @@ export async function ensureClockReminderTables() {
   await db.execute(sql`CREATE TABLE IF NOT EXISTS clock_reminder_settings (
     employer_id INTEGER PRIMARY KEY REFERENCES employers(id) ON DELETE CASCADE,
     pre_shift_enabled BOOLEAN NOT NULL DEFAULT false,
-    pre_shift_minutes INTEGER NOT NULL DEFAULT 15 CHECK (pre_shift_minutes IN (15,30,45,60)),
+    pre_shift_minutes INTEGER NOT NULL DEFAULT 15 CHECK (pre_shift_minutes IN (15,30,45,60,120,240,480,720,1440)),
     late_alert_enabled BOOLEAN NOT NULL DEFAULT false,
     late_grace_minutes INTEGER NOT NULL DEFAULT 5 CHECK (late_grace_minutes IN (5,10,15,30)),
     notify_employer BOOLEAN NOT NULL DEFAULT true,
