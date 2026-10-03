@@ -11,7 +11,7 @@ import { ensureClockReminderTables, defaultClockReminderSettings, processClockRe
 const router = Router();
 const settingsSchema = z.object({
   preShiftEnabled: z.boolean(),
-  preShiftMinutes: z.union([z.literal(15), z.literal(30), z.literal(45), z.literal(60)]),
+  preShiftMinutes: z.union([z.literal(15), z.literal(30), z.literal(45), z.literal(60), z.literal(120), z.literal(240), z.literal(480), z.literal(720), z.literal(1440)]),
   lateAlertEnabled: z.boolean(),
   lateGraceMinutes: z.union([z.literal(5), z.literal(10), z.literal(15), z.literal(30)]),
   notifyEmployer: z.boolean(),
