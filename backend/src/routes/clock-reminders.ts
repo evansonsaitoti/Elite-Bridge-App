@@ -46,9 +46,9 @@ router.get("/settings", async (req: AuthRequest, res, next) => {
     await ensureCoreTables();
     await ensureClockReminderTables();
     if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
-    const employer = (await db.execute(sql`SELECT id FROM employers WHERE user_id = \${req.user.id} LIMIT 1`) as any).rows[0];
+    const employer = (await db.execute(sql`SELECT id FROM employers WHERE user_id = ${req.user.id} LIMIT 1`) as any).rows[0];
     if (!employer) throw new AppError(404, "Employer workspace not found");
-    const row = (await db.execute(sql`SELECT * FROM clock_reminder_settings WHERE employer_id = \${employer.id}`) as any).rows[0];
+    const row = (await db.execute(sql`SELECT * FROM clock_reminder_settings WHERE employer_id = ${employer.id}`) as any).rows[0];
     res.json({ settings: row ? {
       preShiftEnabled: row.pre_shift_enabled,
       preShiftMinutes: Number(row.pre_shift_minutes),
@@ -64,12 +64,12 @@ router.put("/settings", async (req: AuthRequest, res, next) => {
     await ensureCoreTables();
     await ensureClockReminderTables();
     if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
-    const employer = (await db.execute(sql`SELECT id FROM employers WHERE user_id = \${req.user.id} LIMIT 1`) as any).rows[0];
+    const employer = (await db.execute(sql`SELECT id FROM employers WHERE user_id = ${req.user.id} LIMIT 1`) as any).rows[0];
     if (!employer) throw new AppError(404, "Employer workspace not found");
     const input = settingsSchema.parse(req.body);
     await db.execute(sql`INSERT INTO clock_reminder_settings
       (employer_id, pre_shift_enabled, pre_shift_minutes, late_alert_enabled, late_grace_minutes, notify_employer, updated_at)
-      VALUES (\${employer.id}, \${input.preShiftEnabled}, \${input.preShiftMinutes}, \${input.lateAlertEnabled}, \${input.lateGraceMinutes}, \${input.notifyEmployer}, CURRENT_TIMESTAMP)
+      VALUES (${employer.id}, ${input.preShiftEnabled}, ${input.preShiftMinutes}, ${input.lateAlertEnabled}, ${input.lateGraceMinutes}, ${input.notifyEmployer}, CURRENT_TIMESTAMP)
       ON CONFLICT (employer_id) DO UPDATE SET
         pre_shift_enabled=EXCLUDED.pre_shift_enabled,
         pre_shift_minutes=EXCLUDED.pre_shift_minutes,
