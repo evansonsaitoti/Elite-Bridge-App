@@ -330,6 +330,44 @@
   });
 
   document.querySelectorAll('[data-notify]').forEach((button) => button.addEventListener('click', () => notify(button.dataset.notify)));
+  let workflowSpecPromise;
+  async function getWorkflowSpec() {
+    if (!workflowSpecPromise) {
+      workflowSpecPromise = fetch('/docs/elite-bridge-automation-workflows.json')
+        .then((response) => {
+          if (!response.ok) throw new Error('Workflow library could not be loaded.');
+          return response.json();
+        });
+    }
+    return workflowSpecPromise;
+  }
+
+  async function copyWorkflowPayload(workflowId) {
+    try {
+      const spec = await getWorkflowSpec();
+      const workflow = spec.workflows?.find((item) => item.id === workflowId);
+      if (!workflow) throw new Error('Workflow was not found.');
+      const payload = {
+        eliteBridgeWorkflow: workflow,
+        security: spec.defaultSecurity,
+        preparedFor: ['ChatGPT', 'internal_dashboard', 'mcp_server'],
+        nextIntegrationStep: 'Map mcpToolCandidate to a backend endpoint with role checks, input validation, and audit logging.'
+      };
+      const textPayload = JSON.stringify(payload, null, 2);
+      try {
+        await navigator.clipboard.writeText(textPayload);
+        notify(`Copied ${workflow.name} workflow payload.`);
+      } catch (_) {
+        window.prompt('Copy this workflow payload:', textPayload);
+      }
+    } catch (error) {
+      notify(error.message || 'Could not copy workflow payload.');
+    }
+  }
+
+  document.querySelectorAll('[data-copy-workflow]').forEach((button) => {
+    button.addEventListener('click', () => copyWorkflowPayload(button.dataset.copyWorkflow));
+  });
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
   document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', () => {
     if (!inviteDialog) return;
