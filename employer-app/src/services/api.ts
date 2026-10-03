@@ -1,7 +1,6 @@
 import axios, { AxiosInstance } from "axios";
 
 const API_BASE_URL = "http://34.75.156.104:3000/api";
-const USE_LOCAL_AUTH = false;
 
 type RegisterPayload = {
   email: string;
