@@ -82,20 +82,6 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/employers/me", login)).profile.companyName).toBe("Persisted test company");
     await request("/auth/login", undefined, "POST", { email: "employer@example.com", password: "incorrect" }, 401);
   });
-  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
-    const defaults = (await request("/clock-reminders/settings", employer)).settings;
-    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
-    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
-    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
-    await request("/clock-reminders/settings", employer, "PUT", settings);
-    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
-    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
-    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
-    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
-    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
-    vi.stubEnv("CRON_SECRET", "");
-    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
-  });
   it("creates an email invitation with a web signup link", async () => {
     invitation = await request("/employers/invitations", employer, "POST", { firstName: "Test", email: "caregiver@example.com" }, 201);
     expect(invitation.emailSent).toBe(true);
@@ -116,6 +102,20 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/employers/invitations", employer)).invitations[0].status).toBe("accepted");
     await request(`/employers/invitations/${invitation.token}`, undefined, "GET", undefined, 404);
     replacement = await signup("caregiver", "replacement@example.com");
+  });
+  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
+    const defaults = (await request("/clock-reminders/settings", employer)).settings;
+    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
+    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
+    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
+    await request("/clock-reminders/settings", employer, "PUT", settings);
+    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
+    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
+    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
+    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
+    vi.stubEnv("CRON_SECRET", "");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
   });
   it("updates caregiver profile and matching preferences", async () => {
     await request(`/caregivers/${caregiver.user.id}`, caregiver, "PUT", { hourlyRate: 30, specialties: ["personal_care"], certifications: ["caregiver"], bio: "Test profile" });
@@ -388,7 +388,7 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await (await exportFor(otherEmployer)).text()).trim().split("\r\n")).toHaveLength(1);
     await request("/payroll/export?from=2026-02-31&to=2026-03-01",employer,"GET",undefined,400);
     await request("/payroll/export?from=2026-01-01&to=2026-12-01",employer,"GET",undefined,400);
-    expect((await request("/payroll/integrations",employer)).integrations.every((p:any)=>p.status==="requires_provider_setup")).toBe(true);
+    expect((await request("/payroll/integrations",employer)).integrations.map((p:any)=>p.status)).toEqual(["available","available","available","available","optional"]);
   });
   it("keeps SMS off without configuration and rejects unsigned provider callbacks", async () => {
     expect((await request("/sms/preferences",caregiver)).configured).toBe(false);
