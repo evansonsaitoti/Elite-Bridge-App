@@ -56,14 +56,26 @@
     toastTimer = setTimeout(() => { toast.hidden = true; }, 3600);
   }
 
+  function setMoreExpanded(expanded) {
+    if (!mobileMoreTab) return;
+    mobileMoreTab.setAttribute('aria-expanded', String(expanded));
+    mobileMoreTab.setAttribute('aria-label', expanded ? 'Close navigation menu' : 'Open more navigation');
+    const label = mobileMoreTab.querySelector('.mobile-more-label');
+    if (label) label.textContent = expanded ? 'Close menu' : 'More';
+  }
+
   function closeMobileNav() {
     document.body.classList.remove('nav-open', 'mobile-more-open');
-    mobileMoreTab?.setAttribute('aria-expanded', 'false');
+    setMoreExpanded(false);
+    menuToggle?.setAttribute('aria-expanded', 'false');
   }
-  menuToggle?.addEventListener('click', () => document.body.classList.toggle('nav-open'));
+  menuToggle?.addEventListener('click', () => {
+    const expanded = document.body.classList.toggle('nav-open');
+    menuToggle.setAttribute('aria-expanded', String(expanded));
+  });
   mobileMoreTab?.addEventListener('click', () => {
     const expanded = document.body.classList.toggle('mobile-more-open');
-    mobileMoreTab.setAttribute('aria-expanded', String(expanded));
+    setMoreExpanded(expanded);
   });
   mobileOverlay?.addEventListener('click', closeMobileNav);
   accountButton?.addEventListener('click', () => {
@@ -309,7 +321,12 @@
   function activateView(viewName) {
     const view = document.querySelector(`[data-view-panel="${viewName}"]`) || document.querySelector('[data-view-panel="overview"]');
     document.querySelectorAll('[data-view-panel]').forEach((panel) => { panel.hidden = panel !== view; });
-    document.querySelectorAll('[data-view]').forEach((link) => link.classList.toggle('active', link.dataset.view === view.dataset.viewPanel));
+    document.querySelectorAll('[data-view]').forEach((link) => {
+      const isActive = link.dataset.view === view.dataset.viewPanel;
+      link.classList.toggle('active', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    });
     closeMobileNav();
     window.scrollTo({ top: 0, behavior: 'smooth' });
     history.replaceState(null, '', viewName === 'overview' ? window.location.pathname : `#${viewName}`);
