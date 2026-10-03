@@ -482,10 +482,18 @@
     catch (_) { window.prompt('Copy this caregiver invitation link:', link); }
   });
 
+  document.getElementById('copyInviteApp')?.addEventListener('click', async () => {
+    const link = document.getElementById('inviteAppLink')?.value;
+    if (!link) return;
+    try { await navigator.clipboard.writeText(link); notify('Caregiver app link copied.'); }
+    catch (_) { window.prompt('Copy this caregiver app link:', link); }
+  });
+
   document.getElementById('shareInvite')?.addEventListener('click', async () => {
     const link = document.getElementById('inviteLink')?.value;
+    const appLink = document.getElementById('inviteAppLink')?.value || link;
     if (!link) return;
-    const shareData = { title: 'Elite Care invitation', text: 'Join our care team on Elite Care.', url: link };
+    const shareData = { title: 'Elite Bridge invitation', text: `Join our care team on Elite Bridge. Download the caregiver app: ${appLink}`, url: link };
     if (navigator.share) {
       try { await navigator.share(shareData); return; }
       catch (error) { if (error?.name === 'AbortError') return; }
@@ -507,11 +515,17 @@
       const data = await api('/employers/invitations', { method: 'POST', body: JSON.stringify(payload) });
       const result = document.getElementById('inviteResult');
       const link = document.getElementById('inviteLink');
+      const appLink = document.getElementById('inviteAppLink');
       const delivery = document.getElementById('inviteDelivery');
+      const caregiverAppUrl = data.appLinks?.caregiver || data.inviteUrl;
       link.value = data.inviteUrl;
-      delivery.textContent = data.emailSent ? 'The invitation email was sent. You can also copy or text the link.' : 'Copy, email, or text this secure link to the caregiver.';
-      document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Care invitation')}&body=${encodeURIComponent(`Join our care team on Elite Care: ${data.inviteUrl}`)}`;
-      document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(`Join our care team on Elite Care: ${data.inviteUrl}`)}`;
+      appLink.value = caregiverAppUrl;
+      const sentBy = [data.emailSent ? 'email' : '', data.smsSent ? 'text' : ''].filter(Boolean).join(' and ');
+      delivery.textContent = sentBy ? `The invitation was sent by ${sentBy}. You can also copy or share the links below.` : 'Copy, email, or text this secure invitation and app download link to the caregiver.';
+      const emailBody = `Join our care team on Elite Bridge.\n\nAccept your secure invitation: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
+      const textBody = `Join Elite Bridge. Accept: ${data.inviteUrl} Download app: ${caregiverAppUrl}`;
+      document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Bridge invitation')}&body=${encodeURIComponent(emailBody)}`;
+      document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(textBody)}`;
       result.hidden = false;
       notify('Caregiver invitation created.');
       await loadEmployer();
