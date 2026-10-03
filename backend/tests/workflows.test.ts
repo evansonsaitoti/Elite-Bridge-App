@@ -153,8 +153,15 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
     const dueAt = new Date(Date.now() + 28 * 60_000);
     const endsAt = new Date(dueAt.getTime() + 4 * 60 * 60_000);
+    const startValue = dueAt.toISOString().replace("Z", "");
+    const endValue = endsAt.toISOString().replace("Z", "");
     await database.query("UPDATE shift_posts SET start_time=$1, end_time=$2, time_zone='UTC' WHERE id=$3", [
-      dueAt.toISOString().replace("Z", ""), endsAt.toISOString().replace("Z", ""), reviewShift.id,
+      startValue, endValue, reviewShift.id,
+    ]);
+    const caregiverRow = (await database.query("SELECT id FROM caregivers WHERE user_id=$1", [caregiver.user.id])).rows[0];
+    const employerRow = (await database.query("SELECT id FROM employers WHERE user_id=$1", [employer.user.id])).rows[0];
+    await database.query("UPDATE bookings SET start_time=$1, end_time=$2 WHERE caregiver_id=$3 AND employer_id=$4", [
+      startValue, endValue, caregiverRow.id, employerRow.id,
     ]);
     vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
     await request("/clock-reminders/run", undefined, "GET", undefined, 401);
