@@ -70,6 +70,10 @@ a { color: inherit; }
 .nav-icon svg,
 .insight-icon svg,
 .automation-icon svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.menu-toggle svg, .round-action svg, .search-glyph svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2; }
+.mobile-more-tab .close-icon { display: none; }
+body.mobile-more-open .mobile-more-tab .more-icon { display: none; }
+body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .nav-icon--green, .nav-icon--gold, .nav-icon--blue, .nav-icon--rose, .nav-icon--orange, .nav-icon--purple, .nav-icon--teal { color: var(--forest-800); background: var(--mint-100); }
 .nav-count { min-width: 22px; margin-left: auto; padding: 3px 6px; border-radius: 999px; color: var(--forest-900); background: #fff; font-size: 10px; font-weight: 850; text-align: center; }
 .mobile-more-tab { display: none; }
