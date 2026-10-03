@@ -54,7 +54,7 @@ beforeAll(async () => {
   await ensureCoreTables();
   const app = express();
   app.use(express.json());
-  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms"]) {
+  for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms", "clock-reminders"]) {
     app.use(`/api/${route}`, (await import(`../src/routes/${route}.ts`)).default);
   }
   app.use((await import("../src/middleware/errorHandler")).errorHandler);
@@ -81,6 +81,20 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     const login = await request("/auth/login", undefined, "POST", { email: "employer@example.com", password });
     expect((await request("/employers/me", login)).profile.companyName).toBe("Persisted test company");
     await request("/auth/login", undefined, "POST", { email: "employer@example.com", password: "incorrect" }, 401);
+  });
+  it("configures optional clock reminders per employer and protects the cron endpoint", async () => {
+    const defaults = (await request("/clock-reminders/settings", employer)).settings;
+    expect(defaults).toEqual({ preShiftEnabled: false, preShiftMinutes: 15, lateAlertEnabled: false, lateGraceMinutes: 5, notifyEmployer: true });
+    await request("/clock-reminders/settings", caregiver, "GET", undefined, 403);
+    const settings = { preShiftEnabled: true, preShiftMinutes: 30, lateAlertEnabled: true, lateGraceMinutes: 10, notifyEmployer: false };
+    await request("/clock-reminders/settings", employer, "PUT", settings);
+    expect((await request("/clock-reminders/settings", employer)).settings).toEqual(settings);
+    expect((await request("/clock-reminders/settings", otherEmployer)).settings.preShiftEnabled).toBe(false);
+    await request("/clock-reminders/settings", employer, "PUT", { ...settings, preShiftMinutes: 20 }, 400);
+    vi.stubEnv("CRON_SECRET", "clock-reminder-test-secret");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 401);
+    vi.stubEnv("CRON_SECRET", "");
+    await request("/clock-reminders/run", undefined, "GET", undefined, 503);
   });
   it("creates an email invitation with a web signup link", async () => {
     invitation = await request("/employers/invitations", employer, "POST", { firstName: "Test", email: "caregiver@example.com" }, 201);
