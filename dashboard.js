@@ -989,6 +989,133 @@
     renderConversations(document.getElementById('conversationList'), conversations);
   }
 
+
+  function zonedDateParts(date, timeZone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone, year: 'numeric', month: '2-digit', day: '2-digit'
+    }).formatToParts(date);
+    return Object.fromEntries(parts.map(part => [part.type, part.value]));
+  }
+
+  function dateInZone(timeZone) {
+    const parts = zonedDateParts(new Date(), timeZone);
+    return `${parts.year}-${parts.month}-${parts.day}`;
+  }
+
+  function addCalendarDays(dateString, days) {
+    const date = new Date(`${dateString}T12:00:00Z`);
+    date.setUTCDate(date.getUTCDate() + days);
+    return date.toISOString().slice(0, 10);
+  }
+
+  function parseShiftDate(text, timeZone) {
+    const iso = text.match(/\b(20\d{2})-(\d{2})-(\d{2})\b/);
+    if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+    const numeric = text.match(/\b(\d{1,2})\/(\d{1,2})\/(\d{4})\b/);
+    if (numeric) return `${numeric[3]}-${numeric[1].padStart(2, '0')}-${numeric[2].padStart(2, '0')}`;
+
+    const today = dateInZone(timeZone);
+    if (/\btomorrow\b/i.test(text)) return addCalendarDays(today, 1);
+    if (/\btoday\b/i.test(text)) return today;
+
+    const weekdays = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+    const weekdayMatch = text.match(/\b(next\s+)?(sunday|monday|tuesday|wednesday|thursday|friday|saturday)\b/i);
+    if (!weekdayMatch) return '';
+    const currentDay = new Intl.DateTimeFormat('en-US', { timeZone, weekday: 'long' }).format(new Date()).toLowerCase();
+    const difference = (weekdays.indexOf(weekdayMatch[2].toLowerCase()) - weekdays.indexOf(currentDay) + 7) % 7;
+    return addCalendarDays(today, difference || 7);
+  }
+
+  function parseShiftTimeRange(text) {
+    const match = text.match(/\b(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\s*(?:-|to|until|through)\s*(\d{1,2})(?::([0-5]\d))?\s*(a\.?m\.?|p\.?m\.?)\b/i);
+    if (!match) return null;
+    const to24Hour = (hourText, minuteText, meridian) => {
+      let hour = Number(hourText);
+      if (hour < 1 || hour > 12) return '';
+      const period = meridian.toLowerCase().startsWith('p');
+      hour = hour % 12 + (period ? 12 : 0);
+      return `${String(hour).padStart(2, '0')}:${minuteText || '00'}`;
+    };
+    const start = to24Hour(match[1], match[2], match[3]);
+    const end = to24Hour(match[4], match[5], match[6]);
+    return start && end ? { start, end } : null;
+  }
+
+  function fillShiftFormFromDescription() {
+    const form = document.getElementById('shiftForm');
+    const input = document.getElementById('quickShiftDescription');
+    const feedback = document.getElementById('quickShiftFeedback');
+    const text = input?.value?.trim() || '';
+    if (!form || !text) {
+      if (feedback) feedback.textContent = 'Enter a short shift description first.';
+      return;
+    }
+
+    const zone = form.elements.namedItem('timeZone')?.value || 'America/New_York';
+    const values = {};
+    const clientMatch = text.match(/\b(?:for|client)\s+([a-z][a-z'’-]{0,39})/i);
+    if (clientMatch) {
+      values.careRecipientName = clientMatch[1].replace(/(^|[-'’])([a-z])/gi, (_match, prefix, letter) => prefix + letter.toUpperCase());
+      values.title = `Care shift for ${values.careRecipientName}`;
+    }
+    const date = parseShiftDate(text, zone);
+    if (date) values.startDate = date;
+    const range = parseShiftTimeRange(text);
+    if (range) {
+      values.startTime = range.start;
+      values.endTime = range.end;
+    }
+    const rateMatch = text.match(/\$\s*(\d+(?:\.\d{1,2})?)/);
+    if (rateMatch) values.hourlyRate = rateMatch[1];
+
+    const serviceSelect = form.elements.namedItem('serviceType');
+    const lower = text.toLowerCase();
+    const servicePatterns = [
+      [/personal care|pca/, 'Personal care'],
+      [/respite/, 'Respite care'],
+      [/meal prep|meal preparation/, 'Meal preparation'],
+      [/transport|ride/, 'Transportation'],
+      [/companionship|companion/, 'Companionship'],
+    ];
+    const service = servicePatterns.find(([pattern]) => pattern.test(lower));
+    if (service && serviceSelect) values.serviceType = service[1];
+
+    const caregiverSelect = form.elements.namedItem('caregiverType');
+    const caregiverMatch = lower.match(/\b(cna|hha|pca|companion|caregiver)\b/);
+    if (caregiverMatch && caregiverSelect) {
+      const caregiverOptions = Array.from(caregiverSelect.options);
+      const option = caregiverOptions.find(item => item.textContent.toLowerCase() === caregiverMatch[1]);
+      if (option) values.caregiverType = option.value;
+    }
+
+    Object.entries(values).forEach(([name, value]) => {
+      const field = form.elements.namedItem(name);
+      if (field) {
+        field.value = value;
+        field.dispatchEvent(new Event('input', { bubbles: true }));
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
+    const parsed = Object.keys(values).length;
+    const missing = [];
+    if (!values.careRecipientName) missing.push('client first name');
+    if (!values.startDate) missing.push('date');
+    if (!values.startTime || !values.endTime) missing.push('start and end times');
+    if (!values.hourlyRate) missing.push('hourly rate');
+    const remaining = ['address', 'city', 'state', 'zipCode', 'responsibilities']
+      .filter(name => !form.elements.namedItem(name)?.value?.trim());
+    const next = remaining.length
+      ? ` Complete the care address, city, state, ZIP, and care responsibilities below before publishing.`
+      : ' Review the shift details below, then publish when ready.';
+    if (feedback) feedback.textContent = parsed
+      ? `Filled ${Object.keys(values).length} shift detail${Object.keys(values).length === 1 ? '' : 's'}.${missing.length ? ` Still needed: ${missing.join(', ')}.` : ''}${next} Nothing is published by this button.`
+      : 'I couldn’t identify a client, date, time range, or rate. Try: “Care for Barry tomorrow, 9 AM to 1 PM, $30 per hour.”';
+    form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  document.getElementById('fillShiftFromDescription')?.addEventListener('click', fillShiftFormFromDescription);
+
   const shiftForm = document.getElementById('shiftForm');
   shiftForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
