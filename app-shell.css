@@ -1329,3 +1329,48 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
     font-size: 15pt;
   }
 }
+
+
+/* Employer-only quick shift entry */
+.quick-shift-helper {
+  margin-bottom: 20px;
+  padding: 18px;
+  border: 1px solid #ead7b8;
+  border-radius: 14px;
+  background: #fbf5e9;
+}
+.quick-shift-helper h2 {
+  margin: 0 0 6px;
+  color: var(--forest, #063e2c);
+  font-size: 1.1rem;
+}
+.quick-shift-helper > p {
+  margin: 0 0 12px;
+  color: var(--muted, #69766f);
+  font-size: .92rem;
+}
+.quick-shift-helper textarea {
+  width: 100%;
+  min-height: 82px;
+  resize: vertical;
+}
+.quick-shift-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.quick-shift-actions p {
+  margin: 0;
+  color: var(--muted, #69766f);
+  font-size: .86rem;
+}
+@media (max-width: 600px) {
+  .quick-shift-actions {
+    align-items: stretch;
+  }
+  .quick-shift-actions button {
+    width: 100%;
+  }
+}
