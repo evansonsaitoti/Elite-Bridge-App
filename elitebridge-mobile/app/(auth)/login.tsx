@@ -79,9 +79,7 @@ export default function LoginScreen() {
               {isLoading ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.loginButtonText}>Sign in to Caregiver</Text>}
             </TouchableOpacity>
 
-            <TouchableOpacity style={styles.signupButton} onPress={() => router.push("/(onboarding)/welcome")} disabled={isLoading}>
-              <Text style={styles.signupButtonText}>New caregiver? Create profile</Text>
-            </TouchableOpacity>
+            <Text style={styles.inviteHint}>New to Elite Care? Your employer must invite you before you can create an account.</Text>
           </View>
 
           <View style={styles.accessBox}>
@@ -124,7 +122,6 @@ const styles = StyleSheet.create({
   loginButton: { minHeight: 52, alignItems: "center", justifyContent: "center", borderRadius: 14, backgroundColor: "#0A4A35" },
   loginButtonDisabled: { opacity: 0.6 },
   loginButtonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "800" },
-  signupButton: { minHeight: 50, alignItems: "center", justifyContent: "center", borderRadius: 14, borderWidth: 1, borderColor: "#D0D5DD", marginTop: 10 },
-  signupButtonText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
+  inviteHint: { marginTop: 12, color: "#667085", fontSize: 12, lineHeight: 18, textAlign: "center" },
   securityHint: { marginTop: 20, color: "#667085", fontSize: 11, textAlign: "center" },
 });
