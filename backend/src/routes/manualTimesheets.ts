@@ -25,6 +25,11 @@ const entrySchema = z.object({
 const reviewSchema = z.object({
   status: z.enum(["approved", "correction_requested"]),
   note: z.string().trim().max(2000).default(""),
+  approvedByName: z.string().trim().min(1).max(255).optional(),
+  approvalDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+}).superRefine((data, ctx) => {
+  if (data.status === "approved" && !data.approvedByName) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["approvedByName"], message: "Enter the approver's name." });
+  if (data.status === "approved" && !data.approvalDate) ctx.addIssue({ code: z.ZodIssueCode.custom, path: ["approvalDate"], message: "Enter the approval date." });
 });
 
 async function ensureManualTimesheets() {
@@ -53,6 +58,8 @@ async function ensureManualTimesheets() {
       UNIQUE (employer_id, staff_name, shift_date)
     )
   `);
+  await db.execute(sql`ALTER TABLE manual_timesheet_entries ADD COLUMN IF NOT EXISTS approved_by_name VARCHAR(255)`);
+  await db.execute(sql`ALTER TABLE manual_timesheet_entries ADD COLUMN IF NOT EXISTS approval_date DATE`);
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS manual_timesheet_reviews (
       id SERIAL PRIMARY KEY,
@@ -88,7 +95,7 @@ router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
     const employer = await getEmployer(req);
     const result = await db.execute(sql`
       SELECT id, staff_name, shift_date, start_time, end_time, worked_minutes, hourly_rate,
-             total_amount, reason, entry_type, status, agency_note, approved_at, created_at
+             total_amount, reason, entry_type, status, agency_note, approved_by_name, approval_date, approved_at, created_at
       FROM manual_timesheet_entries
       WHERE employer_id = ${employer.id}
       ORDER BY shift_date DESC, end_time DESC, id DESC
@@ -147,7 +154,7 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
              ${workedMinutes}, ${hourlyRate}, ${totalAmount}, ${data.reason}, 'missed_clock_in',
              'pending_approval', ${req.user!.id})
           RETURNING id, staff_name, shift_date, start_time, end_time, worked_minutes, hourly_rate,
-                    total_amount, reason, entry_type, status, agency_note, approved_at, created_at
+                    total_amount, reason, entry_type, status, agency_note, approved_by_name, approval_date, approved_at, created_at
         `) as any).rows[0];
         created.push(row);
       }
@@ -172,6 +179,7 @@ router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: 
     const id = z.coerce.number().int().positive().parse(req.params.manualTimesheetId);
     const data = reviewSchema.parse(req.body);
     if (data.status === "correction_requested" && !data.note) throw new AppError(400, "Explain what needs clarification.");
+    if (data.status === "approved") asEmployerDate(data.approvalDate!);
 
     const entry = await db.transaction(async (tx) => {
       const current = (await tx.execute(sql`
@@ -185,11 +193,13 @@ router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: 
         UPDATE manual_timesheet_entries
         SET status = ${data.status}, agency_note = ${data.note || null},
             approved_by = CASE WHEN ${data.status} = 'approved' THEN ${req.user!.id} ELSE NULL END,
+            approved_by_name = CASE WHEN ${data.status} = 'approved' THEN ${data.approvedByName || null} ELSE NULL END,
+            approval_date = CASE WHEN ${data.status} = 'approved' THEN ${data.approvalDate || null}::date ELSE NULL END,
             approved_at = CASE WHEN ${data.status} = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ${id}
         RETURNING id, staff_name, shift_date, start_time, end_time, worked_minutes, hourly_rate,
-                  total_amount, reason, entry_type, status, agency_note, approved_at, created_at
+                  total_amount, reason, entry_type, status, agency_note, approved_by_name, approval_date, approved_at, created_at
       `) as any).rows[0];
       await tx.execute(sql`
         INSERT INTO manual_timesheet_reviews (manual_timesheet_id, actor_user_id, action, note)
@@ -202,3 +212,4 @@ router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: 
 });
 
 export default router;
+
