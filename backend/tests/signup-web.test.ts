@@ -15,29 +15,14 @@ function loadSignup() {
   return { w: dom.window, d: dom.window.document };
 }
 
-it("normalizes phone numbers and shows backend registration errors", async () => {
+it("shows the join-team gate and does not submit caregiver registration without an invite", async () => {
   const { w, d } = loadSignup();
-  const calls: Array<{ body: Record<string, unknown> }> = [];
-  w.fetch = vi.fn(async (_url: string, init: RequestInit = {}) => {
-    calls.push({ body: JSON.parse(String(init.body)) });
-    return {
-      ok: false,
-      status: 409,
-      json: async () => ({ error: "User with this email already exists" }),
-    };
-  }) as any;
+  const fetch = vi.fn();
+  w.fetch = fetch as any;
 
-  (d.getElementById("firstName") as HTMLInputElement).value = " Evanson ";
-  (d.getElementById("lastName") as HTMLInputElement).value = " Saitoti ";
-  (d.getElementById("email") as HTMLInputElement).value = " EVANSONSAITOTI@GMAIL.COM ";
-  (d.getElementById("phone") as HTMLInputElement).value = "9789679928";
-  (d.getElementById("password") as HTMLInputElement).value = "password123";
-  (d.getElementById("confirmPassword") as HTMLInputElement).value = "password123";
+  expect(d.getElementById("inviteRequired")?.classList.contains("active")).toBe(true);
+  expect((d.getElementById("signupForm") as HTMLFormElement).style.display).toBe("none");
+
   await (w as any).handleSignup(new w.Event("submit", { bubbles: true, cancelable: true }));
-
-  await vi.waitFor(() => expect(d.getElementById("errorMessage")?.textContent).toBe("User with this email already exists"));
-  expect(calls[0].body).toMatchObject({
-    email: "evansonsaitoti@gmail.com",
-    phone: "+19789679928",
-  });
+  expect(fetch).not.toHaveBeenCalled();
 });
