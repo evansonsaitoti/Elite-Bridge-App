@@ -86,11 +86,16 @@ export default function CaregiverWelcomeScreen() {
       </ImageBackground>
 
       <View style={styles.actionSheet}>
-        <Text style={styles.sheetTitle}>Care professionals start here</Text>
-        <Text style={styles.sheetBody}>Employers post from the separate Elite Bridge Employer app; qualified caregivers receive the matching opportunities here.</Text>
+        <Text style={styles.sheetTitle}>Join your team</Text>
+        <Text style={styles.sheetBody}>To use Elite Care, your employer must invite you first. They’ll send a secure link by email or text. Open that invitation to set up your caregiver account.</Text>
         <View style={styles.actionRow}>
-          <TouchableOpacity style={styles.secondary} onPress={() => router.push("/(onboarding)/welcome")}><Text style={styles.secondaryText}>Create profile</Text></TouchableOpacity>
-          <TouchableOpacity style={styles.primary} onPress={() => router.push("/(auth)/login")}><Text style={styles.primaryText}>Sign in</Text></TouchableOpacity>
+          <TouchableOpacity style={[styles.primary, styles.primaryFull]} onPress={() => router.push("/(auth)/login")}>
+            <Text style={styles.primaryText}>Have an account? Log in</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.inviteNote}>
+          <Text style={styles.inviteNoteTitle}>Stay tuned for an invitation</Text>
+          <Text style={styles.inviteNoteBody}>Ask your employer to add you to their team. We’ll send your invitation as soon as it’s ready.</Text>
         </View>
         <View style={styles.links}>
           <TouchableOpacity onPress={() => void Linking.openURL(PRIVACY_URL)}><Text style={styles.link}>Privacy</Text></TouchableOpacity>
@@ -109,6 +114,6 @@ const styles = StyleSheet.create({
   brandRow: { alignItems: "center", flexDirection: "row", gap: 11, marginTop: 8 }, mark: { alignItems: "center", backgroundColor: "rgba(255,255,255,0.94)", borderRadius: 15, height: 48, justifyContent: "center", width: 48 }, markLogo: { height: 34, width: 34 }, brand: { color: "#FFFFFF", fontSize: 16, fontWeight: "900", letterSpacing: 1.5 }, product: { color: "#F0CC82", fontSize: 10, fontWeight: "900", letterSpacing: 2.5, marginTop: 2 },
   heroCopy: { marginTop: "auto", paddingBottom: 32 }, eyebrow: { color: "#F0CC82", fontSize: 11, fontWeight: "900", letterSpacing: 1.6 }, title: { color: "#FFFFFF", fontSize: 37, fontWeight: "900", letterSpacing: 0, lineHeight: 42, marginTop: 9, maxWidth: 350 }, subtitle: { color: "#EFF7F3", fontSize: 15, lineHeight: 22, marginTop: 12, maxWidth: 355 },
   dots: { flexDirection: "row", gap: 8, marginTop: 19 }, dot: { backgroundColor: "rgba(255,255,255,0.55)", borderRadius: 4, height: 5, width: 24 }, dotActive: { backgroundColor: "#D7A94B", width: 40 }, services: { flexDirection: "row", flexWrap: "wrap", gap: 7, marginTop: 17 }, servicePill: { backgroundColor: "rgba(4,39,27,0.72)", borderColor: "rgba(255,255,255,0.35)", borderRadius: 999, borderWidth: 1, paddingHorizontal: 10, paddingVertical: 6 }, serviceText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
-  actionSheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -20, paddingBottom: 18, paddingHorizontal: 22, paddingTop: 20 }, sheetTitle: { color: "#101828", fontSize: 18, fontWeight: "900", textAlign: "center" }, sheetBody: { color: "#667085", fontSize: 12, lineHeight: 18, marginHorizontal: 10, marginTop: 5, textAlign: "center" }, actionRow: { flexDirection: "row", gap: 10 }, primary: { alignItems: "center", backgroundColor: "#0A4A35", borderRadius: 15, flex: 1, justifyContent: "center", minHeight: 54, marginTop: 16 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, secondary: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#0A4A35", borderRadius: 15, borderWidth: 1.5, flex: 1, justifyContent: "center", minHeight: 54, marginTop: 16 }, secondaryText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
+  actionSheet: { backgroundColor: "#FFFFFF", borderTopLeftRadius: 28, borderTopRightRadius: 28, marginTop: -20, paddingBottom: 18, paddingHorizontal: 22, paddingTop: 20 }, inviteNote: { alignItems: "center", backgroundColor: "#F5F8F6", borderColor: "#E4ECE7", borderRadius: 16, borderWidth: 1, marginTop: 14, padding: 14 }, inviteNoteTitle: { color: "#0A4A35", fontSize: 14, fontWeight: "900" }, inviteNoteBody: { color: "#667085", fontSize: 12, lineHeight: 18, marginTop: 4, textAlign: "center" }, primaryFull: { flex: 1 }, sheetTitle: { color: "#101828", fontSize: 18, fontWeight: "900", textAlign: "center" }, sheetBody: { color: "#667085", fontSize: 12, lineHeight: 18, marginHorizontal: 10, marginTop: 5, textAlign: "center" }, actionRow: { flexDirection: "row", gap: 10 }, primary: { alignItems: "center", backgroundColor: "#0A4A35", borderRadius: 15, flex: 1, justifyContent: "center", minHeight: 54, marginTop: 16 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, secondary: { alignItems: "center", backgroundColor: "#FFFFFF", borderColor: "#0A4A35", borderRadius: 15, borderWidth: 1.5, flex: 1, justifyContent: "center", minHeight: 54, marginTop: 16 }, secondaryText: { color: "#0A4A35", fontSize: 15, fontWeight: "900" },
   links: { alignItems: "center", flexDirection: "row", justifyContent: "center", marginTop: 13 }, link: { color: "#0A4A35", fontSize: 11, fontWeight: "800" }, linkDivider: { color: "#98A2B3", marginHorizontal: 7 }, caregiverOnly: { color: "#667085", fontSize: 10, fontWeight: "700" },
 });

@@ -82,6 +82,9 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/employers/me", login)).profile.companyName).toBe("Persisted test company");
     await request("/auth/login", undefined, "POST", { email: "employer@example.com", password: "incorrect" }, 401);
   });
+  it("rejects caregiver registration without an employer invitation", async () => {
+    await request("/auth/register", undefined, "POST", { email: "uninvited@example.com", password, firstName: "Test", lastName: "Uninvited", role: "caregiver" }, 403);
+  });
   it("creates an email invitation with a web signup link", async () => {
     invitation = await request("/employers/invitations", employer, "POST", { firstName: "Test", email: "caregiver@example.com" }, 201);
     expect(invitation.emailSent).toBe(true);
@@ -101,7 +104,8 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await request("/bookings/employer/team", otherEmployer)).team).toEqual([]);
     expect((await request("/employers/invitations", employer)).invitations[0].status).toBe("accepted");
     await request(`/employers/invitations/${invitation.token}`, undefined, "GET", undefined, 404);
-    replacement = await signup("caregiver", "replacement@example.com");
+    const replacementInvite = await request("/employers/invitations", otherEmployer, "POST", { firstName: "Replacement", email: "replacement@example.com" }, 201);
+    replacement = await signup("caregiver", "replacement@example.com", { inviteToken: new URL(replacementInvite.inviteUrl).searchParams.get("invite") });
   });
   it("updates caregiver profile and matching preferences", async () => {
     await request(`/caregivers/${caregiver.user.id}`, caregiver, "PUT", { hourlyRate: 30, specialties: ["personal_care"], certifications: ["caregiver"], bio: "Test profile" });
@@ -374,7 +378,9 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await (await exportFor(otherEmployer)).text()).trim().split("\r\n")).toHaveLength(1);
     await request("/payroll/export?from=2026-02-31&to=2026-03-01",employer,"GET",undefined,400);
     await request("/payroll/export?from=2026-01-01&to=2026-12-01",employer,"GET",undefined,400);
-    expect((await request("/payroll/integrations",employer)).integrations.every((p:any)=>p.status==="requires_provider_setup")).toBe(true);
+    const integrations=(await request("/payroll/integrations",employer)).integrations;
+    expect(integrations.filter((p:any)=>p.provider!=="external_payroll").every((p:any)=>p.status==="available")).toBe(true);
+    expect(integrations.find((p:any)=>p.provider==="external_payroll")?.status).toBe("optional");
   });
   it("keeps SMS off without configuration and rejects unsigned provider callbacks", async () => {
     expect((await request("/sms/preferences",caregiver)).configured).toBe(false);

@@ -54,6 +54,10 @@ router.post("/register", async (req, res, next) => {
     const data = registerSchema.parse(req.body);
     let invitation: typeof caregiverInvitations.$inferSelect | undefined;
 
+    if (data.role === "caregiver" && !data.inviteToken) {
+      throw new AppError(403, "Caregiver accounts require an invitation from an employer. Ask your employer to send you a secure invitation link.");
+    }
+
     if (data.inviteToken) {
       if (data.role !== "caregiver") {
         throw new AppError(400, "Caregiver invitations can only create caregiver accounts");
