@@ -337,6 +337,8 @@
     activateView(link.dataset.view);
   }));
   activateView(location.hash.slice(1) || 'overview');
+  const manualEntryForm = document.querySelector('[data-manual-entry]');
+  if (manualEntryForm) { const today = todayInputValue(); manualEntryForm.elements.startDate.value = today; manualEntryForm.elements.endDate.value = today; }
 
   search?.addEventListener('input', () => {
     const query = search.value.trim().toLowerCase();
@@ -622,15 +624,19 @@
 
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
-    if (!sheets.length) { renderEmpty(container, 'No completed timesheets yet', 'Clocking out creates a shared timesheet for employer review.'); return; }
+    if (!sheets.length) { renderEmpty(container, 'No timesheets yet', 'Add a missed clock-in entry above, or clock out to create a timesheet for review.'); return; }
     container.innerHTML = sheets.map((sheet) => {
-      const title = employerView ? `${sheet.first_name} ${sheet.last_name} · ${sheet.shift_title}` : applications.find(a => a.shift.id === sheet.shift_id)?.shift.title || 'Care shift';
-      return `<article class="surface-pad" data-searchable><strong>${escapeHtml(title)}</strong><p>${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}</p><span class="status">${escapeHtml(sheet.status.replaceAll('_', ' '))}</span>${sheet.notes ? `<p>${escapeHtml(sheet.notes)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
-      ${employerView && sheet.status === 'pending_approval' ? `<form data-review-sheet="${sheet.id}" class="field"><label for="review-${sheet.id}">Review note (required for clarification)</label><textarea id="review-${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
+      const manual = sheet.entry_source === 'manual_missed_clock_in';
+      const title = manual ? `${sheet.staff_name} · Missed clock-in` : employerView ? `${sheet.first_name} ${sheet.last_name} · ${sheet.shift_title}` : applications.find(a => a.shift.id === sheet.shift_id)?.shift.title || 'Care shift';
+      const details = manual
+        ? `${formatDateOnly(sheet.shift_date)} · ${String(sheet.start_time).slice(0, 5)} - ${String(sheet.end_time).slice(0, 5)} · ${Number(sheet.worked_minutes / 60).toFixed(2)} hours · ${money(sheet.hourly_rate)}/hr · ${money(sheet.total_amount)}`
+        : `${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}`;
+      const note = manual ? sheet.reason : sheet.notes;
+      return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Manual entry</span>' : ''}</div><p>${details}</p><span class="status">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span>${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
+      ${employerView && sheet.status === 'pending_approval' ? `<form data-review-sheet="${sheet.id}" ${manual ? `data-manual-review-sheet="${sheet.id}"` : ''} class="field timesheet-review-form"><label for="review-${manual ? 'manual-' : ''}${sheet.id}">Review note (required for clarification)</label><textarea id="review-${manual ? 'manual-' : ''}${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
       ${!employerView && sheet.status === 'correction_requested' ? `<form data-resubmit-sheet="${sheet.id}" class="field"><label for="response-${sheet.id}">Clarification for your employer</label><textarea id="response-${sheet.id}" name="notes" maxlength="2000" required></textarea><button class="primary-button" type="submit">Send clarification</button><small>Recorded hours remain unchanged.</small></form>` : ''}</article>`;
     }).join('');
   }
-
   function formatDateOnly(value) {
     if (!value) return '—';
     const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
@@ -770,6 +776,7 @@
     event.preventDefault();
     if (savingTime) return;
     const review = form.dataset.reviewSheet;
+    const manualReview = form.dataset.manualReviewSheet;
     const data = new FormData(form);
     const status = event.submitter?.value;
     if (review && !['approved', 'correction_requested'].includes(status)) return;
@@ -778,12 +785,45 @@
     savingTime = true;
     form.querySelectorAll('button').forEach(b => { b.disabled = true; });
     try {
-      await api(review ? `/bookings/employer/timesheets/${review}` : `/bookings/caregiver/timesheets/${form.dataset.resubmitSheet}/resubmit`, { method: review ? 'PATCH' : 'POST', body: JSON.stringify(review ? { status, note: String(data.get('note') || '') } : { notes: String(data.get('notes') || '') }) });
+      await api(manualReview ? `/manual-timesheets/employer/${manualReview}/review` : review ? `/bookings/employer/timesheets/${review}` : `/bookings/caregiver/timesheets/${form.dataset.resubmitSheet}/resubmit`, { method: review || manualReview ? 'PATCH' : 'POST', body: JSON.stringify(review || manualReview ? { status, note: String(data.get('note') || '') } : { notes: String(data.get('notes') || '') }) });
       notify('Timesheet update saved.');
-      await (review ? loadEmployer() : loadCaregiver());
+      await (review || manualReview ? loadEmployer() : loadCaregiver());
     } catch (error) { notify(error.message); }
     finally { savingTime = false; form.querySelectorAll('button').forEach(b => { b.disabled = false; }); }
   });
+  document.addEventListener('submit', async event => {
+    const form = event.target;
+    if (!form.matches('[data-manual-entry]') || savingTime) return;
+    event.preventDefault();
+    const data = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    savingTime = true;
+    if (button) button.disabled = true;
+    try {
+      const result = await api('/manual-timesheets/employer', {
+        method: 'POST',
+        body: JSON.stringify({
+          staffName: String(data.get('staffName') || ''),
+          startDate: String(data.get('startDate') || ''),
+          endDate: String(data.get('endDate') || ''),
+          startTime: String(data.get('startTime') || ''),
+          endTime: String(data.get('endTime') || ''),
+          hourlyRate: Number(data.get('hourlyRate')),
+          unpaidBreakMinutes: Number(data.get('unpaidBreakMinutes') || 0),
+          includeWeekends: data.get('includeWeekends') === 'on',
+          reason: String(data.get('reason') || ''),
+        }),
+      });
+      notify(`Saved ${result.count} missed-clock-in ${result.count === 1 ? 'entry' : 'entries'} for review (${Number(result.worked_hours).toFixed(2)} hrs, ${money(result.total_amount)}).`);
+      form.reset();
+      const today = todayInputValue();
+      form.elements.startDate.value = today;
+      form.elements.endDate.value = today;
+      await loadEmployer();
+    } catch (error) { notify(error.message); }
+    finally { savingTime = false; if (button) button.disabled = false; }
+  });
+
   document.addEventListener('click', async event => {
     const button = event.target.closest('[data-clock-shift]');
     if (!button || savingTime) return;
@@ -906,8 +946,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -925,7 +965,10 @@
       session.storage.setItem('user', JSON.stringify(session.user));
       document.querySelectorAll('[data-company-name]').forEach((element) => { element.textContent = profile.companyName; });
     }
-    const timesheets = timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : [];
+    const timesheets = [
+      ...(timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : []),
+      ...(manualTimesheetResult.status === 'fulfilled' ? manualTimesheetResult.value.manualTimesheets || [] : []),
+    ];
     const pendingTimesheets = timesheets.filter(t => t.status === 'pending_approval').length;
     const pendingApplications = applicationsResult.status === 'fulfilled' ? (applicationsResult.value.applications || []).filter(a => a.status === 'pending').length : 0;
     const unfilled = shifts.filter(shift => ['open', 'assigned', 'in_progress'].includes(shift.status) && shift.remainingPositions > 0).length;
@@ -941,7 +984,7 @@
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
     renderActivities(document.getElementById('activityList'), activities);
-    if (timesheetResult.status === 'fulfilled') renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
+    if (timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled') renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
     else renderEmpty(document.getElementById('timesheetList'), 'Timesheets could not be loaded', 'Refresh to try again.');
     renderConversations(document.getElementById('conversationList'), conversations);
     const caregiverList = document.getElementById('caregiverList');

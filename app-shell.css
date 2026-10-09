@@ -1,10 +1,10 @@
 :root {
-  --forest-950: #052d22;
-  --forest-900: #063e2c;
-  --forest-800: #0b513a;
-  --forest-700: #176c4d;
-  --mint-100: #e7f4ed;
-  --mint-50: #f3f9f6;
+  --forest-950: #042716;
+  --forest-900: #064024;
+  --forest-800: #0a5630;
+  --forest-700: #145f34;
+  --mint-100: #eef6e4;
+  --mint-50: #f7fbf1;
   --gold-600: #b9791f;
   --gold-100: #fbefd9;
   --blue-600: #3274c5;
@@ -201,6 +201,38 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .dashboard-main, .dashboard-rail { display: flex; min-width: 0; flex-direction: column; gap: 20px; }
 .surface { border: 1px solid var(--line); border-radius: 19px; background: var(--white); box-shadow: 0 5px 18px rgba(23,50,39,.035); }
 .surface-pad { padding: 21px; }
+
+.manual-entry-panel { margin-bottom: 20px; border-color: #d9e8de; background: linear-gradient(135deg, #f4faf6, #ffffff 58%); }
+.manual-entry-pill { display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px; border: 1px solid #cfe3d4; border-radius: 999px; color: var(--forest-800); background: var(--mint-100); font-size: 11px; font-weight: 800; white-space: nowrap; }
+.manual-timesheet-form { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 15px; }
+.manual-timesheet-form .field label { margin-bottom: 6px; }
+.manual-timesheet-form .field input, .manual-timesheet-form .field textarea { min-height: 46px; }
+.manual-timesheet-form .manual-reason-field, .manual-timesheet-form .manual-entry-actions { grid-column: 1 / -1; }
+.manual-timesheet-form .manual-reason-field textarea { min-height: 74px; }
+.manual-weekends-check { display: flex; align-items: center; gap: 10px; min-height: 46px; padding: 7px 11px; border: 1px solid var(--line); border-radius: 12px; background: #fff; cursor: pointer; }
+.manual-weekends-check input { width: 18px; height: 18px; accent-color: var(--forest-700); }
+.manual-weekends-check span { display: flex; flex-direction: column; gap: 2px; }
+.manual-weekends-check strong { color: var(--ink); font-size: 12px; }
+.manual-weekends-check small { color: var(--muted); font-size: 10px; line-height: 1.35; }
+.manual-entry-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 2px; }
+.manual-entry-actions p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.manual-entry-actions .primary-button { flex: 0 0 auto; }
+.timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.timesheet-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.status-manual { color: var(--forest-800); background: var(--mint-100); }
+.timesheet-review-form { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
+@media (max-width: 760px) {
+  .manual-timesheet-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 520px) {
+  .manual-timesheet-form { grid-template-columns: 1fr; }
+  .manual-timesheet-form .manual-reason-field, .manual-timesheet-form .manual-entry-actions { grid-column: auto; }
+  .manual-entry-pill { width: 100%; justify-content: center; }
+  .manual-entry-actions { align-items: stretch; flex-direction: column; }
+  .manual-entry-actions .primary-button { width: 100%; }
+  .timesheet-card-head { align-items: flex-start; flex-direction: column; }
+}
+
 .surface-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 17px; }
 .surface-head h2 { margin: 0; color: var(--forest-950); font-size: 17px; letter-spacing: -.02em; }
 .surface-head p { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
