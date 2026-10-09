@@ -1,206 +1,43 @@
-import React, { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { User, Mail, Lock, Phone, AlertCircle, Loader } from "lucide-react";
+import React from "react";
+import { Link } from "react-router-dom";
+import { Mail, ShieldCheck, Users } from "lucide-react";
 
 export function RegisterPage() {
-  const navigate = useNavigate();
-  const { register } = useAuth();
-  const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-  });
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError("Password must be at least 8 characters");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await register({
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        phone: formData.phone,
-        password: formData.password,
-      });
-      navigate("/profile-setup");
-    } catch (err: any) {
-      setError(err.response?.data?.error || "Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0b3726] to-[#1a5a3f] flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-        {/* Header */}
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-[#0b3726] mb-2">Elite Bridge</h1>
-          <p className="text-gray-600">Join as a Caregiver</p>
+    <main className="min-h-screen bg-[#f4f7f5] px-4 py-10 flex items-center justify-center">
+      <section className="w-full max-w-xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0b3726] to-[#1a5a3f] px-8 py-10 text-center text-white sm:px-12">
+          <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/10">
+            <Users className="h-8 w-8 text-[#f2c96f]" aria-hidden="true" />
+          </div>
+          <p className="text-xs font-black uppercase tracking-[.2em] text-[#f2c96f]">Elite Care access</p>
+          <h1 className="mt-3 text-3xl font-black tracking-tight">Join your team</h1>
+          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-white/85">
+            Your employer needs to invite you before you can create an Elite Care account.
+          </p>
         </div>
 
-        {/* Error Alert */}
-        {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )}
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Name Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Name
-              </label>
-              <input
-                type="text"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-                placeholder="John"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-                required
-              />
+        <div className="px-7 py-8 text-center sm:px-12">
+          <div className="rounded-2xl border border-[#e7eee9] bg-[#f7faf8] p-5">
+            <div className="mx-auto mb-3 flex h-11 w-11 items-center justify-center rounded-full bg-white text-[#0b3726] shadow-sm">
+              <Mail className="h-5 w-5" aria-hidden="true" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Last Name
-              </label>
-              <input
-                type="text"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-                placeholder="Doe"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-                required
-              />
-            </div>
+            <h2 className="font-bold text-[#0b3726]">Stay tuned for an invitation</h2>
+            <p className="mt-2 text-sm leading-6 text-gray-600">
+              We’ll email or text you a secure link as soon as your employer adds you. Open that link to set up your profile.
+            </p>
           </div>
 
-          {/* Email */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Email Address
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="you@example.com"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Phone Number
-            </label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="tel"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                placeholder="(555) 123-4567"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-              />
-            </div>
-          </div>
-
-          {/* Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-                required
-              />
-            </div>
-            <p className="text-xs text-gray-500 mt-1">Minimum 8 characters</p>
-          </div>
-
-          {/* Confirm Password */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Confirm Password
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
-              <input
-                type="password"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#c08530]"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full bg-[#c08530] hover:bg-[#b0743f] text-white font-semibold py-2 rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2 mt-6"
-          >
-            {isLoading && <Loader className="w-4 h-4 animate-spin" />}
-            {isLoading ? "Creating Account..." : "Create Account"}
-          </button>
-        </form>
-
-        {/* Login Link */}
-        <div className="mt-6 text-center text-sm text-gray-600">
-          Already have an account?{" "}
-          <Link to="/login" className="text-[#c08530] hover:underline font-semibold">
-            Sign In
+          <Link to="/login" className="mt-6 inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-[#0b3726] px-5 font-bold text-white transition hover:bg-[#164b37]">
+            Have an account? Log in
           </Link>
+
+          <div className="mt-5 flex items-center justify-center gap-2 text-xs text-gray-500">
+            <ShieldCheck className="h-4 w-4 text-[#c08530]" aria-hidden="true" />
+            <span>Secure access managed by your employer</span>
+          </div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }
