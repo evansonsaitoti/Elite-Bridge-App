@@ -34,7 +34,7 @@ export default function OnboardingReview() {
         phone: data.phoneNumber,
         email: data.email,
         password: data.password,
-        inviteToken: data.inviteToken || undefined,
+        inviteToken: data.inviteToken,
       });
       await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
         role: "staff",
