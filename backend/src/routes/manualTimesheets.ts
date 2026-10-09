@@ -200,6 +200,7 @@ router.post("/employer/email", authMiddleware, async (req: AuthRequest, res, nex
     const filenameBase = data.staffName.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/gi, "_").replace(/^_+|_+$/g, "").slice(0, 80) || "staff";
     const filename = `${filenameBase}_Timesheet_${data.month}.pdf`;
     const sent = await sendEmail({
+      from: "Elite Bridge Staffing <info@elitebridgestaffing.com>",
       to: data.recipient,
       subject: `Elite Bridge timesheet - ${data.staffName} - ${data.month}`,
       text: `Attached is the requested confidential staff timesheet for ${data.staffName} (${data.month}). Please handle this payroll record securely.`,
