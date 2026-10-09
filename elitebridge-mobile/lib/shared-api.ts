@@ -105,8 +105,9 @@ export async function registerCaregiverAccount(input: {
   phone: string;
   email: string;
   password: string;
-  inviteToken?: string;
+  inviteToken: string;
 }): Promise<AuthUser> {
+  if (!input.inviteToken.trim()) throw new Error("An employer invitation is required to create a caregiver account.");
   const result = await request<{ token: string; user: AuthUser }>("/api/auth/register", {
     method: "POST",
     body: JSON.stringify({ ...input, email: input.email.trim().toLowerCase(), role: "caregiver" }),
