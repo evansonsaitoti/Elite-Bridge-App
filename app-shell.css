@@ -217,6 +217,17 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .manual-entry-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 2px; }
 .manual-entry-actions p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .manual-entry-actions .primary-button { flex: 0 0 auto; }
+.timesheet-dashboard { margin-bottom: 18px; }
+.timesheet-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.timesheet-summary article { display: flex; flex-direction: column; gap: 7px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdfb, #f2f7f2); }
+.timesheet-summary span { color: var(--muted); font-size: 11px; font-weight: 700; }
+.timesheet-summary strong { color: var(--forest-950); font-size: 24px; letter-spacing: -.04em; }
+.timesheet-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 13px; }
+.timesheet-action-button { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 8px 13px; border: 1px solid #cfe0d5; border-radius: 10px; color: var(--forest-800); background: #f7fbf8; font-size: 11px; font-weight: 800; text-decoration: none; cursor: pointer; }
+.timesheet-action-button:hover { border-color: #9cbdab; background: #edf6f0; }
+.timesheet-approve-button { min-height: 38px; padding: 8px 14px; font-size: 11px; }
+.timesheet-approval-record { color: var(--forest-800) !important; font-size: 11px !important; }
+.status-approved { color: #17633a; background: #e9f5eb; }
 .timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(23,50,39,.035); }
 .timesheet-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .timesheet-card-head > strong { color: var(--forest-950); font-size: 15px; letter-spacing: -.01em; }
@@ -239,6 +250,8 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   .manual-entry-actions { align-items: stretch; flex-direction: column; }
   .manual-entry-actions .primary-button { width: 100%; }
   .timesheet-card-head { align-items: flex-start; flex-direction: column; }
+  .timesheet-summary { grid-template-columns: 1fr; }
+  .timesheet-actions > * { flex: 1 1 auto; }
 }
 
 .surface-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 17px; }

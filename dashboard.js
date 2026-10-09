@@ -624,8 +624,13 @@
 
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
-    if (!sheets.length) { renderEmpty(container, 'No timesheets yet', 'Add a missed clock-in entry above, or clock out to create a timesheet for review.'); return; }
-    container.innerHTML = sheets.map((sheet) => {
+    const summary = document.getElementById('timesheetSummary');
+    const pending = sheets.filter(sheet => sheet.status === 'pending_approval');
+    const approved = sheets.filter(sheet => sheet.status === 'approved');
+    if (summary && employerView) summary.innerHTML = `<article><span>Awaiting approval</span><strong>${pending.length}</strong></article><article><span>Approved</span><strong>${approved.length}</strong></article><article><span>Hours recorded</span><strong>${(sheets.reduce((sum, sheet) => sum + Number(sheet.worked_minutes || 0), 0) / 60).toFixed(2)}</strong></article>`;
+    if (!sheets.length) { renderEmpty(container, 'No timesheets yet', 'Add a missed clock-in entry below, or clock out to create a timesheet for review.'); return; }
+    const orderedSheets = employerView ? [...sheets].sort((a, b) => (a.status === 'pending_approval' ? 0 : a.status === 'approved' ? 1 : 2) - (b.status === 'pending_approval' ? 0 : b.status === 'approved' ? 1 : 2) || String(b.shift_date || b.clock_in_at || '').localeCompare(String(a.shift_date || a.clock_in_at || ''))) : sheets;
+    container.innerHTML = orderedSheets.map((sheet) => {
       const manual = sheet.entry_source === 'manual_missed_clock_in';
       const title = manual ? `${sheet.staff_name} · Missed clock-in` : employerView ? `${sheet.first_name} ${sheet.last_name} · ${sheet.shift_title}` : applications.find(a => a.shift.id === sheet.shift_id)?.shift.title || 'Care shift';
       const details = manual
@@ -633,11 +638,12 @@
         : `${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}`;
       const note = manual ? sheet.reason : sheet.notes;
       const exportAction = employerView && manual
-        ? `<button type="button" class="timesheet-export-button" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5"></path><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"></path><path d="M7 14h10v7H7z"></path></svg>Print / save PDF</button>`
+        ? `<div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-timesheet-action="view" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">View</button><button type="button" class="timesheet-action-button" data-timesheet-action="download" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">Download PDF</button>${sheet.status === 'pending_approval' ? `<button type="button" class="primary-button timesheet-approve-button" data-approve-manual-timesheet="${sheet.id}" data-approve-staff="${escapeHtml(sheet.staff_name)}" data-approve-date="${escapeHtml(formatDateOnly(sheet.shift_date))}">Approve</button>` : ''}</div>`
         : '';
-      return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Manual entry</span>' : ''}</div><p>${details}</p><div class="timesheet-card-footer"><span class="status">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span>${exportAction}</div>${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
-      ${employerView && sheet.status === 'pending_approval' ? `<form data-review-sheet="${sheet.id}" ${manual ? `data-manual-review-sheet="${sheet.id}"` : ''} class="field timesheet-review-form"><label for="review-${manual ? 'manual-' : ''}${sheet.id}">Review note (required for clarification)</label><textarea id="review-${manual ? 'manual-' : ''}${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
-      ${!employerView && sheet.status === 'correction_requested' ? `<form data-resubmit-sheet="${sheet.id}" class="field"><label for="response-${sheet.id}">Clarification for your employer</label><textarea id="response-${sheet.id}" name="notes" maxlength="2000" required></textarea><button class="primary-button" type="submit">Send clarification</button><small>Recorded hours remain unchanged.</small></form>` : ''}</article>`;
+      const approval = manual && sheet.status === 'approved' ? `<p class="timesheet-approval-record">Approved by <strong>${escapeHtml(sheet.approved_by_name || 'Employer')}</strong>${sheet.approval_date ? ` · ${escapeHtml(formatDateOnly(sheet.approval_date))}` : ''}</p>` : '';
+      return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Missed clock-in</span>' : ''}</div><p>${details}</p><div class="timesheet-card-footer"><span class="status ${sheet.status === 'approved' ? 'status-approved' : ''}">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span></div>${approval}${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}${exportAction}
+      ${employerView && sheet.status === 'pending_approval' ? manual ? `<form data-review-sheet="${sheet.id}" data-manual-review-sheet="${sheet.id}" class="field timesheet-review-form"><label for="review-manual-${sheet.id}">Review note (required for clarification)</label><textarea id="review-manual-${sheet.id}" name="note" maxlength="2000"></textarea><button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></form>` : `<form data-review-sheet="${sheet.id}" class="field timesheet-review-form"><label for="review-${sheet.id}">Review note (required for clarification)</label><textarea id="review-${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
+      ${!employerView && sheet.status === 'correction_requested' ? `<form data-resubmit-sheet="${sheet.id}" class="field"><label for="response-${sheet.id}">Clarification for your employer</label><textarea id="response-${sheet.id}" name="notes" maxlength="4000" required></textarea><button class="primary-button" type="submit">Send clarification</button><small>Recorded hours remain unchanged.</small></form>` : ''}</article>`;
     }).join('');
   }
   function formatDateOnly(value) {
@@ -676,10 +682,16 @@
       : firstDay.getMonth() === lastDay.getMonth() && firstDay.getFullYear() === lastDay.getFullYear()
         ? `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(firstDay)} ${firstDay.getDate()}-${lastDay.getDate()}, ${firstDay.getFullYear()}`
         : `${firstLabel} - ${lastLabel}`;
+    const fullyApproved = ordered.every(entry => entry.status === 'approved');
+    const signerValues = [...new Set(ordered.map(entry => String(entry.approved_by_name || '').trim()).filter(Boolean))];
+    const approvalNames = fullyApproved && signerValues.length === 1 ? signerValues[0] : '';
+    const approvalDates = [...new Set(ordered.map(entry => String(entry.approval_date || '').slice(0, 10)).filter(Boolean))];
+    const approvalDate = fullyApproved && approvalDates.length === 1 ? formatDateOnly(approvalDates[0]) : '';
+    const approvalLabel = fullyApproved ? 'Employer-approved missed clock-in record' : 'Missed clock-in record · Prepared for employer review';
     const reportTitle = `${staffName} timesheet - ${payPeriod}`;
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safe(reportTitle)}</title><style>
       :root{--green:#064024;--lime:#8dc240;--ink:#1e2a24;--muted:#607067;--line:#dce6df;--pale:#f3f8ee}*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;display:flex;justify-content:flex-end;gap:10px;padding:14px max(18px,calc((100vw - 840px)/2));background:#fff;border-bottom:1px solid var(--line)}.toolbar button{border:0;border-radius:9px;padding:11px 16px;color:#fff;background:var(--green);font-weight:700;cursor:pointer}.toolbar button:last-child{color:var(--green);background:var(--pale);border:1px solid var(--line)}main{width:min(840px,calc(100% - 32px));margin:24px auto 50px;padding:42px 48px;background:#fff;box-shadow:0 12px 38px rgba(20,52,39,.1)}.brand{display:flex;align-items:center;justify-content:space-between;padding:0 0 24px;border-top:7px solid var(--green);padding-top:22px}.brand img{width:190px;height:auto;object-fit:contain}.contact{text-align:right;color:var(--muted);font-size:11px;line-height:1.7}.contact strong{color:var(--green);font-size:12px}.rule{border:0;border-top:1px solid var(--line);margin:0 0 30px}h1{margin:0;color:var(--green);font-size:30px;letter-spacing:-.04em}.subtitle{margin:5px 0 22px;color:var(--muted)}.meta,.metrics{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--pale)}.meta>div,.metrics>div{padding:13px 15px;border-right:1px solid var(--line)}.meta>div:last-child,.metrics>div:last-child{border:0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.value{color:var(--ink);font-size:15px;font-weight:700}.metrics{margin-top:14px;background:#fff}.metrics>div{padding:14px 15px}.metric{color:var(--green);font-size:21px;font-weight:700;letter-spacing:-.03em}table{width:100%;margin-top:20px;border-collapse:collapse;font-size:11px}th{padding:10px;background:var(--green);color:#fff;text-align:left;font-size:9px;letter-spacing:.05em}td{padding:10px;border:1px solid var(--line)}tbody tr:nth-child(even){background:#f8fbf9}.num{text-align:right;white-space:nowrap}.total{background:var(--pale)!important;color:var(--green);font-weight:700}.note{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:6px;background:#f7faf4;color:var(--muted);font-size:11px}.approval{margin-top:20px}.approval-title{margin:0 0 13px;color:var(--green);font-size:10px;font-weight:700;letter-spacing:.06em}.approval-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:22px}.approval label{display:block;color:var(--muted);font-size:10px;font-weight:700}.approval input{width:100%;height:30px;border:0;border-bottom:1px solid #aebfb4;background:#fff;color:var(--ink);font:13px Arial;margin-top:4px}.footer{display:flex;justify-content:space-between;margin-top:34px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}@page{size:letter;margin:.42in}@media(max-width:620px){main{padding:24px 18px}.brand{align-items:flex-start;gap:14px;flex-direction:column}.contact{text-align:left}.meta,.metrics{grid-template-columns:1fr}.meta>div,.metrics>div{border-right:0;border-bottom:1px solid var(--line)}table{font-size:9px}td,th{padding:7px 5px}.value{font-size:13px}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;box-shadow:none}.toolbar{display:none}.brand{padding-top:14px}.subtitle{margin-bottom:16px}.meta>div,.metrics>div{padding:10px}.metrics{margin-top:10px}table{margin-top:15px}.note{margin-top:12px}.approval{margin-top:15px}.footer{margin-top:25px}}
-    </style></head><body><div class="toolbar"><button id="printTimesheet" type="button">Print / save as PDF</button><button id="closeTimesheet" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">Missed clock-in record · Prepared for employer review</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>Please review and approve before including in payroll.</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text"></label><label>Date<input aria-label="Approval date" type="text"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main></body></html>`;
+    </style></head><body><div class="toolbar"><button id="printTimesheet" type="button">Print / save as PDF</button><button id="closeTimesheet" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.'}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="text" value="${safe(approvalDate)}"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main></body></html>`;
   }
 
   document.addEventListener('click', async event => {
@@ -700,6 +712,7 @@
       printWindow.document.close();
       printWindow.document.getElementById('printTimesheet')?.addEventListener('click', () => printWindow.print());
       printWindow.document.getElementById('closeTimesheet')?.addEventListener('click', () => printWindow.close());
+      if (button.dataset.timesheetAction === 'download') printWindow.requestAnimationFrame(() => printWindow.print());
     } catch (error) {
       printWindow.close();
       notify(error.message || 'Could not prepare the timesheet.');
@@ -831,6 +844,40 @@
     }).join('');
     for (const [id, value] of drafts) { const field = document.getElementById(id); if (field) field.value = value; }
   }
+
+  const timesheetApprovalDialog = document.getElementById('timesheetApprovalDialog');
+  document.addEventListener('click', event => {
+    const approve = event.target.closest('[data-approve-manual-timesheet]');
+    if (approve && timesheetApprovalDialog) {
+      const form = document.getElementById('timesheetApprovalForm');
+      form.elements.entryId.value = approve.dataset.approveManualTimesheet;
+      document.getElementById('timesheetApprovalSummary').textContent = `Approve ${approve.dataset.approveStaff}’s missed clock-in hours (${approve.dataset.approveDate})? This records approval and does not send payment.`;
+      const date = document.getElementById('timesheetApprovalDate');
+      const now = new Date();
+      date.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      timesheetApprovalDialog.showModal();
+      document.getElementById('timesheetApproverName').focus();
+    }
+    if (event.target.closest('#timesheetApprovalClose, #timesheetApprovalCancel')) timesheetApprovalDialog?.close();
+    if (event.target === timesheetApprovalDialog) timesheetApprovalDialog.close();
+  });
+  document.addEventListener('submit', async event => {
+    const form = event.target;
+    if (!form.matches('[data-manual-approval]')) return;
+    event.preventDefault();
+    if (savingTime) return;
+    const data = new FormData(form);
+    const button = form.querySelector('button[type="submit"]');
+    savingTime = true;
+    button.disabled = true;
+    try {
+      await api(`/manual-timesheets/employer/${encodeURIComponent(String(data.get('entryId')) )}/review`, { method: 'PATCH', body: JSON.stringify({ status: 'approved', approvedByName: String(data.get('approvedByName') || '').trim(), approvalDate: String(data.get('approvalDate') || ''), note: '' }) });
+      timesheetApprovalDialog.close();
+      notify('Timesheet approved and reviewer details recorded.');
+      await loadEmployer();
+    } catch (error) { notify(error.message || 'Could not approve this timesheet.'); }
+    finally { savingTime = false; button.disabled = false; }
+  });
 
   let savingTime = false;
   document.addEventListener('submit', async event => {
