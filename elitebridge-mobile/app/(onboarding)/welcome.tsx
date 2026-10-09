@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { KeyboardAvoidingView, Platform, ScrollView, View, Text, TouchableOpacity, TextInput, Alert } from "react-native";
 import { useColors } from "@/hooks/use-colors";
 import { useOnboarding } from "@/lib/onboarding-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { Redirect, useLocalSearchParams, useRouter } from "expo-router";
 
 /**
  * Onboarding Step 1: Welcome & Personal Information
@@ -13,6 +13,7 @@ export default function OnboardingWelcome() {
   const { data, updateData, nextStep } = useOnboarding();
   const router = useRouter();
   const params = useLocalSearchParams<{ invite?: string }>();
+  const inviteToken = Array.isArray(params.invite) ? params.invite[0] : params.invite || data.inviteToken;
 
   const [fullName, setFullName] = useState(data.fullName);
   const [email, setEmail] = useState(data.email);
@@ -29,6 +30,8 @@ export default function OnboardingWelcome() {
     const inviteToken = Array.isArray(params.invite) ? params.invite[0] : params.invite;
     if (inviteToken && inviteToken !== data.inviteToken) updateData({ inviteToken });
   }, [data.inviteToken, params.invite, updateData]);
+
+  if (!inviteToken) return <Redirect href="/(root)" />;
 
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
