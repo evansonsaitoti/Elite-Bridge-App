@@ -622,8 +622,10 @@
     finally { savingTime = false; button.disabled = false; }
   });
 
+  let employerManualTimesheets = [];
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
+    if (employerView) employerManualTimesheets = sheets.filter(sheet => sheet.entry_source === 'manual_missed_clock_in');
     const summary = document.getElementById('timesheetSummary');
     const pending = sheets.filter(sheet => sheet.status === 'pending_approval');
     const approved = sheets.filter(sheet => sheet.status === 'approved');
@@ -638,7 +640,7 @@
         : `${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}`;
       const note = manual ? sheet.reason : sheet.notes;
       const exportAction = employerView && manual
-        ? `<div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-timesheet-action="view" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">View</button><button type="button" class="timesheet-action-button" data-timesheet-action="download" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">Download PDF</button>${sheet.status === 'pending_approval' ? `<button type="button" class="primary-button timesheet-approve-button" data-approve-manual-timesheet="${sheet.id}" data-approve-staff="${escapeHtml(sheet.staff_name)}" data-approve-date="${escapeHtml(formatDateOnly(sheet.shift_date))}">Approve</button>` : ''}</div>`
+        ? `<div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-timesheet-action="view" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">View</button><button type="button" class="timesheet-action-button" data-timesheet-action="download" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">Download PDF</button><button type="button" class="timesheet-action-button" data-timesheet-action="email" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}">Email PDF</button>${sheet.status === 'pending_approval' ? `<button type="button" class="primary-button timesheet-approve-button" data-approve-manual-timesheet="${sheet.id}" data-approve-staff="${escapeHtml(sheet.staff_name)}" data-approve-date="${escapeHtml(formatDateOnly(sheet.shift_date))}">Approve</button>` : ''}</div>`
         : '';
       const approval = manual && sheet.status === 'approved' ? `<p class="timesheet-approval-record">Approved by <strong>${escapeHtml(sheet.approved_by_name || 'Employer')}</strong>${sheet.approval_date ? ` · ${escapeHtml(formatDateOnly(sheet.approval_date))}` : ''}</p>` : '';
       return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Missed clock-in</span>' : ''}</div><p>${details}</p><div class="timesheet-card-footer"><span class="status ${sheet.status === 'approved' ? 'status-approved' : ''}">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span></div>${approval}${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}${exportAction}
@@ -694,29 +696,210 @@
     </style></head><body><div class="toolbar"><button id="printTimesheet" type="button">Print / save as PDF</button><button id="closeTimesheet" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.'}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="text" value="${safe(approvalDate)}"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main></body></html>`;
   }
 
-  document.addEventListener('click', async event => {
+  function pdfSafeText(value) {
+    return String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^\x20-\x7E]/g, '-');
+  }
+  function pdfEscape(value) { return pdfSafeText(value).replaceAll('\\', '\\\\').replaceAll('(', '\\(').replaceAll(')', '\\)'); }
+  function pdfAscii(value) { return new TextEncoder().encode(value); }
+  function pdfJoin(parts) {
+    const length = parts.reduce((sum, part) => sum + part.length, 0);
+    const output = new Uint8Array(length);
+    let offset = 0;
+    for (const part of parts) { output.set(part, offset); offset += part.length; }
+    return output;
+  }
+  function timesheetPdfBlob(staffName, month, entries) {
+    const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
+    const logo = document.querySelector('img[src*="logo"]');
+    const canvas = document.createElement('canvas');
+    canvas.width = logo?.naturalWidth || 300;
+    canvas.height = logo?.naturalHeight || 94;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Could not prepare the timesheet PDF.');
+    context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
+    if (logo?.complete && logo.naturalWidth) context.drawImage(logo, 0, 0, canvas.width, canvas.height);
+    const logoUrl = canvas.toDataURL('image/jpeg', .92);
+    const logoBytes = Uint8Array.from(atob(logoUrl.split(',')[1]), character => character.charCodeAt(0));
+    const firstDate = new Date(`${String(ordered[0]?.shift_date || '').slice(0, 10)}T12:00:00`);
+    const lastDate = new Date(`${String(ordered.at(-1)?.shift_date || '').slice(0, 10)}T12:00:00`);
+    const dateLabel = date => Number.isNaN(date.getTime()) ? month : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+    const firstLabel = dateLabel(firstDate), lastLabel = dateLabel(lastDate);
+    const payPeriod = ordered.length < 2 || String(ordered[0]?.shift_date).slice(0, 10) === String(ordered.at(-1)?.shift_date).slice(0, 10) ? firstLabel : firstDate.getMonth() === lastDate.getMonth() && firstDate.getFullYear() === lastDate.getFullYear() ? `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(firstDate)} ${firstDate.getDate()}-${lastDate.getDate()}, ${firstDate.getFullYear()}` : `${firstLabel} - ${lastLabel}`;
+    const totalMinutes = ordered.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0);
+    const totalAmount = ordered.reduce((sum, entry) => sum + Number(entry.total_amount || 0), 0);
+    const rates = [...new Set(ordered.map(entry => Number(entry.hourly_rate || 0)))];
+    const rateLabel = rates.length === 1 ? moneyPrecise(rates[0]) : 'Varies';
+    const fullyApproved = ordered.every(entry => entry.status === 'approved');
+    const signers = [...new Set(ordered.map(entry => String(entry.approved_by_name || '').trim()).filter(Boolean))];
+    const approvalDates = [...new Set(ordered.map(entry => String(entry.approval_date || '').slice(0, 10)).filter(Boolean))];
+    const approver = fullyApproved && signers.length === 1 ? signers[0] : '';
+    const approvalDate = fullyApproved && approvalDates.length === 1 ? formatDateOnly(approvalDates[0]) : '';
+    const reasons = [...new Set(ordered.map(entry => String(entry.reason || '').trim()).filter(Boolean))];
+    const chunks = [];
+    for (let index = 0; index < ordered.length; index += 16) chunks.push(ordered.slice(index, index + 16));
+    if (!chunks.length) chunks.push([]);
+    const pages = chunks.map((pageEntries, pageIndex) => {
+      const ops = [];
+      const text = (x, top, size, value, bold = false, color = '20352A') => {
+        const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
+        ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg BT /${bold ? 'F2' : 'F1'} ${size} Tf ${x} ${792 - top - size} Td (${pdfEscape(value)}) Tj ET`);
+      };
+      const rect = (x, top, width, height, fill) => {
+        const [r, g, b] = fill.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
+        ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ${x} ${792 - top - height} ${width} ${height} re f`);
+      };
+      const line = (x1, top, x2, color = 'DCE6DF', width = 1) => {
+        const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
+        ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${width} w ${x1} ${792 - top} m ${x2} ${792 - top} l S`);
+      };
+      ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
+      text(372, 39, 10, 'ELITE BRIDGE STAFFING', true, '064024');
+      text(372, 56, 9, '(508) 251-9346', false, '607067');
+      text(372, 71, 9, 'info@elitebridgestaffing.com', false, '607067');
+      text(372, 86, 9, 'elitebridgestaffing.com', false, '607067');
+      line(50, 108, 562, '064024', 4);
+      text(50, 126, 22, pageIndex ? 'Staff timesheet (continued)' : 'Staff timesheet', true, '064024');
+      text(50, 154, 10, fullyApproved ? 'Employer-approved missed clock-in record' : 'Missed clock-in record - Prepared for employer review', false, '607067');
+      rect(50, 176, 512, 49, 'F3F8EE');
+      line(50, 176, 562); line(50, 225, 562); line(220, 176, 220); line(391, 176, 391);
+      text(62, 184, 8, 'STAFF MEMBER', true, '607067'); text(62, 199, 12, staffName, true, '20352A');
+      text(232, 184, 8, 'PAY PERIOD', true, '607067'); text(232, 199, 12, payPeriod, true, '20352A');
+      text(403, 184, 8, 'ENTRY TYPE', true, '607067'); text(403, 199, 12, 'Missed clock-in', true, '20352A');
+      rect(50, 238, 512, 54, 'FFFFFF');
+      line(50, 238, 562); line(50, 292, 562); line(220, 238, 220); line(391, 238, 391);
+      text(62, 247, 8, 'HOURLY PAY RATE', true, '607067'); text(62, 264, 16, rateLabel, false, '064024');
+      text(232, 247, 8, 'TOTAL HOURS', true, '607067'); text(232, 264, 16, `${(totalMinutes / 60).toFixed(2)} hrs`, false, '064024');
+      text(403, 247, 8, 'GROSS WAGES', true, '607067'); text(403, 264, 16, moneyPrecise(totalAmount), false, '064024');
+      const tableTop = 309, rowHeight = 17;
+      rect(50, tableTop, 512, 22, '064024');
+      text(58, tableTop + 6, 8, 'DATE', true, 'FFFFFF'); text(200, tableTop + 6, 8, 'TIME WORKED', true, 'FFFFFF'); text(350, tableTop + 6, 8, 'HOURS', true, 'FFFFFF'); text(411, tableTop + 6, 8, 'RATE', true, 'FFFFFF'); text(478, tableTop + 6, 8, 'AMOUNT', true, 'FFFFFF');
+      const shiftDateLabel = value => { const d = new Date(`${String(value || '').slice(0, 10)}T12:00:00`); return Number.isNaN(d.getTime()) ? String(value || '') : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(d); };
+      const shiftTimeLabel = value => { const [hour, minute] = String(value || '').slice(0, 5).split(':').map(Number); if (!Number.isFinite(hour) || !Number.isFinite(minute)) return String(value || ''); return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`; };
+      pageEntries.forEach((entry, row) => {
+        const top = tableTop + 22 + row * rowHeight;
+        rect(50, top, 512, rowHeight, row % 2 ? 'F8FBF9' : 'FFFFFF');
+        line(50, top + rowHeight, 562, 'DCE6DF', .5);
+        text(57, top + 4, 8, shiftDateLabel(entry.shift_date));
+        text(199, top + 4, 8, `${shiftTimeLabel(entry.start_time)} - ${shiftTimeLabel(entry.end_time)}`);
+        text(350, top + 4, 8, (Number(entry.worked_minutes || 0) / 60).toFixed(2));
+        text(407, top + 4, 8, moneyPrecise(entry.hourly_rate));
+        text(475, top + 4, 8, moneyPrecise(entry.total_amount));
+      });
+      let cursor = tableTop + 22 + pageEntries.length * rowHeight;
+      if (pageIndex === chunks.length - 1) {
+        rect(50, cursor, 512, 20, 'F3F8EE');
+        text(199, cursor + 5, 9, 'TOTAL', true, '064024'); text(350, cursor + 5, 9, (totalMinutes / 60).toFixed(2), true, '064024'); text(475, cursor + 5, 9, moneyPrecise(totalAmount), true, '064024');
+        cursor += 30;
+        rect(50, cursor, 512, 45, 'F7FAF4');
+        text(62, cursor + 7, 8, 'TIME ENTRY NOTE', true, '607067');
+        text(62, cursor + 21, 8, fullyApproved ? 'Approval recorded. Ready for payroll review.' : (reasons[0] || 'Hours were entered manually from reported hours.').slice(0, 86), false, '607067');
+        if (reasons.length > 1) text(62, cursor + 32, 8, reasons[1].slice(0, 86), false, '607067');
+        cursor += 59;
+        text(50, cursor, 8, 'EMPLOYER APPROVAL', true, '064024');
+        text(50, cursor + 16, 8, 'Approved by', true, '607067'); text(360, cursor + 16, 8, 'Date', true, '607067');
+        text(50, cursor + 31, 10, approver || '____________________________________', false, '20352A');
+        text(360, cursor + 31, 10, approvalDate || '____________________', false, '20352A');
+      } else text(50, 741, 8, 'Continued on next page', false, '607067');
+      line(50, 770, 562); text(50, 777, 7, 'Confidential payroll record - Prepared for employer review', false, '607067'); text(516, 777, 7, `${pageIndex + 1} / ${chunks.length}`, false, '607067');
+      return pdfAscii(ops.join('\n'));
+    });
+    const objects = [];
+    objects[1] = pdfAscii('<< /Type /Catalog /Pages 2 0 R >>');
+    const pageIds = pages.map((_, index) => 6 + index * 2);
+    objects[2] = pdfAscii(`<< /Type /Pages /Kids [${pageIds.map(id => `${id} 0 R`).join(' ')}] /Count ${pages.length} >>`);
+    objects[3] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>');
+    objects[4] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+    objects[5] = pdfJoin([pdfAscii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`), logoBytes, pdfAscii('\nendstream')]);
+    pages.forEach((stream, index) => {
+      const pageId = pageIds[index], contentId = pageId + 1;
+      objects[pageId] = pdfAscii(`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents ${contentId} 0 R >>`);
+      objects[contentId] = pdfJoin([pdfAscii(`<< /Length ${stream.length} >>\nstream\n`), stream, pdfAscii('\nendstream')]);
+    });
+    const parts = [pdfAscii('%PDF-1.4\n')];
+    const offsets = [0]; let length = parts[0].length;
+    for (let id = 1; id < objects.length; id++) {
+      const prefix = pdfAscii(`${id} 0 obj\n`), suffix = pdfAscii('\nendobj\n');
+      offsets[id] = length; parts.push(prefix, objects[id], suffix); length += prefix.length + objects[id].length + suffix.length;
+    }
+    const xrefOffset = length;
+    let xref = `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+    for (let id = 1; id < objects.length; id++) xref += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
+    const trailer = `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
+    parts.push(pdfAscii(xref + trailer));
+    return new Blob([pdfJoin(parts)], { type: 'application/pdf' });
+  }
+  function timesheetFilename(staffName, month) {
+    const name = String(staffName || 'staff').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9_-]+/gi, '_').replace(/^_+|_+$/g, '').slice(0, 80) || 'staff';
+    return `${name}_Timesheet_${month}.pdf`;
+  }
+  function downloadTimesheetPdf(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url; link.download = filename; link.rel = 'noopener';
+    document.body.appendChild(link); link.click(); link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  }
+  function timesheetEntries(staffName, month) {
+    return employerManualTimesheets.filter(entry => entry.staff_name === staffName && String(entry.shift_date).slice(0, 7) === month);
+  }
+  document.addEventListener('click', event => {
     const button = event.target.closest('[data-export-timesheet]');
     if (!button || button.disabled) return;
     event.preventDefault();
+    const staffName = button.dataset.exportTimesheet;
+    const month = button.dataset.exportMonth;
+    const entries = timesheetEntries(staffName, month);
+    if (!entries.length) { notify('No timesheet entries were found for this staff member and month.'); return; }
+    if (button.dataset.timesheetAction === 'email') {
+      const form = document.getElementById('timesheetEmailForm');
+      form.elements.staffName.value = staffName;
+      form.elements.month.value = month;
+      form.elements.recipient.value = '';
+      form.elements.confirmSensitiveEmail.checked = false;
+      document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment.`;
+      document.getElementById('timesheetEmailDialog').showModal();
+      document.getElementById('timesheetRecipientEmail').focus();
+      return;
+    }
+    if (button.dataset.timesheetAction === 'download') {
+      try { downloadTimesheetPdf(timesheetPdfBlob(staffName, month, entries), timesheetFilename(staffName, month)); notify('Timesheet PDF downloaded.'); }
+      catch (error) { notify(error.message || 'Could not create the timesheet PDF.'); }
+      return;
+    }
     const printWindow = window.open('', '_blank');
-    if (!printWindow) { notify('Allow pop-ups to open the printable timesheet.'); return; }
-    button.disabled = true;
+    if (!printWindow) { notify('Allow pop-ups to view the printable timesheet.'); return; }
+    printWindow.document.open();
+    printWindow.document.write(timesheetPrintDocument(staffName, month, entries));
+    printWindow.document.close();
+    printWindow.document.getElementById('printTimesheet')?.addEventListener('click', () => printWindow.print());
+    printWindow.document.getElementById('closeTimesheet')?.addEventListener('click', () => printWindow.close());
+  });
+  const timesheetEmailDialog = document.getElementById('timesheetEmailDialog');
+  document.addEventListener('click', event => {
+    if (event.target.closest('#timesheetEmailClose, #timesheetEmailCancel')) timesheetEmailDialog?.close();
+    if (event.target === timesheetEmailDialog) timesheetEmailDialog.close();
+  });
+  document.addEventListener('submit', async event => {
+    const form = event.target;
+    if (!form.matches('[data-manual-timesheet-email]')) return;
+    event.preventDefault();
+    if (savingTime) return;
+    const data = new FormData(form);
+    const staffName = String(data.get('staffName') || '');
+    const month = String(data.get('month') || '');
+    const entries = timesheetEntries(staffName, month);
+    if (!entries.length) { notify('No timesheet entries were found for this staff member and month.'); return; }
+    const button = form.querySelector('button[type="submit"]');
+    savingTime = true; button.disabled = true;
     try {
-      const staffName = button.dataset.exportTimesheet;
-      const month = button.dataset.exportMonth;
-      const result = await api('/manual-timesheets/employer');
-      const entries = (result.manualTimesheets || []).filter(entry => entry.staff_name === staffName && String(entry.shift_date).slice(0, 7) === month);
-      if (!entries.length) throw new Error('No manual entries were found for this staff member and month.');
-      printWindow.document.open();
-      printWindow.document.write(timesheetPrintDocument(staffName, month, entries));
-      printWindow.document.close();
-      printWindow.document.getElementById('printTimesheet')?.addEventListener('click', () => printWindow.print());
-      printWindow.document.getElementById('closeTimesheet')?.addEventListener('click', () => printWindow.close());
-      if (button.dataset.timesheetAction === 'download') printWindow.requestAnimationFrame(() => printWindow.print());
-    } catch (error) {
-      printWindow.close();
-      notify(error.message || 'Could not prepare the timesheet.');
-    } finally { button.disabled = false; }
+      const blob = timesheetPdfBlob(staffName, month, entries);
+      const bytes = new Uint8Array(await blob.arrayBuffer());
+      let binary = ''; for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
+      timesheetEmailDialog.close(); form.reset();
+      notify('Timesheet PDF emailed successfully.');
+    } catch (error) { notify(error.message || 'Could not send the timesheet PDF.'); }
+    finally { savingTime = false; button.disabled = false; }
   });
 
   function render1099Payroll(data) {

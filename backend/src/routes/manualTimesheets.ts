@@ -6,6 +6,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { sendEmail, escapeEmailHtml } from "../services/email.js";
 
 const router = Router();
 let manualTimesheetsReady = false;
@@ -20,6 +21,13 @@ const entrySchema = z.object({
   unpaidBreakMinutes: z.coerce.number().int().min(0).max(1440).default(0),
   includeWeekends: z.boolean().default(true),
   reason: z.string().trim().min(3).max(2000),
+});
+
+const emailTimesheetSchema = z.object({
+  staffName: z.string().trim().min(1).max(255),
+  month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  recipient: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  pdfBase64: z.string().min(100).max(3_200_000).regex(/^[A-Za-z0-9+/]+={0,2}$/),
 });
 
 const reviewSchema = z.object({
@@ -170,6 +178,37 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
     if (error?.code === "23505") return next(new AppError(409, "A missed-clock-in entry already exists for this staff member on one of those dates."));
     next(error);
   }
+});
+
+router.post("/employer/email", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureManualTimesheets();
+    const employer = await getEmployer(req);
+    const data = emailTimesheetSchema.parse(req.body);
+    const match = (await db.execute(sql`
+      SELECT COUNT(*)::int AS entry_count
+      FROM manual_timesheet_entries
+      WHERE employer_id = ${employer.id} AND staff_name = ${data.staffName}
+        AND to_char(shift_date, 'YYYY-MM') = ${data.month}
+    `) as any).rows[0];
+    if (!Number(match?.entry_count || 0)) throw new AppError(404, "No timesheet entries were found for this staff member and month.");
+
+    const pdf = Buffer.from(data.pdfBase64, "base64");
+    if (pdf.length > 2_400_000 || !pdf.subarray(0, 5).equals(Buffer.from("%PDF-")) || !pdf.includes(Buffer.from("%%EOF"))) {
+      throw new AppError(400, "The timesheet PDF could not be verified. Download it again and retry.");
+    }
+    const filenameBase = data.staffName.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/gi, "_").replace(/^_+|_+$/g, "").slice(0, 80) || "staff";
+    const filename = `${filenameBase}_Timesheet_${data.month}.pdf`;
+    const sent = await sendEmail({
+      to: data.recipient,
+      subject: `Elite Bridge timesheet - ${data.staffName} - ${data.month}`,
+      text: `Attached is the requested confidential staff timesheet for ${data.staffName} (${data.month}). Please handle this payroll record securely.`,
+      html: `<p>Attached is the requested confidential staff timesheet for <strong>${escapeEmailHtml(data.staffName)}</strong> (${escapeEmailHtml(data.month)}).</p><p>Please handle this payroll record securely.</p>`,
+      attachments: [{ filename, content: pdf, contentType: "application/pdf" }],
+    });
+    if (!sent) throw new AppError(503, "Email delivery is not configured on the Elite Bridge server.");
+    res.json({ sent: true });
+  } catch (error) { next(error); }
 });
 
 router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: AuthRequest, res, next) => {

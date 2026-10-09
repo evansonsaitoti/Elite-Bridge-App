@@ -81,7 +81,7 @@
       <section data-view-panel="caregivers" hidden><div class="page-head"><div><p class="eyebrow">People</p><h1>Caregiver directory</h1><p>Review caregivers and invitations connected to your Elite Bridge account.</p></div><button class="primary-button" type="button" data-invite-caregiver>Invite caregiver</button></div><div class="operations-grid"><div class="surface surface-pad"><div class="surface-head"><div><h2>Caregivers</h2><p>Profiles and screening status from the shared Elite Bridge platform</p></div></div><div id="caregiverList"></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Invitations</h2><p>Secure links expire after seven days</p></div></div><div id="invitationList"></div></div></div></section>
       <section data-view-panel="timesheets" hidden>
         <div class="page-head"><div><p class="eyebrow">Timekeeping</p><h1>Timesheets</h1><p>Review recorded hours and log a missed clock-in. Every manual entry is audited and stays pending until you review it.</p></div></div>
-        <div class="surface surface-pad timesheet-dashboard"><div class="surface-head"><div><h2>Timesheet dashboard</h2><p>Review, approve, and prepare staff timesheets for sharing.</p></div><span class="manual-entry-pill">Employer review</span></div><div class="timesheet-summary" id="timesheetSummary" aria-label="Timesheet summary"></div><div id="timesheetList"></div><p class="timesheet-export-hint">View opens a share-ready timesheet. Download PDF opens your browser’s print and save dialog.</p></div>
+        <div class="surface surface-pad timesheet-dashboard"><div class="surface-head"><div><h2>Timesheet dashboard</h2><p>Review, approve, and prepare staff timesheets for sharing.</p></div><span class="manual-entry-pill">Employer review</span></div><div class="timesheet-summary" id="timesheetSummary" aria-label="Timesheet summary"></div><div id="timesheetList"></div><p class="timesheet-export-hint">View opens a share-ready timesheet. Download saves a PDF file directly. Email sends a PDF attachment to the address you enter.</p></div>
         <article class="surface surface-pad manual-entry-panel">
           <div class="surface-head"><div><h2>Add a missed clock-in</h2><p>Create a manual timesheet from the staff member's reported hours.</p></div><span class="manual-entry-pill">Employer review required</span></div>
           <form id="manualTimesheetForm" data-manual-entry class="manual-timesheet-form">
@@ -364,6 +364,15 @@
         <div class="dialog-actions"><button class="secondary-button" id="timesheetApprovalCancel" type="button">Cancel</button><button class="primary-button" type="submit">Confirm approval</button></div>
       </form>
     </dialog>
+    <dialog class="invite-dialog timesheet-email-dialog" id="timesheetEmailDialog" aria-labelledby="timesheetEmailTitle">
+      <form class="invite-form" id="timesheetEmailForm" data-manual-timesheet-email>
+        <div class="dialog-head"><div><p class="eyebrow">Confidential payroll record</p><h2 id="timesheetEmailTitle">Email timesheet PDF</h2><p id="timesheetEmailSummary">Choose the recipient for this timesheet PDF.</p></div><button class="dialog-close" id="timesheetEmailClose" type="button" aria-label="Close email form">×</button></div>
+        <input type="hidden" name="staffName"><input type="hidden" name="month">
+        <div class="field"><label for="timesheetRecipientEmail">Recipient email</label><input id="timesheetRecipientEmail" name="recipient" type="email" maxlength="254" autocomplete="email" required placeholder="name@example.com"></div>
+        <label class="timesheet-email-confirm"><input name="confirmSensitiveEmail" type="checkbox" required><span>I confirm I’m authorized to send this confidential timesheet to this recipient.</span></label>
+        <div class="dialog-actions"><button class="secondary-button" id="timesheetEmailCancel" type="button">Cancel</button><button class="primary-button" type="submit">Send PDF by email</button></div>
+      </form>
+    </dialog>
     <dialog class="invite-dialog" id="inviteDialog" aria-labelledby="inviteTitle">
       <form class="invite-form" id="inviteForm">
         <div class="dialog-head"><div><p class="eyebrow">Elite Care invitation</p><h2 id="inviteTitle">Invite a caregiver</h2><p>We will create a secure, organization-specific signup link.</p></div><button class="dialog-close" id="inviteClose" type="button" aria-label="Close invitation form">×</button></div>
@@ -375,7 +384,7 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=timesheet-approval-20261009"></script>
+  <script src="/dashboard.js?v=timesheet-pdf-email-20261009"></script>
 </body>
 </html>
 

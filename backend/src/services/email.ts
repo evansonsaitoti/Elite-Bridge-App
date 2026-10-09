@@ -2,12 +2,20 @@ import nodemailer from "nodemailer";
 import axios from "axios";
 import { config } from "../config/env.js";
 
-type EmailMessage = { to: string; subject: string; text: string; html?: string };
+type EmailAttachment = { filename: string; content: Buffer; contentType?: string };
+type EmailMessage = { to: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
 
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
   if (config.RESEND_API_KEY && config.RESEND_FROM) {
     const response = await axios.post("https://api.resend.com/emails", {
-      from: config.RESEND_FROM, ...message, to: [message.to],
+      from: config.RESEND_FROM,
+      ...message,
+      to: [message.to],
+      attachments: message.attachments?.map((attachment) => ({
+        filename: attachment.filename,
+        content: attachment.content.toString("base64"),
+        ...(attachment.contentType ? { content_type: attachment.contentType } : {}),
+      })),
     }, {
       headers: { Authorization: `Bearer ${config.RESEND_API_KEY}` },
       timeout: 15_000,
