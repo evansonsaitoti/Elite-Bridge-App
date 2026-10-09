@@ -231,6 +231,9 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .timesheet-email-confirm input { flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--forest-700); }
 .timesheet-email-dialog .dialog-actions > * { min-width: 140px; }
 .timesheet-email-sender { margin: 8px 0 0; color: var(--forest-700); font-size: 11px; font-weight: 700; }
+.timesheet-preview-dialog { width: min(1120px, calc(100vw - 24px)); height: min(94dvh, 960px); max-width: none; max-height: none; padding: 0; overflow: hidden; border: 0; border-radius: 18px; background: #eef2ef; box-shadow: 0 28px 90px rgba(5,35,24,.28); }
+.timesheet-preview-dialog::backdrop { background: rgba(4,26,18,.56); backdrop-filter: blur(3px); }
+.timesheet-preview-dialog iframe { display: block; width: 100%; height: 100%; border: 0; background: #eef2ef; }
 .status-approved { color: #17633a; background: #e9f5eb; }
 .timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(23,50,39,.035); }
 .timesheet-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
