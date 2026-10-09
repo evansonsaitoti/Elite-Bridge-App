@@ -230,6 +230,7 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .timesheet-email-confirm { display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: #f7faf7; font-size: 11px; line-height: 1.5; }
 .timesheet-email-confirm input { flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--forest-700); }
 .timesheet-email-dialog .dialog-actions > * { min-width: 140px; }
+.timesheet-email-sender { margin: 8px 0 0; color: var(--forest-700); font-size: 11px; font-weight: 700; }
 .status-approved { color: #17633a; background: #e9f5eb; }
 .timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(23,50,39,.035); }
 .timesheet-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

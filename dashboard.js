@@ -688,12 +688,13 @@
     const signerValues = [...new Set(ordered.map(entry => String(entry.approved_by_name || '').trim()).filter(Boolean))];
     const approvalNames = fullyApproved && signerValues.length === 1 ? signerValues[0] : '';
     const approvalDates = [...new Set(ordered.map(entry => String(entry.approval_date || '').slice(0, 10)).filter(Boolean))];
-    const approvalDate = fullyApproved && approvalDates.length === 1 ? formatDateOnly(approvalDates[0]) : '';
+    const approvalDateValue = fullyApproved && approvalDates.length === 1 ? approvalDates[0] : '';
+    const approvalDate = approvalDateValue ? formatDateOnly(approvalDateValue) : '';
     const approvalLabel = fullyApproved ? 'Employer-approved missed clock-in record' : 'Missed clock-in record · Prepared for employer review';
     const reportTitle = `${staffName} timesheet - ${payPeriod}`;
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safe(reportTitle)}</title><style>
-      :root{--green:#064024;--lime:#8dc240;--ink:#1e2a24;--muted:#607067;--line:#dce6df;--pale:#f3f8ee}*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;display:flex;justify-content:flex-end;gap:10px;padding:14px max(18px,calc((100vw - 840px)/2));background:#fff;border-bottom:1px solid var(--line)}.toolbar button{border:0;border-radius:9px;padding:11px 16px;color:#fff;background:var(--green);font-weight:700;cursor:pointer}.toolbar button:last-child{color:var(--green);background:var(--pale);border:1px solid var(--line)}main{width:min(840px,calc(100% - 32px));margin:24px auto 50px;padding:42px 48px;background:#fff;box-shadow:0 12px 38px rgba(20,52,39,.1)}.brand{display:flex;align-items:center;justify-content:space-between;padding:0 0 24px;border-top:7px solid var(--green);padding-top:22px}.brand img{width:190px;height:auto;object-fit:contain}.contact{text-align:right;color:var(--muted);font-size:11px;line-height:1.7}.contact strong{color:var(--green);font-size:12px}.rule{border:0;border-top:1px solid var(--line);margin:0 0 30px}h1{margin:0;color:var(--green);font-size:30px;letter-spacing:-.04em}.subtitle{margin:5px 0 22px;color:var(--muted)}.meta,.metrics{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--pale)}.meta>div,.metrics>div{padding:13px 15px;border-right:1px solid var(--line)}.meta>div:last-child,.metrics>div:last-child{border:0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.value{color:var(--ink);font-size:15px;font-weight:700}.metrics{margin-top:14px;background:#fff}.metrics>div{padding:14px 15px}.metric{color:var(--green);font-size:21px;font-weight:700;letter-spacing:-.03em}table{width:100%;margin-top:20px;border-collapse:collapse;font-size:11px}th{padding:10px;background:var(--green);color:#fff;text-align:left;font-size:9px;letter-spacing:.05em}td{padding:10px;border:1px solid var(--line)}tbody tr:nth-child(even){background:#f8fbf9}.num{text-align:right;white-space:nowrap}.total{background:var(--pale)!important;color:var(--green);font-weight:700}.note{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:6px;background:#f7faf4;color:var(--muted);font-size:11px}.approval{margin-top:20px}.approval-title{margin:0 0 13px;color:var(--green);font-size:10px;font-weight:700;letter-spacing:.06em}.approval-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:22px}.approval label{display:block;color:var(--muted);font-size:10px;font-weight:700}.approval input{width:100%;height:30px;border:0;border-bottom:1px solid #aebfb4;background:#fff;color:var(--ink);font:13px Arial;margin-top:4px}.footer{display:flex;justify-content:space-between;margin-top:34px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}@page{size:letter;margin:.42in}@media(max-width:620px){main{padding:24px 18px}.brand{align-items:flex-start;gap:14px;flex-direction:column}.contact{text-align:left}.meta,.metrics{grid-template-columns:1fr}.meta>div,.metrics>div{border-right:0;border-bottom:1px solid var(--line)}table{font-size:9px}td,th{padding:7px 5px}.value{font-size:13px}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;box-shadow:none}.toolbar{display:none}.brand{padding-top:14px}.subtitle{margin-bottom:16px}.meta>div,.metrics>div{padding:10px}.metrics{margin-top:10px}table{margin-top:15px}.note{margin-top:12px}.approval{margin-top:15px}.footer{margin-top:25px}}
-    </style></head><body><div class="toolbar"><button id="printTimesheet" type="button">Print / save as PDF</button><button id="closeTimesheet" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.'}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="text" value="${safe(approvalDate)}"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main></body></html>`;
+      :root{--green:#064024;--lime:#8dc240;--ink:#1e2a24;--muted:#607067;--line:#dce6df;--pale:#f3f8ee}*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;padding:14px max(18px,calc((100vw - 840px)/2));background:#fff;border-bottom:1px solid var(--line);z-index:2}.toolbar button{min-height:44px;border:0;border-radius:9px;padding:11px 16px;color:#fff;background:var(--green);font-weight:700;cursor:pointer}.toolbar button.secondary{color:var(--green);background:var(--pale);border:1px solid var(--line)}main{width:min(840px,calc(100% - 32px));margin:24px auto 50px;padding:42px 48px;background:#fff;box-shadow:0 12px 38px rgba(20,52,39,.1)}.brand{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:24px;padding:22px 0 24px;border-top:7px solid var(--green)}.brand img{display:block;width:min(210px,100%);height:auto;object-fit:contain}.contact{text-align:right;color:var(--muted);font-size:11px;line-height:1.7}.contact strong{color:var(--green);font-size:12px}.rule{border:0;border-top:1px solid var(--line);margin:0 0 30px}h1{margin:0;color:var(--green);font-size:30px;letter-spacing:-.04em}.subtitle{margin:5px 0 22px;color:var(--muted)}.meta,.metrics{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--pale)}.meta>div,.metrics>div{padding:13px 15px;border-right:1px solid var(--line)}.meta>div:last-child,.metrics>div:last-child{border:0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.value{color:var(--ink);font-size:15px;font-weight:700}.metrics{margin-top:14px;background:#fff}.metrics>div{padding:14px 15px}.metric{color:var(--green);font-size:21px;font-weight:700;letter-spacing:-.03em}table{width:100%;margin-top:20px;border-collapse:collapse;font-size:11px}th{padding:10px;background:var(--green);color:#fff;text-align:left;font-size:9px;letter-spacing:.05em}td{padding:10px;border:1px solid var(--line)}tbody tr:nth-child(even){background:#f8fbf9}.num{text-align:right;white-space:nowrap}.total{background:var(--pale)!important;color:var(--green);font-weight:700}.note{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:6px;background:#f7faf4;color:var(--muted);font-size:11px}.approval{margin-top:20px}.approval-title{margin:0 0 13px;color:var(--green);font-size:10px;font-weight:700;letter-spacing:.06em}.approval-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:22px}.approval label{display:block;color:var(--muted);font-size:10px;font-weight:700}.approval input{width:100%;min-height:38px;border:0;border-bottom:1px solid #aebfb4;background:#fff;color:var(--ink);font:13px Arial;margin-top:4px;padding:6px 4px}.approval input[type=date]{font:13px Arial;min-width:0}.footer{display:flex;justify-content:space-between;margin-top:34px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}@page{size:letter;margin:.42in}@media(max-width:620px){main{padding:22px 16px}.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 12px}.toolbar button{padding:9px 7px;font-size:12px}.toolbar #printTimesheet{grid-column:span 2}.brand{grid-template-columns:minmax(0,1fr) minmax(126px,.9fr);gap:12px;padding-top:16px}.brand img{width:100%;max-width:180px}.contact{text-align:right;font-size:9px;line-height:1.6}.contact strong{font-size:10px}.meta,.metrics{grid-template-columns:1fr}.meta>div,.metrics>div{border-right:0;border-bottom:1px solid var(--line)}table{font-size:9px}td,th{padding:7px 5px}.value{font-size:13px}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;box-shadow:none}.toolbar{display:none}.brand{padding-top:14px}.subtitle{margin-bottom:16px}.meta>div,.metrics>div{padding:10px}.metrics{margin-top:10px}table{margin-top:15px}.note{margin-top:12px}.approval{margin-top:15px}.footer{margin-top:25px}}
+    </style></head><body><div class="toolbar"><button id="downloadTimesheet" type="button">Download PDF</button><button id="emailTimesheet" class="secondary" type="button">Email PDF</button><button id="printTimesheet" class="secondary" type="button">Print / save PDF</button><button id="closeTimesheet" class="secondary" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.'}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="date" value="${safe(approvalDateValue)}"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main><script>(function(){const send=action=>{if(!window.opener||window.opener.closed){alert('Return to the timesheet dashboard to download or email this PDF.');return}window.opener.postMessage({type:'elitebridge-timesheet-action',action,staffName:${JSON.stringify(staffName)},month:${JSON.stringify(month)},approvedByName:document.querySelector('[aria-label="Approved by"]').value.trim(),approvalDate:document.querySelector('[aria-label="Approval date"]').value},location.origin);if(action==='email'){window.setTimeout(()=>window.close(),180)}};document.getElementById('downloadTimesheet').addEventListener('click',()=>send('download'));document.getElementById('emailTimesheet').addEventListener('click',()=>send('email'));document.getElementById('printTimesheet').addEventListener('click',()=>window.print());document.getElementById('closeTimesheet').addEventListener('click',()=>window.close())})();</script></body></html>`;
   }
 
   function pdfSafeText(value) {
@@ -708,7 +709,7 @@
     for (const part of parts) { output.set(part, offset); offset += part.length; }
     return output;
   }
-  function timesheetPdfBlob(staffName, month, entries) {
+  function timesheetPdfBlob(staffName, month, entries, approval = {}) {
     const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
     const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
     const logo = document.querySelector('img[src*="logo"]');
@@ -733,8 +734,11 @@
     const fullyApproved = ordered.every(entry => entry.status === 'approved');
     const signers = [...new Set(ordered.map(entry => String(entry.approved_by_name || '').trim()).filter(Boolean))];
     const approvalDates = [...new Set(ordered.map(entry => String(entry.approval_date || '').slice(0, 10)).filter(Boolean))];
-    const approver = fullyApproved && signers.length === 1 ? signers[0] : '';
-    const approvalDate = fullyApproved && approvalDates.length === 1 ? formatDateOnly(approvalDates[0]) : '';
+    const recordedApprover = fullyApproved && signers.length === 1 ? signers[0] : '';
+    const recordedApprovalDate = fullyApproved && approvalDates.length === 1 ? approvalDates[0] : '';
+    const approver = String(approval.approvedByName || recordedApprover).trim();
+    const approvalDateValue = String(approval.approvalDate || recordedApprovalDate).slice(0, 10);
+    const approvalDate = approvalDateValue ? formatDateOnly(approvalDateValue) : '';
     const reasons = [...new Set(ordered.map(entry => String(entry.reason || '').trim()).filter(Boolean))];
     const chunks = [];
     for (let index = 0; index < ordered.length; index += 16) chunks.push(ordered.slice(index, index + 16));
@@ -754,10 +758,10 @@
         ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${width} w ${x1} ${792 - top} m ${x2} ${792 - top} l S`);
       };
       ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
-      text(372, 39, 10, 'ELITE BRIDGE STAFFING', true, '064024');
-      text(372, 56, 9, '(508) 251-9346', false, '607067');
-      text(372, 71, 9, 'info@elitebridgestaffing.com', false, '607067');
-      text(372, 86, 9, 'elitebridgestaffing.com', false, '607067');
+      text(372, 5, 10, 'ELITE BRIDGE STAFFING', true, '064024');
+      text(372, 22, 9, '(508) 251-9346', false, '607067');
+      text(372, 37, 9, 'info@elitebridgestaffing.com', false, '607067');
+      text(372, 52, 9, 'elitebridgestaffing.com', false, '607067');
       line(50, 108, 562, '064024', 4);
       text(50, 126, 22, pageIndex ? 'Staff timesheet (continued)' : 'Staff timesheet', true, '064024');
       text(50, 154, 10, fullyApproved ? 'Employer-approved missed clock-in record' : 'Missed clock-in record - Prepared for employer review', false, '607067');
@@ -859,6 +863,8 @@
       form.elements.confirmSensitiveEmail.checked = false;
       document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment.`;
       document.getElementById('timesheetEmailDialog').showModal();
+      form.elements.approvedByName.value = '';
+      form.elements.approvalDate.value = '';
       document.getElementById('timesheetRecipientEmail').focus();
       return;
     }
@@ -872,8 +878,31 @@
     printWindow.document.open();
     printWindow.document.write(timesheetPrintDocument(staffName, month, entries));
     printWindow.document.close();
-    printWindow.document.getElementById('printTimesheet')?.addEventListener('click', () => printWindow.print());
-    printWindow.document.getElementById('closeTimesheet')?.addEventListener('click', () => printWindow.close());
+  });
+  window.addEventListener('message', event => {
+    const message = event.data;
+    if (event.origin !== location.origin || !message || message.type !== 'elitebridge-timesheet-action') return;
+    const staffName = String(message.staffName || '');
+    const month = String(message.month || '');
+    const entries = timesheetEntries(staffName, month);
+    if (!entries.length) { notify('No timesheet entries were found for this staff member and month.'); return; }
+    const approval = { approvedByName: String(message.approvedByName || '').trim(), approvalDate: String(message.approvalDate || '') };
+    if (message.action === 'download') {
+      try { downloadTimesheetPdf(timesheetPdfBlob(staffName, month, entries, approval), timesheetFilename(staffName, month)); notify('Timesheet PDF downloaded.'); }
+      catch (error) { notify(error.message || 'Could not create the timesheet PDF.'); }
+      return;
+    }
+    if (message.action === 'email') {
+      const form = document.getElementById('timesheetEmailForm');
+      form.elements.staffName.value = staffName;
+      form.elements.month.value = month;
+      form.elements.recipient.value = '';
+      form.elements.confirmSensitiveEmail.checked = false;
+      form.elements.approvedByName.value = approval.approvedByName;
+      form.elements.approvalDate.value = approval.approvalDate;
+      document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment from info@elitebridgestaffing.com.`;
+      document.getElementById('timesheetEmailDialog').showModal();
+    }
   });
   const timesheetEmailDialog = document.getElementById('timesheetEmailDialog');
   document.addEventListener('click', event => {
@@ -893,7 +922,7 @@
     const button = form.querySelector('button[type="submit"]');
     savingTime = true; button.disabled = true;
     try {
-      const blob = timesheetPdfBlob(staffName, month, entries);
+      const blob = timesheetPdfBlob(staffName, month, entries, { approvedByName: String(data.get('approvedByName') || '').trim(), approvalDate: String(data.get('approvalDate') || '') });
       const bytes = new Uint8Array(await blob.arrayBuffer());
       let binary = ''; for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
       await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
@@ -1040,7 +1069,6 @@
       const now = new Date();
       date.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       timesheetApprovalDialog.showModal();
-      document.getElementById('timesheetApproverName').focus();
     }
     if (event.target.closest('#timesheetApprovalClose, #timesheetApprovalCancel')) timesheetApprovalDialog?.close();
     if (event.target === timesheetApprovalDialog) timesheetApprovalDialog.close();

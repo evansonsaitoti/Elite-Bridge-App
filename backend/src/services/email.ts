@@ -3,12 +3,12 @@ import axios from "axios";
 import { config } from "../config/env.js";
 
 type EmailAttachment = { filename: string; content: Buffer; contentType?: string };
-type EmailMessage = { to: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
+type EmailMessage = { from?: string; to: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
 
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
-  if (config.RESEND_API_KEY && config.RESEND_FROM) {
+  if (config.RESEND_API_KEY && (message.from || config.RESEND_FROM)) {
     const response = await axios.post("https://api.resend.com/emails", {
-      from: config.RESEND_FROM,
+      from: message.from || config.RESEND_FROM,
       ...message,
       to: [message.to],
       attachments: message.attachments?.map((attachment) => ({
@@ -22,7 +22,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
     });
     return Boolean(response.data?.id);
   }
-  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || !config.SMTP_FROM) {
+  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || (!message.from && !config.SMTP_FROM)) {
     console.warn("Email not sent: configure Resend or SMTP");
     return false;
   }
@@ -37,7 +37,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
     socketTimeout: 15_000,
   });
 
-  const result = await transporter.sendMail({ from: config.SMTP_FROM, ...message });
+  const result = await transporter.sendMail({ from: message.from || config.SMTP_FROM, ...message });
   return result.accepted.some((recipient: unknown) => String(recipient).toLowerCase() === message.to.toLowerCase());
 }
 
