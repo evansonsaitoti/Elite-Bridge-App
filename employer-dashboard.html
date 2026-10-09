@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#064024">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=elitebridge-brand-missedclock-20261009">
+  <link rel="stylesheet" href="/app-shell.css?v=elitebridge-timesheet-pdf-20261009">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -96,7 +96,7 @@
             <div class="manual-entry-actions"><p>Manual entries are recorded as pending review. Approval does not send payment.</p><button class="primary-button" type="submit">Save for review</button></div>
           </form>
         </article>
-        <div class="surface surface-pad"><div class="surface-head"><div><h2>Timesheet activity</h2><p>Clocked hours and employer-entered missed clock-ins</p></div></div><div id="timesheetList"></div></div>
+        <div class="surface surface-pad"><div class="surface-head"><div><h2>Timesheet activity</h2><p>Clocked hours and employer-entered missed clock-ins</p></div></div><div id="timesheetList"></div><p class="timesheet-export-hint">Use <strong>Print / save PDF</strong> on a manual entry to prepare a private, share-ready timesheet for that staff member and month.</p></div>
       </section>
       <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div id="conversationList"></div></div></section>
       <section data-view-panel="updates" hidden><div class="page-head"><div><p class="eyebrow">Team communication</p><h1>Team updates</h1><p>Share important operational information with your care team.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">↗</span><strong>No updates published yet</strong><p>Connected team announcements will be added here.</p><button class="secondary-button" type="button" data-notify="Team updates are being prepared for the web portal.">Create an update</button></div></div></div></section>
@@ -367,6 +367,7 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=manual-missed-clockins-20261009"></script>
+  <script src="/dashboard.js?v=timesheet-pdf-20261009"></script>
 </body>
 </html>
+

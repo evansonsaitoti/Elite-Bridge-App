@@ -217,8 +217,16 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .manual-entry-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 2px; }
 .manual-entry-actions p { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
 .manual-entry-actions .primary-button { flex: 0 0 auto; }
-.timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.timesheet-card { margin-bottom: 11px; border: 1px solid var(--line); border-radius: 16px; background: #fff; box-shadow: 0 4px 14px rgba(23,50,39,.035); }
 .timesheet-card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.timesheet-card-head > strong { color: var(--forest-950); font-size: 15px; letter-spacing: -.01em; }
+.timesheet-card > p { color: var(--muted); font-size: 12px; line-height: 1.55; }
+.timesheet-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; }
+.timesheet-export-button { display: inline-flex; align-items: center; gap: 8px; min-height: 38px; padding: 8px 12px; border: 1px solid #cfe0d5; border-radius: 10px; color: var(--forest-800); background: #f7fbf8; font-size: 11px; font-weight: 800; cursor: pointer; transition: background .18s ease, border-color .18s ease, transform .18s ease; }
+.timesheet-export-button:hover { border-color: #9cbdab; background: #edf6f0; transform: translateY(-1px); }
+.timesheet-export-button svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.timesheet-export-hint { margin: 15px 2px 0; padding-top: 13px; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; line-height: 1.5; }
+.timesheet-export-hint strong { color: var(--forest-800); }
 .status-manual { color: var(--forest-800); background: var(--mint-100); }
 .timesheet-review-form { margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line); }
 @media (max-width: 760px) {
@@ -1366,3 +1374,4 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
     font-size: 15pt;
   }
 }
+

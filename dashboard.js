@@ -632,7 +632,10 @@
         ? `${formatDateOnly(sheet.shift_date)} · ${String(sheet.start_time).slice(0, 5)} - ${String(sheet.end_time).slice(0, 5)} · ${Number(sheet.worked_minutes / 60).toFixed(2)} hours · ${money(sheet.hourly_rate)}/hr · ${money(sheet.total_amount)}`
         : `${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}`;
       const note = manual ? sheet.reason : sheet.notes;
-      return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Manual entry</span>' : ''}</div><p>${details}</p><span class="status">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span>${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
+      const exportAction = employerView && manual
+        ? `<button type="button" class="timesheet-export-button" data-export-timesheet="${escapeHtml(sheet.staff_name)}" data-export-month="${escapeHtml(String(sheet.shift_date).slice(0, 7))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 8V3h10v5"></path><path d="M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2"></path><path d="M7 14h10v7H7z"></path></svg>Print / save PDF</button>`
+        : '';
+      return `<article class="surface-pad timesheet-card" data-searchable><div class="timesheet-card-head"><strong>${escapeHtml(title)}</strong>${manual ? '<span class="status status-manual">Manual entry</span>' : ''}</div><p>${details}</p><div class="timesheet-card-footer"><span class="status">${escapeHtml(String(sheet.status || '').replaceAll('_', ' '))}</span>${exportAction}</div>${note ? `<p>${escapeHtml(note)}</p>` : ''}${sheet.agency_note ? `<p>Employer note: ${escapeHtml(sheet.agency_note)}</p>` : ''}
       ${employerView && sheet.status === 'pending_approval' ? `<form data-review-sheet="${sheet.id}" ${manual ? `data-manual-review-sheet="${sheet.id}"` : ''} class="field timesheet-review-form"><label for="review-${manual ? 'manual-' : ''}${sheet.id}">Review note (required for clarification)</label><textarea id="review-${manual ? 'manual-' : ''}${sheet.id}" name="note" maxlength="2000"></textarea><div><button class="primary-button" type="submit" name="decision" value="approved">Approve hours</button> <button class="secondary-button" type="submit" name="decision" value="correction_requested">Request clarification</button></div></form>` : ''}
       ${!employerView && sheet.status === 'correction_requested' ? `<form data-resubmit-sheet="${sheet.id}" class="field"><label for="response-${sheet.id}">Clarification for your employer</label><textarea id="response-${sheet.id}" name="notes" maxlength="2000" required></textarea><button class="primary-button" type="submit">Send clarification</button><small>Recorded hours remain unchanged.</small></form>` : ''}</article>`;
     }).join('');
@@ -642,6 +645,66 @@
     const date = new Date(`${String(value).slice(0, 10)}T12:00:00`);
     return Number.isNaN(date.getTime()) ? String(value).slice(0, 10) : date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   }
+
+  function timesheetPrintDocument(staffName, month, entries) {
+    const safe = escapeHtml;
+    const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
+    const shiftDate = value => {
+      const raw = String(value || '').slice(0, 10);
+      const date = new Date(`${raw}T12:00:00`);
+      return Number.isNaN(date.getTime()) ? raw : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(date);
+    };
+    const shiftTime = value => {
+      const [hours, minutes] = String(value || '').slice(0, 5).split(':').map(Number);
+      if (!Number.isFinite(hours) || !Number.isFinite(minutes)) return safe(value);
+      const period = hours >= 12 ? 'PM' : 'AM';
+      return `${hours % 12 || 12}:${String(minutes).padStart(2, '0')} ${period}`;
+    };
+    const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
+    const totalMinutes = ordered.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0);
+    const gross = ordered.reduce((sum, entry) => sum + Number(entry.total_amount || 0), 0);
+    const rates = [...new Set(ordered.map(entry => Number(entry.hourly_rate || 0)))];
+    const rateLabel = rates.length > 1 ? 'Varies' : moneyPrecise(rates[0] || 0);
+    const rows = ordered.map(entry => `<tr><td>${safe(shiftDate(entry.shift_date))}</td><td>${safe(shiftTime(entry.start_time))} - ${safe(shiftTime(entry.end_time))}</td><td class="num">${(Number(entry.worked_minutes || 0) / 60).toFixed(2)}</td><td class="num">${moneyPrecise(entry.hourly_rate)}</td><td class="num">${moneyPrecise(entry.total_amount)}</td></tr>`).join('');
+    const reasons = [...new Set(ordered.map(entry => String(entry.reason || '').trim()).filter(Boolean))];
+    const firstDay = new Date(`${String(ordered[0]?.shift_date || '').slice(0, 10)}T12:00:00`);
+    const lastDay = new Date(`${String(ordered.at(-1)?.shift_date || '').slice(0, 10)}T12:00:00`);
+    const firstLabel = Number.isNaN(firstDay.getTime()) ? month : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(firstDay);
+    const lastLabel = Number.isNaN(lastDay.getTime()) ? firstLabel : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(lastDay);
+    const payPeriod = ordered.length < 2 || String(ordered[0]?.shift_date).slice(0, 10) === String(ordered.at(-1)?.shift_date).slice(0, 10)
+      ? firstLabel
+      : firstDay.getMonth() === lastDay.getMonth() && firstDay.getFullYear() === lastDay.getFullYear()
+        ? `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(firstDay)} ${firstDay.getDate()}-${lastDay.getDate()}, ${firstDay.getFullYear()}`
+        : `${firstLabel} - ${lastLabel}`;
+    const reportTitle = `${staffName} timesheet - ${payPeriod}`;
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safe(reportTitle)}</title><style>
+      :root{--green:#064024;--lime:#8dc240;--ink:#1e2a24;--muted:#607067;--line:#dce6df;--pale:#f3f8ee}*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;display:flex;justify-content:flex-end;gap:10px;padding:14px max(18px,calc((100vw - 840px)/2));background:#fff;border-bottom:1px solid var(--line)}.toolbar button{border:0;border-radius:9px;padding:11px 16px;color:#fff;background:var(--green);font-weight:700;cursor:pointer}.toolbar button:last-child{color:var(--green);background:var(--pale);border:1px solid var(--line)}main{width:min(840px,calc(100% - 32px));margin:24px auto 50px;padding:42px 48px;background:#fff;box-shadow:0 12px 38px rgba(20,52,39,.1)}.brand{display:flex;align-items:center;justify-content:space-between;padding:0 0 24px;border-top:7px solid var(--green);padding-top:22px}.brand img{width:190px;height:auto;object-fit:contain}.contact{text-align:right;color:var(--muted);font-size:11px;line-height:1.7}.contact strong{color:var(--green);font-size:12px}.rule{border:0;border-top:1px solid var(--line);margin:0 0 30px}h1{margin:0;color:var(--green);font-size:30px;letter-spacing:-.04em}.subtitle{margin:5px 0 22px;color:var(--muted)}.meta,.metrics{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--pale)}.meta>div,.metrics>div{padding:13px 15px;border-right:1px solid var(--line)}.meta>div:last-child,.metrics>div:last-child{border:0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.value{color:var(--ink);font-size:15px;font-weight:700}.metrics{margin-top:14px;background:#fff}.metrics>div{padding:14px 15px}.metric{color:var(--green);font-size:21px;font-weight:700;letter-spacing:-.03em}table{width:100%;margin-top:20px;border-collapse:collapse;font-size:11px}th{padding:10px;background:var(--green);color:#fff;text-align:left;font-size:9px;letter-spacing:.05em}td{padding:10px;border:1px solid var(--line)}tbody tr:nth-child(even){background:#f8fbf9}.num{text-align:right;white-space:nowrap}.total{background:var(--pale)!important;color:var(--green);font-weight:700}.note{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:6px;background:#f7faf4;color:var(--muted);font-size:11px}.approval{margin-top:20px}.approval-title{margin:0 0 13px;color:var(--green);font-size:10px;font-weight:700;letter-spacing:.06em}.approval-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:22px}.approval label{display:block;color:var(--muted);font-size:10px;font-weight:700}.approval input{width:100%;height:30px;border:0;border-bottom:1px solid #aebfb4;background:#fff;color:var(--ink);font:13px Arial;margin-top:4px}.footer{display:flex;justify-content:space-between;margin-top:34px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}@page{size:letter;margin:.42in}@media(max-width:620px){main{padding:24px 18px}.brand{align-items:flex-start;gap:14px;flex-direction:column}.contact{text-align:left}.meta,.metrics{grid-template-columns:1fr}.meta>div,.metrics>div{border-right:0;border-bottom:1px solid var(--line)}table{font-size:9px}td,th{padding:7px 5px}.value{font-size:13px}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;box-shadow:none}.toolbar{display:none}.brand{padding-top:14px}.subtitle{margin-bottom:16px}.meta>div,.metrics>div{padding:10px}.metrics{margin-top:10px}table{margin-top:15px}.note{margin-top:12px}.approval{margin-top:15px}.footer{margin-top:25px}}
+    </style></head><body><div class="toolbar"><button id="printTimesheet" type="button">Print / save as PDF</button><button id="closeTimesheet" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">Missed clock-in record · Prepared for employer review</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">Pay period</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">Missed clock-in</span></div></section><section class="metrics"><div><span class="label">Hourly pay rate</span><span class="metric">${rateLabel}</span></div><div><span class="label">Total hours</span><span class="metric">${(totalMinutes / 60).toFixed(2)} hrs</span></div><div><span class="label">Gross wages</span><span class="metric">${moneyPrecise(gross)}</span></div></section><table><thead><tr><th>Date</th><th>Time worked</th><th class="num">Hours</th><th class="num">Rate</th><th class="num">Amount</th></tr></thead><tbody>${rows}<tr class="total"><td></td><td>Total</td><td class="num">${(totalMinutes / 60).toFixed(2)}</td><td></td><td class="num">${moneyPrecise(gross)}</td></tr></tbody></table><aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>Please review and approve before including in payroll.</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text"></label><label>Date<input aria-label="Approval date" type="text"></label></div></section><footer class="footer"><span>Confidential payroll record · Prepared for employer review</span><span>Elite Bridge Staffing</span></footer></main></body></html>`;
+  }
+
+  document.addEventListener('click', async event => {
+    const button = event.target.closest('[data-export-timesheet]');
+    if (!button || button.disabled) return;
+    event.preventDefault();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) { notify('Allow pop-ups to open the printable timesheet.'); return; }
+    button.disabled = true;
+    try {
+      const staffName = button.dataset.exportTimesheet;
+      const month = button.dataset.exportMonth;
+      const result = await api('/manual-timesheets/employer');
+      const entries = (result.manualTimesheets || []).filter(entry => entry.staff_name === staffName && String(entry.shift_date).slice(0, 7) === month);
+      if (!entries.length) throw new Error('No manual entries were found for this staff member and month.');
+      printWindow.document.open();
+      printWindow.document.write(timesheetPrintDocument(staffName, month, entries));
+      printWindow.document.close();
+      printWindow.document.getElementById('printTimesheet')?.addEventListener('click', () => printWindow.print());
+      printWindow.document.getElementById('closeTimesheet')?.addEventListener('click', () => printWindow.close());
+    } catch (error) {
+      printWindow.close();
+      notify(error.message || 'Could not prepare the timesheet.');
+    } finally { button.disabled = false; }
+  });
 
   function render1099Payroll(data) {
     const approved = data?.approvedTimesheets || [];
@@ -1139,3 +1202,4 @@
   initializeContractGenerator();
   (expectedRole === 'employer' ? loadEmployer() : loadCaregiver()).catch(() => notify('Some live information could not be loaded. Please refresh to try again.'));
 })();
+
