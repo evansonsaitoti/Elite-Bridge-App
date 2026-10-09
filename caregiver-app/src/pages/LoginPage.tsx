@@ -99,13 +99,11 @@ export function LoginPage() {
           <div className="flex-1 h-px bg-gray-300"></div>
         </div>
 
-        {/* Register Link */}
-        <Link
-          to="/register"
-          className="block w-full text-center bg-[#0b3726] hover:bg-[#0a2f1f] text-white font-semibold py-2 rounded-lg transition-colors"
-        >
-          Create Account
-        </Link>
+        {/* Employer invitation required */}
+        <div className="mt-6 rounded-lg border border-emerald-100 bg-emerald-50 p-4 text-center">
+          <p className="text-sm font-semibold text-[#0b3726]">New to Elite Care?</p>
+          <p className="mt-1 text-xs leading-5 text-gray-600">Ask your employer to invite you. Your secure link will let you create your account.</p>
+        </div>
 
         {/* Footer Links */}
         <div className="mt-6 text-center text-sm text-gray-600">
