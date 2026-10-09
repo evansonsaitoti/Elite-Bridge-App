@@ -366,8 +366,8 @@
     </dialog>
     <dialog class="invite-dialog timesheet-email-dialog" id="timesheetEmailDialog" aria-labelledby="timesheetEmailTitle">
       <form class="invite-form" id="timesheetEmailForm" data-manual-timesheet-email>
-        <div class="dialog-head"><div><p class="eyebrow">Confidential payroll record</p><h2 id="timesheetEmailTitle">Email timesheet PDF</h2><p id="timesheetEmailSummary">Choose the recipient for this timesheet PDF.</p></div><button class="dialog-close" id="timesheetEmailClose" type="button" aria-label="Close email form">×</button></div>
-        <input type="hidden" name="staffName"><input type="hidden" name="month">
+        <div class="dialog-head"><div><p class="eyebrow">Confidential payroll record</p><h2 id="timesheetEmailTitle">Email timesheet PDF</h2><p id="timesheetEmailSummary">Choose the recipient for this timesheet PDF.</p><p class="timesheet-email-sender">Sent securely from info@elitebridgestaffing.com.</p></div><button class="dialog-close" id="timesheetEmailClose" type="button" aria-label="Close email form">×</button></div>
+        <input type="hidden" name="staffName"><input type="hidden" name="month"><input type="hidden" name="approvedByName"><input type="hidden" name="approvalDate">
         <div class="field"><label for="timesheetRecipientEmail">Recipient email</label><input id="timesheetRecipientEmail" name="recipient" type="email" maxlength="254" autocomplete="email" required placeholder="name@example.com"></div>
         <label class="timesheet-email-confirm"><input name="confirmSensitiveEmail" type="checkbox" required><span>I confirm I’m authorized to send this confidential timesheet to this recipient.</span></label>
         <div class="dialog-actions"><button class="secondary-button" id="timesheetEmailCancel" type="button">Cancel</button><button class="primary-button" type="submit">Send PDF by email</button></div>
