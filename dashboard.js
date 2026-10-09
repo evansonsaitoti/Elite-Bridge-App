@@ -709,6 +709,7 @@
     return output;
   }
   function timesheetPdfBlob(staffName, month, entries) {
+    const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
     const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
     const logo = document.querySelector('img[src*="logo"]');
     const canvas = document.createElement('canvas');
