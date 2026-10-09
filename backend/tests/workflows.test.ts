@@ -378,7 +378,9 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect((await (await exportFor(otherEmployer)).text()).trim().split("\r\n")).toHaveLength(1);
     await request("/payroll/export?from=2026-02-31&to=2026-03-01",employer,"GET",undefined,400);
     await request("/payroll/export?from=2026-01-01&to=2026-12-01",employer,"GET",undefined,400);
-    expect((await request("/payroll/integrations",employer)).integrations.every((p:any)=>p.status==="requires_provider_setup")).toBe(true);
+    const integrations=(await request("/payroll/integrations",employer)).integrations;
+    expect(integrations.filter((p:any)=>p.provider!=="external_payroll").every((p:any)=>p.status==="available")).toBe(true);
+    expect(integrations.find((p:any)=>p.provider==="external_payroll")?.status).toBe("optional");
   });
   it("keeps SMS off without configuration and rejects unsigned provider callbacks", async () => {
     expect((await request("/sms/preferences",caregiver)).configured).toBe(false);
