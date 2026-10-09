@@ -386,6 +386,56 @@
 
         .invite-banner.active { display: block; }
 
+        .invite-required {
+            display: none;
+            margin: 28px 0 10px;
+            padding: 30px 26px;
+            border: 1px solid #e6eee9;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #f8fbf9, #f1f7f3);
+            text-align: center;
+        }
+        .invite-required.active { display: block; }
+        .invite-required-kicker {
+            color: var(--accent-gold);
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .17em;
+            text-transform: uppercase;
+        }
+        .invite-required h2 {
+            margin: 10px 0 8px;
+            color: var(--primary-dark);
+            font-size: clamp(1.75rem, 3vw, 2.15rem);
+            letter-spacing: -.04em;
+        }
+        .invite-required p {
+            max-width: 430px;
+            margin: 0 auto;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        .invite-status-card {
+            display: grid;
+            gap: 5px;
+            margin: 22px auto 18px;
+            padding: 18px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(11,55,38,.06);
+            color: var(--primary-dark);
+        }
+        .invite-status-card span { color: var(--muted); font-size: .92rem; line-height: 1.5; }
+        .invite-login {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--primary-dark);
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .invite-employer-link { margin-top: 18px !important; font-size: .88rem; }
+        .invite-employer-link a { color: var(--primary-dark); font-weight: 800; }
+
         @media (max-width: 480px) {
             body {
                 display: block;
@@ -476,6 +526,18 @@
         <div class="error-message" id="errorMessage"></div>
         <div class="success-message" id="successMessage"></div>
         <div class="invite-banner" id="inviteBanner"></div>
+
+        <section class="invite-required" id="inviteRequired" aria-labelledby="inviteRequiredTitle">
+            <span class="invite-required-kicker">Elite Care access</span>
+            <h2 id="inviteRequiredTitle">Join your team</h2>
+            <p>To use Elite Care, your employer needs to invite you first. Your secure invitation will arrive by email or text.</p>
+            <div class="invite-status-card">
+                <strong>Stay tuned for an invitation</strong>
+                <span>Once your employer adds you, open their link to create your caregiver account.</span>
+            </div>
+            <a class="invite-login" href="/">Have an account? Log in</a>
+            <p class="invite-employer-link">Hiring caregivers? <a href="/signup?role=employer">Create an employer account</a></p>
+        </section>
 
         <form id="signupForm" onsubmit="handleSignup(event)">
             <div style="margin-bottom: 25px;">
@@ -605,12 +667,13 @@
 
     function updateCompanySection() {
         const checkedRole = document.querySelector('input[name="role"]:checked');
-        const role = checkedRole ? checkedRole.value : 'caregiver';
+        const role = checkedRole ? checkedRole.value : null;
         const companySection = document.getElementById('companySection');
         const companyInput = document.getElementById('companyName');
         const hero = signupHeroContent[role] || signupHeroContent.caregiver;
+        const invitationRequired = role === 'caregiver' && !inviteToken;
 
-        document.body.dataset.signupRole = role;
+        document.body.dataset.signupRole = role || '';
         document.getElementById('heroRoleLabel').textContent = hero.role;
         document.getElementById('heroKicker').textContent = hero.kicker;
         document.getElementById('heroTitle').textContent = hero.title;
@@ -626,6 +689,9 @@
             companySection.classList.remove('active');
             companyInput.required = false;
         }
+
+        document.getElementById('signupForm').style.display = invitationRequired ? 'none' : 'block';
+        document.getElementById('inviteRequired').classList.toggle('active', invitationRequired);
     }
 
     updateCompanySection();
@@ -641,6 +707,12 @@
         const confirmPassword = document.getElementById('confirmPassword').value;
         const role = document.querySelector('input[name="role"]:checked').value;
         const companyName = document.getElementById('companyName').value;
+
+        if (role === 'caregiver' && !inviteToken) {
+            document.getElementById('inviteRequired').classList.add('active');
+            document.getElementById('signupForm').style.display = 'none';
+            return;
+        }
 
         const errorDiv = document.getElementById('errorMessage');
         const successDiv = document.getElementById('successMessage');
