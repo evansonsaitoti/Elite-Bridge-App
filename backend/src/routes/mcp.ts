@@ -25,6 +25,7 @@ const scopeDescriptions: Record<string, string> = {
   "caregivers:write": "Create caregiver invitations.",
   "invoices:read": "View official client invoices and totals.",
   "invoices:write": "Create draft client invoices for review.",
+  "offline_access": "Keep the approved connection active with rotating refresh tokens.",
   "timesheets:read": "View timesheets.",
   "timesheets:write": "Create missed-clock-in timesheets."
 };
