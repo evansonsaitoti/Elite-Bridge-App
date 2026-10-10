@@ -209,7 +209,15 @@ router.post("/employer/email", authMiddleware, async (req: AuthRequest, res, nex
     });
     if (!sent) throw new AppError(503, "Email delivery is not configured on the Elite Bridge server.");
     res.json({ sent: true });
-  } catch (error) { next(error); }
+  } catch (error: any) {
+    if (error instanceof AppError) return next(error);
+    console.error("Manual timesheet email delivery failed", {
+      providerStatus: error?.response?.status,
+      providerCode: error?.code,
+      errorName: error?.name,
+    });
+    next(new AppError(502, "Email delivery failed. Check that info@elitebridgestaffing.com is verified for outbound email and that the recipient address is valid."));
+  }
 });
 
 router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: AuthRequest, res, next) => {
