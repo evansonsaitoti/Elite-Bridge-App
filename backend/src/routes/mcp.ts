@@ -6,8 +6,9 @@ import { config } from "../config/env.js";
 
 const router = Router();
 export const mcpDiscoveryRouter = Router();
-const MCP_URL = process.env.MCP_SERVER_URL || "https://elite-bridge-shared-api-evans.vercel.app/api/mcp";
-const API_BASE = process.env.MCP_API_BASE_URL || "https://elite-bridge-shared-api-evans.vercel.app/api";
+const previewOrigin = process.env.VERCEL_ENV === "preview" && process.env.VERCEL_URL ? "https://" + process.env.VERCEL_URL : "";
+const MCP_URL = process.env.MCP_SERVER_URL || (previewOrigin ? previewOrigin + "/api/mcp" : "https://elite-bridge-shared-api-evans.vercel.app/api/mcp");
+const API_BASE = process.env.MCP_API_BASE_URL || new URL(MCP_URL).origin + "/api";
 const MCP_ISSUER = new URL(MCP_URL).origin;
 const RESOURCE_METADATA = MCP_ISSUER + "/.well-known/oauth-protected-resource/api/mcp";
 const AUTH_METADATA = MCP_ISSUER + "/.well-known/oauth-authorization-server";
