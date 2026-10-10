@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#064024">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=mobile-icon-hero-20261010">
+  <link rel="stylesheet" href="/app-shell.css?v=mobile-deputy-hero-20261010">
 </head>
 <body data-role="employer">
   <div class="app-frame">
@@ -40,12 +40,28 @@
     <main class="app-main"><div class="content-shell">
       <section data-view-panel="overview">
         <div class="command-hero">
-          <div>
+          <div class="command-copy">
             <p class="eyebrow">Employer command center</p>
             <h1><span data-company-name>Your care workspace</span></h1>
-            <p>See today’s care priorities, fill open coverage, and keep contracts, caregivers, and payments moving.</p>
+            <p>Schedule care, track coverage, approve time, and manage client billing from one mobile workspace.</p>
           </div>
-          <div class="command-actions">
+          <div class="mobile-hero-preview" aria-hidden="true">
+            <div class="preview-phone preview-phone-list">
+              <div class="preview-top"><span></span><strong>Today</strong></div>
+              <div class="preview-person"><i>G</i><span><b>Gladys</b><small>9:00 AM - 1:00 PM</small></span></div>
+              <div class="preview-person"><i>E</i><span><b>Evanson</b><small>4:00 PM - 9:00 PM</small></span></div>
+              <div class="preview-person muted"><i>?</i><span><b>Open shift</b><small>Needs coverage</small></span></div>
+            </div>
+            <div class="preview-phone preview-phone-schedule">
+              <div class="preview-top"><span></span><strong>Barry</strong></div>
+              <div class="preview-days"><b>Mon</b><b>Tue</b><b>Wed</b><b>Thu</b></div>
+              <div class="preview-shift filled">9-1<br><small>Gladys</small></div>
+              <div class="preview-shift filled">9-1<br><small>Gladys</small></div>
+              <div class="preview-shift open">Open</div>
+              <div class="preview-shift evening">4-9<br><small>Evanson</small></div>
+            </div>
+          </div>
+          <div class="command-actions" aria-label="Quick actions">
             <button class="primary-button" type="button" data-go-view="shifts">Post shift</button>
             <button class="secondary-button" type="button" data-go-view="contracts">Contract</button>
             <button class="secondary-button" type="button" data-go-view="timesheets">Timesheet</button>
