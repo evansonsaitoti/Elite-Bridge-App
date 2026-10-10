@@ -5,6 +5,7 @@
     'shifts:write': 'Create, assign, or cancel shifts',
     'caregivers:read': 'View caregivers connected to your organization',
     'caregivers:write': 'Create caregiver invitations',
+    'offline_access': 'Keep the approved connection active with rotating refresh tokens',
     'invoices:read': 'View official client invoices and totals',
     'invoices:write': 'Create draft client invoices for review',
     'timesheets:read': 'View manual timesheets',
