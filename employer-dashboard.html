@@ -361,19 +361,19 @@
             <h1>ChatGPT and MCP automations</h1>
             <p>Prepare repeatable workflows that can be triggered from ChatGPT, internal tools, or a connected MCP server.</p>
           </div>
-          <button class="primary-button" type="button" data-notify="Automation publishing will be enabled after the MCP endpoint and permissions are connected.">Prepare automation</button>
+          <button class="primary-button" type="button" data-notify="Copy MCP endpoint">Prepare automation</button>
         </div>
         <div class="automation-layout">
           <article class="surface surface-pad mcp-panel">
-            <div class="surface-head"><div><h2>MCP connection plan</h2><p>Secure bridge between Elite Bridge and ChatGPT actions</p></div></div>
-            <div class="mcp-flow">
+            <div class="surface-head"><div><h2>Elite Bridge MCP connection</h2><p>Secure access to your employer workspace from ChatGPT</p></div></div>
+            <p class="automation-note">Add this endpoint as a custom MCP connector in ChatGPT. You will sign in to Elite Bridge and approve the requested permissions before any workspace data is shared.</p>\n            <div class="mcp-endpoint-row"><code>https://elite-bridge-shared-api-evans.vercel.app/api/mcp</code><button type="button" data-copy-mcp-endpoint>Copy endpoint</button></div>\n            <div class="mcp-flow">
               <span>ChatGPT</span>
               <i></i>
               <span>MCP tools</span>
               <i></i>
               <span>Elite Bridge API</span>
             </div>
-            <p class="automation-note">Best next build: expose approved actions only, such as create shift, invite caregiver, read timesheets, send reminder, and generate payroll batch. Every write action should require account permissions and an audit log.</p>
+            <p class="automation-note">Available permissions: view shifts and caregivers, create or manage shifts, invite caregivers, view or create draft client invoices, and manage missed-clock-in timesheets. Every action is limited to the connected employer account and recorded in an audit log.</p>
           </article>
           <div class="automation-grid">
             <article class="automation-card"><span class="automation-icon nav-icon--gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3"></path><path d="M17 3v3"></path><path d="M4 8h16"></path><rect x="4" y="5" width="16" height="16" rx="3"></rect></svg></span><strong>Shift coverage guard</strong><p>Alert when a shift is still open 24 hours before start time.</p><button type="button" data-copy-workflow="shift_coverage_guard">Copy workflow</button></article>
