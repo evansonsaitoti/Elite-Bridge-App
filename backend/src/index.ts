@@ -25,6 +25,7 @@ import aiRoutes from "./routes/ai";
 import notificationRoutes from "./routes/notifications";
 import operationsRoutes from "./routes/operations";
 import smsRoutes from "./routes/sms";
+import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
 
 const app = express();
 const httpServer = createServer(app);
@@ -54,6 +55,9 @@ app.get("/health", async (req, res) => {
   });
 });
 
+// Public OAuth discovery metadata for the MCP endpoint
+app.use(mcpDiscoveryRouter);
+
 // API Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
@@ -70,6 +74,7 @@ app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/operations", operationsRoutes);
 app.use("/api/sms", smsRoutes);
+app.use("/api/mcp", mcpRoutes);
 
 // Socket.IO for real-time features
 io.on("connection", (socket) => {
