@@ -22,6 +22,8 @@ const scopeDescriptions: Record<string, string> = {
   "shifts:write": "Create, assign, or cancel shifts.",
   "caregivers:read": "View caregivers connected to your organization.",
   "caregivers:write": "Create caregiver invitations.",
+  "invoices:read": "View official client invoices and totals.",
+  "invoices:write": "Create draft client invoices for review.",
   "timesheets:read": "View timesheets.",
   "timesheets:write": "Create missed-clock-in timesheets."
 };
@@ -254,6 +256,8 @@ const toolList = [
   { name: "elitebridge_assign_caregiver", description: "Assign a connected caregiver to an open shift. This creates a confirmed booking and enforces availability and overlap checks. Requires explicit assignment instruction and confirmAssignment=true.", inputSchema: { type: "object", properties: { shiftId: { type: "integer" }, caregiverId: { type: "integer" }, caregiverPayRate: { type: "number" }, confirmAssignment: { type: "boolean" } }, required: ["shiftId", "caregiverId", "confirmAssignment"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true } },
   { name: "elitebridge_cancel_shift", description: "Cancel a shift and notify assigned caregivers. Requires explicit user instruction and confirmCancel=true.", inputSchema: { type: "object", properties: { shiftId: { type: "integer" }, confirmCancel: { type: "boolean" } }, required: ["shiftId", "confirmCancel"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: false } },
   { name: "elitebridge_invite_caregiver", description: "Create an organization-specific caregiver signup invitation and return a secure link. The app may prepare email/text drafts; it does not guarantee delivery.", inputSchema: { type: "object", properties: { firstName: { type: "string" }, lastName: { type: "string" }, email: { type: "string", format: "email" }, phone: { type: "string" } }, required: ["firstName"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true } },
+  { name: "elitebridge_list_invoices", description: "List official client invoices for the authenticated employer organization.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } },
+  { name: "elitebridge_create_invoice", description: "Create an official draft client invoice for employer review. Requires explicit user instruction to create the invoice. Email delivery is not performed by this tool.", inputSchema: { type: "object", properties: { clientName: { type: "string" }, clientEmail: { type: "string", format: "email" }, billingAddress: { type: "string" }, invoiceDate: { type: "string", description: "YYYY-MM-DD" }, dueDate: { type: "string", description: "YYYY-MM-DD" }, serviceStartDate: { type: "string", description: "YYYY-MM-DD" }, serviceEndDate: { type: "string", description: "YYYY-MM-DD" }, hourlyRate: { type: "number", exclusiveMinimum: 0, maximum: 500 }, morningStartTime: { type: "string", description: "24-hour HH:mm" }, morningEndTime: { type: "string", description: "24-hour HH:mm" }, morningCaregiver: { type: "string" }, eveningStartTime: { type: "string", description: "24-hour HH:mm" }, eveningEndTime: { type: "string", description: "24-hour HH:mm" }, eveningCaregiver: { type: "string" }, includeWeekends: { type: "boolean", default: true }, notes: { type: "string" }, confirmCreate: { type: "boolean", description: "Set true only after the user explicitly requests invoice creation." } }, required: ["clientName", "invoiceDate", "dueDate", "serviceStartDate", "serviceEndDate", "hourlyRate", "morningStartTime", "morningEndTime", "morningCaregiver", "eveningStartTime", "eveningEndTime", "eveningCaregiver", "confirmCreate"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } },
   { name: "elitebridge_list_timesheets", description: "List the employer's manual missed-clock-in timesheets and their approval status.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } },
   { name: "elitebridge_create_missed_clock_in", description: "Create a manual missed-clock-in timesheet for employer review. Requires the staff pay rate, date, time range, and explicit user instruction to record it.", inputSchema: { type: "object", properties: { staffName: { type: "string" }, startDate: { type: "string", description: "YYYY-MM-DD" }, endDate: { type: "string", description: "YYYY-MM-DD; same as startDate for one shift." }, startTime: { type: "string", description: "24-hour HH:mm" }, endTime: { type: "string", description: "24-hour HH:mm" }, hourlyRate: { type: "number", minimum: 0.01 }, unpaidBreakMinutes: { type: "integer", minimum: 0, default: 0 }, includeWeekends: { type: "boolean", default: true }, reason: { type: "string" } }, required: ["staffName", "startDate", "endDate", "startTime", "endTime", "hourlyRate", "reason"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }
 ];
@@ -265,6 +269,8 @@ const requiredScope: Record<string, string> = {
   elitebridge_assign_caregiver: "shifts:write",
   elitebridge_cancel_shift: "shifts:write",
   elitebridge_invite_caregiver: "caregivers:write",
+  elitebridge_list_invoices: "invoices:read",
+  elitebridge_create_invoice: "invoices:write",
   elitebridge_list_timesheets: "timesheets:read",
   elitebridge_create_missed_clock_in: "timesheets:write"
 };
@@ -335,6 +341,12 @@ async function executeTool(name: string, args: any, token: string) {
   }
   if (name === "elitebridge_invite_caregiver") {
     return result(await upstream("/employers/invitations", token, "POST", args));
+  }
+  if (name === "elitebridge_list_invoices") return result(await upstream("/client-invoices/employer", token));
+  if (name === "elitebridge_create_invoice") {
+    if (args.confirmCreate !== true) throw new Error("Invoice not created. Confirm the client, dates, shifts, rate, and invoice details with the user first.");
+    const { confirmCreate, ...payload } = args;
+    return result(await upstream("/client-invoices/employer", token, "POST", payload));
   }
   if (name === "elitebridge_list_timesheets") return result(await upstream("/manual-timesheets/employer", token));
   if (name === "elitebridge_create_missed_clock_in") return result(await upstream("/manual-timesheets/employer", token, "POST", args));
