@@ -486,6 +486,15 @@
   document.querySelectorAll('[data-copy-workflow]').forEach((button) => {
     button.addEventListener('click', () => copyWorkflowPayload(button.dataset.copyWorkflow));
   });
+  document.querySelectorAll('[data-copy-mcp-endpoint]').forEach((button) => button.addEventListener('click', async () => {
+    const endpoint = 'https://elite-bridge-shared-api-evans.vercel.app/api/mcp';
+    try {
+      await navigator.clipboard.writeText(endpoint);
+      notify('MCP endpoint copied. Add it as a custom connector in ChatGPT.');
+    } catch (_) {
+      window.prompt('Copy the Elite Bridge MCP endpoint:', endpoint);
+    }
+  }));
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
   document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', () => {
     if (!inviteDialog) return;
