@@ -500,15 +500,15 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 }
 @media (max-width: 680px) {
   body { background: linear-gradient(180deg, #eef6f1 0, var(--canvas) 190px); }
-  .app-header { height: 64px; border-bottom-color: rgba(6, 62, 44, .08); box-shadow: 0 8px 28px rgba(16, 52, 38, .06); }
-  .header-main { gap: 10px; padding: 0 13px; }
+  .app-header { height: 76px; border-bottom-color: rgba(6, 62, 44, .08); box-shadow: 0 8px 28px rgba(16, 52, 38, .06); }
+  .header-main { gap: 10px; padding: 0 18px; }
   .header-main::before {
-    content: "Elite Bridge";
-    color: var(--forest-950);
-    font-size: 15px;
-    font-weight: 900;
-    letter-spacing: -.02em;
-    white-space: nowrap;
+    content: "";
+    display: block;
+    flex: 0 0 auto;
+    width: 148px;
+    height: 48px;
+    background: url("/logo.png") left center / contain no-repeat;
   }
   .global-search, .header-action, .account-copy { display: none; }
   .menu-toggle { display: none; }
@@ -518,7 +518,7 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   .account-button { padding: 3px; }
   .avatar { width: 40px; height: 40px; border-radius: 14px; }
   .account-wrap { position: static; }
-  .account-menu { position: fixed; top: 68px; right: 12px; width: min(260px, calc(100vw - 24px)); }
+  .account-menu { position: fixed; top: 80px; right: 12px; width: min(260px, calc(100vw - 24px)); }
   .app-sidebar {
     top: auto;
     right: 0;
@@ -627,18 +627,22 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   .nav-icon { flex-basis: 42px; width: 42px; height: 42px; border-radius: 14px; font-size: 14px; }
   .nav-count { position: absolute; transform: translate(26px, -20px); margin-left: 0; }
   body.mobile-more-open .nav-count { right: 10px; transform: none; }
-  .app-main { padding: 82px 14px calc(108px + env(safe-area-inset-bottom)); }
+  .app-main { padding: 94px 14px calc(108px + env(safe-area-inset-bottom)); }
   .content-shell { width: 100%; }
   .command-hero {
     align-items: stretch;
     flex-direction: column;
     gap: 16px;
     margin-bottom: 14px;
-    padding: 20px;
-    border-radius: 22px;
+    padding: 22px;
+    border-radius: 24px;
+    border-color: #d6e6dd;
+    background:
+      radial-gradient(circle at 92% 2%, rgba(197, 138, 36, .20), transparent 36%),
+      linear-gradient(145deg, rgba(255,255,255,.98), rgba(241,248,244,.96));
   }
-  .command-hero h1 { font-size: clamp(29px, 8vw, 38px); }
-  .command-hero p:last-child { font-size: 13px; }
+  .command-hero h1 { font-size: clamp(31px, 8.8vw, 42px); letter-spacing: -.06em; }
+  .command-hero p:last-child { font-size: 14px; line-height: 1.55; }
   .command-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
