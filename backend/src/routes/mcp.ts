@@ -142,6 +142,19 @@ router.get("/oauth/authorize", async (req, res) => {
   }
 });
 
+router.post("/oauth/request-info", async (req, res) => {
+  try {
+    await ensureMcpTables();
+    const pending = jwt.verify(String(req.body?.authorizationRequest || ""), config.JWT_SECRET, { issuer: MCP_ISSUER, audience: "elitebridge-mcp-authorization-request" }) as any;
+    if (!Array.isArray(pending.scopes) || pending.scopes.some((scope: string) => !allScopes.includes(scope))) return oauthError(res, 400, "invalid_request", "The authorization request has invalid permissions.");
+    const result = await (db as any).$client.query("SELECT client_name FROM mcp_oauth_clients WHERE client_id = $1 LIMIT 1", [pending.clientId]);
+    if (!result.rows[0]) return oauthError(res, 400, "invalid_client", "The requesting client is no longer registered.");
+    return res.json({ clientName: result.rows[0].client_name, scopes: pending.scopes as string[] });
+  } catch {
+    return oauthError(res, 400, "invalid_request", "This authorization request is invalid or expired. Start again from your MCP client.");
+  }
+});
+
 router.post("/oauth/approve", async (req, res) => {
   try {
     await ensureMcpTables();
