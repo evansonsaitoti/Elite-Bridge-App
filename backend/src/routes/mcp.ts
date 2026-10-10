@@ -1,7 +1,6 @@
 import { Router, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import { createHash, randomBytes, randomUUID } from "crypto";
-import { z } from "zod";
 import { db } from "../db/index.js";
 import { config } from "../config/env.js";
 
@@ -33,6 +32,7 @@ async function ensureMcpTables() {
   const client = (db as any).$client;
   await client.query("CREATE TABLE IF NOT EXISTS mcp_oauth_clients (client_id VARCHAR(80) PRIMARY KEY, client_name VARCHAR(200) NOT NULL, redirect_uris JSONB NOT NULL, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
   await client.query("CREATE TABLE IF NOT EXISTS mcp_oauth_codes (code_hash VARCHAR(64) PRIMARY KEY, client_id VARCHAR(80) NOT NULL REFERENCES mcp_oauth_clients(client_id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, redirect_uri TEXT NOT NULL, code_challenge VARCHAR(128) NOT NULL, scopes TEXT[] NOT NULL, resource TEXT NOT NULL, state TEXT, expires_at TIMESTAMP NOT NULL, used_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
+  await client.query("CREATE TABLE IF NOT EXISTS mcp_oauth_refresh_tokens (token_hash VARCHAR(64) PRIMARY KEY, client_id VARCHAR(80) NOT NULL REFERENCES mcp_oauth_clients(client_id) ON DELETE CASCADE, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, scopes TEXT[] NOT NULL, resource TEXT NOT NULL, expires_at TIMESTAMP NOT NULL, used_at TIMESTAMP, created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
   await client.query("CREATE TABLE IF NOT EXISTS mcp_audit_events (id BIGSERIAL PRIMARY KEY, user_id INTEGER REFERENCES users(id) ON DELETE SET NULL, tool_name VARCHAR(100) NOT NULL, outcome VARCHAR(20) NOT NULL, target_id VARCHAR(100), created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)");
   tablesReady = true;
 }
@@ -66,7 +66,7 @@ mcpDiscoveryRouter.get("/.well-known/oauth-authorization-server", (_req, res) =>
     token_endpoint: MCP_ISSUER + oauthBase + "/oauth/token",
     registration_endpoint: MCP_ISSUER + oauthBase + "/oauth/register",
     response_types_supported: ["code"],
-    grant_types_supported: ["authorization_code"],
+    grant_types_supported: ["authorization_code", "refresh_token"],
     code_challenge_methods_supported: ["S256"],
     token_endpoint_auth_methods_supported: ["none"],
     scopes_supported: allScopes,
@@ -116,7 +116,7 @@ router.get("/oauth/authorize", async (req, res) => {
     const method = String(req.query.code_challenge_method || "");
     const state = String(req.query.state || "");
     const resource = String(req.query.resource || MCP_URL);
-    const requestedScopes = String(req.query.scope || "shifts:read caregivers:read").split(/\s+/).filter(Boolean);
+    const requestedScopes = String(req.query.scope || allScopes.join(" ")).split(/\s+/).filter(Boolean);
     if (responseType !== "code") return oauthError(res, 400, "unsupported_response_type", "Authorization code flow is required.");
     if (!validRedirect(redirectUri)) return oauthError(res, 400, "invalid_request", "The redirect URI is invalid.");
     if (!/^[A-Za-z0-9_-]{43,128}$/.test(challenge) || method !== "S256") return oauthError(res, 400, "invalid_request", "PKCE S256 is required.");
@@ -179,12 +179,42 @@ router.post("/oauth/deny", (req, res) => {
   }
 });
 
+function accessToken(user: any, scopes: string[], clientId: string, resource: string) {
+  return jwt.sign({
+    id: user.id, sub: String(user.id), email: user.email, role: user.role,
+    scope: scopes.join(" "), client_id: clientId, token_use: "mcp_access"
+  }, config.JWT_SECRET, { issuer: MCP_ISSUER, audience: resource, expiresIn: "1h" });
+}
+
 router.post("/oauth/token", async (req, res) => {
   try {
     await ensureMcpTables();
     const body = req.body || {};
-    if (body.grant_type !== "authorization_code") return oauthError(res, 400, "unsupported_grant_type", "Only authorization_code is supported.");
     const clientId = String(body.client_id || "");
+    if (body.grant_type === "refresh_token") {
+      const oldRefreshToken = String(body.refresh_token || "");
+      const existing = await (db as any).$client.query(
+        "SELECT * FROM mcp_oauth_refresh_tokens WHERE token_hash = $1 AND client_id = $2 AND used_at IS NULL AND expires_at > NOW() LIMIT 1",
+        [sha256(oldRefreshToken), clientId]
+      );
+      const grant = existing.rows[0];
+      if (!grant) return oauthError(res, 400, "invalid_grant", "The refresh token is invalid, expired, or already used.");
+      const consumed = await (db as any).$client.query(
+        "UPDATE mcp_oauth_refresh_tokens SET used_at = NOW() WHERE token_hash = $1 AND used_at IS NULL AND expires_at > NOW() RETURNING *",
+        [sha256(oldRefreshToken)]
+      );
+      if (!consumed.rows[0]) return oauthError(res, 400, "invalid_grant", "The refresh token was already used.");
+      const userResult = await (db as any).$client.query("SELECT id, email, role, is_active FROM users WHERE id = $1 LIMIT 1", [grant.user_id]);
+      const user = userResult.rows[0];
+      if (!user || user.is_active === false || !["employer", "admin"].includes(user.role)) return oauthError(res, 400, "invalid_grant", "The authorizing account is no longer active.");
+      const nextRefreshToken = randomToken();
+      await (db as any).$client.query(
+        "INSERT INTO mcp_oauth_refresh_tokens (token_hash, client_id, user_id, scopes, resource, expires_at) VALUES ($1,$2,$3,$4,$5,NOW() + INTERVAL '30 days')",
+        [sha256(nextRefreshToken), clientId, user.id, grant.scopes, grant.resource]
+      );
+      return res.json({ access_token: accessToken(user, grant.scopes as string[], clientId, grant.resource), token_type: "Bearer", expires_in: 3600, refresh_token: nextRefreshToken, scope: (grant.scopes as string[]).join(" ") });
+    }
+    if (body.grant_type !== "authorization_code") return oauthError(res, 400, "unsupported_grant_type", "The grant type is not supported.");
     const redirectUri = String(body.redirect_uri || "");
     const code = String(body.code || "");
     const verifier = String(body.code_verifier || "");
@@ -205,13 +235,12 @@ router.post("/oauth/token", async (req, res) => {
     const userResult = await (db as any).$client.query("SELECT id, email, role, is_active FROM users WHERE id = $1 LIMIT 1", [grant.user_id]);
     const user = userResult.rows[0];
     if (!user || user.is_active === false || !["employer", "admin"].includes(user.role)) return oauthError(res, 400, "invalid_grant", "The authorizing account is no longer active.");
-    const now = Math.floor(Date.now() / 1000);
-    const accessToken = jwt.sign({
-      id: user.id, sub: String(user.id), email: user.email, role: user.role,
-      scope: (grant.scopes as string[]).join(" "),
-      client_id: clientId, token_use: "mcp_access", iat: now, exp: now + 3600
-    }, config.JWT_SECRET, { issuer: MCP_ISSUER, audience: grant.resource });
-    return res.json({ access_token: accessToken, token_type: "Bearer", expires_in: 3600, scope: (grant.scopes as string[]).join(" ") });
+    const refreshToken = randomToken();
+    await (db as any).$client.query(
+      "INSERT INTO mcp_oauth_refresh_tokens (token_hash, client_id, user_id, scopes, resource, expires_at) VALUES ($1,$2,$3,$4,$5,NOW() + INTERVAL '30 days')",
+      [sha256(refreshToken), clientId, user.id, grant.scopes, grant.resource]
+    );
+    return res.json({ access_token: accessToken(user, grant.scopes as string[], clientId, grant.resource), token_type: "Bearer", expires_in: 3600, refresh_token: refreshToken, scope: (grant.scopes as string[]).join(" ") });
   } catch (error) {
     console.error("MCP token exchange failed", error);
     return oauthError(res, 400, "invalid_grant", "The authorization code could not be exchanged.");
