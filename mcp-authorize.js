@@ -3,6 +3,7 @@
       const descriptions={
         'shifts:read':'View shifts and coverage','shifts:write':'Create, assign, or cancel shifts',
         'caregivers:read':'View caregivers connected to your organization','caregivers:write':'Create caregiver invitations',
+        'invoices:read':'View official client invoices and totals','invoices:write':'Create draft client invoices for review',
         'timesheets:read':'View manual timesheets','timesheets:write':'Create missed-clock-in timesheets'
       };
       const query=new URLSearchParams(location.search), request=query.get('request');
