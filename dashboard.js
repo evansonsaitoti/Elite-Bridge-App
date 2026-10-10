@@ -861,6 +861,8 @@
       form.elements.month.value = month;
       form.elements.recipient.value = '';
       form.elements.confirmSensitiveEmail.checked = false;
+      const emailError = document.getElementById('timesheetEmailError');
+      if (emailError) { emailError.hidden = true; emailError.textContent = ''; }
       document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment.`;
       document.getElementById('timesheetEmailDialog').showModal();
       form.elements.approvedByName.value = '';
@@ -901,6 +903,8 @@
       form.elements.month.value = month;
       form.elements.recipient.value = '';
       form.elements.confirmSensitiveEmail.checked = false;
+      const emailError = document.getElementById('timesheetEmailError');
+      if (emailError) { emailError.hidden = true; emailError.textContent = ''; }
       form.elements.approvedByName.value = approval.approvedByName;
       form.elements.approvalDate.value = approval.approvalDate;
       document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment from info@elitebridgestaffing.com.`;
@@ -931,7 +935,12 @@
       await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
       timesheetEmailDialog.close(); form.reset();
       notify('Timesheet PDF emailed successfully.');
-    } catch (error) { notify(error.message || 'Could not send the timesheet PDF.'); }
+    } catch (error) {
+      const message = error.message || 'Could not send the timesheet PDF.';
+      const emailError = document.getElementById('timesheetEmailError');
+      if (emailError) { emailError.textContent = message; emailError.hidden = false; }
+      notify(message);
+    }
     finally { savingTime = false; button.disabled = false; }
   });
 
