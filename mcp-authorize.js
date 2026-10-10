@@ -1,5 +1,5 @@
 (() => {
-      const API='https://elite-bridge-shared-api-evans.vercel.app/api/mcp';
+      let API='';
       const descriptions={
         'shifts:read':'View shifts and coverage','shifts:write':'Create, assign, or cancel shifts',
         'caregivers:read':'View caregivers connected to your organization','caregivers:write':'Create caregiver invitations',
@@ -9,7 +9,7 @@
       const query=new URLSearchParams(location.search), request=query.get('request');
       const list=document.getElementById('scopeList'), message=document.getElementById('message');
       let scopes=[];
-      try { const payload=JSON.parse(atob(request.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'))); scopes=payload.scopes||[]; }
+      try { const part=request.split('.')[1].replace(/-/g,'+').replace(/_/g,'/'); const payload=JSON.parse(atob(part.padEnd(Math.ceil(part.length/4)*4,'='))); scopes=payload.scopes||[]; API=new URL(payload.iss).origin+'/api/mcp'; }
       catch { document.getElementById('actions').classList.add('hidden'); message.className='message error'; message.textContent='This authorization request is invalid or expired. Start again from your MCP client.'; return; }
       scopes.forEach(scope=>{const li=document.createElement('li');li.textContent=descriptions[scope]||scope;list.appendChild(li)});
       const stores=[localStorage,sessionStorage];
