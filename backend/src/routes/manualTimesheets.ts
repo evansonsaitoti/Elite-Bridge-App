@@ -221,15 +221,8 @@ router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: 
     if (data.status === "correction_requested" && !data.note) throw new AppError(400, "Explain what needs clarification.");
     if (data.status === "approved") asEmployerDate(data.approvalDate!);
 
-    const entry = await db.transaction(async (tx) => {
-      const current = (await tx.execute(sql`
-        SELECT * FROM manual_timesheet_entries
-        WHERE id = ${id} AND employer_id = ${employer.id}
-        FOR UPDATE
-      `) as any).rows[0];
-      if (!current) throw new AppError(404, "Manual timesheet entry not found.");
-      if (current.status !== "pending_approval") throw new AppError(409, "This entry is no longer pending review.");
-      const updated = (await tx.execute(sql`
+    const result = await db.execute(sql`
+      WITH updated AS (
         UPDATE manual_timesheet_entries
         SET status = ${data.status}, agency_note = ${data.note || null},
             approved_by = CASE WHEN ${data.status} = 'approved' THEN ${req.user!.id} ELSE NULL END,
@@ -237,16 +230,28 @@ router.patch("/employer/:manualTimesheetId/review", authMiddleware, async (req: 
             approval_date = CASE WHEN ${data.status} = 'approved' THEN ${data.approvalDate || null}::date ELSE NULL END,
             approved_at = CASE WHEN ${data.status} = 'approved' THEN CURRENT_TIMESTAMP ELSE NULL END,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ${id}
+        WHERE id = ${id} AND employer_id = ${employer.id} AND status = 'pending_approval'
         RETURNING id, staff_name, shift_date, start_time, end_time, worked_minutes, hourly_rate,
-                  total_amount, reason, entry_type, status, agency_note, approved_by_name, approval_date, approved_at, created_at
-      `) as any).rows[0];
-      await tx.execute(sql`
+                  total_amount, reason, entry_type, status, agency_note, approved_by_name,
+                  approval_date, approved_at, created_at
+      ), audit AS (
         INSERT INTO manual_timesheet_reviews (manual_timesheet_id, actor_user_id, action, note)
-        VALUES (${id}, ${req.user!.id}, ${data.status}, ${data.note || null})
-      `);
-      return updated;
-    });
+        SELECT id, ${req.user!.id}, ${data.status}, ${data.note || null}
+        FROM updated
+        RETURNING manual_timesheet_id
+      )
+      SELECT updated.*
+      FROM updated
+      INNER JOIN audit ON audit.manual_timesheet_id = updated.id
+    `);
+    const entry = (result as any).rows[0];
+    if (!entry) {
+      const current = (await db.execute(sql`
+        SELECT status FROM manual_timesheet_entries WHERE id = ${id} AND employer_id = ${employer.id}
+      `) as any).rows[0];
+      if (!current) throw new AppError(404, "Manual timesheet entry not found.");
+      throw new AppError(409, "This entry is no longer pending review.");
+    }
     res.json({ manualTimesheet: entry });
   } catch (error) { next(error); }
 });
