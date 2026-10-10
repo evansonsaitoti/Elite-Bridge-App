@@ -944,6 +944,135 @@
     finally { savingTime = false; button.disabled = false; }
   });
 
+  let employerInvoices = [];
+  function invoicePdfBlob(invoice) {
+    const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
+    const dateLabel = value => formatDateOnly(value);
+    const items = Array.isArray(invoice.line_items) ? invoice.line_items : [];
+    const morning = items.filter(item => item.description === 'Morning care');
+    const evening = items.filter(item => item.description === 'Evening care');
+    const summarize = list => ({ hours: list.reduce((sum, item) => sum + Number(item.hours || 0), 0), amount: list.reduce((sum, item) => sum + Number(item.amount || 0), 0), caregiver: list[0]?.caregiver || '', start: list[0]?.startTime || '', end: list[0]?.endTime || '' });
+    const am = summarize(morning), pm = summarize(evening);
+    const logo = document.querySelector('img[src*="logo"]');
+    const canvas = document.createElement('canvas'); canvas.width = logo?.naturalWidth || 300; canvas.height = logo?.naturalHeight || 94;
+    const context = canvas.getContext('2d'); if (!context) throw new Error('Could not prepare the invoice PDF.');
+    context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
+    if (logo?.complete && logo.naturalWidth) context.drawImage(logo, 0, 0, canvas.width, canvas.height);
+    const logoUrl = canvas.toDataURL('image/jpeg', .92);
+    const logoBytes = Uint8Array.from(atob(logoUrl.split(',')[1]), c => c.charCodeAt(0));
+    const ops = [];
+    const text = (x, top, size, value, bold = false, color = '20352A') => {
+      const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
+      ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg BT /${bold ? 'F2' : 'F1'} ${size} Tf ${x} ${792 - top - size} Td (${pdfEscape(value)}) Tj ET`);
+    };
+    const rect = (x, top, width, height, fill) => { const [r, g, b] = fill.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255); ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ${x} ${792 - top - height} ${width} ${height} re f`); };
+    const line = (x1, top, x2, color = 'DCE6DF', width = 1) => { const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255); ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${width} w ${x1} ${792 - top} m ${x2} ${792 - top} l S`); };
+    ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
+    text(372, 7, 10, 'ELITE BRIDGE STAFFING', true, '064024'); text(372, 23, 9, '(508) 251-9346', false, '607067'); text(372, 38, 9, 'info@elitebridgestaffing.com', false, '607067'); text(372, 53, 9, 'elitebridgestaffing.com', false, '607067');
+    line(50, 108, 562, '064024', 4);
+    text(50, 126, 25, 'INVOICE', true, '064024'); text(50, 157, 10, `Invoice ${invoice.invoice_number || ''}`, true, '20352A');
+    text(362, 130, 8, 'INVOICE DATE', true, '607067'); text(362, 146, 10, dateLabel(invoice.invoice_date), false, '20352A');
+    text(462, 130, 8, 'DUE DATE', true, '607067'); text(462, 146, 10, dateLabel(invoice.due_date), false, '20352A');
+    rect(50, 180, 512, 88, 'F3F8EE'); line(50, 180, 562); line(50, 268, 562); line(50, 180, 50); line(562, 180, 562);
+    text(64, 191, 8, 'BILL TO', true, '607067'); text(64, 210, 13, invoice.client_name || '', true, '20352A');
+    const addressLines = String(invoice.billing_address || '').split(/\r?\n/).filter(Boolean).slice(0, 2);
+    addressLines.forEach((row, index) => text(64, 229 + index * 12, 9, row.slice(0, 65), false, '607067'));
+    if (invoice.client_email) text(64, 251, 9, invoice.client_email, false, '607067');
+    text(350, 191, 8, 'SERVICE PERIOD', true, '607067'); text(350, 210, 11, `${dateLabel(invoice.service_start_date)} - ${dateLabel(invoice.service_end_date)}`, true, '20352A');
+    text(350, 233, 8, 'SERVICE DAYS', true, '607067'); text(350, 249, 11, String(Array.isArray(invoice.service_days) ? invoice.service_days.length : 0), true, '20352A');
+    const tableTop = 292; rect(50, tableTop, 512, 23, '064024');
+    text(60, tableTop + 7, 8, 'SERVICE', true, 'FFFFFF'); text(255, tableTop + 7, 8, 'HOURS', true, 'FFFFFF'); text(326, tableTop + 7, 8, 'RATE', true, 'FFFFFF'); text(412, tableTop + 7, 8, 'CAREGIVER', true, 'FFFFFF'); text(503, tableTop + 7, 8, 'AMOUNT', true, 'FFFFFF');
+    const rows = [
+      { name: `Morning care ${am.start}-${am.end}`, caregiver: am.caregiver, hours: am.hours, amount: am.amount },
+      { name: `Evening care ${pm.start}-${pm.end}`, caregiver: pm.caregiver, hours: pm.hours, amount: pm.amount },
+    ];
+    rows.forEach((row, index) => { const top = tableTop + 23 + index * 30; rect(50, top, 512, 30, index ? 'F8FBF9' : 'FFFFFF'); line(50, top + 30, 562, 'DCE6DF', .7); text(60, top + 10, 8, row.name.slice(0, 34)); text(255, top + 10, 9, row.hours.toFixed(2)); text(326, top + 10, 9, moneyPrecise(invoice.hourly_rate)); text(412, top + 10, 8, row.caregiver.slice(0, 15)); text(503, top + 10, 9, moneyPrecise(row.amount)); });
+    const dayCount = Array.isArray(invoice.service_days) ? invoice.service_days.length : 0;
+    text(60, 385, 8, `Daily visits for ${dayCount} selected service day${dayCount === 1 ? '' : 's'}; dates fall within the service period above.`, false, '607067');
+    rect(356, 422, 206, 68, 'F3F8EE'); line(356, 422, 562); line(356, 490, 562); text(370, 435, 9, 'SUBTOTAL', true, '607067'); text(493, 435, 10, moneyPrecise(invoice.subtotal), true, '20352A'); text(370, 460, 11, 'TOTAL DUE', true, '064024'); text(481, 459, 15, moneyPrecise(invoice.total), true, '064024');
+    if (invoice.notes) { text(50, 526, 8, 'NOTE', true, '607067'); text(50, 542, 9, String(invoice.notes).slice(0, 105), false, '20352A'); }
+    text(50, 625, 9, 'Payment is due by the date shown above. Please include the invoice number with payment.', false, '607067');
+    text(50, 651, 9, 'Thank you for choosing Elite Bridge Staffing.', true, '064024');
+    line(50, 770, 562); text(50, 777, 7, 'Elite Bridge Staffing · Client billing statement', false, '607067'); text(467, 777, 7, String(invoice.status || 'draft').toUpperCase(), true, '607067');
+    const stream = pdfAscii(ops.join('\n'));
+    const objects = [];
+    objects[1] = pdfAscii('<< /Type /Catalog /Pages 2 0 R >>'); objects[2] = pdfAscii('<< /Type /Pages /Kids [6 0 R] /Count 1 >>');
+    objects[3] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'); objects[4] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
+    objects[5] = pdfJoin([pdfAscii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`), logoBytes, pdfAscii('\nendstream')]);
+    objects[6] = pdfAscii('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents 7 0 R >>');
+    objects[7] = pdfJoin([pdfAscii(`<< /Length ${stream.length} >>\nstream\n`), stream, pdfAscii('\nendstream')]);
+    const parts = [pdfAscii('%PDF-1.4\n')], offsets = [0]; let length = parts[0].length;
+    for (let id = 1; id < objects.length; id++) { const before = pdfAscii(`${id} 0 obj\n`), after = pdfAscii('\nendobj\n'); offsets[id] = length; parts.push(before, objects[id], after); length += before.length + objects[id].length + after.length; }
+    const xrefOffset = length; let xref = `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
+    for (let id = 1; id < objects.length; id++) xref += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
+    parts.push(pdfAscii(`${xref}trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`));
+    return new Blob([pdfJoin(parts)], { type: 'application/pdf' });
+  }
+  function invoiceFilename(invoice) { return `${String(invoice.invoice_number || 'EliteBridge').replace(/[^a-z0-9_-]/gi, '_')}_Invoice.pdf`; }
+  function renderClientInvoices() {
+    const container = document.getElementById('clientInvoiceList'); if (!container) return;
+    if (!employerInvoices.length) { renderEmpty(container, 'No client invoices yet', 'Create a draft from completed service dates. Client invoices stay separate from payroll timesheets.'); return; }
+    container.innerHTML = employerInvoices.map(invoice => {
+      const days = Array.isArray(invoice.service_days) ? invoice.service_days.length : 0;
+      const lineItems = Array.isArray(invoice.line_items) ? invoice.line_items : [];
+      const detailRows = lineItems.map(item => `<div class="invoice-detail-row"><span>${escapeHtml(formatDateOnly(item.serviceDate))} · ${escapeHtml(item.description)} · ${escapeHtml(item.startTime)}–${escapeHtml(item.endTime)} · ${escapeHtml(item.caregiver)}</span><strong>${money(item.amount)}</strong></div>`).join('');
+      return `<article class="surface-pad invoice-row"><div class="invoice-row-top"><span class="row-icon">$</span><span class="row-copy"><strong>${escapeHtml(invoice.invoice_number)} · ${escapeHtml(invoice.client_name)}</strong><span>${escapeHtml(formatDateOnly(invoice.service_start_date))} – ${escapeHtml(formatDateOnly(invoice.service_end_date))} · ${days} service days</span></span><span class="status ${invoice.status === 'sent' ? '' : 'neutral'}">${escapeHtml(invoice.status || 'draft')}</span><span class="invoice-total">${money(invoice.total)}</span></div><div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-invoice-action="view" data-invoice-id="${invoice.id}">View</button><button type="button" class="timesheet-action-button" data-invoice-action="download" data-invoice-id="${invoice.id}">Download PDF</button><button type="button" class="timesheet-action-button" data-invoice-action="email" data-invoice-id="${invoice.id}" ${invoice.status !== 'draft' ? 'disabled' : ''}>Email PDF</button></div><div class="invoice-details" data-invoice-details="${invoice.id}" hidden>${detailRows}<div class="invoice-detail-row invoice-detail-total"><span>Invoice total</span><strong>${money(invoice.total)}</strong></div></div></article>`;
+    }).join('');
+  }
+  function resetClientInvoiceDates() {
+    const form = document.getElementById('clientInvoiceForm'); if (!form) return;
+    const today = new Date();
+    const localDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const due = new Date(today); due.setDate(due.getDate() + 30);
+    form.elements.invoiceDate.value = localDate(today); form.elements.dueDate.value = localDate(due);
+  }
+  resetClientInvoiceDates();
+  renderClientInvoices();
+  document.getElementById('clientInvoiceForm')?.addEventListener('submit', async event => {
+    event.preventDefault(); if (savingTime) return;
+    const form = event.currentTarget, data = new FormData(form), button = form.querySelector('button[type="submit"]');
+    const payload = Object.fromEntries(['clientName','clientEmail','billingAddress','invoiceDate','dueDate','serviceStartDate','serviceEndDate','hourlyRate','morningStartTime','morningEndTime','morningCaregiver','eveningStartTime','eveningEndTime','eveningCaregiver','notes'].map(key => [key, String(data.get(key) || '').trim()]));
+    payload.includeWeekends = data.get('includeWeekends') === 'on';
+    if (data.get('confirmCompletedServices') !== 'on') { notify('Confirm the invoice dates are completed services.'); return; }
+    savingTime = true; button.disabled = true; button.textContent = 'Saving draft…';
+    try {
+      const result = await api('/client-invoices/employer', { method: 'POST', body: JSON.stringify(payload) });
+      employerInvoices = [result.invoice, ...employerInvoices]; renderClientInvoices(); form.reset(); resetClientInvoiceDates();
+      notify(`Draft invoice ${result.invoice.invoice_number} saved.`);
+    } catch (error) { notify(error.message || 'Could not save this invoice.'); }
+    finally { savingTime = false; button.disabled = false; button.textContent = 'Save draft invoice'; }
+  });
+  const clientInvoiceEmailDialog = document.getElementById('clientInvoiceEmailDialog');
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-invoice-action]');
+    if (button) {
+      const invoice = employerInvoices.find(item => String(item.id) === button.dataset.invoiceId);
+      if (!invoice) return;
+      if (button.dataset.invoiceAction === 'view') { const details = document.querySelector(`[data-invoice-details="${CSS.escape(String(invoice.id))}"]`); if (details) details.hidden = !details.hidden; return; }
+      if (button.dataset.invoiceAction === 'download') { try { downloadTimesheetPdf(invoicePdfBlob(invoice), invoiceFilename(invoice)); notify('Client invoice PDF downloaded.'); } catch (error) { notify(error.message || 'Could not create the invoice PDF.'); } return; }
+      const form = document.getElementById('clientInvoiceEmailForm'); form.elements.invoiceId.value = invoice.id; form.elements.recipient.value = invoice.client_email || '';
+      form.elements.confirmInvoiceEmail.checked = false; const error = document.getElementById('clientInvoiceEmailError'); if (error) { error.hidden = true; error.textContent = ''; }
+      document.getElementById('clientInvoiceEmailSummary').textContent = `Email invoice ${invoice.invoice_number} for ${invoice.client_name} (${money(invoice.total)}). Sending issues the invoice to the client.`;
+      clientInvoiceEmailDialog.showModal(); document.getElementById('clientInvoiceRecipient').focus();
+    }
+    if (event.target.closest('#clientInvoiceEmailClose, #clientInvoiceEmailCancel')) clientInvoiceEmailDialog?.close();
+    if (event.target === clientInvoiceEmailDialog) clientInvoiceEmailDialog.close();
+  });
+  document.addEventListener('submit', async event => {
+    const form = event.target; if (!form.matches('[data-client-invoice-email]')) return;
+    event.preventDefault(); if (savingTime) return;
+    const data = new FormData(form), invoice = employerInvoices.find(item => String(item.id) === String(data.get('invoiceId')));
+    if (!invoice || data.get('confirmInvoiceEmail') !== 'on') return;
+    const button = form.querySelector('button[type="submit"]'); savingTime = true; button.disabled = true;
+    try {
+      const blob = invoicePdfBlob(invoice), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      await api(`/client-invoices/employer/${encodeURIComponent(String(invoice.id))}/email`, { method: 'POST', body: JSON.stringify({ recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
+      clientInvoiceEmailDialog.close(); form.reset(); notify(`Invoice ${invoice.invoice_number} emailed to the client.`); await loadEmployer();
+    } catch (error) { const message = error.message || 'Could not send the invoice PDF.'; const area = document.getElementById('clientInvoiceEmailError'); if (area) { area.textContent = message; area.hidden = false; } notify(message); }
+    finally { savingTime = false; button.disabled = false; }
+  });
+
   function render1099Payroll(data) {
     const approved = data?.approvedTimesheets || [];
     const runs = data?.runs || [];
@@ -1280,8 +1409,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -1294,6 +1423,8 @@
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
     const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
     const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];
+    employerInvoices = clientInvoiceResult.status === 'fulfilled' ? clientInvoiceResult.value.invoices || [] : [];
+    renderClientInvoices();
     if (profile?.companyName) {
       session.user.companyName = profile.companyName;
       session.storage.setItem('user', JSON.stringify(session.user));
