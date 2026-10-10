@@ -25,9 +25,11 @@ const scopeDescriptions: Record<string, string> = {
   "caregivers:write": "Create caregiver invitations.",
   "invoices:read": "View official client invoices and totals.",
   "invoices:write": "Create draft client invoices for review.",
-  "offline_access": "Keep the approved connection active with rotating refresh tokens.",
   "timesheets:read": "View timesheets.",
-  "timesheets:write": "Create missed-clock-in timesheets."
+  "timesheets:write": "Create missed-clock-in timesheets.",
+  "expenses:read": "View company expenses and receipt records.",
+  "expenses:write": "Create company expense records.",
+  "offline_access": "Keep the Elite Bridge connector available after the first sign-in."
 };
 const allScopes = Object.keys(scopeDescriptions);
 
@@ -274,7 +276,9 @@ const toolList = [
   { name: "elitebridge_list_invoices", description: "List official client invoices for the authenticated employer organization.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } },
   { name: "elitebridge_create_invoice", description: "Create an official draft client invoice for employer review. Requires explicit user instruction to create the invoice. Email delivery is not performed by this tool.", inputSchema: { type: "object", properties: { clientName: { type: "string" }, clientEmail: { type: "string", format: "email" }, billingAddress: { type: "string" }, invoiceDate: { type: "string", description: "YYYY-MM-DD" }, dueDate: { type: "string", description: "YYYY-MM-DD" }, serviceStartDate: { type: "string", description: "YYYY-MM-DD" }, serviceEndDate: { type: "string", description: "YYYY-MM-DD" }, hourlyRate: { type: "number", exclusiveMinimum: 0, maximum: 500 }, morningStartTime: { type: "string", description: "24-hour HH:mm" }, morningEndTime: { type: "string", description: "24-hour HH:mm" }, morningCaregiver: { type: "string" }, eveningStartTime: { type: "string", description: "24-hour HH:mm" }, eveningEndTime: { type: "string", description: "24-hour HH:mm" }, eveningCaregiver: { type: "string" }, includeWeekends: { type: "boolean", default: true }, notes: { type: "string" }, confirmCreate: { type: "boolean", description: "Set true only after the user explicitly requests invoice creation." } }, required: ["clientName", "invoiceDate", "dueDate", "serviceStartDate", "serviceEndDate", "hourlyRate", "morningStartTime", "morningEndTime", "morningCaregiver", "eveningStartTime", "eveningEndTime", "eveningCaregiver", "confirmCreate"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } },
   { name: "elitebridge_list_timesheets", description: "List the employer's manual missed-clock-in timesheets and their approval status.", inputSchema: { type: "object", properties: {}, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } },
-  { name: "elitebridge_create_missed_clock_in", description: "Create a manual missed-clock-in timesheet for employer review. Requires the staff pay rate, date, time range, and explicit user instruction to record it.", inputSchema: { type: "object", properties: { staffName: { type: "string" }, startDate: { type: "string", description: "YYYY-MM-DD" }, endDate: { type: "string", description: "YYYY-MM-DD; same as startDate for one shift." }, startTime: { type: "string", description: "24-hour HH:mm" }, endTime: { type: "string", description: "24-hour HH:mm" }, hourlyRate: { type: "number", minimum: 0.01 }, unpaidBreakMinutes: { type: "integer", minimum: 0, default: 0 }, includeWeekends: { type: "boolean", default: true }, reason: { type: "string" } }, required: ["staffName", "startDate", "endDate", "startTime", "endTime", "hourlyRate", "reason"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }
+  { name: "elitebridge_create_missed_clock_in", description: "Create a manual missed-clock-in timesheet for employer review. Requires the staff pay rate, date, time range, and explicit user instruction to record it.", inputSchema: { type: "object", properties: { staffName: { type: "string" }, startDate: { type: "string", description: "YYYY-MM-DD" }, endDate: { type: "string", description: "YYYY-MM-DD; same as startDate for one shift." }, startTime: { type: "string", description: "24-hour HH:mm" }, endTime: { type: "string", description: "24-hour HH:mm" }, hourlyRate: { type: "number", minimum: 0.01 }, unpaidBreakMinutes: { type: "integer", minimum: 0, default: 0 }, includeWeekends: { type: "boolean", default: true }, reason: { type: "string" } }, required: ["staffName", "startDate", "endDate", "startTime", "endTime", "hourlyRate", "reason"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } },
+  { name: "elitebridge_list_expenses", description: "List company expenses for the authenticated employer, including categories, totals, and receipt availability.", inputSchema: { type: "object", properties: { from: { type: "string", description: "Optional YYYY-MM-DD start date." }, to: { type: "string", description: "Optional YYYY-MM-DD end date." } }, additionalProperties: false }, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false } },
+  { name: "elitebridge_create_expense", description: "Create a company expense record for gas, subscriptions, advertising, supplies, payroll, insurance, office, or other costs. Requires explicit user instruction to record it.", inputSchema: { type: "object", properties: { expenseDate: { type: "string", description: "YYYY-MM-DD" }, vendor: { type: "string" }, category: { type: "string", enum: ["gas", "subscriptions", "advertising", "supplies", "payroll", "insurance", "office", "other"] }, amount: { type: "number", exclusiveMinimum: 0, maximum: 100000 }, paymentMethod: { type: "string" }, description: { type: "string" }, confirmCreate: { type: "boolean", description: "Set true only after the user explicitly asks to record the expense." } }, required: ["expenseDate", "vendor", "category", "amount", "confirmCreate"], additionalProperties: false }, annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false } }
 ];
 
 const requiredScope: Record<string, string> = {
@@ -287,7 +291,9 @@ const requiredScope: Record<string, string> = {
   elitebridge_list_invoices: "invoices:read",
   elitebridge_create_invoice: "invoices:write",
   elitebridge_list_timesheets: "timesheets:read",
-  elitebridge_create_missed_clock_in: "timesheets:write"
+  elitebridge_create_missed_clock_in: "timesheets:write",
+  elitebridge_list_expenses: "expenses:read",
+  elitebridge_create_expense: "expenses:write"
 };
 
 function bearer(req: Request) {
@@ -365,6 +371,17 @@ async function executeTool(name: string, args: any, token: string) {
   }
   if (name === "elitebridge_list_timesheets") return result(await upstream("/manual-timesheets/employer", token));
   if (name === "elitebridge_create_missed_clock_in") return result(await upstream("/manual-timesheets/employer", token, "POST", args));
+  if (name === "elitebridge_list_expenses") {
+    const query = new URLSearchParams();
+    if (args.from) query.set("from", String(args.from));
+    if (args.to) query.set("to", String(args.to));
+    return result(await upstream("/expenses/employer" + (query.toString() ? "?" + query.toString() : ""), token));
+  }
+  if (name === "elitebridge_create_expense") {
+    if (args.confirmCreate !== true) throw new Error("Expense not created. Confirm the date, vendor, category, and amount with the user first.");
+    const { confirmCreate, ...payload } = args;
+    return result(await upstream("/expenses/employer", token, "POST", payload));
+  }
   throw new Error("Unknown tool.");
 }
 
