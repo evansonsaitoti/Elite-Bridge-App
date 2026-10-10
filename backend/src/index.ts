@@ -17,6 +17,7 @@ import employerRoutes from "./routes/employers";
 import bookingRoutes from "./routes/bookings";
 import manualTimesheetRoutes from "./routes/manualTimesheets";
 import clientInvoiceRoutes from "./routes/clientInvoices";
+import expenseRoutes from "./routes/expenses";
 import messageRoutes from "./routes/messages";
 import paymentRoutes from "./routes/payments";
 import payrollRoutes from "./routes/payroll";
@@ -66,6 +67,7 @@ app.use("/api/employers", employerRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/manual-timesheets", manualTimesheetRoutes);
 app.use("/api/client-invoices", clientInvoiceRoutes);
+app.use("/api/expenses", expenseRoutes);
 app.use("/api/messages", messageRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/payroll", payrollRoutes);
@@ -139,3 +141,4 @@ process.on("SIGTERM", () => {
 });
 
 export { app, httpServer, io };
+
