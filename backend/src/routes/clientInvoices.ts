@@ -131,23 +131,21 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
     ]);
     const total = Number(lineItems.reduce((sum, row) => sum + row.amount, 0).toFixed(2));
     const result = await db.execute(sql`
-      WITH created AS (
-        INSERT INTO client_invoices
-          (employer_id, client_name, client_email, billing_address, invoice_date, due_date,
-           service_start_date, service_end_date, hourly_rate, service_days, line_items,
-           subtotal, total, notes, status, created_by)
-        VALUES
-          (${employer.id}, ${data.clientName}, ${data.clientEmail || null}, ${data.billingAddress},
-           ${data.invoiceDate}::date, ${data.dueDate}::date, ${data.serviceStartDate}::date,
-           ${data.serviceEndDate}::date, ${rate}, ${JSON.stringify(serviceDays)}::jsonb,
-           ${JSON.stringify(lineItems)}::jsonb, ${total}, ${total}, ${data.notes}, 'draft', ${req.user!.id})
-        RETURNING *
-      ), numbered AS (
-        UPDATE client_invoices invoice
-        SET invoice_number = 'EBS-' || to_char(invoice.invoice_date, 'YYYY') || '-' || lpad(invoice.id::text, 6, '0')
-        FROM created WHERE invoice.id = created.id
-        RETURNING invoice.*
-      ) SELECT * FROM numbered
+      WITH next_id AS (
+        SELECT nextval(pg_get_serial_sequence('client_invoices', 'id')::regclass)::integer AS id
+      )
+      INSERT INTO client_invoices
+        (id, employer_id, invoice_number, client_name, client_email, billing_address, invoice_date,
+         due_date, service_start_date, service_end_date, hourly_rate, service_days, line_items,
+         subtotal, total, notes, status, created_by)
+      SELECT next_id.id, ${employer.id},
+        'EBS-' || to_char(${data.invoiceDate}::date, 'YYYY') || '-' || lpad(next_id.id::text, 6, '0'),
+        ${data.clientName}, ${data.clientEmail || null}, ${data.billingAddress},
+        ${data.invoiceDate}::date, ${data.dueDate}::date, ${data.serviceStartDate}::date,
+        ${data.serviceEndDate}::date, ${rate}, ${JSON.stringify(serviceDays)}::jsonb,
+        ${JSON.stringify(lineItems)}::jsonb, ${total}, ${total}, ${data.notes}, 'draft', ${req.user!.id}
+      FROM next_id
+      RETURNING *
     `);
     res.status(201).json({ invoice: (result as any).rows[0] });
   } catch (error) { next(error); }
