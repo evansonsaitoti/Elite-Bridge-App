@@ -1065,7 +1065,7 @@
     if (!invoice || data.get('confirmInvoiceEmail') !== 'on') return;
     const button = form.querySelector('button[type="submit"]'); savingTime = true; button.disabled = true;
     try {
-      const blob = invoicePdfBlob(invoice), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
+      const blob = invoicePdfBlob({ ...invoice, status: 'sent' }), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
       for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
       await api(`/client-invoices/employer/${encodeURIComponent(String(invoice.id))}/email`, { method: 'POST', body: JSON.stringify({ recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
       clientInvoiceEmailDialog.close(); form.reset(); notify(`Invoice ${invoice.invoice_number} emailed to the client.`); await loadEmployer();
