@@ -77,6 +77,7 @@ export default function DashboardScreen() {
             <NavCard icon="people-outline" title="Caregiver directory" detail="See assigned caregivers, credentials and upcoming schedules." value={team} onPress={() => router.push("/team")} />
             <NavCard icon="person-add-outline" title="Hiring pipeline" detail="Review caregiver applicants and make assignment decisions." value={pending} onPress={() => router.push("/applications")} />
             <NavCard icon="time-outline" title="Time and attendance" detail="Monitor caregiver clock-ins and clock-outs from assigned visits." onPress={() => router.push("/time")} />
+            <NavCard icon="receipt-outline" title="Company expenses" detail="Track gas, subscriptions, advertising, supplies and receipts for your agency." onPress={() => router.push("/expenses")} />
             <NavCard icon="settings-outline" title="Organization settings" detail="Manage your profile, notifications, privacy and support." onPress={() => router.push("/account")} />
           </>
         )}
