@@ -46,10 +46,6 @@
   const search = document.getElementById('globalSearch');
   const inviteDialog = document.getElementById('inviteDialog');
   const inviteForm = document.getElementById('inviteForm');
-  const shiftInviteDialog = document.getElementById('shiftInviteDialog');
-  let employerCaregivers = [];
-  let employerShifts = [];
-  let activeShiftInvite = null;
   let toastTimer;
 
   function notify(message) {
@@ -588,23 +584,20 @@
 
   function renderShiftRows(container, shifts, employerView) {
     if (!container) return;
-    if (!shifts.length) { renderEmpty(container, employerView ? 'No shifts posted yet' : 'No open shifts nearby yet', employerView ? 'Post your first care shift to begin matching with caregivers.' : 'New care opportunities will appear here as employers post them.', employerView ? 'Post a shift' : '', employerView ? 'shifts' : 'overview'); return; }
-    if (!employerView || expectedRole !== 'employer') {
-      container.innerHTML = shifts.map(shift => `<article class="list-row shift-row" data-searchable><span class="row-icon">${employerView ? 'SH' : '$'}</span><span class="row-copy"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.location?.city || '')}${shift.location?.state ? `, ${escapeHtml(shift.location.state)}` : ''} · ${dateTime(shift.startTime)} – ${dateTime(shift.endTime)} · ${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span></span><span class="row-meta"><span class="status ${shift.status === 'open' ? '' : 'neutral'}">${escapeHtml(shift.status || 'open')}</span><br>${money(shift.hourlyRate)}/hr</span>${!employerView && expectedRole === 'caregiver' ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`) : ''}</article>`).join(''); return;
+    if (!shifts.length) {
+      renderEmpty(container, employerView ? 'No shifts posted yet' : 'No open shifts nearby yet', employerView ? 'Post your first care shift to begin matching with caregivers.' : 'New care opportunities will appear here as employers post them.', employerView ? 'Post a shift' : '', employerView ? 'shifts' : 'overview');
+      return;
     }
-    container.innerHTML = shifts.map(shift => {
-      const status = String(shift.status || 'open').toLowerCase(), assigned = Number(shift.assignedCaregivers || 0), positions = Number(shift.numberOfCaregivers || 1);
-      const remaining = shift.remainingPositions == null ? Math.max(0, positions-assigned) : Number(shift.remainingPositions);
-      const city = [shift.location?.city,shift.location?.state].filter(Boolean).join(', ') || 'Location not set';
-      return `<article class="shift-management-card" data-searchable data-shift-status="${escapeHtml(status)}"><div class="shift-card-top"><div class="shift-card-title"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.serviceType || 'Care visit')} · ${escapeHtml(city)}</span></div><span class="status shift-card-status ${['open','assigned','in_progress'].includes(status) ? '' : 'neutral'}">${escapeHtml(status.replaceAll('_',' '))}</span></div><div class="shift-card-details"><div class="shift-card-detail"><small>Schedule</small><span>${dateTime(shift.startTime)} – ${dateTime(shift.endTime)}</span></div><div class="shift-card-detail"><small>Caregivers</small><span>${assigned} of ${positions} assigned · ${remaining} open</span></div><div class="shift-card-detail"><small>Hourly pay</small><span>${money(shift.hourlyRate)}/hr</span></div><div class="shift-card-detail"><small>Assignment</small><span>${escapeHtml(shift.assignmentMode === 'instant' ? 'First eligible caregiver' : 'Employer review')}</span></div></div><div class="shift-card-actions">${['open','assigned','in_progress'].includes(status)&&remaining>0 ? `<button class="primary-button" type="button" data-shift-invite="${escapeHtml(String(shift.id))}">Invite caregiver</button>` : ''}${['open','assigned'].includes(status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${escapeHtml(String(shift.id))}">Cancel shift</button>` : ''}</div></article>`;
-    }).join('');
-    filterShiftCards();
+    container.innerHTML = shifts.map((shift) => `
+      <article class="list-row shift-row" data-searchable>
+        <span class="row-icon">${employerView ? 'SH' : '$'}</span>
+        <span class="row-copy"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.location?.city || '')}${shift.location?.state ? `, ${escapeHtml(shift.location.state)}` : ''} · ${dateTime(shift.startTime)} – ${dateTime(shift.endTime)} · ${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span></span>
+        <span class="row-meta"><span class="status ${shift.status === 'open' ? '' : 'neutral'}">${escapeHtml(shift.status || 'open')}</span><br>${money(shift.hourlyRate)}/hr</span>
+        ${!employerView && expectedRole === 'caregiver' ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`) : ''}
+        ${employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(shift.status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : ''}
+      </article>`).join('');
   }
-  function filterShiftCards() {
-    const query = String(document.getElementById('shiftSearch')?.value || '').trim().toLowerCase();
-    const status = String(document.getElementById('shiftStatusFilter')?.value || 'all');
-    document.querySelectorAll('#allShiftList .shift-management-card').forEach(card => { card.hidden = Boolean((query && !card.textContent.toLowerCase().includes(query)) || (status !== 'all' && card.dataset.shiftStatus !== status)); });
-  }
+
   function renderActivities(container, activities) {
     if (!container) return;
     if (!activities.length) {
@@ -623,46 +616,7 @@
     container.innerHTML = pending.map(a => `<article class="surface-pad" data-searchable><strong>${escapeHtml(`${a.first_name} ${a.last_name}`)}</strong><p>${escapeHtml(a.shift_title)} · ${dateTime(a.start_time)} – ${dateTime(a.end_time)}</p><p>${escapeHtml(a.note || '')}</p><button class="primary-button" type="button" data-application-id="${a.id}" data-decision="approved">Approve caregiver</button> <button class="secondary-button" type="button" data-application-id="${a.id}" data-decision="rejected">Decline</button></article>`).join('');
   }
 
-  function inviteMessage() {
-    const person=employerCaregivers.find(p=>String(p.caregiver_id??p.id)===String(document.getElementById('shiftInviteCaregiver')?.value)), shift=activeShiftInvite;
-    if(!person||!shift) return {person,body:'',subject:''};
-    const city=[shift.location?.city,shift.location?.state].filter(Boolean).join(', ');
-    const note=String(document.getElementById('shiftInviteMessage')?.value||'').trim();
-    const subject=`Care shift invitation: ${shift.title||'Care visit'}`;
-    const body=[`Hello ${person.firstName||person.first_name||'there'},`,'',`${session.user.companyName||'Elite Bridge Staffing'} would like to invite you to consider this care shift:`,`Shift: ${shift.title||shift.serviceType||'Care visit'}`,`Service: ${shift.serviceType||'Care visit'}`,`When: ${dateTime(shift.startTime)} – ${dateTime(shift.endTime)}`,city?`City: ${city}`:'',`Hourly pay: ${money(shift.hourlyRate)}/hr`,note?`Note: ${note}`:'','','Sign in to the Elite Bridge caregiver workspace to review available shifts:',`${window.location.origin}/caregiver-dashboard#available`,'','This invitation excludes the street address and care notes.'].filter(Boolean).join('\n');
-    return {person,body,subject};
-  }
-  function refreshInviteLinks() {
-    const {person,body,subject}=inviteMessage(), email=document.getElementById('shiftInviteEmail'), text=document.getElementById('shiftInviteText');
-    email.href=person?.email?`mailto:${encodeURIComponent(person.email)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`:'#';
-    email.setAttribute('aria-disabled',person?.email?'false':'true');
-    text.href=person?.phone?`sms:${encodeURIComponent(person.phone)}?body=${encodeURIComponent(body)}`:'#';
-    text.setAttribute('aria-disabled',person?.phone?'false':'true');
-  }
-  function openShiftInvite(id) {
-    activeShiftInvite=employerShifts.find(s=>String(s.id)===String(id));
-    if(!activeShiftInvite){notify('Shift not found. Refresh and try again.');return;}
-    const form=document.getElementById('shiftInviteForm'); form?.reset();
-    form?.querySelector('[name="shiftId"]')&&(form.querySelector('[name="shiftId"]').value=String(id));
-    const summary=document.getElementById('shiftInviteSummary');
-    if(summary) summary.textContent=`${activeShiftInvite.title||'Care shift'} · ${dateTime(activeShiftInvite.startTime)} · ${[activeShiftInvite.location?.city,activeShiftInvite.location?.state].filter(Boolean).join(', ')||'Location not set'}`;
-    const select=document.getElementById('shiftInviteCaregiver');
-    if(select){const eligible=employerCaregivers.filter(p=>p.caregiver_id||p.id);select.innerHTML=eligible.length?'<option value="">Select a caregiver</option>'+eligible.map(p=>`<option value="${escapeHtml(String(p.caregiver_id??p.id))}">${escapeHtml(`${p.firstName||p.first_name||''} ${p.lastName||p.last_name||''}`.trim()||'Caregiver')}</option>`).join(''):'<option value="">No connected caregivers yet</option>';select.disabled=!eligible.length;}
-    refreshInviteLinks(); shiftInviteDialog?.showModal(); select?.focus();
-  }
-  document.getElementById('shiftInviteCaregiver')?.addEventListener('change',refreshInviteLinks);
-  document.getElementById('shiftInviteMessage')?.addEventListener('input',refreshInviteLinks);
-  ['shiftInviteClose','shiftInviteCancel'].forEach(id=>document.getElementById(id)?.addEventListener('click',()=>shiftInviteDialog?.close()));
-  shiftInviteDialog?.addEventListener('click',e=>{if(e.target===shiftInviteDialog)shiftInviteDialog.close();});
-  document.getElementById('shiftInviteCopy')?.addEventListener('click',async()=>{const {person,body}=inviteMessage();if(!person){notify('Select a caregiver first.');return;}try{await navigator.clipboard.writeText(body);notify('Invitation copied.');}catch(_){window.prompt('Copy this shift invitation:',body);}});
-  document.getElementById('shiftInviteShare')?.addEventListener('click',async()=>{const {person,body,subject}=inviteMessage();if(!person){notify('Select a caregiver first.');return;}if(navigator.share){try{await navigator.share({title:subject,text:body});return;}catch(e){if(e?.name==='AbortError')return;}}try{await navigator.clipboard.writeText(body);notify('Invitation copied. Paste it into your preferred app.');}catch(_){window.prompt('Copy this shift invitation:',body);}});
-  document.getElementById('shiftSearch')?.addEventListener('input',filterShiftCards);
-  document.getElementById('shiftStatusFilter')?.addEventListener('change',filterShiftCards);
-  document.getElementById('refreshShifts')?.addEventListener('click',async e=>{const b=e.currentTarget;b.disabled=true;b.textContent='Refreshing…';try{await loadEmployer();notify('Shift information refreshed.');}catch(err){notify(err.message||'Could not refresh shifts.');}finally{b.disabled=false;b.textContent='Refresh';}});
-  document.querySelector('[data-shift-create]')?.addEventListener('click',()=>{document.getElementById('shiftForm')?.scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('shiftTitle')?.focus({preventScroll:true});});
-    document.addEventListener('click', async event => {
-    const inviteButton=event.target.closest('[data-shift-invite]');
-    if(inviteButton){openShiftInvite(inviteButton.dataset.shiftInvite);return;}
+  document.addEventListener('click', async event => {
     const button = event.target.closest('[data-application-id], [data-shift-op]');
     if (!button || savingTime) return;
     const operation = button.dataset.shiftOp;
@@ -1120,12 +1074,107 @@
     if (!invoice || data.get('confirmInvoiceEmail') !== 'on') return;
     const button = form.querySelector('button[type="submit"]'); savingTime = true; button.disabled = true;
     try {
-      const blob = invoicePdfBlob({ ...invoice, status: 'sent' }), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
+      const blob = invoicePdfBlob(invoice), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
       for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
       await api(`/client-invoices/employer/${encodeURIComponent(String(invoice.id))}/email`, { method: 'POST', body: JSON.stringify({ recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
       clientInvoiceEmailDialog.close(); form.reset(); notify(`Invoice ${invoice.invoice_number} emailed to the client.`); await loadEmployer();
     } catch (error) { const message = error.message || 'Could not send the invoice PDF.'; const area = document.getElementById('clientInvoiceEmailError'); if (area) { area.textContent = message; area.hidden = false; } notify(message); }
     finally { savingTime = false; button.disabled = false; }
+  });
+
+  let employerExpenses = [];
+  let selectedExpenseReceipt = null;
+  const expenseCategories = {
+    gas: 'Gas',
+    subscriptions: 'Subscriptions',
+    advertising: 'Advertising',
+    supplies: 'Supplies',
+    payroll: 'Payroll',
+    insurance: 'Insurance',
+    office: 'Office',
+    other: 'Other'
+  };
+  function setExpenseDefaults() {
+    const date = document.getElementById('expenseDate');
+    if (date && !date.value) date.value = todayInputValue();
+  }
+  function renderExpenses(data = {}) {
+    const expenses = data.expenses || employerExpenses || [];
+    employerExpenses = expenses;
+    const monthPrefix = todayInputValue().slice(0, 7);
+    const monthExpenses = expenses.filter(item => String(item.expense_date || '').slice(0, 7) === monthPrefix);
+    const totalFor = category => monthExpenses.filter(item => item.category === category).reduce((sum, item) => sum + Number(item.amount || 0), 0);
+    setText('expenseMonthTotal', money(monthExpenses.reduce((sum, item) => sum + Number(item.amount || 0), 0)));
+    setText('expenseAdvertisingTotal', money(totalFor('advertising')));
+    setText('expenseSubscriptionTotal', money(totalFor('subscriptions')));
+    setText('expenseReceiptCount', String(monthExpenses.filter(item => item.has_receipt || item.receipt_image_base64).length));
+    const container = document.getElementById('expenseList');
+    if (!container) return;
+    if (!expenses.length) {
+      renderEmpty(container, 'No expenses recorded yet', 'Add gas, subscriptions, advertising, or supplies as they happen. Receipt photos can be attached from your phone.');
+      return;
+    }
+    container.innerHTML = expenses.slice(0, 80).map(item => {
+      const receipt = item.receipt_image_base64 && item.receipt_image_type ? `<img class="expense-receipt-thumb" src="data:${escapeHtml(item.receipt_image_type)};base64,${escapeHtml(item.receipt_image_base64)}" alt="Receipt for ${escapeHtml(item.vendor)}">` : '<span class="row-icon">$</span>';
+      return `<article class="expense-row" data-searchable>${receipt}<span class="row-copy"><strong>${escapeHtml(item.vendor)}</strong><span>${escapeHtml(expenseCategories[item.category] || item.category || 'Expense')} · ${formatDateOnly(item.expense_date)}${item.payment_method ? ` · ${escapeHtml(item.payment_method)}` : ''}${item.description ? ` · ${escapeHtml(item.description)}` : ''}</span></span><strong class="expense-amount">${money(item.amount)}</strong></article>`;
+    }).join('');
+  }
+  function readReceipt(file) {
+    return new Promise((resolve, reject) => {
+      if (!file) return resolve(null);
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) return reject(new Error('Use a JPG, PNG, or WebP receipt image.'));
+      if (file.size > 3_000_000) return reject(new Error('Receipt image must be under 3 MB.'));
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result || '');
+        const base64 = dataUrl.split(',')[1] || '';
+        resolve({ receiptImageBase64: base64, receiptImageType: file.type, dataUrl, name: file.name });
+      };
+      reader.onerror = () => reject(new Error('Could not read the receipt image.'));
+      reader.readAsDataURL(file);
+    });
+  }
+  setExpenseDefaults();
+  document.getElementById('expenseReceipt')?.addEventListener('change', async event => {
+    const preview = document.getElementById('expenseReceiptPreview');
+    try {
+      selectedExpenseReceipt = await readReceipt(event.target.files?.[0]);
+      if (preview && selectedExpenseReceipt) {
+        preview.innerHTML = `<img src="${selectedExpenseReceipt.dataUrl}" alt="Selected receipt"><span><strong>Receipt attached</strong><br>${escapeHtml(selectedExpenseReceipt.name || 'Receipt image')}</span>`;
+        preview.hidden = false;
+      } else if (preview) {
+        preview.hidden = true;
+        preview.innerHTML = '';
+      }
+    } catch (error) {
+      selectedExpenseReceipt = null;
+      if (preview) preview.hidden = true;
+      event.target.value = '';
+      notify(error.message || 'Could not attach receipt.');
+    }
+  });
+  document.getElementById('expenseForm')?.addEventListener('submit', async event => {
+    event.preventDefault(); if (savingTime) return;
+    const form = event.currentTarget, data = new FormData(form), button = form.querySelector('button[type="submit"]');
+    const payload = {
+      expenseDate: String(data.get('expenseDate') || '').trim(),
+      vendor: String(data.get('vendor') || '').trim(),
+      category: String(data.get('category') || 'other'),
+      amount: String(data.get('amount') || '').trim(),
+      paymentMethod: String(data.get('paymentMethod') || '').trim(),
+      description: String(data.get('description') || '').trim(),
+      ...(selectedExpenseReceipt ? { receiptImageBase64: selectedExpenseReceipt.receiptImageBase64, receiptImageType: selectedExpenseReceipt.receiptImageType } : {})
+    };
+    savingTime = true; button.disabled = true; button.textContent = 'Saving expense…';
+    try {
+      const result = await api('/expenses/employer', { method: 'POST', body: JSON.stringify(payload) });
+      employerExpenses = [result.expense, ...employerExpenses];
+      renderExpenses({ expenses: employerExpenses });
+      form.reset(); selectedExpenseReceipt = null; setExpenseDefaults();
+      const preview = document.getElementById('expenseReceiptPreview'); if (preview) { preview.hidden = true; preview.innerHTML = ''; }
+      notify('Company expense saved.');
+    } catch (error) { notify(error.message || 'Could not save this expense.'); }
+    finally { savingTime = false; button.disabled = false; button.textContent = 'Save expense'; }
   });
 
   function render1099Payroll(data) {
@@ -1464,8 +1513,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
@@ -1475,12 +1524,13 @@
       hourlyRate: person.hourly_rate, backgroundCheckStatus: person.background_check_status,
       backgroundCheckDate: person.background_check_date,
     })) : [];
-    employerCaregivers = caregivers;
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
     const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
     const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];
     employerInvoices = clientInvoiceResult.status === 'fulfilled' ? clientInvoiceResult.value.invoices || [] : [];
     renderClientInvoices();
+    if (expenseResult.status === 'fulfilled') renderExpenses(expenseResult.value);
+    else renderExpenses({ expenses: [] });
     if (profile?.companyName) {
       session.user.companyName = profile.companyName;
       session.storage.setItem('user', JSON.stringify(session.user));
@@ -1503,10 +1553,6 @@
     setText('attentionTimesheets', timesheetResult.status === 'fulfilled' ? pendingTimesheets : 'Unavailable');
     setText('attentionShifts', unfilled);
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
-    employerShifts = shifts;
-    setText('shiftOpenCount', shifts.filter(s=>['open','assigned','in_progress'].includes(String(s.status).toLowerCase())&&Number(s.remainingPositions??(Number(s.numberOfCaregivers||1)-Number(s.assignedCaregivers||0)))>0).length);
-    setText('shiftFilledCount', shifts.reduce((n,s)=>n+Number(s.assignedCaregivers||0),0));
-    setText('shiftApplicationCount', applicationsResult.status==='fulfilled'?(applicationsResult.value.applications||[]).filter(a=>a.status==='pending').length:'—');
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
     renderActivities(document.getElementById('activityList'), activities);
     if (timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled') renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
