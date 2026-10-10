@@ -205,3 +205,45 @@ export async function launchCalloutRescue(calloutId: number) {
     { method: "POST" },
   );
 }
+
+
+export type CompanyExpenseCategory = "gas" | "subscriptions" | "advertising" | "supplies" | "payroll" | "insurance" | "office" | "other";
+
+export type CompanyExpense = {
+  id: number;
+  employerId?: number;
+  date: string;
+  vendor: string;
+  category: CompanyExpenseCategory;
+  amount: number | string;
+  paymentMethod?: string | null;
+  description?: string | null;
+  receiptImageBase64?: string | null;
+  receiptImageType?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type CompanyExpenseDraft = {
+  date: string;
+  vendor: string;
+  category: CompanyExpenseCategory;
+  amount: number;
+  paymentMethod?: string;
+  description?: string;
+  receiptImageBase64?: string;
+  receiptImageType?: string;
+};
+
+export async function fetchCompanyExpenses(): Promise<CompanyExpense[]> {
+  const result = await request<{ expenses: CompanyExpense[] }>("/api/expenses/employer");
+  return result.expenses;
+}
+
+export async function createCompanyExpense(draft: CompanyExpenseDraft): Promise<CompanyExpense> {
+  const result = await request<{ expense: CompanyExpense }>("/api/expenses/employer", {
+    method: "POST",
+    body: JSON.stringify(draft),
+  });
+  return result.expense;
+}
