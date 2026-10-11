@@ -1,0 +1,222 @@
+(function () {
+  const API_BASE = 'https://elite-bridge-shared-api-evans.vercel.app/api';
+  const readSession = () => {
+    const stores = [localStorage, sessionStorage];
+    for (const storage of stores) {
+      const token = storage.getItem('token');
+      const rawUser = storage.getItem('user');
+      if (!token || !rawUser) continue;
+      try {
+        return { storage, user: JSON.parse(rawUser), token };
+      } catch (_) {
+        storage.removeItem('token');
+        storage.removeItem('user');
+      }
+    }
+    return { storage: sessionStorage, user: null, token: null };
+  };
+
+  const session = readSession();
+  if (!session.user || !session.token) {
+    window.location.replace('/');
+    return;
+  }
+
+  const role = session.user.role === 'employer' ? 'employer' : 'caregiver';
+  const dashboardUrl = role === 'employer' ? '/employer-dashboard' : '/caregiver-dashboard';
+  const completionKey = `eliteBridgeOnboarding:${session.user.id}:${role}`;
+  let step = 1;
+
+  const form = document.getElementById('onboardingForm');
+  const error = document.getElementById('onboardingError');
+  const nextButton = document.getElementById('nextButton');
+  const backButton = document.getElementById('backButton');
+  const skipButton = document.getElementById('skipButton');
+  const exitLink = document.getElementById('exitLink');
+
+  document.querySelectorAll('[data-role-fields]').forEach((element) => {
+    element.hidden = element.dataset.roleFields !== role;
+    element.querySelectorAll('input, select, textarea').forEach((input) => {
+      input.disabled = element.hidden;
+    });
+  });
+
+  if (role === 'employer') {
+    document.getElementById('asideTitle').textContent = 'Build your care operations hub.';
+    document.getElementById('asideCopy').textContent = 'Set up your organization once, then coordinate shifts, caregivers, timesheets and communication from mobile or web.';
+    document.getElementById('stepOneTitle').textContent = 'Tell us about your care operation';
+    document.getElementById('stepOneIntro').textContent = 'We will shape your workspace around the way your organization or household coordinates care.';
+    document.getElementById('serviceTitle').textContent = 'What care do you coordinate?';
+    document.getElementById('detailsTitle').textContent = 'Shape your organization workspace';
+    document.getElementById('detailsIntro').textContent = 'These details make scheduling, matching and team management more useful.';
+    document.getElementById('reviewTitle').textContent = 'Employer workspace';
+    document.getElementById('locationReviewStep').textContent = 'Primary care location and scheduling contact added';
+    document.getElementById('companyName').value = session.user.companyName || '';
+  }
+
+  function setValue(id, value) {
+    const input = document.getElementById(id);
+    if (input && value !== undefined && value !== null) input.value = String(value);
+  }
+
+  function normalizePhone(value) {
+    const trimmed = value.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('+')) return trimmed.replace(/[^\d+]/g, '');
+    const digits = trimmed.replace(/\D/g, '');
+    if (digits.length === 10) return `+1${digits}`;
+    if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+    return trimmed;
+  }
+
+  async function hydrateExistingProfile() {
+    try {
+      const endpoint = role === 'employer' ? '/employers/me' : `/caregivers/${session.user.id}`;
+      const response = await fetch(`${API_BASE}${endpoint}`, { headers: { Authorization: `Bearer ${session.token}` } });
+      if (!response.ok) return;
+      const result = await response.json();
+      const profile = result.profile || result;
+      if (role === 'employer') {
+        const address = profile.billingAddress || profile.billing_address || {};
+        setValue('companyName', profile.companyName || profile.company_name);
+        setValue('companyDescription', profile.companyDescription || profile.company_description);
+        setValue('website', profile.website);
+        setValue('organizationType', profile.industry);
+        setValue('teamSize', profile.teamSize);
+        setValue('organizationPhone', profile.phone || session.user.phone);
+        setValue('facilityAddress', address.address);
+        setValue('facilityCity', address.city);
+        setValue('facilityState', address.state);
+        setValue('zipCode', address.zipCode || address.zip_code);
+        const services = profile.servicesOffered || profile.serviceArea || profile.service_area || [];
+        form.querySelectorAll('input[name="services"]').forEach((input) => { input.checked = services.includes(input.value); });
+      } else {
+        setValue('caregiverBio', profile.bio);
+        setValue('hourlyRate', profile.hourlyRate);
+        setValue('yearsExperience', profile.yearsExperience);
+        setValue('certifications', (profile.certifications || []).join(', '));
+        form.querySelectorAll('input[name="services"]').forEach((input) => { input.checked = (profile.specialties || []).includes(input.value); });
+      }
+    } catch (_) {
+      // Existing details are a convenience; setup remains usable if they cannot be loaded.
+    }
+  }
+
+  function selectedServices() {
+    return Array.from(form.querySelectorAll('input[name="services"]:checked')).map((input) => input.value);
+  }
+
+  function showError(message) {
+    error.textContent = message;
+    error.hidden = false;
+    error.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  function validateCurrentStep() {
+    error.hidden = true;
+    const panel = form.querySelector(`[data-step="${step}"]`);
+    const invalid = Array.from(panel.querySelectorAll('input, select, textarea')).find((input) => !input.disabled && !input.checkValidity());
+    if (invalid) {
+      invalid.reportValidity();
+      return false;
+    }
+    if (step === 2 && selectedServices().length === 0) {
+      showError('Choose at least one care service to continue.');
+      return false;
+    }
+    return true;
+  }
+
+  function renderStep() {
+    form.querySelectorAll('[data-step]').forEach((panel) => panel.classList.toggle('active', Number(panel.dataset.step) === step));
+    document.querySelectorAll('[data-dot]').forEach((dot) => {
+      const number = Number(dot.dataset.dot);
+      dot.classList.toggle('active', number === step);
+      dot.classList.toggle('done', number < step);
+      dot.textContent = number < step ? '✓' : number;
+    });
+    document.querySelectorAll('.step-line').forEach((line, index) => line.classList.toggle('done', index + 1 < step));
+    backButton.hidden = step === 1;
+    skipButton.hidden = step === 4;
+    nextButton.textContent = step === 4 ? 'Open my dashboard' : 'Continue';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  async function saveProfile() {
+    const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${session.token}` };
+    let endpoint;
+    let body;
+    if (role === 'caregiver') {
+      endpoint = `${API_BASE}/caregivers/${session.user.id}`;
+      const certificationValue = document.getElementById('certifications').value;
+      body = {
+        bio: document.getElementById('caregiverBio').value.trim(),
+        hourlyRate: Number(document.getElementById('hourlyRate').value || 0),
+        yearsExperience: Number(document.getElementById('yearsExperience').value || 0),
+        specialties: selectedServices(),
+        certifications: certificationValue.split(',').map((item) => item.trim()).filter(Boolean),
+        availability: { preference: [document.getElementById('availability').value] }
+      };
+    } else {
+      endpoint = `${API_BASE}/employers/me`;
+      body = {
+        companyName: document.getElementById('companyName').value.trim(),
+        companyDescription: document.getElementById('companyDescription').value.trim(),
+        website: document.getElementById('website').value.trim(),
+        industry: document.getElementById('organizationType').value,
+        teamSize: Number(document.getElementById('teamSize').value || 1),
+        address: document.getElementById('facilityAddress').value.trim(),
+        city: document.getElementById('facilityCity').value.trim(),
+        state: document.getElementById('facilityState').value.trim().toUpperCase(),
+        zipCode: document.getElementById('zipCode').value.trim(),
+        phone: normalizePhone(document.getElementById('organizationPhone').value),
+        servicesOffered: selectedServices()
+      };
+    }
+    const response = await fetch(endpoint, { method: 'PUT', headers, body: JSON.stringify(body) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(data.message || data.error || 'We could not save your setup.');
+    if (role === 'employer' && body.companyName) {
+      session.user.companyName = body.companyName;
+      session.storage.setItem('user', JSON.stringify(session.user));
+    }
+  }
+
+  function completeLocally() {
+    localStorage.setItem(completionKey, new Date().toISOString());
+    window.location.assign(dashboardUrl);
+  }
+
+  nextButton.addEventListener('click', async () => {
+    if (!validateCurrentStep()) return;
+    if (step < 4) {
+      step += 1;
+      renderStep();
+      return;
+    }
+    nextButton.disabled = true;
+    nextButton.textContent = 'Saving…';
+    try {
+      await saveProfile();
+      completeLocally();
+    } catch (saveError) {
+      showError(saveError instanceof TypeError ? 'Elite Bridge could not be reached. Check your connection and try again.' : saveError.message);
+      nextButton.disabled = false;
+      nextButton.textContent = 'Open my dashboard';
+    }
+  });
+
+  backButton.addEventListener('click', () => {
+    if (step > 1) step -= 1;
+    renderStep();
+  });
+
+  function skipSetup(event) {
+    event.preventDefault();
+    completeLocally();
+  }
+  skipButton.addEventListener('click', skipSetup);
+  exitLink.addEventListener('click', skipSetup);
+  renderStep();
+  void hydrateExistingProfile();
+})();

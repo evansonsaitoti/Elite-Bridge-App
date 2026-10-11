@@ -19,27 +19,30 @@ export default function OnboardingReview() {
 
   const handleCompleteOnboarding = async () => {
     if (submitting) return;
-    if (!sharedApiConfigured) {
+    if (!data.accountCreated && !sharedApiConfigured) {
       Alert.alert("Service unavailable", "Elite Bridge cannot reach the secure agency service in this build.");
       return;
     }
     try {
       setSubmitting(true);
-      const names = data.fullName.trim().split(/\s+/);
-      const firstName = names.shift() || "Caregiver";
-      const lastName = names.join(" ") || "Applicant";
-      const user = await registerCaregiverAccount({
-        firstName,
-        lastName,
-        phone: data.phoneNumber,
-        email: data.email,
-        password: data.password,
-        inviteToken: data.inviteToken,
-      });
+      let user = null;
+      if (!data.accountCreated) {
+        const names = data.fullName.trim().split(/\s+/);
+        const firstName = names.shift() || "Caregiver";
+        const lastName = names.join(" ") || "Applicant";
+        user = await registerCaregiverAccount({
+          firstName,
+          lastName,
+          phone: data.phoneNumber,
+          email: data.email,
+          password: data.password,
+          inviteToken: data.inviteToken,
+        });
+      }
       await AsyncStorage.setItem("elitebridge-session", JSON.stringify({
         role: "staff",
-        email: user.email,
-        name: `${user.firstName} ${user.lastName}`.trim(),
+        email: user?.email || data.email,
+        name: user ? `${user.firstName} ${user.lastName}`.trim() : data.fullName,
         profileStatus: "submitted",
         signedInAt: new Date().toISOString(),
       }));

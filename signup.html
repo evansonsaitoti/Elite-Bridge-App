@@ -530,10 +530,10 @@
         <section class="invite-required" id="inviteRequired" aria-labelledby="inviteRequiredTitle">
             <span class="invite-required-kicker">Elite Care access</span>
             <h2 id="inviteRequiredTitle">Join your team</h2>
-            <p>To use Elite Care, your employer needs to invite you first. Your secure invitation will arrive by email or text.</p>
+            <p>To use Elite Care, your employer needs to invite you first. Your secure invitation lets you create access with your email, phone, and password.</p>
             <div class="invite-status-card">
                 <strong>Stay tuned for an invitation</strong>
-                <span>Once your employer adds you, open their link to create your caregiver account.</span>
+                <span>Once your employer adds you, open their link to create your account. You can finish the rest of your profile later.</span>
             </div>
             <a class="invite-login" href="/">Have an account? Log in</a>
             <p class="invite-employer-link">Hiring caregivers? <a href="/signup?role=employer">Create an employer account</a></p>
@@ -615,7 +615,7 @@
             role: 'CAREGIVER',
             kicker: 'Meaningful shifts',
             title: 'Care work that fits your life.',
-            copy: 'Create your caregiver profile, find nearby shifts, and manage your Elite Bridge work from mobile or web.',
+            copy: 'Accept your employer invitation, create account access first, and finish your caregiver profile when you are ready.',
             tags: ['Flexible shifts', 'Clock in', 'Get matched']
         },
         employer: {
@@ -656,7 +656,7 @@
             document.getElementById('phone').value = invitation.phone || '';
             if (invitation.email) document.getElementById('email').readOnly = true;
             const banner = document.getElementById('inviteBanner');
-            banner.textContent = `${invitation.companyName} invited you to join their care team in Elite Care. Create your caregiver account to accept.`;
+            banner.textContent = `${invitation.companyName} invited you to join their care team in Elite Care. Create account access now; you can finish profile details later.`;
             banner.classList.add('active');
         } catch (error) {
             errorDiv.textContent = error.message || 'This invitation could not be opened.';
@@ -670,6 +670,7 @@
         const role = checkedRole ? checkedRole.value : null;
         const companySection = document.getElementById('companySection');
         const companyInput = document.getElementById('companyName');
+        const phoneInput = document.getElementById('phone');
         const hero = signupHeroContent[role] || signupHeroContent.caregiver;
         const invitationRequired = role === 'caregiver' && !inviteToken;
 
@@ -689,6 +690,7 @@
             companySection.classList.remove('active');
             companyInput.required = false;
         }
+        phoneInput.required = role === 'caregiver';
 
         document.getElementById('signupForm').style.display = invitationRequired ? 'none' : 'block';
         document.getElementById('inviteRequired').classList.toggle('active', invitationRequired);

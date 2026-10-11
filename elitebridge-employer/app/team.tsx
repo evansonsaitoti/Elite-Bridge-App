@@ -60,7 +60,7 @@ export default function TeamScreen() {
       setInviteEmail("");
       setInvitePhone("");
       const sentBy = [response.emailSent ? "email" : "", response.smsSent ? "text" : ""].filter(Boolean).join(" and ");
-      Alert.alert("Invitation ready", sentBy ? `The invite was sent by ${sentBy}.` : "The secure invitation link is ready to share.");
+      Alert.alert("Invitation ready", sentBy ? `The invite was sent by ${sentBy}. The caregiver can create access now and finish profile details later.` : "The secure invitation link is ready to share. The caregiver can create access now and finish profile details later.");
       await load(true);
     } catch (error) {
       Alert.alert("Could not create invite", error instanceof Error ? error.message : "Please try again.");
@@ -71,7 +71,7 @@ export default function TeamScreen() {
 
   const shareInvite = useCallback((mode: "email" | "text" | "open") => {
     if (!lastInvite) return;
-    const message = `Join our care team on Elite Bridge.\n\nAccept your secure invitation: ${lastInvite.inviteUrl}\nDownload the caregiver app: ${lastInvite.appLink}`;
+    const message = `Join our care team on Elite Bridge.\n\nAccept your secure invitation, create access with your email, phone and password, then finish the rest of your profile later: ${lastInvite.inviteUrl}\nDownload the caregiver app: ${lastInvite.appLink}`;
     if (mode === "email") void Linking.openURL(`mailto:?subject=${encodeURIComponent("Your Elite Bridge invitation")}&body=${encodeURIComponent(message)}`);
     if (mode === "text") void Linking.openURL(`sms:?body=${encodeURIComponent(message.replace(/\n\n/g, " "))}`);
     if (mode === "open") void Linking.openURL(lastInvite.appLink);
@@ -81,7 +81,7 @@ export default function TeamScreen() {
     <View style={styles.summary}><View style={styles.summaryIcon}><Ionicons color="#FFFFFF" name="people" size={25} /></View><View style={styles.summaryCopy}><Text style={styles.summaryTitle}>{team.length} team {team.length === 1 ? "member" : "members"}</Text><Text style={styles.summaryBody}>Caregivers who accepted your invitation or received a shift assignment.</Text></View></View>
     <View style={styles.pipeline}><Text style={styles.pipelineText}>Still hiring?</Text><TouchableOpacity onPress={() => router.push("/applications")}><Text style={styles.pipelineLink}>Review applicants</Text></TouchableOpacity></View>
     <View style={styles.inviteCard}>
-      <View style={styles.inviteHead}><View><Text style={styles.inviteTitle}>Invite caregiver</Text><Text style={styles.inviteBody}>Send one secure onboarding link by email, text, or both.</Text></View><View style={styles.inviteIcon}><Ionicons color={colors.green} name="paper-plane" size={20} /></View></View>
+      <View style={styles.inviteHead}><View><Text style={styles.inviteTitle}>Invite caregiver</Text><Text style={styles.inviteBody}>Send one secure signup link. Caregivers create access first and can finish profile details later.</Text></View><View style={styles.inviteIcon}><Ionicons color={colors.green} name="paper-plane" size={20} /></View></View>
       <View style={styles.inputRow}><TextInput autoCapitalize="words" onChangeText={setInviteFirstName} placeholder="First name" placeholderTextColor={colors.muted} style={[styles.input, styles.inputHalf]} value={inviteFirstName} /><TextInput autoCapitalize="words" onChangeText={setInviteLastName} placeholder="Last name" placeholderTextColor={colors.muted} style={[styles.input, styles.inputHalf]} value={inviteLastName} /></View>
       <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="email-address" onChangeText={setInviteEmail} placeholder="Email address" placeholderTextColor={colors.muted} style={styles.input} value={inviteEmail} />
       <TextInput keyboardType="phone-pad" onChangeText={setInvitePhone} placeholder="Phone number for text invite" placeholderTextColor={colors.muted} style={styles.input} value={invitePhone} />

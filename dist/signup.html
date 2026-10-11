@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Elite Bridge</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f4f7f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+        }
+
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+            --muted: #66736c;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1120px;
+        }
+
+        .signup-shell {
+            display: grid;
+            grid-template-columns: minmax(420px, .9fr) minmax(460px, 1fr);
+            min-height: 760px;
+            overflow: hidden;
+            border-radius: 30px;
+            background: var(--white);
+            box-shadow: 0 28px 80px rgba(12, 48, 35, .16);
+        }
+
+        .app-hero {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            min-height: 100%;
+            padding: 42px;
+            color: #fff;
+            background:
+                linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .22) 34%, rgba(4, 25, 18, .9) 100%),
+                url("/elitebridge-mobile/assets/images/caregiver-welcome-hero.jpg") center / cover no-repeat;
+        }
+
+        body[data-signup-role="employer"] .app-hero {
+            background:
+                linear-gradient(180deg, rgba(4, 25, 18, .08) 0%, rgba(4, 25, 18, .22) 34%, rgba(4, 25, 18, .9) 100%),
+                url("/elitebridge-employer/assets/images/employer-welcome-hero.jpg") center / cover no-repeat;
+        }
+
+        .hero-brand {
+            position: absolute;
+            top: 38px;
+            left: 38px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 900;
+            letter-spacing: .12em;
+        }
+
+        .hero-brand img {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            background: #fff;
+            object-fit: contain;
+            padding: 8px;
+        }
+
+        .hero-brand span {
+            display: block;
+            color: #f2c96f;
+            font-size: .82rem;
+            letter-spacing: .28em;
+            margin-top: 5px;
+        }
+
+        .hero-copy small {
+            display: block;
+            margin-bottom: 16px;
+            color: #f2c96f;
+            font-weight: 900;
+            letter-spacing: .24em;
+            text-transform: uppercase;
+        }
+
+        .hero-copy h2 {
+            max-width: 420px;
+            margin: 0;
+            font-size: clamp(2.8rem, 5.2vw, 4.8rem);
+            line-height: .96;
+            letter-spacing: -.065em;
+        }
+
+        .hero-copy p {
+            max-width: 390px;
+            margin: 20px 0 0;
+            color: rgba(255,255,255,.9);
+            font-size: 1.08rem;
+            line-height: 1.45;
+        }
+
+        .hero-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 28px;
+        }
+
+        .hero-tags span {
+            padding: 10px 14px;
+            border: 1px solid rgba(255,255,255,.44);
+            border-radius: 999px;
+            background: rgba(255,255,255,.08);
+            font-size: .88rem;
+            font-weight: 800;
+        }
+
+        .form-card {
+            background: var(--white);
+            border-radius: 0;
+            padding: 52px;
+            box-shadow: none;
+        }
+
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+            margin-bottom: 15px;
+        }
+
+        .logo-section h1 {
+            font-size: 1.8rem;
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .logo-section p {
+            color: var(--muted);
+            font-size: 0.95rem;
+        }
+
+        .role-selector {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .role-option {
+            position: relative;
+        }
+
+        .role-option input {
+            display: none;
+        }
+
+        .role-option label {
+            display: grid;
+            min-height: 98px;
+            padding: 17px;
+            border: 2px solid var(--gray-light);
+            border-radius: 18px;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            color: #666;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(11,55,38,.05);
+        }
+
+        .role-option input:checked + label {
+            border-color: var(--primary-dark);
+            background: #f2faf6;
+            color: var(--primary-dark);
+        }
+
+        .role-icon {
+            display: grid;
+            place-items: center;
+            width: 42px;
+            height: 42px;
+            margin-bottom: 10px;
+            border-radius: 14px;
+            background: rgba(11,55,38,.09);
+            font-size: 1.35rem;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--gray-light);
+            border-radius: 14px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--primary-dark);
+            box-shadow: 0 0 0 3px rgba(11, 55, 38, 0.1);
+        }
+
+        .form-group .password-field {
+            position: relative;
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+
+        .form-group .password-field input {
+            width: 100%;
+            padding-right: 78px !important;
+        }
+
+        .form-group .password-field .show-password {
+            position: absolute;
+            top: 50%;
+            right: 10px;
+            transform: translateY(-50%);
+            width: auto !important;
+            min-width: 54px;
+            height: 32px;
+            margin: 0 !important;
+            padding: 0 10px;
+            border: 0;
+            border-radius: 6px;
+            background: rgba(11, 55, 38, 0.08);
+            color: var(--primary-dark);
+            font-size: 0.78rem;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .form-group .password-field .show-password:hover,
+        .form-group .password-field .show-password:focus {
+            background: rgba(11, 55, 38, 0.14);
+            outline: none;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn-signup {
+            width: 100%;
+            min-height: 56px;
+            padding: 14px;
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            border-radius: 17px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-signup:hover {
+            background: var(--accent-gold);
+        }
+
+        .btn-signup:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .terms {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .terms a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .signin-link {
+            text-align: center;
+            color: #666;
+            font-size: 0.95rem;
+            margin-top: 20px;
+        }
+
+        .signin-link a {
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .signin-link a:hover {
+            text-decoration: underline;
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #efe;
+            color: #3c3;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .company-section {
+            display: none;
+        }
+
+        .company-section.active {
+            display: block;
+        }
+
+        .invite-banner {
+            display: none;
+            margin-bottom: 20px;
+            padding: 14px 16px;
+            border: 1px solid #cfe3d8;
+            border-radius: 10px;
+            color: #325e4b;
+            background: #f1f8f4;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .invite-banner.active { display: block; }
+
+        .invite-required {
+            display: none;
+            margin: 28px 0 10px;
+            padding: 30px 26px;
+            border: 1px solid #e6eee9;
+            border-radius: 22px;
+            background: linear-gradient(145deg, #f8fbf9, #f1f7f3);
+            text-align: center;
+        }
+        .invite-required.active { display: block; }
+        .invite-required-kicker {
+            color: var(--accent-gold);
+            font-size: .72rem;
+            font-weight: 900;
+            letter-spacing: .17em;
+            text-transform: uppercase;
+        }
+        .invite-required h2 {
+            margin: 10px 0 8px;
+            color: var(--primary-dark);
+            font-size: clamp(1.75rem, 3vw, 2.15rem);
+            letter-spacing: -.04em;
+        }
+        .invite-required p {
+            max-width: 430px;
+            margin: 0 auto;
+            color: var(--muted);
+            line-height: 1.55;
+        }
+        .invite-status-card {
+            display: grid;
+            gap: 5px;
+            margin: 22px auto 18px;
+            padding: 18px;
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: 0 8px 22px rgba(11,55,38,.06);
+            color: var(--primary-dark);
+        }
+        .invite-status-card span { color: var(--muted); font-size: .92rem; line-height: 1.5; }
+        .invite-login {
+            display: inline-block;
+            margin-top: 8px;
+            color: var(--primary-dark);
+            font-weight: 800;
+            text-decoration: none;
+        }
+        .invite-employer-link { margin-top: 18px !important; font-size: .88rem; }
+        .invite-employer-link a { color: var(--primary-dark); font-weight: 800; }
+
+        @media (max-width: 480px) {
+            body {
+                display: block;
+                padding: 0;
+                background: #fff;
+            }
+
+            .container {
+                max-width: none;
+            }
+
+            .signup-shell {
+                display: block;
+                min-height: 100vh;
+                border-radius: 0;
+                box-shadow: none;
+            }
+
+            .app-hero {
+                min-height: 62vh;
+                padding: 32px 24px 112px;
+            }
+
+            .hero-brand {
+                top: 30px;
+                left: 24px;
+            }
+
+            .hero-brand img {
+                width: 56px;
+                height: 56px;
+            }
+
+            .hero-copy h2 {
+                font-size: clamp(3rem, 13vw, 4rem);
+            }
+
+            .hero-copy p {
+                font-size: 1rem;
+            }
+
+            .form-card {
+                position: relative;
+                z-index: 2;
+                margin-top: -78px;
+                padding: 30px 22px 34px;
+                border-radius: 30px 30px 0 0;
+                box-shadow: 0 -20px 45px rgba(0,0,0,.16);
+            }
+
+            .logo-section h1 {
+                font-size: 1.5rem;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <main class="signup-shell">
+    <section class="app-hero" aria-label="Elite Bridge app welcome">
+        <div class="hero-brand">
+            <img src="/logo-icon.png" alt="">
+            <strong>ELITE BRIDGE <span id="heroRoleLabel">CAREGIVER</span></strong>
+        </div>
+        <div class="hero-copy">
+            <small id="heroKicker">Meaningful shifts</small>
+            <h2 id="heroTitle">Care work that fits your life.</h2>
+            <p id="heroCopy">Create your caregiver profile, find nearby shifts, and manage your Elite Bridge work from mobile or web.</p>
+            <div class="hero-tags" aria-label="Elite Bridge highlights">
+                <span id="heroTagOne">Flexible shifts</span>
+                <span id="heroTagTwo">Clock in</span>
+                <span id="heroTagThree">Get matched</span>
+            </div>
+        </div>
+    </section>
+    <div class="form-card">
+        <div class="logo-section">
+            <img src="logo.webp" alt="Elite Bridge Logo">
+            <h1>Elite Bridge</h1>
+            <p>Create your account</p>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+        <div class="invite-banner" id="inviteBanner"></div>
+
+        <section class="invite-required" id="inviteRequired" aria-labelledby="inviteRequiredTitle">
+            <span class="invite-required-kicker">Elite Care access</span>
+            <h2 id="inviteRequiredTitle">Join your team</h2>
+            <p>To use Elite Care, your employer needs to invite you first. Your secure invitation lets you create access with your email, phone, and password.</p>
+            <div class="invite-status-card">
+                <strong>Stay tuned for an invitation</strong>
+                <span>Once your employer adds you, open their link to create your account. You can finish the rest of your profile later.</span>
+            </div>
+            <a class="invite-login" href="/">Have an account? Log in</a>
+            <p class="invite-employer-link">Hiring caregivers? <a href="/signup?role=employer">Create an employer account</a></p>
+        </section>
+
+        <form id="signupForm" onsubmit="handleSignup(event)">
+            <div style="margin-bottom: 25px;">
+                <label style="display: block; font-weight: 600; color: var(--primary-dark); margin-bottom: 12px;">I am a:</label>
+                <div class="role-selector">
+                    <div class="role-option">
+                        <input type="radio" id="caregiver" name="role" value="caregiver" required onchange="updateCompanySection()">
+                        <label for="caregiver"><span class="role-icon">🩺</span> Caregiver</label>
+                    </div>
+                    <div class="role-option">
+                        <input type="radio" id="employer" name="role" value="employer" required onchange="updateCompanySection()">
+                        <label for="employer"><span class="role-icon">🏥</span> Employer / Family</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="firstName">First Name</label>
+                    <input type="text" id="firstName" name="firstName" placeholder="John" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name</label>
+                    <input type="text" id="lastName" name="lastName" placeholder="Doe" required>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <input type="email" id="email" name="email" placeholder="you@example.com" required>
+            </div>
+
+            <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-field"><input type="password" id="password" name="password" placeholder="••••••••" required minlength="8"><button class="show-password" type="button" data-toggle-password="password" aria-pressed="false">Show</button></div>
+            </div>
+
+            <div class="form-group">
+                <label for="confirmPassword">Confirm Password</label>
+                <div class="password-field"><input type="password" id="confirmPassword" name="confirmPassword" placeholder="••••••••" required minlength="8"><button class="show-password" type="button" data-toggle-password="confirmPassword" aria-pressed="false">Show</button></div>
+            </div>
+
+            <div class="company-section" id="companySection">
+                <div class="form-group">
+                    <label for="companyName">Company Name</label>
+                    <input type="text" id="companyName" name="companyName" placeholder="Your Company">
+                </div>
+            </div>
+
+            <div class="terms">
+                By signing up, you agree to our <a href="/terms" target="_blank" rel="noopener">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener">Privacy Policy</a>
+            </div>
+
+            <button type="submit" class="btn-signup" id="submitBtn">Create Account</button>
+
+            <div class="loading" id="loading">Creating account...</div>
+        </form>
+
+        <div class="signin-link">
+            Already have an account? <a href="/">Sign in here</a>
+        </div>
+    </div>
+    </main>
+</div>
+
+<script>
+    const API_BASE = window.ELITE_BRIDGE_API_BASE || 'https://elite-bridge-shared-api-evans.vercel.app/api';
+    const signupHeroContent = {
+        caregiver: {
+            role: 'CAREGIVER',
+            kicker: 'Meaningful shifts',
+            title: 'Care work that fits your life.',
+            copy: 'Accept your employer invitation, create account access first, and finish your caregiver profile when you are ready.',
+            tags: ['Flexible shifts', 'Clock in', 'Get matched']
+        },
+        employer: {
+            role: 'EMPLOYER',
+            kicker: 'Smarter care staffing',
+            title: 'Fill the right shift faster.',
+            copy: 'Create an opportunity once and reach active caregivers whose profile matches your care needs.',
+            tags: ['Personal care', 'Companionship', 'Respite']
+        }
+    };
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedRole = params.get('role');
+    const inviteToken = params.get('invite');
+    if (requestedRole === 'caregiver' || requestedRole === 'employer') {
+        document.getElementById(requestedRole).checked = true;
+        updateCompanySection();
+    }
+
+    if (inviteToken) {
+        document.getElementById('caregiver').checked = true;
+        document.getElementById('employer').disabled = true;
+        updateCompanySection();
+        loadInvitation();
+    }
+
+    async function loadInvitation() {
+        const errorDiv = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        try {
+            const response = await fetch(`${API_BASE}/employers/invitations/${encodeURIComponent(inviteToken)}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.error || 'This invitation is invalid or has expired.');
+            const invitation = data.invitation;
+            document.getElementById('firstName').value = invitation.firstName || '';
+            document.getElementById('lastName').value = invitation.lastName || '';
+            document.getElementById('email').value = invitation.email || '';
+            document.getElementById('phone').value = invitation.phone || '';
+            if (invitation.email) document.getElementById('email').readOnly = true;
+            const banner = document.getElementById('inviteBanner');
+            banner.textContent = `${invitation.companyName} invited you to join their care team in Elite Care. Create account access now; you can finish profile details later.`;
+            banner.classList.add('active');
+        } catch (error) {
+            errorDiv.textContent = error.message || 'This invitation could not be opened.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = true;
+        }
+    }
+
+    function updateCompanySection() {
+        const checkedRole = document.querySelector('input[name="role"]:checked');
+        const role = checkedRole ? checkedRole.value : null;
+        const companySection = document.getElementById('companySection');
+        const companyInput = document.getElementById('companyName');
+        const phoneInput = document.getElementById('phone');
+        const hero = signupHeroContent[role] || signupHeroContent.caregiver;
+        const invitationRequired = role === 'caregiver' && !inviteToken;
+
+        document.body.dataset.signupRole = role || '';
+        document.getElementById('heroRoleLabel').textContent = hero.role;
+        document.getElementById('heroKicker').textContent = hero.kicker;
+        document.getElementById('heroTitle').textContent = hero.title;
+        document.getElementById('heroCopy').textContent = hero.copy;
+        document.getElementById('heroTagOne').textContent = hero.tags[0];
+        document.getElementById('heroTagTwo').textContent = hero.tags[1];
+        document.getElementById('heroTagThree').textContent = hero.tags[2];
+
+        if (role === 'employer') {
+            companySection.classList.add('active');
+            companyInput.required = true;
+        } else {
+            companySection.classList.remove('active');
+            companyInput.required = false;
+        }
+        phoneInput.required = role === 'caregiver';
+
+        document.getElementById('signupForm').style.display = invitationRequired ? 'none' : 'block';
+        document.getElementById('inviteRequired').classList.toggle('active', invitationRequired);
+    }
+
+    updateCompanySection();
+
+    async function handleSignup(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstName').value.trim();
+        const lastName = document.getElementById('lastName').value.trim();
+        const email = document.getElementById('email').value.trim().toLowerCase();
+        const phone = normalizePhone(document.getElementById('phone').value);
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        const role = document.querySelector('input[name="role"]:checked').value;
+        const companyName = document.getElementById('companyName').value;
+
+        if (role === 'caregiver' && !inviteToken) {
+            document.getElementById('inviteRequired').classList.add('active');
+            document.getElementById('signupForm').style.display = 'none';
+            return;
+        }
+
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+
+        // Clear messages
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+
+        // Validate passwords match
+        if (password !== confirmPassword) {
+            errorDiv.textContent = 'Passwords do not match';
+            errorDiv.style.display = 'block';
+            return;
+        }
+
+        // Show loading
+        submitBtn.style.display = 'none';
+        loading.style.display = 'block';
+
+        try {
+            const response = await fetch(`${API_BASE}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    firstName,
+                    lastName,
+                    email,
+                    phone,
+                    password,
+                    role,
+                    companyName: role === 'employer' ? companyName : undefined,
+                    inviteToken: inviteToken || undefined,
+                }),
+            });
+
+            const data = await response.json().catch(() => ({}));
+
+            if (!response.ok) {
+                throw new Error(getApiErrorMessage(data) || 'Registration failed');
+            }
+
+            // Store token
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('user', JSON.stringify(data.user));
+
+            successDiv.textContent = 'Account created successfully. Redirecting...';
+            successDiv.style.display = 'block';
+
+            setTimeout(redirectAfterSignup, 900);
+
+        } catch (error) {
+            errorDiv.textContent = error.message || 'An error occurred. Please try again.';
+            errorDiv.style.display = 'block';
+            submitBtn.style.display = 'block';
+            loading.style.display = 'none';
+        }
+    }
+
+
+
+    function redirectAfterSignup() {
+        let role = '';
+        try {
+            const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+            role = storedUser.role || '';
+        } catch (error) {
+            role = document.querySelector('input[name="role"]:checked')?.value || '';
+        }
+
+        if (!role) {
+            role = document.querySelector('input[name="role"]:checked')?.value || '';
+        }
+
+        window.location.href = role === 'employer' ? '/employer-dashboard.html' : '/caregiver-dashboard.html';
+    }
+
+    document.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-toggle-password]');
+        if (!button) return;
+
+        const input = document.getElementById(button.dataset.togglePassword);
+        if (!input) return;
+
+        const isHidden = input.type === 'password';
+        input.type = isHidden ? 'text' : 'password';
+        button.textContent = isHidden ? 'Hide' : 'Show';
+        button.setAttribute('aria-pressed', String(isHidden));
+        button.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+    });
+
+    function normalizePhone(value) {
+        const trimmed = value.trim();
+        if (!trimmed) return '';
+        if (trimmed.startsWith('+')) return trimmed.replace(/[^\d+]/g, '');
+        const digits = trimmed.replace(/\D/g, '');
+        if (digits.length === 10) return `+1${digits}`;
+        if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`;
+        return trimmed;
+    }
+
+    function getApiErrorMessage(data) {
+        if (!data || typeof data !== 'object') return '';
+        if (typeof data.message === 'string' && data.message.trim()) return data.message;
+        if (typeof data.error === 'string' && data.error.trim() && data.error !== 'Validation Error') return data.error;
+        if (Array.isArray(data.details) && data.details.length) {
+            const first = data.details[0];
+            if (first && typeof first.message === 'string') return first.message;
+        }
+        return '';
+    }
+</script>
+
+</body>
+</html>

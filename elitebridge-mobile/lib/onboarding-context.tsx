@@ -35,6 +35,7 @@ export interface OnboardingData {
   stripeTokenId?: string;
 
   // Completion
+  accountCreated: boolean;
   onboardingCompleted: boolean;
   completedAt?: string;
 }
@@ -61,6 +62,7 @@ const defaultData: OnboardingData = {
   state: "",
   zip: "",
   inviteToken: "",
+  accountCreated: false,
   yearsOfExperience: "",
   certifications: [],
   languages: [],

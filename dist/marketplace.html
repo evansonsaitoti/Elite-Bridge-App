@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Bridge - Professional Non-Medical Caregiver Staffing in Massachusetts</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* BRAND COLORS */
+        :root {
+            --primary-dark: #0b3726;
+            --accent-gold: #c08530;
+            --text-dark: #1B5E3F;
+            --bg-light: #f4f7f6;
+            --white: #ffffff;
+            --gray-light: #e9ecef;
+            --shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        /* HEADER & NAVIGATION */
+        header {
+            background: var(--white);
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+        }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .logo-section img {
+            height: 50px;
+            width: auto;
+        }
+
+        nav {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            flex: 1;
+            justify-content: center;
+        }
+
+        nav a {
+            text-decoration: none;
+            color: #444;
+            font-weight: 500;
+            transition: color 0.3s ease;
+            font-size: 0.95rem;
+        }
+
+        nav a:hover {
+            color: var(--primary-dark);
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .btn-signin {
+            padding: 8px 18px;
+            color: var(--primary-dark);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .btn-signup {
+            padding: 10px 24px;
+            background: var(--primary-dark);
+            color: var(--white);
+            text-decoration: none;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: background 0.3s ease;
+        }
+
+        .btn-signup:hover {
+            background: var(--accent-gold);
+        }
+
+        /* HERO SECTION - Care.com Style Search First */
+        .hero {
+            background: var(--white);
+            padding: 80px 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--gray-light);
+        }
+
+        .hero-container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .search-box {
+            background: var(--white);
+            padding: 10px;
+            border-radius: 50px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto 50px;
+            border: 1px solid var(--gray-light);
+        }
+
+        .search-box input {
+            flex: 1;
+            border: none;
+            padding: 15px 25px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            outline: none;
+        }
+
+        .search-box button {
+            background: var(--primary-dark);
+            color: var(--white);
+            border: none;
+            padding: 15px 35px;
+            border-radius: 50px;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .search-box button:hover {
+            background: var(--accent-gold);
+        }
+
+        /* SERVICE CATEGORIES - Care.com Style Icons */
+        .categories {
+            padding: 40px 20px;
+            background: var(--bg-light);
+        }
+
+        .categories-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+        }
+
+        .category-item {
+            background: var(--white);
+            padding: 30px 20px;
+            border-radius: 12px;
+            text-align: center;
+            text-decoration: none;
+            color: var(--primary-dark);
+            font-weight: 700;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        }
+
+        .category-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            color: var(--accent-gold);
+        }
+
+        .category-icon {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        /* TRUST SECTION */
+        .trust {
+            padding: 80px 20px;
+            background: var(--white);
+            text-align: center;
+        }
+
+        .trust-container {
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .trust h2 {
+            font-size: 2.5rem;
+            color: var(--primary-dark);
+            margin-bottom: 50px;
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .trust-item {
+            text-align: left;
+            padding: 20px;
+        }
+
+        .trust-item h3 {
+            color: var(--primary-dark);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trust-item p {
+            color: #666;
+            font-size: 1.05rem;
+        }
+
+        /* PROFILE PREVIEWS - Care.com Style */
+        .profiles {
+            padding: 80px 20px;
+            background: var(--bg-light);
+        }
+
+        .profiles-header {
+            max-width: 1200px;
+            margin: 0 auto 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .profiles-header h2 {
+            font-size: 2.2rem;
+            color: var(--primary-dark);
+        }
+
+        .profiles-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .profile-card {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .profile-img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: #ddd;
+            flex-shrink: 0;
+        }
+
+        .profile-info h3 {
+            color: var(--primary-dark);
+            margin-bottom: 5px;
+        }
+
+        .profile-info .tagline {
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 10px;
+            font-size: 0.9rem;
+        }
+
+        .profile-info .desc {
+            font-size: 0.9rem;
+            color: #777;
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .profile-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 0.85rem;
+            color: #444;
+            font-weight: 600;
+        }
+
+        /* CTA SECTION */
+        .cta {
+            background: var(--primary-dark);
+            color: var(--white);
+            padding: 100px 20px;
+            text-align: center;
+        }
+
+        .cta h2 {
+            font-size: 2.8rem;
+            margin-bottom: 20px;
+        }
+
+        .cta p {
+            font-size: 1.2rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .cta-btns {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .btn-large {
+            padding: 16px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .btn-gold {
+            background: var(--accent-gold);
+            color: var(--primary-dark);
+        }
+
+        .btn-outline {
+            border: 2px solid var(--white);
+            color: var(--white);
+        }
+
+        .btn-large:hover {
+            transform: scale(1.05);
+        }
+
+        /* FOOTER */
+        footer {
+            background: #fff;
+            padding: 60px 20px;
+            border-top: 1px solid var(--gray-light);
+        }
+
+        .footer-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+        }
+
+        .footer-col h4 {
+            color: var(--primary-dark);
+            margin-bottom: 20px;
+        }
+
+        .footer-col ul {
+            list-style: none;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 10px;
+        }
+
+        .footer-col ul li a {
+            text-decoration: none;
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 40px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid var(--gray-light);
+            text-align: center;
+            color: #999;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 2.5rem; }
+            .profiles-header { flex-direction: column; align-items: flex-start; gap: 20px; }
+            .cta-btns { flex-direction: column; align-items: center; }
+            nav { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="header-container">
+        <div class="logo-section">
+            <img src="logo.webp" alt="Elite Bridge Logo">
+        </div>
+        <nav>
+            <a href="find-care.html">Find Care</a>
+            <a href="find-jobs.html">Find Jobs</a>
+            <a href="services.html">Services</a>
+            <a href="https://elitebridgestaffing.com">Resources</a>
+        </nav>
+        <div class="auth-buttons">
+            <a href="/" class="btn-signin">Sign in</a>
+            <a href="/signup" class="btn-signup">Join Now</a>
+        </div>
+    </div>
+</header>
+
+<section class="hero">
+    <div class="hero-container">
+        <h1>Find non-medical care you can trust</h1>
+        <p>Connecting Massachusetts families with quality, local non-medical caregivers.</p>
+
+        <form class="search-box" onsubmit="handleZipSearch(event)">
+            <input type="text" id="zipInput" placeholder="Enter your zip code in MA" required>
+            <button type="submit">Search</button>
+        </form>
+
+        <p style="font-size: 1rem; color: #999;">Elite Bridge: Support for every stage of life.</p>
+    </div>
+</section>
+
+<section class="categories">
+    <div class="categories-grid">
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">👵</span>
+            Senior Companion
+        </a>
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">🧹</span>
+            Housekeeping
+        </a>
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">🚗</span>
+            Transportation
+        </a>
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">🛒</span>
+            Errands & Groceries
+        </a>
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">🍳</span>
+            Meal Preparation
+        </a>
+        <a href="/signup?role=employer" class="category-item">
+            <span class="category-icon">🐾</span>
+            Pet Support
+        </a>
+    </div>
+</section>
+
+<section class="trust">
+    <div class="trust-container">
+        <h2>More than access. It's support.</h2>
+        <div class="trust-grid">
+            <div class="trust-item">
+                <h3>🛡️ Search safer</h3>
+                <p>We provide tools you won't get with social media or referrals, including background check integrations and verified reviews.</p>
+            </div>
+            <div class="trust-item">
+                <h3>💎 Quality non-medical care</h3>
+                <p>Find expertise you need—dementia companion support, light housekeeping, and specialized non-medical assistance.</p>
+            </div>
+            <div class="trust-item">
+                <h3>🤝 Unlimited connections</h3>
+                <p>Message and video interview caregivers directly through our platform without sharing your personal contact info.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="profiles">
+    <div class="profiles-header">
+        <h2>Caregiver profile preview</h2>
+        <a href="/signup?role=employer" style="color: var(--primary-dark); font-weight: 700;">Create an employer account →</a>
+    </div>
+    <div class="profiles-grid">
+        <!-- Sample Profile 1 -->
+        <div class="profile-card">
+            <div class="profile-img" style="background: #e2e8f0 url('https://i.pravatar.cc/100?u=sarah') center/cover;"></div>
+            <div class="profile-info">
+                <h3>Example caregiver</h3>
+                <div class="tagline">Senior Companion & Housekeeper</div>
+                <p class="desc">Sample profile showing how services, experience, and availability can be presented.</p>
+                <div class="profile-stats">
+                    <span>Profile preview</span>
+                    <span>📍 Massachusetts</span>
+                </div>
+            </div>
+        </div>
+        <!-- Sample Profile 2 -->
+        <div class="profile-card">
+            <div class="profile-img" style="background: #e2e8f0 url('https://i.pravatar.cc/100?u=james') center/cover;"></div>
+            <div class="profile-info">
+                <h3>Example caregiver</h3>
+                <div class="tagline">Transportation & Errands Specialist</div>
+                <p class="desc">Sample profile showing how employers can review services before making contact.</p>
+                <div class="profile-stats">
+                    <span>Profile preview</span>
+                    <span>📍 Massachusetts</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <h2>Ready to find the perfect care?</h2>
+    <p>Create an account to organize care, invite caregivers, and manage shifts in one connected workspace.</p>
+    <div class="cta-btns">
+        <a href="find-care.html" class="btn-large btn-gold">Find a Caregiver</a>
+        <a href="find-jobs.html" class="btn-large btn-outline">Apply as a Caregiver</a>
+    </div>
+</section>
+
+<footer>
+    <div class="footer-grid">
+        <div class="footer-col">
+            <h4>Elite Bridge</h4>
+            <ul>
+                <li><a href="https://elitebridgestaffing.com">About Us</a></li>
+                <li><a href="/privacy">Safety & Privacy</a></li>
+                <li><a href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20careers">Careers</a></li>
+                <li><a href="/terms">Terms of Use</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Find Care</h4>
+            <ul>
+                <li><a href="/signup?role=employer">Senior Care</a></li>
+                <li><a href="/signup?role=employer">Housekeeping</a></li>
+                <li><a href="/signup?role=employer">Pet Care</a></li>
+                <li><a href="/signup?role=employer">Errands</a></li>
+            </ul>
+        </div>
+        <div class="footer-col">
+            <h4>Support</h4>
+            <ul>
+                <li><a href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20help">Help Center</a></li>
+                <li><a href="mailto:info@elitebridgestaffing.com">Contact Us</a></li>
+                <li><a href="https://www.mass.gov/">Massachusetts resources</a></li>
+            </ul>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 Elite Bridge Staffing. Serving the state of Massachusetts. Non-medical services only.
+        <br>Contact: info@elitebridgestaffing.com
+    </div>
+</footer>
+
+<script>
+    function handleZipSearch(event) {
+        event.preventDefault();
+        const zipCode = document.getElementById('zipInput').value;
+
+        if (zipCode && zipCode.length >= 3) {
+            // Redirect to find-care page with zip code parameter
+            window.location.href = `find-care.html?zip=${encodeURIComponent(zipCode)}`;
+        }
+    }
+</script>
+
+</body>
+</html>

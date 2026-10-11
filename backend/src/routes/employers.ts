@@ -145,8 +145,8 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
         emailSent = await sendEmail({
           to: data.email,
           subject: `${employer.companyName} invited you to Elite Bridge`,
-          text: `${employer.companyName} invited you to join their care team on Elite Bridge.\n\nAccept your secure invitation within 7 days: ${inviteUrl}\nDownload the caregiver app: ${appLinks.caregiver}`,
-          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Bridge.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p><a href="${escapeEmailHtml(appLinks.caregiver)}">Download the caregiver app</a></p><p>This secure invitation expires in 7 days.</p>`,
+          text: `${employer.companyName} invited you to join their care team on Elite Bridge.\n\nAccept your secure invitation within 7 days and create access with your email, phone and password. You can finish profile details later: ${inviteUrl}\nDownload the caregiver app: ${appLinks.caregiver}`,
+          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Bridge.</p><p>Create access with your email, phone and password. You can finish profile details later.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p><a href="${escapeEmailHtml(appLinks.caregiver)}">Download the caregiver app</a></p><p>This secure invitation expires in 7 days.</p>`,
         });
       } catch {
         console.error("Invitation email could not be delivered; check the email provider log");
@@ -154,7 +154,7 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
     }
     if (data.phone && smsReady()) {
       try {
-        await sendSms(data.phone, `${employer.companyName} invited you to Elite Bridge. Accept: ${inviteUrl} Download app: ${appLinks.caregiver}`);
+        await sendSms(data.phone, `${employer.companyName} invited you to Elite Bridge. Create access now and finish your profile later: ${inviteUrl} App: ${appLinks.caregiver}`);
         smsSent = true;
       } catch {
         console.error("Invitation SMS could not be delivered; check the SMS provider log");

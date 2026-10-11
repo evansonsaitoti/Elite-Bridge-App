@@ -580,11 +580,11 @@
       link.value = data.inviteUrl;
       appLink.value = caregiverAppUrl;
       const sentBy = [data.emailSent ? 'email' : '', data.smsSent ? 'text' : ''].filter(Boolean).join(' and ');
-      delivery.textContent = sentBy ? `The invitation was sent by ${sentBy}. You can also copy or share the links below.` : 'Copy, email, or text this secure invitation and app download link to the caregiver.';
+      delivery.textContent = sentBy ? `The invitation was sent by ${sentBy}. The caregiver can create access now and finish profile details later.` : 'Copy, email, or text this secure signup link. The caregiver can create access now and finish profile details later.';
       const inviteContext = [payload.role, payload.location].filter(Boolean).join(' · ');
       const noteLine = payload.note ? `\n\nNote: ${payload.note}` : '';
-      const emailBody = `Join our care team on Elite Bridge${inviteContext ? ` for ${inviteContext}` : ''}.${noteLine}\n\nAccept your secure invitation: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
-      const textBody = `Join Elite Bridge${payload.location ? ` (${payload.location})` : ''}. Accept: ${data.inviteUrl} Download app: ${caregiverAppUrl}`;
+      const emailBody = `Join our care team on Elite Bridge${inviteContext ? ` for ${inviteContext}` : ''}.${noteLine}\n\nAccept your secure invitation and create access with your email, phone and password. You can finish the rest of your profile later: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
+      const textBody = `Join Elite Bridge${payload.location ? ` (${payload.location})` : ''}. Create access now and finish your profile later: ${data.inviteUrl} App: ${caregiverAppUrl}`;
       document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Bridge invitation')}&body=${encodeURIComponent(emailBody)}`;
       document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(textBody)}`;
       result.hidden = false;

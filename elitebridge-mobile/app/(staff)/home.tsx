@@ -95,12 +95,20 @@ export default function StaffHome() {
   const [callingOutShiftId, setCallingOutShiftId] = useState<number | null>(null);
   const [syncMessage, setSyncMessage] = useState(sharedApiConfigured ? "Live agency sync starting" : "Secure device data");
   const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
+  const [profileStatus, setProfileStatus] = useState<"incomplete" | "submitted" | "unknown">("unknown");
 
   const refreshFeed = async () => {
-    const [savedPreferences, savedAvailability] = await Promise.all([
+    const [savedPreferences, savedAvailability, savedSession] = await Promise.all([
       getCaregiverPreferences(),
       AsyncStorage.getItem(AVAILABILITY_KEY),
+      AsyncStorage.getItem("elitebridge-session"),
     ]);
+    try {
+      const session = savedSession ? JSON.parse(savedSession) as { profileStatus?: "incomplete" | "submitted" } : null;
+      setProfileStatus(session?.profileStatus || "unknown");
+    } catch {
+      setProfileStatus("unknown");
+    }
     setPreferences(savedPreferences);
     setAvailableNow(savedAvailability === "true");
 
@@ -363,6 +371,18 @@ export default function StaffHome() {
       <View style={{ alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6, backgroundColor: sharedApiConfigured ? "#EAF7EF" : "#F2F4F7", marginBottom: 14 }}>
         <Text style={{ color: "#1B5E3F", fontSize: 11, fontWeight: "800" }}>{syncMessage}</Text>
       </View>
+
+      {profileStatus === "incomplete" ? (
+        <TouchableOpacity
+          accessibilityRole="button"
+          onPress={() => router.push("/(onboarding)/welcome")}
+          style={{ borderRadius: 18, padding: 14, backgroundColor: "#FFF8E7", borderWidth: 1, borderColor: "#EBCB8B", marginBottom: 14 }}
+        >
+          <Text style={{ color: "#8A5A00", fontSize: 11, fontWeight: "900", letterSpacing: 1 }}>PROFILE CAN BE FINISHED LATER</Text>
+          <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "900", marginTop: 5 }}>Your app access is active.</Text>
+          <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 4 }}>Complete experience, availability, background check and payment details when you are ready.</Text>
+        </TouchableOpacity>
+      ) : null}
 
       <View style={{ flexDirection: "row", gap: 10, marginBottom: 10 }}>
         {renderMetric("Urgent", urgentShifts.length, "#B54708")}
