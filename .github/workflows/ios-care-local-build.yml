@@ -1,0 +1,147 @@
+name: Elite Care iOS build only
+
+on:
+  push:
+    branches:
+      - build/care-ios-local-20261011
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elite-care-local-ios-build
+  cancel-in-progress: false
+
+jobs:
+  build-care:
+    name: Archive signed Elite Care app (no submission)
+    runs-on: macos-15
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install and validate Care app
+        working-directory: elitebridge-mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://elite-bridge-shared-api-evans.vercel.app
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm prepare:icons
+          pnpm check
+          pnpm audit:release
+
+      - name: Prepare Apple signing credentials
+        working-directory: elitebridge-mobile
+        shell: bash
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+        run: |
+          for secret_name in ASC_API_KEY_P8 EXPO_ASC_KEY_ID EXPO_ASC_ISSUER_ID BUILD_CERTIFICATE_BASE64 P12_PASSWORD; do
+            if [ -z "${!secret_name}" ]; then
+              echo "Missing required signing secret: $secret_name" >&2
+              exit 1
+            fi
+          done
+          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
+          printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
+          chmod 600 /tmp/AuthKey.p8 /tmp/elitebridge-dist.p12
+          python3 -m pip install --quiet pyjwt cryptography
+          IOS_BUNDLE_IDENTIFIER=com.app.elitebridgemobile \
+          IOS_APP_LABEL=Caregiver \
+          IOS_PROFILE_PATH=/tmp/elitebridge-caregiver.mobileprovision \
+            python3 ../elitebridge-employer/scripts/prepare-ios-credentials.py
+
+      - name: Install Apple distribution identity and profile
+        working-directory: elitebridge-mobile
+        shell: bash
+        env:
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH="$RUNNER_TEMP/elitebridge-signing.keychain-db"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import /tmp/elitebridge-dist-compatible.p12 -P "$P12_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -d user -s "$KEYCHAIN_PATH"
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+          security cms -D -i /tmp/elitebridge-caregiver.mobileprovision > "$RUNNER_TEMP/caregiver-profile.plist"
+          PROFILE_NAME=$(/usr/libexec/PlistBuddy -c 'Print :Name' "$RUNNER_TEMP/caregiver-profile.plist")
+          PROFILE_UUID=$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$RUNNER_TEMP/caregiver-profile.plist")
+          PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$PROFILE_DIR"
+          cp /tmp/elitebridge-caregiver.mobileprovision "$PROFILE_DIR/$PROFILE_UUID.mobileprovision"
+          echo "PROFILE_NAME=$PROFILE_NAME" >> "$GITHUB_ENV"
+          echo "PROFILE_UUID=$PROFILE_UUID" >> "$GITHUB_ENV"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Install CocoaPods
+        working-directory: elitebridge-mobile/ios
+        env:
+          COCOAPODS_DISABLE_STATS: "true"
+        run: pod install --repo-update
+
+      - name: Archive Elite Care for App Store distribution
+        working-directory: elitebridge-mobile
+        run: >-
+          xcodebuild -workspace ios/EliteBridgeAdmin.xcworkspace
+          -scheme EliteBridgeAdmin
+          -configuration Release
+          -sdk iphoneos
+          -destination 'generic/platform=iOS'
+          -archivePath "$RUNNER_TEMP/EliteCare.xcarchive"
+          CODE_SIGN_STYLE=Manual
+          CODE_SIGN_IDENTITY='Apple Distribution'
+          DEVELOPMENT_TEAM=F42HSPN3W4
+          PROVISIONING_PROFILE_SPECIFIER="$PROFILE_NAME"
+          archive
+
+      - name: Export signed IPA
+        working-directory: elitebridge-mobile
+        shell: bash
+        run: |
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0"><dict>
+            <key>method</key><string>app-store</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>teamID</key><string>F42HSPN3W4</string>
+            <key>provisioningProfiles</key><dict>
+              <key>com.app.elitebridgemobile</key><string>$PROFILE_NAME</string>
+            </dict>
+            <key>uploadSymbols</key><true/>
+          </dict></plist>
+          EOF
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/EliteCare.xcarchive" \
+            -exportPath "$RUNNER_TEMP/EliteCare-IPA" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist"
+
+      - name: Store signed IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: elite-care-ios-build-62
+          path: ${{ runner.temp }}/EliteCare-IPA/*.ipa
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Remove temporary signing material
+        if: ${{ always() }}
+        run: |
+          if [ -n "${KEYCHAIN_PATH:-}" ]; then security delete-keychain "$KEYCHAIN_PATH" || true; fi
+          rm -f /tmp/AuthKey.p8 /tmp/elitebridge-dist.p12 /tmp/elitebridge-dist-compatible.p12
+          rm -f /tmp/elitebridge-dist-cert.pem /tmp/elitebridge-dist-key.pem /tmp/elitebridge-caregiver.mobileprovision
+          rm -f elitebridge-mobile/credentials.json
