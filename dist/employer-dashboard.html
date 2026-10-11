@@ -1,0 +1,526 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#064024">
+  <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
+  <title>Employer workspace | Elite Bridge</title>
+  <link rel="stylesheet" href="/app-shell.css?v=desktop-command-bar-20261011">
+</head>
+<body data-role="employer">
+  <div class="app-frame">
+    <header class="app-header">
+      <div class="brand-panel"><a class="brand-home" href="#overview" data-view="overview" aria-label="Go to Elite Bridge dashboard home"><img src="/logo.png" alt="Elite Bridge"></a></div>
+      <div class="header-main">
+        <button class="menu-toggle" id="menuToggle" type="button" aria-label="Open navigation" aria-expanded="false" aria-controls="appNavigation"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"></path></svg></button>
+        <label class="global-search"><input id="globalSearch" type="search" placeholder="Search shifts, caregivers and activity"><span class="search-glyph">⌕</span></label>
+        <span class="header-spacer"></span>
+        <button class="header-action header-plan" type="button" data-view="settings"><span class="header-spark">✦</span><span>Elite Bridge Workspace</span><span class="header-chevron" aria-hidden="true"></span></button>
+        <button class="header-action header-webinars" type="button" data-view="help-center"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"></rect><path d="m10 9 5 3-5 3V9Z"></path></svg> Training center</button>
+        <div class="header-menu-wrap">
+          <button class="header-action" id="helpButton" type="button" aria-expanded="false" aria-controls="helpMenu"><span>Help</span><span class="header-chevron" aria-hidden="true"></span></button>
+          <div class="header-menu" id="helpMenu" hidden>
+            <button type="button" data-view="help-center"><span>?</span> Help Center</button>
+            <button type="button" data-view="support"><span>▱</span> Contact support</button>
+            <button type="button" data-view="issue-report"><span>▣</span> Record issue</button>
+            <button type="button" data-view="pro-services"><span>⚒</span> Hire a certified Pro</button>
+          </div>
+        </div>
+        <button class="round-action desktop-only" type="button" aria-label="Chat" data-view="messages"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v10H8l-4 4V6Z"></path></svg></button>
+        <button class="round-action has-alert" type="button" aria-label="Notification centre" data-view="notifications"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16v-5a6 6 0 0 0-12 0v5l-2 3h16l-2-3Z"></path><path d="M10 21h4"></path></svg></button>
+        <div class="account-wrap">
+          <button class="account-button" id="accountButton" type="button" aria-expanded="false" aria-controls="accountMenu"><span class="avatar" data-user-initials>EB</span><span class="account-copy"><strong data-company-name>Care workspace</strong><small>Employer Workspace</small></span><span class="header-chevron account-chevron" aria-hidden="true"></span></button>
+          <div class="account-menu account-menu-wide" id="accountMenu" hidden><div class="account-menu-card"><span class="avatar" data-user-initials>EB</span><span><strong>Elite Bridge</strong><small>Owner</small></span></div><button type="button" data-view="caregiver-view"><span>◎</span> Switch to user's view</button><button type="button" data-view="settings"><span>⚙</span> Settings</button><button type="button" data-view="notifications"><span>♧</span> Notifications</button><button type="button" data-view="integrations"><span>♢</span> Integrations</button><button type="button" data-view="perks"><span>▦</span> Perk marketplace</button><button type="button" data-view="organization-switch"><span>↔</span> Switch company</button><div class="menu-divider"></div><button type="button" data-logout><span>↪</span> Sign out</button></div>
+        </div>
+      </div>
+    </header>
+
+    <aside class="app-sidebar"><nav class="nav-shell" id="appNavigation" aria-label="Employer workspace">
+      <a class="nav-link" href="/operations.html"><span class="nav-icon nav-icon--green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg></span>Operations hub</a>
+      <div class="nav-section"><p class="nav-label">Workspace</p><a class="nav-link active mobile-primary" href="#overview" data-view="overview"><span class="nav-icon nav-icon--green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5"></path><path d="M5.5 10.5V20h13v-9.5"></path><path d="M9.5 20v-5h5v5"></path></svg></span>Overview</a><a class="nav-link" href="#activity" data-view="activity"><span class="nav-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h4l2-6 4 12 2-6h4"></path></svg></span>Attendance</a></div>
+      <div class="nav-section"><p class="nav-label">Care operations</p><a class="nav-link mobile-primary" href="#shifts" data-view="shifts"><span class="nav-icon nav-icon--gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3"></path><path d="M17 3v3"></path><path d="M4 8h16"></path><rect x="4" y="5" width="16" height="16" rx="3"></rect><path d="M8 12h3"></path><path d="M13 12h3"></path><path d="M8 16h3"></path></svg></span>Shifts</a><a class="nav-link mobile-primary" href="#clients" data-view="clients"><span class="nav-icon nav-icon--purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-8 0"></path><path d="M4 20a8 8 0 0 1 16 0"></path><path d="M19 8l2 2-2 2"></path></svg></span>Clients</a><a class="nav-link mobile-primary" href="#caregivers" data-view="caregivers"><span class="nav-icon nav-icon--rose"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z"></path><path d="M2.5 21a5.5 5.5 0 0 1 11 0"></path><path d="M17 10.5a3 3 0 1 0 0-6"></path><path d="M15.5 16.5a5 5 0 0 1 6 4.5"></path></svg></span>Caregivers</a><a class="nav-link" href="#timesheets" data-view="timesheets"><span class="nav-icon nav-icon--teal"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v5l3 2"></path></svg></span>Timesheets</a></div>
+      <div class="nav-section"><p class="nav-label">Communication</p><a class="nav-link" href="#messages" data-view="messages"><span class="nav-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v11H8l-4 4V6Z"></path><path d="m5 7 7 6 7-6"></path></svg></span>Messages</a><a class="nav-link" href="#updates" data-view="updates"><span class="nav-icon nav-icon--orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 14h4l8-5V5l4 2v10l-4 2v-4l-8-5H4v4Z"></path><path d="M8 14v4"></path></svg></span>Announcements</a></div>
+      <div class="nav-section"><p class="nav-label">Business administration</p><a class="nav-link" href="#payroll" data-view="payroll"><span class="nav-icon nav-icon--green"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"></rect><path d="M7 12h.01"></path><path d="M17 12h.01"></path><circle cx="12" cy="12" r="3"></circle></svg></span>Payroll</a><a class="nav-link" href="#invoices" data-view="invoices"><span class="nav-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"></path><path d="M10 8h4"></path><path d="M10 12h4"></path><path d="M10 16h2"></path><path d="M17 6h2v12h-2"></path></svg></span>Invoices</a><a class="nav-link" href="#expenses" data-view="expenses"><span class="nav-icon nav-icon--orange"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4h10v16H7z"></path><path d="M9.5 8h5"></path><path d="M9.5 12h5"></path><path d="M9.5 16h2.5"></path><path d="M16 4l2 2"></path></svg></span>Expenses</a><a class="nav-link" href="#contracts" data-view="contracts"><span class="nav-icon nav-icon--gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z"></path><path d="M14 3v5h5"></path><path d="M9 13h6"></path><path d="M9 17h4"></path></svg></span>Contracts</a><a class="nav-link" href="#compliance" data-view="compliance"><span class="nav-icon nav-icon--teal"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 5 3.5 8.5 7 10 3.5-1.5 7-5 7-10V6l-7-3Z"></path><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg></span>Compliance</a></div>
+      <div class="nav-section"><p class="nav-label">Insights & tools</p><a class="nav-link" href="#charts" data-view="charts"><span class="nav-icon nav-icon--purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19V5"></path><path d="M5 19h15"></path><rect x="8" y="11" width="3" height="5" rx="1"></rect><rect x="13" y="8" width="3" height="8" rx="1"></rect><rect x="18" y="5" width="3" height="11" rx="1"></rect></svg></span>Reports</a><a class="nav-link" href="#automations" data-view="automations"><span class="nav-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h8"></path><path d="M8 18h8"></path><circle cx="5" cy="6" r="2"></circle><circle cx="19" cy="18" r="2"></circle><path d="M7 6c5 0 5 12 10 12"></path></svg></span>Automation center</a></div>
+      <button class="mobile-more-tab" id="mobileMoreTab" type="button" aria-expanded="false" aria-label="Open more navigation" aria-controls="appNavigation"><span class="nav-icon"><svg class="more-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></span><span class="mobile-more-label">More</span></button>
+      <div class="sidebar-foot"><strong>Web and mobile connected</strong><p>Coordinate your care operation from either screen with the same Elite Bridge account.</p><a href="/onboarding">Review organization setup →</a></div>
+    </nav></aside>
+    <button class="mobile-overlay" id="mobileOverlay" aria-label="Close navigation"></button>
+
+    <main class="app-main"><div class="content-shell">
+      <section data-view-panel="overview">
+        <div class="home-command" aria-label="Quick actions">
+          <div class="home-command-head">
+            <div>
+              <h1>Quick actions</h1>
+              <p>Move today’s care operations forward</p>
+            </div>
+          </div>
+          <div class="home-action-grid">
+            <button class="home-action-card primary" type="button" data-go-view="shifts"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><rect x="13" y="17" width="38" height="37" rx="7" fill="#fff" stroke="#173d32" stroke-width="3"/><path d="M22 12v11M42 12v11M14 27h36" fill="none" stroke="#173d32" stroke-width="3" stroke-linecap="round"/><rect x="21" y="33" width="8" height="7" rx="2" fill="#f3b74f"/><rect x="35" y="33" width="8" height="7" rx="2" fill="#54b8b2"/><path d="M23 46h18" fill="none" stroke="#173d32" stroke-width="3" stroke-linecap="round"/><path d="M32 3v4M7 17l4 2M57 17l-4 2" fill="none" stroke="#e27c62" stroke-width="3" stroke-linecap="round"/></svg></span><span class="quick-copy"><strong>Post a shift</strong><span>Create a care opportunity</span></span></button>
+            <button class="home-action-card" type="button" data-go-view="clients"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="20" r="11" fill="#f6c77c" stroke="#173d32" stroke-width="3"/><path d="M12 53c1-12 8-19 20-19s19 7 20 19" fill="#58bcb7" stroke="#173d32" stroke-width="3" stroke-linejoin="round"/><path d="M32 39c-7-6-13-11-9-16 3-4 8-2 9 1 2-3 7-5 10-1 4 5-2 10-10 16Z" fill="#e67e69" stroke="#fff" stroke-width="1.5"/><path d="M8 26c-3 5-3 11 0 15M56 26c3 5 3 11 0 15" fill="none" stroke="#dcae54" stroke-width="3" stroke-linecap="round"/></svg></span><span class="quick-copy"><strong>Client record</strong><span>Prepare care details</span></span></button>
+            <button class="home-action-card" type="button" data-go-view="expenses"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M19 8h27v48H19z" fill="#fff" stroke="#173d32" stroke-width="3" stroke-linejoin="round"/><path d="M25 20h15M25 30h15M25 40h9" stroke="#173d32" stroke-width="3" stroke-linecap="round"/><circle cx="45" cy="43" r="10" fill="#f3b74f" stroke="#173d32" stroke-width="3"/><path d="M45 37v12M40 43h10" stroke="#173d32" stroke-width="3" stroke-linecap="round"/></svg></span><span class="quick-copy"><strong>Add expense</strong><span>Gas, ads, receipts</span></span></button>
+            <button class="home-action-card" type="button" data-invite-caregiver><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="19" r="9" fill="#f4bd58" stroke="#173d32" stroke-width="3"/><circle cx="13" cy="25" r="7" fill="#f5d29a" stroke="#173d32" stroke-width="3"/><circle cx="51" cy="25" r="7" fill="#f5d29a" stroke="#173d32" stroke-width="3"/><path d="M18 52c1-12 6-19 14-19s13 7 14 19" fill="#58bcb7" stroke="#173d32" stroke-width="3" stroke-linejoin="round"/><path d="M2 51c1-9 5-14 11-14 4 0 7 2 9 6M62 51c-1-9-5-14-11-14-4 0-7 2-9 6" fill="#f2a18d" stroke="#173d32" stroke-width="3" stroke-linejoin="round"/><path d="M32 6V3M20 11l-3-3M44 11l3-3" stroke="#e17d66" stroke-width="3" stroke-linecap="round"/></svg></span><span class="quick-copy"><strong>Invite caregiver</strong><span>Send signup link</span></span></button>
+            <button class="home-action-card" type="button" data-go-view="timesheets"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="22" fill="#fff" stroke="#173d32" stroke-width="3"/><path d="M32 17v16l10 6" fill="none" stroke="#173d32" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 9l-5 7M47 9l5 7" fill="none" stroke="#e27c62" stroke-width="3" stroke-linecap="round"/><rect x="21" y="45" width="22" height="7" rx="3" fill="#f3b74f" stroke="#173d32" stroke-width="2.5"/></svg></span><span class="quick-copy"><strong>Timesheets</strong><span>Approve hours</span></span></button>
+            <button class="home-action-card" type="button" data-go-view="invoices"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M18 7h28v50H18z" fill="#fff" stroke="#173d32" stroke-width="3" stroke-linejoin="round"/><path d="M25 20h14M25 30h14M25 40h8" stroke="#173d32" stroke-width="3" stroke-linecap="round"/><circle cx="45" cy="45" r="10" fill="#f6c77c" stroke="#173d32" stroke-width="3"/><path d="M45 39v12M40 45h10" stroke="#173d32" stroke-width="3" stroke-linecap="round"/></svg></span><span class="quick-copy"><strong>Invoices</strong><span>Bill clients</span></span></button>
+          </div>
+        </div>
+        <div class="dashboard-grid"><div class="dashboard-main">
+          <section class="surface surface-pad workflow-panel" aria-label="Today workflow"><div class="surface-head"><div><h2>Today’s workflow</h2><p>One place to see what needs action before care starts.</p></div><button class="secondary-button" type="button" data-go-view="shifts">Open scheduling</button></div><div class="workflow-list"><button type="button" class="workflow-item urgent" data-go-view="shifts"><span class="workflow-icon">1</span><span><strong>Fill open shifts</strong><small><b id="metricOpenShifts">—</b> shifts still need coverage</small></span></button><button type="button" class="workflow-item" data-go-view="activity"><span class="workflow-icon">2</span><span><strong>Check attendance</strong><small><b id="metricOnDuty">—</b> caregivers currently on duty</small></span></button><button type="button" class="workflow-item" data-go-view="caregivers"><span class="workflow-icon">3</span><span><strong>Confirm caregiver network</strong><small><b id="metricCaregivers">—</b> visible caregiver profiles</small></span></button><button type="button" class="workflow-item" data-go-view="payroll"><span class="workflow-icon">4</span><span><strong>Review payouts</strong><small><b id="metricPendingPayroll">—</b> draft payroll batches ready</small></span></button></div></section>
+          <section class="surface surface-pad"><div class="surface-head"><div><h2>Activity rhythm</h2><p>Care activity over seven days</p></div></div><div class="timeline"><div class="bar-wrap"><div class="bar" style="height:34px"></div><span>Mon</span></div><div class="bar-wrap"><div class="bar" style="height:62px"></div><span>Tue</span></div><div class="bar-wrap"><div class="bar" style="height:45px"></div><span>Wed</span></div><div class="bar-wrap"><div class="bar" style="height:78px"></div><span>Thu</span></div><div class="bar-wrap"><div class="bar" style="height:52px"></div><span>Fri</span></div><div class="bar-wrap"><div class="bar" style="height:26px"></div><span>Sat</span></div><div class="bar-wrap"><div class="bar" style="height:18px"></div><span>Sun</span></div></div></section>
+        </div><aside class="dashboard-rail"><section class="surface surface-pad"><div class="surface-head"><div><h2>Needs your attention</h2><p>Items that may block care</p></div></div><div class="attention-list"><button class="attention-item" type="button" data-go-view="timesheets"><span class="row-icon">◷</span><span class="row-copy"><strong>Timesheet activity</strong><span>Review recent clock events</span></span><span class="attention-count" id="attentionTimesheets">0</span></button><button class="attention-item" type="button" data-go-view="shifts"><span class="row-icon">▦</span><span class="row-copy"><strong>Open shifts</strong><span>Still seeking coverage</span></span><span class="attention-count" id="attentionShifts">0</span></button></div></section><section class="surface setup-card"><div class="setup-banner"><div class="setup-top"><h2>Organization setup</h2><span class="setup-percent" id="employerSetupPercent">0%</span></div><div class="progress-track"><span id="employerSetupProgress" style="width:0%"></span></div><div class="setup-list" id="employerSetupList"><div class="setup-step" data-setup="organization">Organization profile</div><div class="setup-step" data-setup="location">Primary care location</div><div class="setup-step" data-setup="services">Care services selected</div><div class="setup-step" data-setup="invitation">Invite your first caregiver</div><div class="setup-step" data-setup="shift">Publish your first shift</div></div><button class="primary-button" id="employerSetupAction" type="button">Complete organization setup</button></div></section></aside></div>
+      </section>
+
+      <section data-view-panel="activity" hidden><div class="page-head"><div><p class="eyebrow">Today</p><h1>Live activity</h1><p>Clock events and shift activity from your care operation.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Recent activity</h2><p>Newest events first</p></div></div><div id="activityList"></div></div></section>
+      <section data-view-panel="shifts" hidden><div class="page-head"><div><p class="eyebrow">Care operations</p><h1>Scheduling</h1><p>Publish care work, manage locations, and track current coverage.</p></div></div><div class="schedule-board surface" aria-label="Scheduling board">
+        <div class="schedule-board-top">
+          <div>
+            <p class="eyebrow">Schedule board</p>
+            <h2>Coverage by location</h2>
+            <p>Switch between Gloucester and Manchester, review open care blocks, and invite a caregiver into a specific shift.</p>
+          </div>
+          <button class="primary-button" type="button" data-go-view="shifts">+ Post shift</button>
+        </div>
+        <div class="schedule-controls">
+          <div class="location-chips" aria-label="Locations">
+            <button type="button" class="location-chip active" data-location-filter="all">All locations</button>
+            <button type="button" class="location-chip" data-location-filter="Gloucester">Gloucester</button>
+            <button type="button" class="location-chip" data-location-filter="Manchester">Manchester</button>
+            <button type="button" class="location-chip add-location" data-notify="Location management will let you add branches, homes, or facilities for scheduling.">+ Add location</button>
+          </div>
+        </div>
+        <div class="schedule-stack" aria-label="Schedule preview">
+          <article class="location-schedule" data-location-schedule="Gloucester">
+            <div class="location-schedule-head"><strong>Gloucester</strong><span>3 care blocks</span></div>
+            <button type="button" class="shift-block open" data-go-view="shifts"><span>Sun 11</span><strong>9 AM-1 PM</strong><small>Open shift</small></button>
+            <button type="button" class="shift-block covered" data-go-view="shifts"><span>Mon 12</span><strong>9 AM-1 PM</strong><small>Assigned</small></button>
+            <button type="button" class="shift-block open" data-invite-caregiver><span>Tue 13</span><strong>4 PM-9 PM</strong><small>Invite caregiver</small></button>
+          </article>
+          <article class="location-schedule" data-location-schedule="Manchester">
+            <div class="location-schedule-head"><strong>Manchester</strong><span>3 care blocks</span></div>
+            <button type="button" class="shift-block assigned" data-go-view="shifts"><span>Sun 11</span><strong>9 AM-1 PM</strong><small>Evanson</small></button>
+            <button type="button" class="shift-block open" data-go-view="shifts"><span>Mon 12</span><strong>9 AM-1 PM</strong><small>Open shift</small></button>
+            <button type="button" class="shift-block covered" data-go-view="shifts"><span>Tue 13</span><strong>4 PM-9 PM</strong><small>Covered</small></button>
+          </article>
+        </div>
+      </div><div class="operations-grid"><div class="surface surface-pad live-shifts-panel"><div class="surface-head"><div><h2>Live shifts</h2><p>Current published care work from Elite Bridge</p></div></div><div class="shift-filter-bar" aria-label="Shift filters"><button type="button" class="shift-filter active" data-shift-filter="all">All</button><button type="button" class="shift-filter" data-shift-filter="open">Open</button><button type="button" class="shift-filter" data-shift-filter="assigned">Assigned</button><button type="button" class="shift-filter" data-shift-filter="cancelled">Cancelled</button><button type="button" class="shift-filter" data-shift-filter="Manchester">Manchester</button><button type="button" class="shift-filter" data-shift-filter="Gloucester">Gloucester</button></div><div id="allShiftList"></div><div class="claims-section-head"><h2>Pending caregiver claims</h2><p>Approve direct claims or decline them before coverage is finalized.</p></div><div id="applicationList"></div></div><form class="surface surface-pad" id="shiftForm"><div class="surface-head"><div><h2>Post a shift</h2><p>Share only the details caregivers need</p></div></div><div class="form-grid"><div class="field full"><label for="shiftTitle">Shift title</label><input id="shiftTitle" name="title" placeholder="Companion care visit" required></div><div class="field"><label for="serviceType">Service</label><select id="serviceType" name="serviceType"><option>Companionship</option><option>Personal care</option><option>Respite care</option><option>Meal preparation</option><option>Transportation</option></select></div><div class="field"><label for="caregiverType">Caregiver type</label><select id="caregiverType" name="caregiverType"><option>Caregiver</option><option>Companion</option><option>Personal care aide</option></select></div><div class="field full"><label for="recipientName">Care recipient first name (optional)</label><input id="recipientName" name="careRecipientName"></div><div class="field"><label for="startDate">Date</label><input id="startDate" name="startDate" type="date" required></div><div class="field"><label for="startTime">Start</label><input id="startTime" name="startTime" type="time" required></div><div class="field"><label for="endDate">End date (optional)</label><input id="endDate" name="endDate" type="date"><small>Blank: same day, or next day when end time is earlier.</small></div><div class="field"><label for="timeZone">Facility time zone</label><input id="timeZone" name="timeZone" value="America/New_York" required></div><div class="field"><label for="numberOfCaregivers">Caregivers needed</label><input id="numberOfCaregivers" name="numberOfCaregivers" type="number" min="1" max="50" value="1" required></div><div class="field"><label for="assignmentMode">Assignment</label><select id="assignmentMode" name="assignmentMode"><option value="review">Employer review</option><option value="instant">Instant claim</option></select></div><div class="field"><label for="endTime">End</label><input id="endTime" name="endTime" type="time" required></div><div class="field"><label for="hourlyRate">Hourly rate</label><input id="hourlyRate" name="hourlyRate" type="number" min="1" value="30" required></div><div class="field full"><label for="address">Care location</label><input id="address" name="address" placeholder="Street address" required></div><div class="field"><label for="city">City</label><input id="city" name="city" required></div><div class="field"><label for="state">State</label><input id="state" name="state" maxlength="2" placeholder="MA" required></div><div class="field"><label for="zipCode">ZIP code</label><input id="zipCode" name="zipCode" required></div><div class="field"><label for="urgency">Priority</label><select id="urgency" name="urgency"><option value="standard">Standard</option><option value="urgent">Urgent</option></select></div><div class="field full"><label for="responsibilities">Care responsibilities</label><textarea id="responsibilities" name="responsibilities" placeholder="Describe the care activities for this shift." required></textarea></div></div><button class="primary-button" type="submit" style="width:100%;margin-top:18px">Publish shift</button></form></div></section>
+      <section data-view-panel="clients" hidden><div class="page-head"><div><p class="eyebrow">Care records</p><h1>Clients & locations</h1><p>Save client locations, billing rates, and caregiver pay defaults for cleaner shifts and invoices.</p></div></div><div class="operations-grid"><form class="surface surface-pad" id="clientForm" data-client-record><div class="surface-head"><div><h2>Add client location</h2><p>Start with Barry, Gloucester, and Manchester so scheduling has clean source data.</p></div><span class="manual-entry-pill">Private record</span></div><div class="form-grid"><div class="field"><label for="clientName">Client name</label><input id="clientName" name="clientName" placeholder="Barry Schwartz" required></div><div class="field"><label for="clientLocationName">Location</label><select id="clientLocationName" name="locationName"><option>Manchester</option><option>Gloucester</option></select></div><div class="field full"><label for="clientAddress">Address</label><input id="clientAddress" name="address" placeholder="Street address"></div><div class="field"><label for="clientCity">City</label><input id="clientCity" name="city" placeholder="Manchester" required></div><div class="field"><label for="clientState">State</label><input id="clientState" name="state" maxlength="2" value="MA" required></div><div class="field"><label for="clientZipCode">ZIP code</label><input id="clientZipCode" name="zipCode"></div><div class="field"><label for="clientBillingRate">Client bill rate</label><input id="clientBillingRate" name="billingRate" type="number" min="1" step="0.01" value="40" required></div><div class="field"><label for="clientCaregiverRate">Caregiver pay rate</label><input id="clientCaregiverRate" name="caregiverRate" type="number" min="1" step="0.01" value="30" required></div><div class="field"><label for="clientContactName">Contact name</label><input id="clientContactName" name="contactName"></div><div class="field"><label for="clientContactPhone">Contact phone</label><input id="clientContactPhone" name="contactPhone"></div><div class="field full"><label for="clientNotes">Care/location notes</label><textarea id="clientNotes" name="notes" placeholder="Scheduling instructions, gate codes, preferences, or billing notes."></textarea></div></div><button class="primary-button" type="submit" style="width:100%;margin-top:18px">Save client location</button></form><div class="surface surface-pad"><div class="surface-head"><div><h2>Saved locations</h2><p>Use these records when posting shifts and creating invoices.</p></div></div><div id="clientRecordList"></div></div></div></section>
+      <section data-view-panel="caregivers" hidden><div class="page-head"><div><p class="eyebrow">People</p><h1>Caregiver directory</h1><p>Review caregivers and invitations connected to your Elite Bridge account.</p></div><button class="primary-button" type="button" data-invite-caregiver>Invite caregiver</button></div><div class="operations-grid"><div class="surface surface-pad"><div class="surface-head"><div><h2>Caregivers</h2><p>Profiles and screening status from the shared Elite Bridge platform</p></div></div><div id="caregiverList"></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Invitations</h2><p>Secure links expire after seven days</p></div></div><div id="invitationList"></div></div></div></section>
+      <section data-view-panel="timesheets" hidden>
+        <div class="page-head"><div><p class="eyebrow">Timekeeping</p><h1>Timesheets</h1><p>Review recorded hours and log a missed clock-in. Every manual entry is audited and stays pending until you review it.</p></div></div>
+        <div class="surface surface-pad timesheet-dashboard"><div class="surface-head"><div><h2>Timesheet dashboard</h2><p>Review, approve, and prepare staff timesheets for sharing.</p></div><span class="manual-entry-pill">Employer review</span></div><div class="timesheet-summary" id="timesheetSummary" aria-label="Timesheet summary"></div><div id="timesheetList"></div><p class="timesheet-export-hint">View opens a share-ready timesheet. Download saves a PDF file directly. Email sends a PDF attachment to the address you enter.</p></div>
+        <article class="surface surface-pad manual-entry-panel">
+          <div class="surface-head"><div><h2>Add a missed clock-in</h2><p>Create a manual timesheet from the staff member's reported hours.</p></div><span class="manual-entry-pill">Employer review required</span></div>
+          <form id="manualTimesheetForm" data-manual-entry class="manual-timesheet-form">
+            <div class="field"><label for="manualStaffName">Staff member</label><input id="manualStaffName" name="staffName" type="text" maxlength="255" placeholder="Full name" required></div>
+            <div class="field"><label for="manualStartDate">First shift date</label><input id="manualStartDate" name="startDate" type="date" required></div>
+            <div class="field"><label for="manualEndDate">Last shift date</label><input id="manualEndDate" name="endDate" type="date" required></div>
+            <div class="field"><label for="manualStartTime">Clock-in time</label><input id="manualStartTime" name="startTime" type="time" value="09:00" required></div>
+            <div class="field"><label for="manualEndTime">Clock-out time</label><input id="manualEndTime" name="endTime" type="time" value="13:00" required></div>
+            <div class="field"><label for="manualHourlyRate">Pay rate ($/hour)</label><input id="manualHourlyRate" name="hourlyRate" type="number" min="0.01" max="500" step="0.01" placeholder="30.00" required></div>
+            <div class="field"><label for="manualBreakMinutes">Unpaid break (minutes per shift)</label><input id="manualBreakMinutes" name="unpaidBreakMinutes" type="number" min="0" max="1440" step="1" value="0"></div>
+            <label class="manual-weekends-check"><input type="checkbox" name="includeWeekends" checked><span><strong>Include weekends</strong><small>Apply the same shift to every date in the range.</small></span></label>
+            <div class="field manual-reason-field"><label for="manualReason">Reason / employer note</label><textarea id="manualReason" name="reason" maxlength="2000" placeholder="Staff forgot to clock in. Entered from the hours they reported." required></textarea></div>
+            <div class="manual-entry-actions"><p>Manual entries are recorded as pending review. Approval does not send payment.</p><button class="primary-button" type="submit">Save for review</button></div>
+          </form>
+        </article>
+      </section>
+      <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div id="conversationList"></div></div></section>
+      <section data-view-panel="updates" hidden><div class="page-head"><div><p class="eyebrow">Team communication</p><h1>Team updates</h1><p>Share important operational information with your care team.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">↗</span><strong>No updates published yet</strong><p>Connected team announcements will be added here.</p><button class="secondary-button" type="button" data-notify="Team updates are being prepared for the web portal.">Create an update</button></div></div></div></section>
+      <section data-view-panel="help-center" hidden><div class="page-head"><div><p class="eyebrow">Support</p><h1>Help Center</h1><p>Quick guides for posting shifts, inviting caregivers, approving claims, and preparing payroll records.</p></div></div><div class="support-grid"><article class="surface surface-pad"><h2>Shift scheduling</h2><p>Create open shifts, invite a specific caregiver, or keep a shift available for pickup.</p><button class="secondary-button" type="button" data-go-view="shifts">Open scheduling</button></article><article class="surface surface-pad"><h2>Timesheets</h2><p>Review missed clock-ins, approve hours, and generate share-ready PDFs.</p><button class="secondary-button" type="button" data-go-view="timesheets">Open timesheets</button></article><article class="surface surface-pad"><h2>Billing</h2><p>Create client invoices separate from caregiver timesheets.</p><button class="secondary-button" type="button" data-go-view="invoices">Open invoices</button></article></div></section>
+      <section data-view-panel="support" hidden><div class="page-head"><div><p class="eyebrow">Support</p><h1>Contact support</h1><p>Send an operational support request to the Elite Bridge team.</p></div></div><form class="surface surface-pad support-form"><div class="form-grid"><div class="field"><label>Topic</label><select><option>Scheduling</option><option>Timesheets</option><option>Invoices</option><option>Caregiver access</option></select></div><div class="field"><label>Priority</label><select><option>Normal</option><option>Urgent</option></select></div><div class="field full"><label>Message</label><textarea placeholder="Tell us what you need help with."></textarea></div></div><button class="primary-button" type="button" data-notify="Support request draft saved. Email delivery will be connected next.">Submit support request</button></form></section>
+      <section data-view-panel="issue-report" hidden><div class="page-head"><div><p class="eyebrow">Quality</p><h1>Record issue</h1><p>Document scheduling, caregiver, timesheet, billing, or app issues for follow-up.</p></div></div><form class="surface surface-pad support-form"><div class="form-grid"><div class="field"><label>Issue type</label><select><option>App issue</option><option>Shift coverage</option><option>Timesheet problem</option><option>Client concern</option></select></div><div class="field"><label>Date</label><input type="date"></div><div class="field full"><label>Description</label><textarea placeholder="Record what happened and what needs to be corrected."></textarea></div></div><button class="primary-button" type="button" data-notify="Issue recorded locally for review.">Save issue</button></form></section>
+      <section data-view-panel="pro-services" hidden><div class="page-head"><div><p class="eyebrow">Operations support</p><h1>Certified Pro services</h1><p>Request help with setup, payroll workflows, caregiver onboarding, and dashboard automation.</p></div></div><div class="support-grid"><article class="surface surface-pad"><h2>Workflow setup</h2><p>Configure scheduling, client records, and caregiver invitations.</p><button class="secondary-button" type="button" data-notify="Workflow setup request saved.">Request help</button></article><article class="surface surface-pad"><h2>Payroll review</h2><p>Prepare contractor payout checks and timesheet review routines.</p><button class="secondary-button" type="button" data-notify="Payroll review request saved.">Request help</button></article></div></section>
+      <section data-view-panel="notifications" hidden><div class="page-head"><div><p class="eyebrow">Notification centre</p><h1>Notifications</h1><p>Important shift, claim, timesheet, and billing alerts for Elite Bridge.</p></div></div><div class="surface surface-pad"><div class="notification-list"><button class="notification-item" type="button" data-go-view="shifts"><span class="status warning">Action</span><strong>Review open shift coverage</strong><small>Open shifts and caregiver claims appear in Scheduling.</small></button><button class="notification-item" type="button" data-go-view="timesheets"><span class="status neutral">Review</span><strong>Timesheets ready for employer approval</strong><small>Approve, download, or share PDFs from Timesheets.</small></button><button class="notification-item" type="button" data-go-view="invoices"><span class="status neutral">Billing</span><strong>Invoices are separate from timesheets</strong><small>Create official client invoices from the Invoices page.</small></button></div></div></section>
+      <section data-view-panel="settings" hidden><div class="page-head"><div><p class="eyebrow">Workspace</p><h1>Settings</h1><p>Manage your Elite Bridge employer workspace defaults and account preferences.</p></div></div><div class="support-grid"><article class="surface surface-pad"><h2>Organization profile</h2><p>Logo, business name, care locations, and contact information.</p><a class="secondary-button" href="/onboarding">Open setup</a></article><article class="surface surface-pad"><h2>Default locations</h2><p>Current scheduling locations: Gloucester and Manchester.</p><button class="secondary-button" type="button" data-go-view="clients">Manage locations</button></article><article class="surface surface-pad"><h2>Permissions</h2><p>Employer owners can approve shifts, timesheets, invoices, and caregiver invitations.</p><button class="secondary-button" type="button" data-notify="Permission management will be connected with team accounts.">Review permissions</button></article></div></section>
+      <section data-view-panel="integrations" hidden><div class="page-head"><div><p class="eyebrow">Workspace</p><h1>Integrations</h1><p>Connect email delivery, accounting, calendar, and automation tools as Elite Bridge grows.</p></div></div><div class="support-grid"><article class="surface surface-pad"><h2>Email delivery</h2><p>Send timesheets, invoices, and invitations from info@elitebridgestaffing.com.</p><button class="secondary-button" type="button" data-notify="Email delivery setup is queued for the next backend pass.">Configure</button></article><article class="surface surface-pad"><h2>Calendar</h2><p>Sync published care shifts to a calendar view.</p><button class="secondary-button" type="button" data-notify="Calendar integration placeholder opened.">Configure</button></article><article class="surface surface-pad"><h2>MCP automation</h2><p>Prepare command-based actions from ChatGPT once endpoint permissions are connected.</p><button class="secondary-button" type="button" data-go-view="automations">Open automation center</button></article></div></section>
+      <section data-view-panel="perks" hidden><div class="page-head"><div><p class="eyebrow">Benefits</p><h1>Perk marketplace</h1><p>A future home for caregiver benefits, discounts, training resources, and employer tools.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">EB</span><strong>Perks are being prepared</strong><p>This page is ready in the dashboard and can be connected to partner offers later.</p></div></div></div></section>
+      <section data-view-panel="caregiver-view" hidden><div class="page-head"><div><p class="eyebrow">Preview</p><h1>User view</h1><p>Preview the caregiver-side experience without leaving the employer workspace.</p></div><a class="primary-button" href="/caregiver-dashboard">Open caregiver dashboard</a></div><div class="surface surface-pad"><p class="muted-copy">Use this when you want to verify how caregivers see invitations, open shifts, and assigned care work.</p></div></section>
+      <section data-view-panel="organization-switch" hidden><div class="page-head"><div><p class="eyebrow">Account</p><h1>Switch company</h1><p>Manage access to more than one employer workspace.</p></div></div><div class="surface surface-pad"><button class="notification-item" type="button" data-go-view="overview"><span class="avatar">EB</span><strong>Elite Bridge</strong><small>Current owner workspace</small></button></div></section>
+      <section data-view-panel="payroll" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Finance</p>
+            <h1>1099 contractor payouts</h1>
+            <p>Create payout batches from approved timesheets. Elite Bridge does not withhold taxes or treat contractors as W-2 employees.</p>
+          </div>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span class="metric-label">Draft payouts <i class="metric-dot"></i></span><strong class="metric-value" id="payrollDraft">—</strong><span class="metric-foot">Ready to pay</span></article>
+          <article class="metric-card"><span class="metric-label">Paid total <i class="metric-dot"></i></span><strong class="metric-value" id="payrollPaid">—</strong><span class="metric-foot">All marked paid</span></article>
+          <article class="metric-card"><span class="metric-label">This year <i class="metric-dot"></i></span><strong class="metric-value" id="payrollYear">—</strong><span class="metric-foot">1099 report total</span></article>
+          <article class="metric-card"><span class="metric-label">Unbatched hours <i class="metric-dot"></i></span><strong class="metric-value" id="payrollUnbatched">—</strong><span class="metric-foot">Approved not in payout</span></article>
+        </div>
+        <div class="operations-grid">
+          <form class="surface surface-pad" id="payoutRunForm">
+            <div class="surface-head"><div><h2>Create payout run</h2><p>Pull approved unpaid timesheets into one contractor payout batch.</p></div></div>
+            <div class="form-grid">
+              <label>From<input id="payoutFrom" name="from" type="date" required></label>
+              <label>To<input id="payoutTo" name="to" type="date" required></label>
+              <label class="full">Memo<input id="payoutMemo" name="memo" placeholder="Example: September caregiver payouts"></label>
+            </div>
+            <p class="form-note">Use only after reviewing and approving timesheets. Contractors handle their own taxes; keep W-9 records before payment.</p>
+            <button class="primary-button" type="submit">Create 1099 payout run</button>
+          </form>
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Approved unpaid timesheets</h2><p>These can be batched into a 1099 payout run.</p></div></div>
+            <div id="approvedPayoutList"></div>
+          </div>
+        </div>
+        <div class="operations-grid">
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Payout runs</h2><p>Export pay statements or mark draft runs paid after you pay contractors.</p></div></div>
+            <div id="payoutRunList"></div>
+          </div>
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Contractor 1099 totals</h2><p>Year-to-date totals for 1099-NEC preparation.</p></div></div>
+            <div id="contractor1099List"></div>
+          </div>
+        </div>
+        <div class="surface surface-pad">
+          <div class="surface-head"><div><h2>Payroll security log</h2><p>Recent payout, export, W-9, and payment-setting activity for this employer account.</p></div></div>
+          <div id="payrollAuditList"></div>
+        </div>
+      </section>
+
+      <section data-view-panel="expenses" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Business finance</p>
+            <h1>Company expenses</h1>
+            <p>Track gas, subscriptions, advertising, supplies, and receipt images for Elite Bridge records.</p>
+          </div>
+          <button class="secondary-button" type="button" data-notify="Expense export will be added after more records are captured.">Export CSV</button>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span class="metric-label">This month <i class="metric-dot"></i></span><strong class="metric-value" id="expenseMonthTotal">—</strong><span class="metric-foot">All categories</span></article>
+          <article class="metric-card"><span class="metric-label">Advertising <i class="metric-dot"></i></span><strong class="metric-value" id="expenseAdvertisingTotal">—</strong><span class="metric-foot">Marketing spend</span></article>
+          <article class="metric-card"><span class="metric-label">Subscriptions <i class="metric-dot"></i></span><strong class="metric-value" id="expenseSubscriptionTotal">—</strong><span class="metric-foot">Recurring tools</span></article>
+          <article class="metric-card"><span class="metric-label">Receipts <i class="metric-dot"></i></span><strong class="metric-value" id="expenseReceiptCount">—</strong><span class="metric-foot">Attached images</span></article>
+        </div>
+        <div class="operations-grid">
+          <form class="surface surface-pad expense-form" id="expenseForm" data-expense-entry>
+            <div class="surface-head"><div><h2>Add expense</h2><p>Enter manually or attach a receipt photo.</p></div><span class="manual-entry-pill">Owner record</span></div>
+            <div class="form-grid">
+              <div class="field"><label for="expenseDate">Date</label><input id="expenseDate" name="expenseDate" type="date" required></div>
+              <div class="field"><label for="expenseCategory">Category</label><select id="expenseCategory" name="category" required><option value="gas">Gas</option><option value="subscriptions">Subscriptions</option><option value="advertising">Advertising</option><option value="supplies">Supplies</option><option value="payroll">Payroll</option><option value="insurance">Insurance</option><option value="office">Office</option><option value="other">Other</option></select></div>
+              <div class="field"><label for="expenseAmount">Amount</label><input id="expenseAmount" name="amount" type="number" min="0.01" max="100000" step="0.01" placeholder="0.00" required></div>
+              <div class="field"><label for="expenseVendor">Vendor</label><input id="expenseVendor" name="vendor" maxlength="255" placeholder="Shell, Canva, Meta Ads" required></div>
+              <div class="field"><label for="expensePayment">Payment method</label><input id="expensePayment" name="paymentMethod" maxlength="80" placeholder="Business card, cash, bank"></div>
+              <div class="field"><label for="expenseReceipt">Receipt photo</label><input id="expenseReceipt" name="receipt" type="file" accept="image/png,image/jpeg,image/webp" capture="environment"><small>Take a photo or upload a saved receipt.</small></div>
+              <div class="field full"><label for="expenseDescription">Notes</label><textarea id="expenseDescription" name="description" maxlength="2000" placeholder="Example: Gas for client visit, Meta ads, monthly app subscription."></textarea></div>
+            </div>
+            <div class="expense-receipt-preview" id="expenseReceiptPreview" hidden></div>
+            <button class="primary-button" type="submit">Save expense</button>
+          </form>
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Recent expenses</h2><p>Newest company spending first.</p></div></div>
+            <div id="expenseList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section data-view-panel="invoices" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Client billing</p>
+            <h1>Invoices</h1>
+            <p>Create official client invoices separate from caregiver timesheets and payroll records.</p>
+          </div>
+          <button class="secondary-button" type="button" data-go-view="contracts">Open contract tools</button>
+        </div>
+        <div class="billing-dashboard">
+          <div class="surface surface-pad invoice-console">
+            <div class="surface-head"><div><h2>Create client invoice</h2><p>Use completed care dates only. The client bill rate stays private.</p></div><span class="manual-entry-pill">Client billing</span></div>
+            <form id="clientInvoiceForm" class="form-grid">
+              <div class="field"><label for="clientInvoiceName">Client name</label><input id="clientInvoiceName" name="clientName" placeholder="Barry Schwartz" required></div>
+              <div class="field"><label for="clientInvoiceEmail">Client email</label><input id="clientInvoiceEmail" name="clientEmail" type="email" placeholder="client@example.com"></div>
+              <div class="field full"><label for="clientBillingAddress">Billing address</label><textarea id="clientBillingAddress" name="billingAddress" placeholder="Street, city, state, ZIP"></textarea></div>
+              <div class="field"><label for="clientInvoiceDate">Invoice date</label><input id="clientInvoiceDate" name="invoiceDate" type="date" required></div>
+              <div class="field"><label for="clientDueDate">Due date</label><input id="clientDueDate" name="dueDate" type="date" required></div>
+              <div class="field"><label for="serviceStartDate">Service start</label><input id="serviceStartDate" name="serviceStartDate" type="date" required></div>
+              <div class="field"><label for="serviceEndDate">Service end</label><input id="serviceEndDate" name="serviceEndDate" type="date" required></div>
+              <div class="field"><label for="clientHourlyRate">Client bill rate</label><input id="clientHourlyRate" name="hourlyRate" type="number" min="1" step="0.01" value="40" required></div>
+              <div class="field"><label for="morningStartTime">Morning start</label><input id="morningStartTime" name="morningStartTime" type="time" value="09:00"></div>
+              <div class="field"><label for="morningEndTime">Morning end</label><input id="morningEndTime" name="morningEndTime" type="time" value="13:00"></div>
+              <div class="field"><label for="morningCaregiver">Morning caregiver</label><input id="morningCaregiver" name="morningCaregiver" value="Gladys"></div>
+              <div class="field"><label for="eveningStartTime">Evening start</label><input id="eveningStartTime" name="eveningStartTime" type="time" value="16:00"></div>
+              <div class="field"><label for="eveningEndTime">Evening end</label><input id="eveningEndTime" name="eveningEndTime" type="time" value="21:00"></div>
+              <div class="field"><label for="eveningCaregiver">Evening caregiver</label><input id="eveningCaregiver" name="eveningCaregiver" value="Evanson Saitoti"></div>
+              <label class="manual-weekends-check"><input type="checkbox" name="includeWeekends" checked><span><strong>Include weekends</strong><small>Bill every day in the service range.</small></span></label>
+              <label class="manual-weekends-check"><input type="checkbox" name="confirmCompletedServices" required><span><strong>Completed services</strong><small>I confirm these visits already happened.</small></span></label>
+              <div class="field full"><label for="clientInvoiceNotes">Invoice notes</label><textarea id="clientInvoiceNotes" name="notes" placeholder="Thank you for choosing Elite Bridge Staffing."></textarea></div>
+              <button class="primary-button full" type="submit">Save draft invoice</button>
+            </form>
+          </div>
+          <div class="surface surface-pad invoice-ledger">
+            <div class="surface-head"><div><h2>Client invoice ledger</h2><p>View, download, and issue official invoices.</p></div></div>
+            <div id="clientInvoiceList"></div>
+          </div>
+        </div>
+      </section>
+
+      <section data-view-panel="contracts" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Client agreements</p>
+            <h1>Elite Bridge contract</h1>
+            <p>Fill the client details on the left. The contract preview on the right stays formatted like the Elite Bridge agreement.</p>
+          </div>
+          <div class="page-actions">
+            <button class="secondary-button" type="button" id="emailContractTop">Email client</button>
+            <button class="primary-button" type="button" id="printContractTop">Download PDF</button>
+          </div>
+        </div>
+
+        <div class="contract-builder">
+          <form class="surface surface-pad contract-form" id="contractForm">
+            <div class="section-heading">
+              <div>
+                <p class="eyebrow">Agreement details</p>
+                <h2>Fill in the agreement</h2>
+              </div>
+            </div>
+            <div class="form-grid">
+              <label>Client name<input id="contractClientName" type="text" placeholder="Edward Kowaloff" required></label>
+              <label>Care recipient<input id="contractCareRecipient" type="text" placeholder="Hollis Kowaloff"></label>
+              <label>Start date<input id="contractStartDate" type="date"></label>
+              <label>Client email<input id="contractClientEmail" type="email" placeholder="client@example.com"></label>
+              <fieldset class="classic-checks full">
+                <legend>Service days</legend>
+                <label><input type="checkbox" name="contractDays" value="Monday"> Monday</label>
+                <label><input type="checkbox" name="contractDays" value="Tuesday"> Tuesday</label>
+                <label><input type="checkbox" name="contractDays" value="Wednesday"> Wednesday</label>
+                <label><input type="checkbox" name="contractDays" value="Thursday"> Thursday</label>
+                <label><input type="checkbox" name="contractDays" value="Friday"> Friday</label>
+                <label><input type="checkbox" name="contractDays" value="Saturday"> Saturday</label>
+                <label><input type="checkbox" name="contractDays" value="Sunday"> Sunday</label>
+              </fieldset>
+              <fieldset class="classic-checks full">
+                <legend>Hourly rates</legend>
+                <label><input type="checkbox" name="contractRates" value="Morning"> Morning / day rate</label>
+                <label><input type="text" id="contractDayRate" placeholder="$40" aria-label="Morning day rate amount"></label>
+                <label><input type="checkbox" name="contractRates" value="Evening"> Evening rate</label>
+                <label><input type="text" id="contractEveningRate" placeholder="$45" aria-label="Evening rate amount"></label>
+              </fieldset>
+              <fieldset class="classic-checks full">
+                <legend>Billing cycle</legend>
+                <label><input type="checkbox" name="contractBilling" value="Weekly"> Weekly</label>
+                <label><input type="checkbox" name="contractBilling" value="Biweekly"> Biweekly</label>
+              </fieldset>
+              <label>Client signature name<input class="signature-input" id="contractClientSigner" type="text" placeholder="Client full name"></label>
+              <label>Client date<input id="contractClientDate" type="date"></label>
+              <label>Agency representative<input class="signature-input" id="contractAgencySigner" type="text" placeholder="Agency representative"></label>
+              <label>Agency date<input id="contractAgencyDate" type="date"></label>
+              <fieldset class="contract-nudge-panel full">
+                <legend>Fine tune alignment</legend>
+                <label>Move field
+                  <select id="contractNudgeTarget">
+                    <option value="client-name">Client name</option>
+                    <option value="care-recipient">Care recipient</option>
+                    <option value="start-date">Start date</option>
+                    <option value="service-days">Service day checkmarks</option>
+                    <option value="rate-checks">Hourly rate checkmarks</option>
+                    <option value="rate-amounts">Hourly rate amounts</option>
+                    <option value="billing">Billing checkmarks</option>
+                    <option value="client-signature">Client signature name</option>
+                    <option value="client-date">Client date</option>
+                    <option value="agency-signature">Agency representative</option>
+                    <option value="agency-date">Agency date</option>
+                  </select>
+                </label>
+                <div class="nudge-grid" aria-label="Move selected contract text">
+                  <span></span>
+                  <button class="nudge-button" type="button" data-nudge-y="-1" aria-label="Move up">↑</button>
+                  <span></span>
+                  <button class="nudge-button" type="button" data-nudge-x="-1" aria-label="Move left">←</button>
+                  <button class="nudge-button" type="button" data-nudge-y="1" aria-label="Move down">↓</button>
+                  <button class="nudge-button" type="button" data-nudge-x="1" aria-label="Move right">→</button>
+                </div>
+                <div class="nudge-actions">
+                  <button class="secondary-button" type="button" id="resetContractNudge">Reset selected</button>
+                  <button class="secondary-button" type="button" id="resetAllContractNudges">Reset all</button>
+                </div>
+                <p class="form-note">Use this if typed text sits a little above, below, left, or right of the line.</p>
+              </fieldset>
+            </div>
+            <p class="form-note">The signature names appear in a signature style. Review the preview before downloading or emailing.</p>
+            <div class="form-actions">
+              <button class="secondary-button" type="submit">Update preview</button>
+              <button class="primary-button" type="button" id="printContract">Download PDF</button>
+              <button class="secondary-button" type="button" id="emailContract">Email client</button>
+            </div>
+          </form>
+
+          <div class="contract-preview-wrap" aria-label="Contract preview">
+            <article class="contract-page" id="contractPreview">
+              <header class="contract-letterhead">
+                <img src="/logo.png" alt="Elite Bridge Staffing" class="contract-logo">
+                <div>
+                  <strong>Elite Bridge Staffing</strong>
+                  <span>Professional home care staffing and client support</span>
+                  <span>elitebridgestaffing.com</span>
+                </div>
+              </header>
+              <div class="contract-title-row">
+                <div>
+                  <p class="eyebrow">Service agreement</p>
+                  <h2>Non-Medical Home Care Services Agreement</h2>
+                </div>
+                <p class="contract-date">Prepared today</p>
+              </div>
+              <div class="contract-empty-state">Enter client information to generate the agreement preview.</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section data-view-panel="compliance" hidden><div class="page-head"><div><p class="eyebrow">Trust & safety</p><h1>Compliance center</h1><p>Monitor verification and background-check status without collecting sensitive identity information yourself.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Caregiver screening</h2><p>Background checks must be completed through an approved screening provider with caregiver consent.</p></div></div><div id="complianceList"></div></div></section>
+      <section data-view-panel="charts" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Internal visibility</p>
+            <h1>Charts and performance</h1>
+            <p>Track coverage, payroll exposure, caregiver response, and client billing from one place.</p>
+          </div>
+          <button class="secondary-button" type="button" data-notify="CSV and PDF chart exports are queued for the next reporting pass.">Export report</button>
+        </div>
+        <div class="metric-grid">
+          <article class="metric-card"><span class="metric-label">Fill rate <i class="metric-dot"></i></span><strong class="metric-value">92%</strong><span class="metric-foot">Published shifts with coverage</span></article>
+          <article class="metric-card"><span class="metric-label">Avg response <i class="metric-dot"></i></span><strong class="metric-value">18m</strong><span class="metric-foot">Caregiver invite response</span></article>
+          <article class="metric-card"><span class="metric-label">Client bill rate <i class="metric-dot"></i></span><strong class="metric-value">$40</strong><span class="metric-foot">Default billing per hour</span></article>
+          <article class="metric-card"><span class="metric-label">Margin watch <i class="metric-dot"></i></span><strong class="metric-value">Live</strong><span class="metric-foot">Compares client and caregiver rates</span></article>
+        </div>
+        <div class="chart-grid">
+          <article class="surface surface-pad chart-card">
+            <div class="surface-head"><div><h2>Weekly coverage</h2><p>Scheduled care hours by day</p></div></div>
+            <div class="chart-bars" aria-label="Weekly coverage chart">
+              <div style="--bar:42%"><span></span><strong>Mon</strong><small>12h</small></div>
+              <div style="--bar:55%"><span></span><strong>Tue</strong><small>16h</small></div>
+              <div style="--bar:36%"><span></span><strong>Wed</strong><small>10h</small></div>
+              <div style="--bar:86%"><span></span><strong>Thu</strong><small>25h</small></div>
+              <div style="--bar:92%"><span></span><strong>Fri</strong><small>27h</small></div>
+              <div style="--bar:78%"><span></span><strong>Sat</strong><small>23h</small></div>
+              <div style="--bar:74%"><span></span><strong>Sun</strong><small>22h</small></div>
+            </div>
+          </article>
+          <article class="surface surface-pad chart-card">
+            <div class="surface-head"><div><h2>Rate protection</h2><p>Keep caregiver pay separate from client billing</p></div></div>
+            <div class="rate-stack">
+              <div><span>Client billing</span><strong>$40/hr</strong><i style="width:100%"></i></div>
+              <div><span>Evanson Saitoti</span><strong>$30/hr</strong><i style="width:75%"></i></div>
+              <div><span>Experienced caregiver</span><strong>$35/hr</strong><i style="width:88%"></i></div>
+              <div><span>New caregiver</span><strong>$25/hr</strong><i style="width:63%"></i></div>
+            </div>
+          </article>
+          <article class="surface surface-pad chart-card wide">
+            <div class="surface-head"><div><h2>Operational dashboard</h2><p>Connecteam-style quick view for owner decisions</p></div></div>
+            <div class="insight-row"><span class="insight-icon nav-icon--green"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 13l4 4L19 7"></path></svg></span><div><strong>Client bill rate stays private</strong><p>Caregivers only see their assigned pay rate and timesheet details.</p></div></div>
+            <div class="insight-row"><span class="insight-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h4l2-6 4 12 2-6h4"></path></svg></span><div><strong>Coverage exceptions surface first</strong><p>Open shifts, late clock-ins, and unapproved timesheets stay visible.</p></div></div>
+            <div class="insight-row"><span class="insight-icon nav-icon--gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l4 4v14H7V3Z"></path><path d="M14 3v5h5"></path></svg></span><div><strong>Contracts and payroll stay connected</strong><p>Client agreements, caregiver rates, and 1099 payouts can be audited together.</p></div></div>
+          </article>
+        </div>
+      </section>
+      <section data-view-panel="automations" hidden>
+        <div class="page-head">
+          <div>
+            <p class="eyebrow">Automation hub</p>
+            <h1>ChatGPT and MCP automations</h1>
+            <p>Prepare repeatable workflows that can be triggered from ChatGPT, internal tools, or a connected MCP server.</p>
+          </div>
+          <button class="primary-button" type="button" data-copy-mcp-endpoint>Copy MCP endpoint</button>
+        </div>
+        <div class="automation-layout">
+          <article class="surface surface-pad mcp-panel">
+            <div class="surface-head"><div><h2>Elite Bridge MCP connection</h2><p>Secure access to your employer workspace from ChatGPT</p></div></div>
+            <p class="automation-note">Add this endpoint as a custom MCP connector in ChatGPT. You will sign in to Elite Bridge and approve the requested permissions before any workspace data is shared.</p>
+            <div class="mcp-endpoint-row"><code>https://elite-bridge-shared-api-evans.vercel.app/api/mcp</code><button type="button" data-copy-mcp-endpoint>Copy endpoint</button></div>
+            <div class="mcp-flow">
+              <span>ChatGPT</span>
+              <i></i>
+              <span>MCP tools</span>
+              <i></i>
+              <span>Elite Bridge API</span>
+            </div>
+            <p class="automation-note">Available permissions: view shifts and caregivers, create or manage shifts, invite caregivers, view or create draft client invoices, and manage missed-clock-in timesheets. Every action is limited to the connected employer account and recorded in an audit log.</p>
+          </article>
+          <div class="automation-grid">
+            <article class="automation-card"><span class="automation-icon nav-icon--gold"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3v3"></path><path d="M17 3v3"></path><path d="M4 8h16"></path><rect x="4" y="5" width="16" height="16" rx="3"></rect></svg></span><strong>Shift coverage guard</strong><p>Alert when a shift is still open 24 hours before start time.</p><button type="button" data-copy-workflow="shift_coverage_guard">Copy workflow</button></article>
+            <article class="automation-card"><span class="automation-icon nav-icon--blue"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16v11H8l-4 4V6Z"></path></svg></span><strong>Caregiver reminder</strong><p>Send a reminder when a caregiver has not submitted a timesheet.</p><button type="button" data-copy-workflow="timesheet_reminder">Copy workflow</button></article>
+            <article class="automation-card"><span class="automation-icon nav-icon--green"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="12" rx="3"></rect><circle cx="12" cy="12" r="3"></circle></svg></span><strong>Payroll exception check</strong><p>Flag missing W-9s, duplicate hours, and payout changes before marking paid.</p><button type="button" data-copy-workflow="payroll_exception_check">Copy workflow</button></article>
+            <article class="automation-card"><span class="automation-icon nav-icon--purple"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-8 0"></path><path d="M4 20a8 8 0 0 1 16 0"></path></svg></span><strong>Client onboarding flow</strong><p>Create the client, schedule, contract, and invite options from one intake.</p><button type="button" data-copy-workflow="client_schedule_intake">Copy workflow</button></article>
+          </div>
+        </div>
+        <div class="surface surface-pad workflow-library">
+          <div class="surface-head">
+            <div>
+              <h2>Repeatable workflow library</h2>
+              <p>Use these as ChatGPT instructions, internal dashboard actions, or MCP tool contracts.</p>
+            </div>
+            <button class="secondary-button" type="button" data-copy-workflow="all">Copy all workflows</button>
+          </div>
+          <div class="workflow-table" role="table" aria-label="Prepared Elite Bridge workflows">
+            <div role="row" class="workflow-row workflow-head"><span>Workflow</span><span>Triggers</span><span>Permission</span><span>Action</span></div>
+            <div role="row" class="workflow-row"><span><strong>Client schedule intake</strong><small>Create client, schedule, shift drafts, and staff allocation options.</small></span><span>ChatGPT · Dashboard · MCP</span><span>Employer admin</span><button type="button" data-copy-workflow="client_schedule_intake">Copy payload</button></div>
+            <div role="row" class="workflow-row"><span><strong>Invite caregiver to shift</strong><small>Private caregiver pay offer for a selected shift.</small></span><span>ChatGPT · Dashboard · MCP</span><span>Employer admin</span><button type="button" data-copy-workflow="invite_caregiver_shift">Copy payload</button></div>
+            <div role="row" class="workflow-row"><span><strong>Shift coverage guard</strong><small>Find underfilled shifts and notify before care is blocked.</small></span><span>Schedule · ChatGPT · MCP</span><span>System or admin</span><button type="button" data-copy-workflow="shift_coverage_guard">Copy payload</button></div>
+            <div role="row" class="workflow-row"><span><strong>Timesheet reminder</strong><small>Message caregivers when timesheets are missing after completed shifts.</small></span><span>Schedule · Dashboard · MCP</span><span>Employer admin</span><button type="button" data-copy-workflow="timesheet_reminder">Copy payload</button></div>
+            <div role="row" class="workflow-row"><span><strong>Payroll exception check</strong><small>Flag duplicate hours, missing W-9s, and rate changes before payout.</small></span><span>Dashboard · ChatGPT · MCP</span><span>Owner</span><button type="button" data-copy-workflow="payroll_exception_check">Copy payload</button></div>
+            <div role="row" class="workflow-row"><span><strong>Generate and send contract</strong><small>Render PDF, prepare email, require approval, then send.</small></span><span>Dashboard · ChatGPT · MCP</span><span>Employer admin</span><button type="button" data-copy-workflow="contract_generate_send">Copy payload</button></div>
+          </div>
+        </div>
+      </section>
+      <section data-view-panel="reports" hidden><div class="page-head"><div><p class="eyebrow">Insights</p><h1>Reports</h1><p>Operational reporting will grow as your care activity is recorded.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">≋</span><strong>Not enough activity for a report yet</strong><p>Shift, attendance and payment trends will appear after your team starts using Elite Bridge.</p></div></div></div></section>
+    </div></main>
+    <dialog class="timesheet-preview-dialog" id="timesheetPreviewDialog" aria-label="Timesheet preview">
+      <iframe id="timesheetPreviewFrame" title="Timesheet PDF preview"></iframe>
+    </dialog>
+    <dialog class="invite-dialog approval-dialog" id="timesheetApprovalDialog" aria-labelledby="timesheetApprovalTitle">
+      <form class="invite-form" id="timesheetApprovalForm" data-manual-approval>
+        <div class="dialog-head"><div><p class="eyebrow">Employer review</p><h2 id="timesheetApprovalTitle">Approve timesheet</h2><p id="timesheetApprovalSummary">Confirm the reviewer details to approve these hours.</p></div><button class="dialog-close" id="timesheetApprovalClose" type="button" aria-label="Close approval form">×</button></div>
+        <input type="hidden" name="entryId">
+        <div class="form-grid"><div class="field full"><label for="timesheetApproverName">Approved by</label><input id="timesheetApproverName" name="approvedByName" type="text" maxlength="255" autocomplete="name" required placeholder="Your full name"></div><div class="field full"><label for="timesheetApprovalDate">Approval date</label><input id="timesheetApprovalDate" name="approvalDate" type="date" required></div></div>
+        <div class="dialog-actions"><button class="secondary-button" id="timesheetApprovalCancel" type="button">Cancel</button><button class="primary-button" type="submit">Confirm approval</button></div>
+      </form>
+    </dialog>
+    <dialog class="invite-dialog timesheet-email-dialog" id="timesheetEmailDialog" aria-labelledby="timesheetEmailTitle">
+      <form class="invite-form" id="timesheetEmailForm" data-manual-timesheet-email>
+        <div class="dialog-head"><div><p class="eyebrow">Confidential payroll record</p><h2 id="timesheetEmailTitle">Email timesheet PDF</h2><p id="timesheetEmailSummary">Choose the recipient for this timesheet PDF.</p><p class="timesheet-email-sender">Sent securely from info@elitebridgestaffing.com.</p><p id="timesheetEmailError" class="timesheet-email-error" role="alert" hidden></p></div><button class="dialog-close" id="timesheetEmailClose" type="button" aria-label="Close email form">×</button></div>
+        <input type="hidden" name="staffName"><input type="hidden" name="month"><input type="hidden" name="approvedByName"><input type="hidden" name="approvalDate">
+        <div class="field"><label for="timesheetRecipientEmail">Recipient email</label><input id="timesheetRecipientEmail" name="recipient" type="email" maxlength="254" autocomplete="email" required placeholder="name@example.com"></div>
+        <label class="timesheet-email-confirm"><input name="confirmSensitiveEmail" type="checkbox" required><span>I confirm I’m authorized to send this confidential timesheet to this recipient.</span></label>
+        <div class="dialog-actions"><button class="secondary-button" id="timesheetEmailCancel" type="button">Cancel</button><button class="primary-button" type="submit">Send PDF by email</button></div>
+      </form>
+    </dialog>
+    <dialog class="invite-dialog" id="clientInvoiceEmailDialog" aria-labelledby="clientInvoiceEmailTitle">
+      <form class="invite-form" id="clientInvoiceEmailForm" data-client-invoice-email>
+        <div class="dialog-head"><div><p class="eyebrow">Client billing</p><h2 id="clientInvoiceEmailTitle">Email invoice PDF</h2><p id="clientInvoiceEmailSummary">Choose the recipient for this invoice PDF.</p><p id="clientInvoiceEmailError" class="timesheet-email-error" role="alert" hidden></p></div><button class="dialog-close" id="clientInvoiceEmailClose" type="button" aria-label="Close invoice email form">×</button></div>
+        <input type="hidden" name="invoiceId">
+        <div class="field"><label for="clientInvoiceRecipient">Recipient email</label><input id="clientInvoiceRecipient" name="recipient" type="email" maxlength="254" autocomplete="email" required placeholder="client@example.com"></div>
+        <label class="timesheet-email-confirm"><input name="confirmInvoiceEmail" type="checkbox" required><span>I confirm this invoice and recipient email are correct.</span></label>
+        <div class="dialog-actions"><button class="secondary-button" id="clientInvoiceEmailCancel" type="button">Cancel</button><button class="primary-button" type="submit">Send invoice PDF</button></div>
+      </form>
+    </dialog>
+    <dialog class="invite-dialog shift-detail-dialog" id="shiftDetailDialog" aria-labelledby="shiftDetailTitle">
+      <div class="invite-form shift-detail-sheet">
+        <div class="dialog-head"><div><p class="eyebrow">Shift details</p><h2 id="shiftDetailTitle">Care shift</h2><p id="shiftDetailSubtitle">Review coverage and choose the next action.</p></div><button class="dialog-close" id="shiftDetailClose" type="button" aria-label="Close shift details">×</button></div>
+        <div id="shiftDetailBody"></div>
+        <div class="dialog-actions" id="shiftDetailActions"></div>
+      </div>
+    </dialog>
+    <dialog class="invite-dialog" id="inviteDialog" aria-labelledby="inviteTitle">
+      <form class="invite-form" id="inviteForm">
+        <div class="dialog-head"><div><p class="eyebrow">Elite Care invitation</p><h2 id="inviteTitle">Invite a caregiver</h2><p>We will create a secure, organization-specific signup link.</p></div><button class="dialog-close" id="inviteClose" type="button" aria-label="Close invitation form">×</button></div>
+        <div class="form-grid"><div class="field"><label for="inviteFirstName">First name</label><input id="inviteFirstName" name="firstName" required></div><div class="field"><label for="inviteLastName">Last name</label><input id="inviteLastName" name="lastName"></div><div class="field"><label for="inviteRole">Role</label><select id="inviteRole" name="role"><option>Caregiver</option><option>Companion</option><option>Personal care aide</option></select></div><div class="field"><label for="inviteLocation">Location</label><select id="inviteLocation" name="location"><option>Manchester</option><option>Gloucester</option><option>Both locations</option></select></div><div class="field full"><label for="inviteEmail">Email address</label><input id="inviteEmail" name="email" type="email" placeholder="caregiver@example.com"></div><div class="field full"><label for="invitePhone">Phone number</label><input id="invitePhone" name="phone" type="tel" placeholder="(978) 555-0123"><small>Enter an email address or phone number.</small></div><div class="field full"><label for="inviteNote">Invite note</label><textarea id="inviteNote" name="note" placeholder="Example: Invited for Barry morning and evening shifts."></textarea></div></div>
+        <div class="invite-result" id="inviteResult" hidden><strong>Invitation ready</strong><p id="inviteDelivery"></p><label for="inviteLink">Secure signup link</label><div class="copy-row"><input id="inviteLink" readonly><button class="secondary-button" id="copyInvite" type="button">Copy link</button></div><label for="inviteAppLink">Caregiver app download</label><div class="copy-row"><input id="inviteAppLink" readonly><button class="secondary-button" id="copyInviteApp" type="button">Copy app link</button></div><div class="share-row"><a class="secondary-button" id="emailInvite" href="#">Email</a><a class="secondary-button" id="textInvite" href="#">Text</a><button class="secondary-button" id="shareInvite" type="button">Share</button></div></div>
+        <div class="dialog-actions"><button class="secondary-button" id="inviteCancel" type="button">Cancel</button><button class="primary-button" id="inviteSubmit" type="submit">Create invitation</button></div>
+      </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" hidden></div>
+  </div>
+  <script>document.getElementById('state').placeholder = 'State code';</script>
+  <script src="/dashboard.js?v=desktop-command-bar-20261011"></script>
+</body>
+</html>
+

@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#064024" />
+    <title>Care operations | Elite Bridge</title>
+    <link rel="stylesheet" href="/app-shell.css?v=desktop-command-bar-20261011" />
+  </head>
+  <body class="operations-page">
+    <header class="ops-topbar">
+      <a class="ops-brand" href="/employer-dashboard"><img src="/logo.png" alt="Elite Bridge" /></a>
+      <label class="ops-search"><input type="search" placeholder="Search operations, incidents, payroll" /><span>⌕</span></label>
+      <nav class="ops-actions" aria-label="Operations navigation">
+        <a href="/employer-dashboard#shifts">Scheduling</a>
+        <a href="/employer-dashboard#timesheets">Timesheets</a>
+        <a href="/employer-dashboard#invoices">Invoices</a>
+        <a id="back" href="/">Dashboard</a>
+      </nav>
+    </header>
+
+    <main class="ops-shell">
+      <section class="ops-hero">
+        <div>
+          <p class="eyebrow">Operations hub</p>
+          <h1>Control center for care quality, location checks, payroll exports, and alerts.</h1>
+          <p>Keep incident follow-up, clock-in boundaries, payroll preparation, and communication preferences in one professional workspace.</p>
+        </div>
+        <div class="ops-status-card">
+          <span>Workspace status</span>
+          <strong id="feedback" role="status">Loading your workspace...</strong>
+          <button id="refresh" class="secondary-button" type="button">Refresh records</button>
+        </div>
+      </section>
+
+      <section class="ops-metrics" aria-label="Operations priorities">
+        <article><span>Incident review</span><strong>Document</strong><small>Capture and review care events</small></article>
+        <article><span>Clock-in areas</span><strong>Verify</strong><small>Set GPS boundaries before attendance</small></article>
+        <article><span>Payroll export</span><strong>Prepare</strong><small>Download approved hours only</small></article>
+        <article><span>Alerts</span><strong>Notify</strong><small>Manage SMS shift alerts</small></article>
+      </section>
+
+      <div class="ops-layout">
+        <section class="surface surface-pad ops-card ops-card-primary">
+          <div class="surface-head"><div><p class="eyebrow">Care quality</p><h2>Incident reports</h2><p>For immediate danger, contact emergency services and your supervisor first. Reports here are not monitored as an emergency service.</p></div></div>
+          <form id="incidentForm" class="ops-form">
+            <label class="field full">Shift<select name="shiftId" class="shift-options" required></select></label>
+            <div class="form-grid">
+              <label class="field">Category<select name="category"><option value="safety">Safety</option><option value="injury">Injury</option><option value="medication">Medication</option><option value="conduct">Conduct</option><option value="property">Property</option><option value="other">Other</option></select></label>
+              <label class="field">Severity<select name="severity"><option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option><option value="critical">Critical</option></select></label>
+              <label class="field full">Occurred at<input name="occurredAt" type="datetime-local" required /></label>
+              <label class="field full">What happened?<textarea name="description" minlength="10" maxlength="4000" rows="4" required></textarea></label>
+            </div>
+            <button class="primary-button">Submit report</button>
+          </form>
+          <div class="ops-record-list" id="incidents"></div>
+        </section>
+
+        <aside class="ops-side">
+          <section class="surface surface-pad ops-card" data-employer hidden>
+            <div class="surface-head"><div><p class="eyebrow">Attendance safety</p><h2>Clock-in locations</h2><p>Set facility coordinates and the permitted radius before attendance starts.</p></div></div>
+            <form id="fenceForm" class="ops-form">
+              <label class="field full">Shift<select name="shiftId" class="shift-options" required></select></label>
+              <div class="form-grid">
+                <label class="field">Latitude<input name="latitude" type="number" min="-90" max="90" step="any" required /></label>
+                <label class="field">Longitude<input name="longitude" type="number" min="-180" max="180" step="any" required /></label>
+                <label class="field full">Radius (meters)<input name="radiusMeters" type="number" min="50" max="1000" value="150" required /></label>
+              </div>
+              <div class="ops-button-row"><button type="button" id="useLocation" class="secondary-button">Use current location</button><button class="primary-button">Save area</button></div>
+            </form>
+            <div class="ops-record-list compact" id="fences"></div>
+          </section>
+
+          <section class="surface surface-pad ops-card" data-employer hidden>
+            <div class="surface-head"><div><p class="eyebrow">Finance</p><h2>Payroll preparation</h2><p>Download approved recorded hours. Exporting does not issue payment.</p></div></div>
+            <form id="exportForm" class="ops-form">
+              <div class="form-grid">
+                <label class="field">From<input type="date" name="from" required /></label>
+                <label class="field">Through<input type="date" name="to" required /></label>
+              </div>
+              <button class="primary-button">Download approved hours CSV</button>
+            </form>
+            <h3>External integrations</h3>
+            <div class="ops-record-list compact" id="integrations"></div>
+          </section>
+        </aside>
+      </div>
+
+      <section class="surface surface-pad ops-card">
+        <div class="surface-head"><div><p class="eyebrow">Communication</p><h2>SMS shift alerts</h2><p id="smsStatus">Checking SMS configuration...</p></div></div>
+        <div class="ops-two-column">
+          <form id="phoneForm" class="ops-form">
+            <label class="field full">Mobile number with country code<input name="phone" type="tel" placeholder="+15085550123" pattern="\+[1-9][0-9]{7,14}" required /></label>
+            <button class="secondary-button">Send verification code</button>
+          </form>
+          <form id="codeForm" class="ops-form">
+            <label class="field full">Six-digit code<input name="code" inputmode="numeric" pattern="[0-9]{6}" required /></label>
+            <label class="ops-consent"><input name="consent" type="checkbox" required /> <span>I agree to receive automated Elite Bridge shift alerts. Frequency varies. Message and data rates may apply. Reply STOP to opt out.</span></label>
+            <button class="primary-button">Verify and enable alerts</button>
+          </form>
+        </div>
+        <button id="disableSms" class="secondary-button" type="button">Turn off SMS alerts</button>
+        <div class="ops-record-list compact" id="smsHistory"></div>
+      </section>
+    </main>
+    <script src="/operations.js?v=desktop-command-bar-20261011"></script>
+  </body>
+</html>
