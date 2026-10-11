@@ -636,7 +636,9 @@
       const statusClass = status === 'open' ? 'open' : status === 'assigned' ? 'assigned' : 'neutral';
       const action = !employerView && expectedRole === 'caregiver'
         ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
-        : employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
+        : employerView && expectedRole === 'employer' && status === 'open'
+          ? `<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button><button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`
+          : employerView && expectedRole === 'employer' && status === 'assigned' ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
       return `
       <article class="shift-card" data-searchable>
         <div class="shift-time-tile">
@@ -648,7 +650,7 @@
           <div class="shift-meta-row">
             <span>${escapeHtml(cityState || 'Care location')}</span>
             <span>${escapeHtml(coverageText)}</span>
-            <span>${money(shift.hourlyRate)}/hr</span>
+            <span>${status === 'open' ? 'Needs caregiver' : status === 'assigned' ? 'Caregiver assigned' : 'Archived'}</span>
           </div>
           <div class="shift-coverage-track" aria-label="${escapeHtml(coverageText)}"><span style="width:${Math.min(100, Math.round((filled / Math.max(needed, 1)) * 100))}%"></span></div>
         </div>
@@ -684,6 +686,28 @@
   }
 
   document.addEventListener('click', async event => {
+    const inviteShift = event.target.closest('[data-invite-shift-id]');
+    if (inviteShift) {
+      inviteForm?.reset();
+      const result = document.getElementById('inviteResult');
+      if (result) result.hidden = true;
+      const locationField = document.getElementById('inviteLocation');
+      const noteField = document.getElementById('inviteNote');
+      const shiftLocation = inviteShift.dataset.shiftLocation || '';
+      if (locationField && shiftLocation) {
+        const city = shiftLocation.split(',')[0].trim();
+        [...locationField.options].forEach((option) => { option.selected = option.value === city || option.textContent === city; });
+      }
+      if (noteField) noteField.value = `Invited for ${inviteShift.dataset.shiftTitle || 'this open shift'}.`;
+      inviteDialog?.showModal();
+      document.getElementById('inviteFirstName')?.focus();
+      return;
+    }
+    const pickup = event.target.closest('[data-open-pickup]');
+    if (pickup) {
+      notify('This shift is open for qualified caregivers to pick up.');
+      return;
+    }
     const button = event.target.closest('[data-application-id], [data-shift-op]');
     if (!button || savingTime) return;
     const operation = button.dataset.shiftOp;
