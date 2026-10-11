@@ -128,13 +128,13 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 
 .home-action-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
 }
 
 .home-action-card {
   display: flex;
-  min-height: 150px;
+  min-height: 132px;
   flex-direction: column;
   align-items: flex-start;
   justify-content: center;
@@ -160,20 +160,22 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 }
 
 .home-action-card .quick-icon {
-  flex: 0 0 74px;
-  width: 74px;
-  height: 74px;
-  border-radius: 22px;
+  flex: 0 0 64px;
+  width: 64px;
+  height: 64px;
+  border-radius: 19px;
 }
 
 .home-action-card .quick-icon svg {
-  width: 50px;
-  height: 50px;
+  width: 43px;
+  height: 43px;
 }
 
 .home-action-card:nth-child(2) .quick-icon { background: #fff0cf; }
 .home-action-card:nth-child(3) .quick-icon { background: #fce8d8; }
 .home-action-card:nth-child(4) .quick-icon { background: #e6efda; }
+.home-action-card:nth-child(5) .quick-icon { background: #ddf3ef; }
+.home-action-card:nth-child(6) .quick-icon { background: #fff1ce; }
 
 .home-action-card strong {
   display: block;
@@ -881,26 +883,26 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
     gap: 10px;
   }
   .home-action-card {
-    min-height: 185px;
+    min-height: 148px;
     flex-direction: column;
     align-items: flex-start;
     justify-content: center;
-    gap: 32px;
-    padding: 22px;
+    gap: 16px;
+    padding: 18px;
     border-radius: 22px;
   }
-  .home-action-card strong { font-size: 22px; }
+  .home-action-card strong { font-size: 18px; }
   .home-action-card small,
-  .home-action-card .quick-copy span { font-size: 15px; }
+  .home-action-card .quick-copy span { font-size: 13px; }
   .home-action-card .quick-icon {
-    width: 86px;
-    height: 86px;
-    flex-basis: 86px;
-    border-radius: 24px;
+    width: 68px;
+    height: 68px;
+    flex-basis: 68px;
+    border-radius: 20px;
   }
   .home-action-card .quick-icon svg {
-    width: 58px;
-    height: 58px;
+    width: 46px;
+    height: 46px;
   }
   .schedule-board {
     padding: 14px;
