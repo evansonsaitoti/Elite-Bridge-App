@@ -45,7 +45,7 @@ const shiftSource = fs.readFileSync(path.join(appDir, "shifts.tsx"), "utf8");
 if (!shiftSource.includes('label="All locations"')) failures.push("The schedule location filter is missing its All locations option.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
 if (appConfig.expo.version !== "1.3.4") failures.push("Employer release version must be 1.3.4.");
-if (appConfig.expo.ios.buildNumber !== "37") failures.push("Employer iOS build number must be 37.");
+if (appConfig.expo.ios.buildNumber !== "38") failures.push("Employer iOS build number must be 37.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

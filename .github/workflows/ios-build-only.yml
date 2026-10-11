@@ -1,0 +1,58 @@
+name: iOS build only
+
+on:
+  push:
+    branches:
+      - build/ios-only-20261011
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ios-build-only-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-ios:
+    name: Build signed iOS apps (no submission)
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate Employer app
+        working-directory: elitebridge-employer
+        env:
+          EXPO_PUBLIC_API_URL: https://elite-bridge-shared-api-evans.vercel.app
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm check
+          pnpm audit:release
+
+      - name: Build Employer iOS app
+        working-directory: elitebridge-employer
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: pnpm dlx eas-cli@latest build --platform ios --profile production --non-interactive
+
+      - name: Prepare and validate Care app
+        working-directory: elitebridge-mobile
+        env:
+          EXPO_PUBLIC_API_URL: https://elite-bridge-shared-api-evans.vercel.app
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm prepare:icons
+          pnpm check
+          pnpm audit:release
+
+      - name: Build Care iOS app
+        working-directory: elitebridge-mobile
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: pnpm dlx eas-cli@latest build --platform ios --profile production --non-interactive
