@@ -533,7 +533,7 @@
   inviteForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(inviteForm);
-    const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'phone'].map((key) => [key, String(formData.get(key) || '').trim()]));
+    const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'phone', 'role', 'location', 'note'].map((key) => [key, String(formData.get(key) || '').trim()]));
     if (!payload.email && !payload.phone) { notify('Enter an email address or phone number.'); return; }
     Object.keys(payload).forEach((key) => { if (!payload[key]) delete payload[key]; });
     const submit = document.getElementById('inviteSubmit');
@@ -550,8 +550,10 @@
       appLink.value = caregiverAppUrl;
       const sentBy = [data.emailSent ? 'email' : '', data.smsSent ? 'text' : ''].filter(Boolean).join(' and ');
       delivery.textContent = sentBy ? `The invitation was sent by ${sentBy}. You can also copy or share the links below.` : 'Copy, email, or text this secure invitation and app download link to the caregiver.';
-      const emailBody = `Join our care team on Elite Bridge.\n\nAccept your secure invitation: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
-      const textBody = `Join Elite Bridge. Accept: ${data.inviteUrl} Download app: ${caregiverAppUrl}`;
+      const inviteContext = [payload.role, payload.location].filter(Boolean).join(' · ');
+      const noteLine = payload.note ? `\n\nNote: ${payload.note}` : '';
+      const emailBody = `Join our care team on Elite Bridge${inviteContext ? ` for ${inviteContext}` : ''}.${noteLine}\n\nAccept your secure invitation: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
+      const textBody = `Join Elite Bridge${payload.location ? ` (${payload.location})` : ''}. Accept: ${data.inviteUrl} Download app: ${caregiverAppUrl}`;
       document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Bridge invitation')}&body=${encodeURIComponent(emailBody)}`;
       document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(textBody)}`;
       result.hidden = false;
@@ -582,13 +584,30 @@
     container.querySelector('[data-empty-view]')?.addEventListener('click', () => activateView(view || 'overview'));
   }
 
+  let employerShifts = [];
+  let employerShiftFilter = 'all';
+
+  function filteredEmployerShifts(shifts) {
+    if (employerShiftFilter === 'all') return shifts;
+    return shifts.filter((shift) => {
+      const status = String(shift.status || 'open').toLowerCase();
+      const city = String(shift.location?.city || '').toLowerCase();
+      return status === employerShiftFilter || city === employerShiftFilter.toLowerCase();
+    });
+  }
+
   function renderShiftRows(container, shifts, employerView) {
     if (!container) return;
+    const visibleShifts = employerView && container.id === 'allShiftList' ? filteredEmployerShifts(shifts) : shifts;
     if (!shifts.length) {
       renderEmpty(container, employerView ? 'No shifts posted yet' : 'No open shifts nearby yet', employerView ? 'Post your first care shift to begin matching with caregivers.' : 'New care opportunities will appear here as employers post them.', employerView ? 'Post a shift' : '', employerView ? 'shifts' : 'overview');
       return;
     }
-    container.innerHTML = shifts.map((shift) => {
+    if (!visibleShifts.length) {
+      renderEmpty(container, 'No shifts match this filter', 'Try All shifts or another location to see the rest of your care schedule.');
+      return;
+    }
+    container.innerHTML = visibleShifts.map((shift) => {
       const cityState = `${shift.location?.city || ''}${shift.location?.state ? `, ${shift.location.state}` : ''}`.trim();
       const status = shift.status || 'open';
       const action = !employerView && expectedRole === 'caregiver'
@@ -609,6 +628,14 @@
       </article>`;
     }).join('');
   }
+
+  document.querySelectorAll('[data-shift-filter]').forEach((button) => {
+    button.addEventListener('click', () => {
+      employerShiftFilter = button.dataset.shiftFilter || 'all';
+      document.querySelectorAll('[data-shift-filter]').forEach((item) => item.classList.toggle('active', item === button));
+      renderShiftRows(document.getElementById('allShiftList'), employerShifts, true);
+    });
+  });
 
   function renderActivities(container, activities) {
     if (!container) return;
@@ -1037,7 +1064,7 @@
       const days = Array.isArray(invoice.service_days) ? invoice.service_days.length : 0;
       const lineItems = Array.isArray(invoice.line_items) ? invoice.line_items : [];
       const detailRows = lineItems.map(item => `<div class="invoice-detail-row"><span>${escapeHtml(formatDateOnly(item.serviceDate))} · ${escapeHtml(item.description)} · ${escapeHtml(item.startTime)}–${escapeHtml(item.endTime)} · ${escapeHtml(item.caregiver)}</span><strong>${money(item.amount)}</strong></div>`).join('');
-      return `<article class="surface-pad invoice-row"><div class="invoice-row-top"><span class="row-icon">$</span><span class="row-copy"><strong>${escapeHtml(invoice.invoice_number)} · ${escapeHtml(invoice.client_name)}</strong><span>${escapeHtml(formatDateOnly(invoice.service_start_date))} – ${escapeHtml(formatDateOnly(invoice.service_end_date))} · ${days} service days</span></span><span class="status ${invoice.status === 'sent' ? '' : 'neutral'}">${escapeHtml(invoice.status || 'draft')}</span><span class="invoice-total">${money(invoice.total)}</span></div><div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-invoice-action="view" data-invoice-id="${invoice.id}">View</button><button type="button" class="timesheet-action-button" data-invoice-action="download" data-invoice-id="${invoice.id}">Download PDF</button><button type="button" class="timesheet-action-button" data-invoice-action="email" data-invoice-id="${invoice.id}" ${invoice.status !== 'draft' ? 'disabled' : ''}>Email PDF</button></div><div class="invoice-details" data-invoice-details="${invoice.id}" hidden>${detailRows}<div class="invoice-detail-row invoice-detail-total"><span>Invoice total</span><strong>${money(invoice.total)}</strong></div></div></article>`;
+      return `<article class="surface-pad invoice-row"><div class="invoice-row-top"><span class="row-icon">$</span><span class="row-copy"><strong>${escapeHtml(invoice.invoice_number)} · ${escapeHtml(invoice.client_name)}</strong><span>${escapeHtml(formatDateOnly(invoice.service_start_date))} – ${escapeHtml(formatDateOnly(invoice.service_end_date))} · ${days} service days</span><span class="invoice-status-line"><span class="status ${invoice.status === 'sent' ? '' : 'neutral'}">${escapeHtml(invoice.status || 'draft')}</span><small>Due ${escapeHtml(formatDateOnly(invoice.due_date))}</small></span></span><strong class="invoice-total">${money(invoice.total)}</strong></div><div class="timesheet-actions"><button type="button" class="timesheet-action-button" data-invoice-action="view" data-invoice-id="${invoice.id}">View details</button><button type="button" class="timesheet-action-button" data-invoice-action="download" data-invoice-id="${invoice.id}">Download PDF</button><button type="button" class="timesheet-action-button" data-invoice-action="email" data-invoice-id="${invoice.id}" ${invoice.status !== 'draft' ? 'disabled' : ''}>Email PDF</button></div><div class="invoice-details" data-invoice-details="${invoice.id}" hidden>${detailRows}<div class="invoice-detail-row invoice-detail-total"><span>Invoice total</span><strong>${money(invoice.total)}</strong></div></div></article>`;
     }).join('');
   }
   function resetClientInvoiceDates() {
@@ -1529,6 +1556,7 @@
       api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
+    employerShifts = shifts;
     const activities = activityResult.status === 'fulfilled' ? activityResult.value.activities || [] : [];
     const payroll = payrollResult.status === 'fulfilled' ? payrollResult.value : { stats: {}, recentPayments: [] };
     const caregivers = caregiverResult.status === 'fulfilled' ? (caregiverResult.value.team || []).map((person) => ({
