@@ -492,6 +492,40 @@
     }
   }));
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
+  document.querySelectorAll('[data-location-filter]').forEach((button) => button.addEventListener('click', () => {
+    const location = button.dataset.locationFilter || 'all';
+    document.querySelectorAll('[data-location-filter]').forEach((item) => item.classList.toggle('active', item === button));
+    document.querySelectorAll('[data-location-schedule]').forEach((card) => {
+      card.hidden = location !== 'all' && card.dataset.locationSchedule !== location;
+    });
+  }));
+  document.querySelectorAll('[data-prefill-shift]').forEach((button) => button.addEventListener('click', () => {
+    activateView('shifts');
+    const city = button.dataset.shiftCity || '';
+    const date = button.dataset.shiftDate || '';
+    const start = button.dataset.shiftStart || '';
+    const end = button.dataset.shiftEnd || '';
+    const values = {
+      shiftTitle: `${city || 'Client'} care visit`,
+      serviceType: 'Companionship',
+      startDate: date,
+      endDate: date,
+      startTime: start,
+      endTime: end,
+      hourlyRate: '30',
+      city,
+      state: 'MA',
+      numberOfCaregivers: '1',
+      assignmentMode: 'review',
+      urgency: 'standard',
+    };
+    Object.entries(values).forEach(([id, value]) => {
+      const field = document.getElementById(id);
+      if (field && value) field.value = value;
+    });
+    document.getElementById('address')?.focus();
+    notify(`Shift form prepared for ${city || 'this location'} at $30/hr.`);
+  }));
   document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', () => {
     if (!inviteDialog) return;
     inviteForm?.reset();
