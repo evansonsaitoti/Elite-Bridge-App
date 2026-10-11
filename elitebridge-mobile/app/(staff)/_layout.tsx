@@ -51,13 +51,13 @@ export default function StaffLayout() {
     <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
     <View style={{
       flexDirection: "row",
-      minHeight: 76 + Math.max(insets.bottom, 8),
+      minHeight: 86 + Math.max(insets.bottom, 8),
       marginHorizontal: 14,
       marginBottom: Math.max(insets.bottom, 8),
       paddingHorizontal: 8,
       paddingTop: 8,
       paddingBottom: 8,
-      borderRadius: 28,
+      borderRadius: 30,
       backgroundColor: colors.surface,
       shadowColor: "#101828",
       shadowOpacity: 0.12,
@@ -69,8 +69,8 @@ export default function StaffLayout() {
         const active = pathname.includes(tab.match);
         const tint = active ? colors.primary : colors.muted;
         return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1, transform: [{ translateY: active ? -2 : 0 }] })}>
-          <View style={{ width: active ? 44 : 36, height: 32, borderRadius: 999, alignItems: "center", justifyContent: "center", backgroundColor: active ? "#EAF4EF" : "transparent", borderWidth: active ? 1 : 0, borderColor: active ? "#CDE7DB" : "transparent" }}>
-            <IconSymbol size={active ? 22 : 20} name={tab.icon} color={tint} />
+          <View style={{ width: active ? 56 : 48, height: active ? 52 : 46, borderRadius: active ? 19 : 17, alignItems: "center", justifyContent: "center", backgroundColor: active ? "#FFFFFF" : "#EAF4EF", borderWidth: 1, borderColor: active ? colors.primary : "#D9E9E2" }}>
+            <IconSymbol size={active ? 28 : 25} name={tab.icon} color={tint} />
           </View>
           <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 10.5, fontWeight: active ? "900" : "700", color: tint }}>{tab.label}</Text>
         </Pressable>;

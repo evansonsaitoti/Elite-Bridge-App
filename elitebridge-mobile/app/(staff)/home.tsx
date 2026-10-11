@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Image,
   RefreshControl,
   ScrollView,
   Switch,
@@ -263,20 +264,20 @@ export default function StaffHome() {
   const renderTool = (
     title: string,
     detail: string,
-    icon: "clock.fill" | "sparkles" | "calendar" | "message.fill",
+    icon: "clock.fill" | "sparkles" | "calendar" | "message.fill" | "person.crop.circle.fill" | "briefcase.fill",
     route: string,
     tint = "#0A4A35",
   ) => (
     <TouchableOpacity
       accessibilityRole="button"
       onPress={() => router.push(route as never)}
-      style={{ width: "48%", borderRadius: 18, padding: 14, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
+      style={{ width: "48%", minHeight: 154, borderRadius: 22, padding: 15, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border }}
     >
-      <View style={{ width: 42, height: 42, borderRadius: 14, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center", marginBottom: 10 }}>
-        <IconSymbol name={icon} size={22} color={tint} />
+      <View style={{ width: 68, height: 68, borderRadius: 22, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center", marginBottom: 14, borderWidth: 1, borderColor: "#D4E9DF" }}>
+        <IconSymbol name={icon} size={32} color={tint} />
       </View>
-      <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900" }}>{title}</Text>
-      <Text style={{ color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 4 }}>{detail}</Text>
+      <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "900", lineHeight: 20 }}>{title}</Text>
+      <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 5 }}>{detail}</Text>
     </TouchableOpacity>
   );
 
@@ -355,11 +356,24 @@ export default function StaffHome() {
       contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshFeed} />}
     >
-      <View style={{ borderRadius: 24, backgroundColor: "#0A4A35", padding: 18, marginBottom: 16 }}>
-        <Text style={{ color: "#EBCB8B", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }}>ELITE BRIDGE NOW</Text>
-        <Text style={{ color: "#FFFFFF", fontSize: 29, fontWeight: "900", lineHeight: 34, marginTop: 8 }}>Ready for care coverage near you?</Text>
-        <Text style={{ color: "#D9E9E2", fontSize: 13, lineHeight: 19, marginTop: 8 }}>Go available, see urgent shifts, claim matched work and keep every visit payroll-ready.</Text>
-        <View style={{ marginTop: 16, borderRadius: 18, backgroundColor: "#FFFFFF", padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          <Image source={require("../../assets/images/elitebridge-logo.png")} style={{ width: 52, height: 52, borderRadius: 16 }} resizeMode="contain" accessibilityLabel="Elite Bridge logo" />
+          <View>
+            <Text style={{ color: colors.foreground, fontSize: 22, fontWeight: "900" }}>Elite Bridge</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, fontWeight: "800", marginTop: 1 }}>Caregiver workspace</Text>
+          </View>
+        </View>
+        <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/profile")} style={{ width: 48, height: 48, borderRadius: 18, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, alignItems: "center", justifyContent: "center" }}>
+          <IconSymbol name="person.crop.circle.fill" size={27} color="#0A4A35" />
+        </TouchableOpacity>
+      </View>
+
+      <View style={{ borderRadius: 24, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.border, padding: 17, marginBottom: 16 }}>
+        <Text style={{ color: "#B7791F", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }}>TODAY</Text>
+        <Text style={{ color: colors.foreground, fontSize: 27, fontWeight: "900", lineHeight: 32, marginTop: 7 }}>Ready for care coverage?</Text>
+        <Text style={{ color: colors.muted, fontSize: 13, lineHeight: 19, marginTop: 7 }}>Go available, review matched shifts, clock in, and keep every visit payroll-ready.</Text>
+        <View style={{ marginTop: 15, borderRadius: 18, backgroundColor: "#F8FBF9", padding: 14, flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12, borderWidth: 1, borderColor: colors.border }}>
           <View style={{ flex: 1 }}>
             <Text style={{ color: "#101828", fontSize: 16, fontWeight: "900" }}>{availableNow ? "Available for short-notice shifts" : "Not marked available now"}</Text>
             <Text style={{ color: "#667085", fontSize: 12, lineHeight: 17, marginTop: 3 }}>Use this as your live readiness signal for urgent care requests.</Text>
@@ -458,6 +472,8 @@ export default function StaffHome() {
           {renderTool("Care Match", "Skills and availability", "sparkles", "/(staff)/match", "#B54708")}
           {renderTool("Timesheets", "Review approved hours", "calendar", "/(staff)/earnings", "#218739")}
           {renderTool("Messages", "Shift and agency updates", "message.fill", "/(staff)/chat", "#4E87D9")}
+          {renderTool("Profile", "Finish details later", "person.crop.circle.fill", "/(staff)/profile", "#0A4A35")}
+          {renderTool("Operations", "Care notes and support", "briefcase.fill", "/(staff)/operations", "#7F56D9")}
         </View>
       </View>
 
