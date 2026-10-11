@@ -55,7 +55,7 @@ jobs:
           printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
           printf '%s' "$BUILD_CERTIFICATE_BASE64" | base64 --decode > /tmp/elitebridge-dist.p12
           chmod 600 /tmp/AuthKey.p8 /tmp/elitebridge-dist.p12
-          python3 -m pip install --quiet pyjwt cryptography
+          python3 -m pip install --quiet --break-system-packages --user pyjwt cryptography
           IOS_BUNDLE_IDENTIFIER=com.app.elitebridgemobile \
           IOS_APP_LABEL=Caregiver \
           IOS_PROFILE_PATH=/tmp/elitebridge-caregiver.mobileprovision \
