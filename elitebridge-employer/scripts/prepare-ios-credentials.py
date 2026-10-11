@@ -185,10 +185,15 @@ def main():
     )
 
     local_serial = p12_serial(P12_PATH, p12_password)
-    make_macos_compatible_p12(p12_password)
-    compatible_serial = p12_serial(COMPAT_P12_PATH, p12_password, legacy=True)
-    if compatible_serial != local_serial:
-        raise RuntimeError("Repacked distribution certificate serial does not match the source certificate.")
+    compatible_path = COMPAT_P12_PATH
+    if os.environ.get("IOS_SKIP_COMPAT_P12") == "1":
+        # Native Xcode builds can import the original GitHub certificate directly.
+        compatible_path = P12_PATH
+    else:
+        make_macos_compatible_p12(p12_password)
+        compatible_serial = p12_serial(COMPAT_P12_PATH, p12_password, legacy=True)
+        if compatible_serial != local_serial:
+            raise RuntimeError("Repacked distribution certificate serial does not match the source certificate.")
 
     cert_query = urllib.parse.urlencode({
         "limit": "200",
@@ -251,7 +256,7 @@ def main():
         "ios": {
             "provisioningProfilePath": PROFILE_PATH,
             "distributionCertificate": {
-                "path": COMPAT_P12_PATH,
+                "path": compatible_path,
                 "password": p12_password,
             },
         }
