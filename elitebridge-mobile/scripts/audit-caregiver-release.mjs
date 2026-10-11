@@ -65,8 +65,8 @@ const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
 if (config.expo.version !== "1.2.6") throw new Error("Caregiver release version must be 1.2.6");
 if (config.expo.ios.buildNumber !== "61") throw new Error("Caregiver iOS build number must be 61");
 requireSource("app/_layout.tsx", 'initialRouteName: "(root)"');
-requireSource("app/(root)/index.tsx", "Care professionals start here");
-requireSource("app/(root)/index.tsx", "Elite Bridge Employer app");
+requireSource("app/(root)/index.tsx", "Meaningful work. Better-fit shifts.");
+requireSource("app/(auth)/login.tsx", "separate Elite Bridge Employer app");
 requireSource("app/(staff)/_layout.tsx", 'router.replace("/(root)")');
 
 const loginSource = fs.readFileSync(path.join(root, "app/(auth)/login.tsx"), "utf8");
@@ -87,5 +87,6 @@ for (const relativeFile of files) {
   }
 }
 requireSource("app/(onboarding)/review.tsx", "registerCaregiverAccount(");
+requireSource("app/(onboarding)/welcome.tsx", "Create account & finish later");
 
 console.log(`Caregiver release audit passed: ${interactiveCount} interactive controls, all declared routes, complete onboarding chain, live profile persistence, call-out reporting, account deletion, and no demo or review-only behavior paths.`);

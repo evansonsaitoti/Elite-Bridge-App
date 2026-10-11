@@ -26,13 +26,9 @@ export default function AllocateStaffScreen() {
       const openShifts = shiftRows.filter((shift) => ["open", "assigned", "in_progress"].includes(shift.status) && shift.remainingPositions > 0);
       setShifts(openShifts);
       setTeam(teamRows);
-      setPayRates((current) => {
-        const next = { ...current };
-        for (const member of teamRows) {
-          if (!next[member.caregiver_id]) next[member.caregiver_id] = String(Number(member.hourly_rate || 25) || 25);
-        }
-        return next;
-      });
+      // Ask the employer to enter the rate for this specific caregiver and shift.
+      // Pay varies by assignment, so do not carry a default or prior value forward.
+      setPayRates({});
       if (!selectedShiftId && openShifts[0]) setSelectedShiftId(openShifts[0].id);
     } catch (error) {
       Alert.alert("Unable to load allocation options", error instanceof Error ? error.message : "Please try again.");
@@ -68,13 +64,13 @@ export default function AllocateStaffScreen() {
         {loading ? <ActivityIndicator color={colors.green} size="large" style={styles.loader} /> : null}
 
         <Text style={styles.section}>Choose shift</Text>
-        {!loading && shifts.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No open shifts to allocate</Text><Text style={styles.emptyBody}>Post Barry’s schedule first, or reopen the shifts page to check coverage.</Text><TouchableOpacity onPress={() => router.push("/client-schedule")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Post Barry schedule</Text></TouchableOpacity></View> : null}
+        {!loading && shifts.length === 0 ? <View style={styles.empty}><Text style={styles.emptyTitle}>No open shifts to allocate</Text><Text style={styles.emptyBody}>Post a shift with an open position, then return here to assign a caregiver.</Text><TouchableOpacity onPress={() => router.push("/post-shift")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Create a shift</Text></TouchableOpacity></View> : null}
         {shifts.map((shift) => {
           const active = selectedShiftId === shift.id;
           return <TouchableOpacity key={shift.id} onPress={() => setSelectedShiftId(shift.id)} style={[styles.shiftCard, active && styles.shiftActive]}>
             <Text style={[styles.shiftTitle, active && styles.activeText]}>{shift.careRecipientName || shift.serviceType}</Text>
             <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{new Date(shift.startTime).toLocaleString([], { weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })} - {new Date(shift.endTime).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}</Text>
-            <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{shift.remainingPositions} open position{shift.remainingPositions === 1 ? "" : "s"} · client bill ${Number(shift.clientBillRate || shift.hourlyRate).toFixed(2)}/hr</Text>
+            <Text style={[styles.shiftMeta, active && styles.activeSubtext]}>{shift.remainingPositions} open position{shift.remainingPositions === 1 ? "" : "s"}</Text>
           </TouchableOpacity>;
         })}
 
@@ -84,7 +80,7 @@ export default function AllocateStaffScreen() {
           const initials = `${member.first_name?.[0] || ""}${member.last_name?.[0] || ""}`.toUpperCase();
           return <View key={member.caregiver_id} style={styles.memberCard}>
             <View style={styles.avatar}><Text style={styles.avatarText}>{initials || "CG"}</Text></View>
-            <View style={styles.memberCopy}><Text style={styles.memberName}>{member.first_name} {member.last_name}</Text><Text style={styles.memberMeta}>{member.upcoming_shifts || 0} upcoming · {Number(member.total_hours || 0).toFixed(1)} recorded hrs</Text><View style={styles.payRow}><Text style={styles.payLabel}>Caregiver pay</Text><TextInput keyboardType="decimal-pad" value={payRates[member.caregiver_id] || ""} onChangeText={(value) => setPayRates((current) => ({ ...current, [member.caregiver_id]: value }))} placeholder="25" style={styles.payInput} /></View></View>
+            <View style={styles.memberCopy}><Text style={styles.memberName}>{member.first_name} {member.last_name}</Text><Text style={styles.memberMeta}>{member.upcoming_shifts || 0} upcoming · {Number(member.total_hours || 0).toFixed(1)} recorded hrs</Text><View style={styles.payRow}><Text style={styles.payLabel}>Caregiver pay</Text><TextInput keyboardType="decimal-pad" value={payRates[member.caregiver_id] || ""} onChangeText={(value) => setPayRates((current) => ({ ...current, [member.caregiver_id]: value }))} placeholder="Enter for this shift" style={styles.payInput} /></View></View>
             <TouchableOpacity disabled={!selectedShift || busyId === member.caregiver_id} onPress={() => void assign(member)} style={[styles.assignButton, (!selectedShift || busyId === member.caregiver_id) && styles.disabled]}>{busyId === member.caregiver_id ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.assignText}>Assign</Text>}</TouchableOpacity>
           </View>;
         })}

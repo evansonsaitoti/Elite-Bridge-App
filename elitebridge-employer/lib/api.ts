@@ -59,6 +59,44 @@ export type ShiftInput = {
   assignmentMode: "instant" | "review";
 };
 
+export type ClientInvoice = {
+  id: number;
+  invoice_number: string;
+  client_name: string;
+  client_email?: string | null;
+  billing_address?: string;
+  invoice_date: string;
+  due_date: string;
+  service_start_date: string;
+  service_end_date: string;
+  hourly_rate: string | number;
+  service_days: string[];
+  line_items: { serviceDate: string; description: string; caregiver: string; startTime: string; endTime: string; hours: number; amount: number }[];
+  subtotal: string | number;
+  total: string | number;
+  notes?: string;
+  status: string;
+};
+
+export type ClientInvoiceInput = {
+  clientName: string;
+  clientEmail?: string;
+  billingAddress?: string;
+  invoiceDate: string;
+  dueDate: string;
+  serviceStartDate: string;
+  serviceEndDate: string;
+  hourlyRate: number;
+  morningStartTime: string;
+  morningEndTime: string;
+  morningCaregiver: string;
+  eveningStartTime: string;
+  eveningEndTime: string;
+  eveningCaregiver: string;
+  includeWeekends: boolean;
+  notes?: string;
+};
+
 export type EmployerProfile = {
   id: number;
   userId: number;
@@ -362,6 +400,23 @@ export async function updateApplication(id: number, status: "approved" | "reject
 
 export async function cancelEmployerShift(id: number) {
   await request<void>(`/api/bookings/employer/${id}/cancel`, { method: "PATCH" });
+}
+
+export async function openEmployerShiftForPickup(id: number) {
+  return request<{ shift: Shift; matchedCaregivers: number }>(`/api/bookings/employer/${id}/pickup`, { method: "PATCH" });
+}
+
+export async function getClientInvoices(): Promise<ClientInvoice[]> {
+  const result = await request<{ invoices: ClientInvoice[] }>("/api/client-invoices/employer");
+  return result.invoices;
+}
+
+export async function createClientInvoice(input: ClientInvoiceInput): Promise<ClientInvoice> {
+  const result = await request<{ invoice: ClientInvoice }>("/api/client-invoices/employer", {
+    method: "POST",
+    body: JSON.stringify(input),
+  });
+  return result.invoice;
 }
 
 export async function getEmployerProfile(): Promise<EmployerProfile> {

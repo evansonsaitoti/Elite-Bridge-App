@@ -593,6 +593,49 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
   } catch (error) { next(error); }
 });
 
+router.patch("/employer/:shiftId/pickup", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const shiftId = Number(req.params.shiftId);
+    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
+
+    const updated = await db.execute(sql`
+      UPDATE shift_posts SET assignment_mode = 'instant', updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${shiftId} AND employer_id = ${employer.id}
+        AND status IN ('open', 'assigned') AND assignment_mode <> 'instant'
+      RETURNING *
+    `);
+    const shift = (updated as any).rows[0];
+    if (!shift) throw new AppError(409, "This shift is already open for pickup or can no longer be changed");
+
+    const matches = await db.execute(sql`
+      SELECT c.user_id
+      FROM caregivers c JOIN users u ON u.id = c.user_id
+      WHERE c.is_available = true AND u.is_active = true
+        AND (
+          COALESCE(jsonb_array_length(c.certifications::jsonb), 0) = 0
+          OR LOWER(c.certifications::text) LIKE ${`%${String(shift.caregiver_type || "").toLowerCase()}%`}
+          OR LOWER(c.specialties::text) LIKE ${`%${String(shift.service_type || "").toLowerCase()}%`}
+        )
+      LIMIT 100
+    `);
+    const userIds = (matches as any).rows.map((row: any) => row.user_id);
+    for (const userId of userIds) {
+      await db.execute(sql`
+        INSERT INTO notifications (user_id, type, title, message, related_id)
+        VALUES (${userId}, 'shift_offer', 'Shift open for pickup', ${`${shift.service_type} in ${shift.city}, ${shift.state}`}, ${shiftId})
+      `);
+    }
+    void sendPushToUsers(userIds, {
+      title: "Shift open for pickup",
+      body: `${shift.service_type} in ${shift.city}, ${shift.state}`,
+      data: { type: "new_shift_offer", shiftId, assignmentMode: "instant" },
+    });
+    res.json({ shift: mapShift(shift), matchedCaregivers: userIds.length });
+  } catch (error) { next(error); }
+});
+
 router.post("/employer/:shiftId/assign", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();

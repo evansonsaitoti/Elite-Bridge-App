@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { cancelEmployerShift, getEmployerShifts, getStoredEmployer, Shift } from "../lib/api";
+import { cancelEmployerShift, getEmployerShifts, getStoredEmployer, openEmployerShiftForPickup, Shift } from "../lib/api";
 import { cardShadow, colors } from "../lib/theme";
 import { EmployerTabBar } from "../components/employer-tab-bar";
 
@@ -53,7 +53,10 @@ export default function ShiftsScreen() {
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
   const visibleShifts = useMemo(() => shifts.filter((shift) => {
-    const statusMatch = statusFilter === "All" || shift.status.toLowerCase() === statusFilter.toLowerCase();
+    const normalizedStatus = shift.status.toLowerCase();
+    const statusMatch = statusFilter === "All"
+      || (statusFilter === "Assigned" && ["assigned", "in_progress"].includes(normalizedStatus))
+      || normalizedStatus === statusFilter.toLowerCase();
     const locationMatch = locationFilter === "All" || shift.location.city.toLowerCase().includes(locationFilter.toLowerCase());
     return statusMatch && locationMatch;
   }), [locationFilter, shifts, statusFilter]);
@@ -93,6 +96,7 @@ export default function ShiftsScreen() {
 
           <Text style={styles.filterLabel}>Location</Text>
           <View style={styles.chips}>
+            <Chip label="All locations" active={locationFilter === "All"} onPress={() => setLocationFilter("All")} />
             {locations.map((item) => <Chip key={item} label={item} active={locationFilter === item} onPress={() => setLocationFilter(item)} />)}
           </View>
           <Text style={styles.filterLabel}>Status</Text>
@@ -130,6 +134,7 @@ function StatCard({ icon, label, value, accent }: { icon: React.ComponentProps<t
 
 function ShiftCard({ shift, onChanged }: { shift: Shift; onChanged: () => void }) {
   const router = useRouter();
+  const [publishing, setPublishing] = useState(false);
   const isOpen = shift.status === "open";
   const isActive = ["open", "assigned", "in_progress"].includes(shift.status);
   const statusColor = shift.status === "assigned" || shift.status === "in_progress" ? colors.green : shift.status === "cancelled" ? colors.muted : shift.urgency === "urgent" ? colors.danger : colors.warning;
@@ -146,14 +151,25 @@ function ShiftCard({ shift, onChanged }: { shift: Shift; onChanged: () => void }
     } },
   ]);
 
-  const postForPickup = () => Alert.alert("Open for pickup", "This shift is visible to eligible caregivers in the Caregiver app. They can apply or claim based on the assignment setting.");
+  const postForPickup = () => Alert.alert("Post remaining positions for pickup?", "Eligible, available caregivers will be notified and can claim an open position in the Caregiver app.", [
+    { text: "Not now", style: "cancel" },
+    { text: "Post for pickup", onPress: async () => {
+      setPublishing(true);
+      try {
+        const result = await openEmployerShiftForPickup(shift.id);
+        Alert.alert("Shift posted", `${result.matchedCaregivers} eligible caregiver${result.matchedCaregivers === 1 ? "" : "s"} notified.`, [{ text: "OK", onPress: onChanged }]);
+      } catch (error) {
+        Alert.alert("Could not post shift", error instanceof Error ? error.message : "Please try again.");
+      } finally { setPublishing(false); }
+    } },
+  ]);
 
   return (
     <View style={styles.shiftCard}>
       <View style={styles.shiftTop}>
         <View style={styles.dateTile}>
-          <Text style={styles.dateMonth}>{new Date(shift.startTime).toLocaleDateString("en-US", { month: "short" })}</Text>
-          <Text style={styles.dateDay}>{new Date(shift.startTime).toLocaleDateString("en-US", { day: "numeric" })}</Text>
+          <Text style={styles.dateMonth}>{shiftDate(shift) === "Date pending" ? "—" : new Date(shift.startTime).toLocaleDateString("en-US", { month: "short" })}</Text>
+          <Text style={styles.dateDay}>{shiftDate(shift) === "Date pending" ? "—" : new Date(shift.startTime).toLocaleDateString("en-US", { day: "numeric" })}</Text>
         </View>
         <View style={styles.shiftMain}>
           <View style={styles.shiftTitleRow}>
@@ -180,11 +196,13 @@ function ShiftCard({ shift, onChanged }: { shift: Shift; onChanged: () => void }
               <Text style={styles.allocateText}>Invite caregiver</Text>
             </TouchableOpacity>
           ) : null}
-          {isOpen ? (
-            <TouchableOpacity onPress={postForPickup} style={styles.pickup}>
-              <Ionicons color={colors.green} name="megaphone-outline" size={17} />
-              <Text style={styles.pickupText}>Open pickup</Text>
+          {isOpen && shift.assignmentMode !== "instant" ? (
+            <TouchableOpacity disabled={publishing} onPress={postForPickup} style={[styles.pickup, publishing && styles.disabled]}>
+              {publishing ? <ActivityIndicator color={colors.green} size="small" /> : <Ionicons color={colors.green} name="megaphone-outline" size={17} />}
+              <Text style={styles.pickupText}>{publishing ? "Posting…" : "Open for pickup"}</Text>
             </TouchableOpacity>
+          ) : isOpen ? (
+            <View style={styles.pickupBadge}><Ionicons color={colors.green} name="checkmark-circle-outline" size={16} /><Text style={styles.pickupBadgeText}>Published for pickup</Text></View>
           ) : null}
           <TouchableOpacity onPress={cancel} style={styles.cancel}>
             <Text style={styles.cancelText}>Cancel</Text>
@@ -260,6 +278,9 @@ const styles = StyleSheet.create({
   allocateText: { color: "#FFFFFF", fontSize: 12, fontWeight: "900" },
   pickup: { alignItems: "center", backgroundColor: colors.greenSoft, borderColor: colors.border, borderRadius: 13, borderWidth: 1, flexDirection: "row", gap: 7, justifyContent: "center", minHeight: 44, paddingHorizontal: 13 },
   pickupText: { color: colors.green, fontSize: 12, fontWeight: "900" },
+  pickupBadge: { alignItems: "center", backgroundColor: colors.greenSoft, borderRadius: 13, flexDirection: "row", gap: 6, minHeight: 44, paddingHorizontal: 12 },
+  pickupBadgeText: { color: colors.green, fontSize: 11, fontWeight: "900" },
+  disabled: { opacity: 0.6 },
   cancel: { alignItems: "center", borderColor: "#F1BBB6", borderRadius: 13, borderWidth: 1, justifyContent: "center", minHeight: 44, paddingHorizontal: 16 },
   cancelText: { color: colors.danger, fontSize: 12, fontWeight: "900" },
 });
