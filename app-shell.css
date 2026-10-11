@@ -845,7 +845,9 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   background: linear-gradient(90deg, var(--forest-700), #34a853);
 }
 .shift-card-side {
-  display: grid;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
   justify-items: end;
   gap: 9px;
   color: #53635b;
@@ -856,6 +858,7 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .shift-card-side .secondary-button {
   min-height: 36px;
   padding: 0 12px;
+  white-space: nowrap;
 }
 .shift-muted-action {
   color: #7b8781;
