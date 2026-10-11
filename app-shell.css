@@ -575,6 +575,58 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   color: var(--forest-950);
   font-weight: 850;
 }
+
+.client-record-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 15px 0;
+  border-top: 1px solid #edf1ef;
+}
+
+.client-record-card:first-child {
+  border-top: 0;
+}
+
+.client-record-card strong,
+.client-record-card span,
+.client-record-card small {
+  display: block;
+}
+
+.client-record-card strong {
+  color: var(--forest-950);
+  font-size: 15px;
+}
+
+.client-record-card span {
+  margin-top: 4px;
+  color: #43534b;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.client-record-card small {
+  margin-top: 3px;
+  color: var(--muted);
+  font-size: 11px;
+}
+
+.client-rate-stack {
+  display: grid;
+  gap: 5px;
+  justify-items: end;
+}
+
+.client-rate-stack span {
+  margin: 0;
+  padding: 5px 8px;
+  border-radius: 999px;
+  color: var(--forest-900);
+  background: var(--mint-100);
+  font-size: 11px;
+}
 @media (max-width: 760px) {
   .manual-timesheet-form { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
