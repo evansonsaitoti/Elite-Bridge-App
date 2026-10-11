@@ -36,6 +36,12 @@
   document.querySelectorAll("[data-employer]").forEach((e) => {
     e.hidden = !employer;
   });
+  document.querySelector(".ops-search input")?.addEventListener("input", (event) => {
+    const query = event.target.value.trim().toLowerCase();
+    document.querySelectorAll(".ops-card, .ops-metrics article").forEach((item) => {
+      item.hidden = Boolean(query) && !item.textContent.toLowerCase().includes(query);
+    });
+  });
   async function api(path, method = "GET", body, raw = false) {
     const response = await fetch(base + path, {
       method,

@@ -47,6 +47,8 @@
   const inviteDialog = document.getElementById('inviteDialog');
   const inviteForm = document.getElementById('inviteForm');
   const shiftDetailDialog = document.getElementById('shiftDetailDialog');
+  const helpButton = document.getElementById('helpButton');
+  const helpMenu = document.getElementById('helpMenu');
   let toastTimer;
 
   function notify(message) {
@@ -83,11 +85,28 @@
     const expanded = accountButton.getAttribute('aria-expanded') === 'true';
     accountButton.setAttribute('aria-expanded', String(!expanded));
     accountMenu.hidden = expanded;
+    if (!expanded && helpMenu) {
+      helpMenu.hidden = true;
+      helpButton?.setAttribute('aria-expanded', 'false');
+    }
+  });
+  helpButton?.addEventListener('click', () => {
+    const expanded = helpButton.getAttribute('aria-expanded') === 'true';
+    helpButton.setAttribute('aria-expanded', String(!expanded));
+    helpMenu.hidden = expanded;
+    if (!expanded && accountMenu) {
+      accountMenu.hidden = true;
+      accountButton?.setAttribute('aria-expanded', 'false');
+    }
   });
   document.addEventListener('click', (event) => {
     if (!event.target.closest('.account-wrap') && accountMenu) {
       accountMenu.hidden = true;
       accountButton?.setAttribute('aria-expanded', 'false');
+    }
+    if (!event.target.closest('.header-menu-wrap') && helpMenu) {
+      helpMenu.hidden = true;
+      helpButton?.setAttribute('aria-expanded', 'false');
     }
   });
 
@@ -329,6 +348,10 @@
       else link.removeAttribute('aria-current');
     });
     closeMobileNav();
+    if (accountMenu) accountMenu.hidden = true;
+    if (helpMenu) helpMenu.hidden = true;
+    accountButton?.setAttribute('aria-expanded', 'false');
+    helpButton?.setAttribute('aria-expanded', 'false');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     history.replaceState(null, '', viewName === 'overview' ? window.location.pathname : `#${viewName}`);
   }
