@@ -115,24 +115,6 @@ const shiftSchema = z.object({
 
 const applicationActionSchema = z.object({ status: z.enum(["approved", "rejected"]), caregiverPayRate: z.coerce.number().positive().optional() });
 const directAssignmentSchema = z.object({ caregiverId: z.coerce.number().int().positive(), caregiverPayRate: z.coerce.number().positive().optional() });
-const shiftUpdateSchema = z.object({
-  title: z.string().trim().min(2).max(255).optional(),
-  careRecipientName: z.string().trim().max(255).optional(),
-  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
-  startTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  endTime: z.string().regex(/^\d{2}:\d{2}$/).optional(),
-  timeZone: z.string().trim().max(100).optional(),
-  hourlyRate: z.coerce.number().positive().max(500).optional(),
-  clientBillRate: z.coerce.number().positive().max(500).optional(),
-  location: z.object({
-    type: z.enum(["client_home", "facility", "other"]).default("client_home"),
-    address: z.string().trim().min(1).max(255),
-    city: z.string().trim().min(1).max(100),
-    state: z.string().trim().min(2).max(2),
-    zipCode: z.string().trim().min(1).max(20),
-  }).optional(),
-});
 const calloutSchema = z.object({
   reason: z.enum(["illness", "family_emergency", "transportation", "schedule_conflict", "other"]),
   note: z.string().max(500).optional(),
@@ -608,53 +590,6 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
     void sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
     await sendOperationsAlert("Shift cancelled", `Employer #${employer.id} cancelled shift #${shiftId}.`);
     res.status(204).send();
-  } catch (error) { next(error); }
-});
-
-router.patch("/employer/:shiftId", authMiddleware, async (req: AuthRequest, res, next) => {
-  try {
-    await ensureShiftPostsTable();
-    const employer = await getOrCreateEmployer(req);
-    const shiftId = Number(req.params.shiftId);
-    if (!Number.isInteger(shiftId)) throw new AppError(400, "Invalid shift ID");
-    const data = shiftUpdateSchema.parse(req.body);
-    if (!Object.keys(data).length) throw new AppError(400, "No shift updates provided");
-    const existing = (await db.execute(sql`
-      SELECT * FROM shift_posts
-      WHERE id = ${shiftId} AND employer_id = ${employer.id} AND status IN ('open', 'assigned')
-      LIMIT 1
-    `) as any).rows[0];
-    if (!existing) throw new AppError(404, "Editable shift not found");
-    const startDate = data.startDate || String(existing.start_time).slice(0, 10);
-    const endDate = data.endDate || data.startDate || String(existing.end_time).slice(0, 10);
-    const startTime = data.startTime || String(existing.start_time).slice(11, 16);
-    const endTime = data.endTime || String(existing.end_time).slice(11, 16);
-    const { start: startDateTime, end: endDateTime, zone } = shiftSchedule({
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-      timeZone: data.timeZone || existing.time_zone || "UTC",
-    });
-    const updated = (await db.execute(sql`
-      UPDATE shift_posts SET
-        title = ${data.title ?? existing.title},
-        care_recipient_name = ${data.careRecipientName ?? existing.care_recipient_name},
-        start_time = ${startDateTime},
-        end_time = ${endDateTime},
-        time_zone = ${zone},
-        hourly_rate = ${(data.hourlyRate ?? Number(existing.hourly_rate)).toFixed(2)},
-        client_bill_rate = ${(data.clientBillRate ?? Number(existing.client_bill_rate ?? existing.hourly_rate)).toFixed(2)},
-        location_type = ${data.location?.type ?? existing.location_type},
-        address = ${data.location?.address ?? existing.address},
-        city = ${data.location?.city ?? existing.city},
-        state = ${(data.location?.state ?? existing.state).toUpperCase()},
-        zip_code = ${data.location?.zipCode ?? existing.zip_code},
-        updated_at = CURRENT_TIMESTAMP
-      WHERE id = ${shiftId} AND employer_id = ${employer.id}
-      RETURNING *
-    `) as any).rows[0];
-    res.json({ shift: mapShift({ ...updated, assigned_count: existing.assigned_count || 0 }) });
   } catch (error) { next(error); }
 });
 
