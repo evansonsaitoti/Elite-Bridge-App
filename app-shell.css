@@ -290,15 +290,13 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   font-size: 12px;
 }
 
-.location-chips,
-.schedule-date-strip {
+.location-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
-.location-chip,
-.schedule-date-strip button {
+.location-chip {
   min-height: 38px;
   padding: 0 14px;
   border: 1px solid #d7e4dd;
@@ -310,8 +308,7 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   cursor: pointer;
 }
 
-.location-chip.active,
-.schedule-date-strip .active {
+.location-chip.active {
   color: #fff;
   border-color: var(--forest-900);
   background: var(--forest-900);
@@ -322,90 +319,76 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   background: #fffaf0;
 }
 
-.schedule-insights {
+.schedule-stack {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin: 14px 0;
+  gap: 12px;
+  margin-top: 16px;
 }
 
-.schedule-insights article {
-  padding: 12px 14px;
-  border: 1px solid #e2ece7;
-  border-radius: 16px;
-  background: #fff;
-}
-
-.schedule-insights strong {
-  display: block;
-  color: var(--forest-950);
-  font-size: 22px;
-  line-height: 1;
-}
-
-.schedule-insights span {
-  display: block;
-  margin-top: 5px;
-  color: var(--muted);
-  font-size: 11px;
-  font-weight: 700;
-}
-
-.deputy-board {
-  overflow-x: auto;
-  padding: 12px;
+.location-schedule {
+  display: grid;
+  gap: 9px;
+  padding: 13px;
   border: 1px solid #e1ebe6;
   border-radius: 18px;
   background: #fbfdfc;
 }
 
-.deputy-row {
-  display: grid;
-  grid-template-columns: 96px repeat(3, minmax(112px, 1fr));
-  gap: 9px;
-  align-items: stretch;
-  min-width: 470px;
-  margin-top: 9px;
-}
-
-.deputy-row:first-child {
-  margin-top: 0;
-}
-
-.deputy-head {
-  color: #7a8781;
-  font-size: 10px;
-  font-weight: 850;
-  text-transform: uppercase;
-}
-
-.deputy-row > strong {
+.location-schedule-head {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px 2px;
+}
+
+.location-schedule-head strong {
   color: var(--forest-950);
-  font-size: 12px;
+  font-size: 15px;
+}
+
+.location-schedule-head span {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 750;
 }
 
 .shift-block {
-  min-height: 62px;
-  padding: 9px 8px;
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  min-height: 58px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 13px;
   border: 0;
-  border-radius: 13px;
+  border-radius: 15px;
   color: var(--forest-950);
   background: #edf2f0;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 900;
   line-height: 1.15;
   text-align: left;
   cursor: pointer;
 }
 
+.shift-block span {
+  color: #6f7e77;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.shift-block strong {
+  font-size: 15px;
+  letter-spacing: -.02em;
+}
+
 .shift-block small {
   display: block;
-  margin-top: 5px;
+  margin-top: 0;
   color: inherit;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 800;
+  text-align: right;
 }
 
 .shift-block.covered {
@@ -539,9 +522,89 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .payroll-controls select { border: 1px solid rgba(20, 77, 48, .18); border-radius: 10px; color: #143b2b; min-height: 38px; padding: 0 10px; }
 .shift-row { flex-wrap: wrap; }
 .shift-row .row-copy { min-width: 170px; }
+.shift-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 15px 0;
+  border-top: 1px solid #edf1ef;
+}
+.shift-card:first-child { border-top: 0; }
+.shift-card-main {
+  display: flex;
+  min-width: 0;
+  align-items: flex-start;
+  gap: 12px;
+}
+.shift-badge {
+  display: grid;
+  flex: 0 0 48px;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(20, 50, 39, .08);
+  border-radius: 16px;
+  color: var(--forest-800);
+  background: var(--mint-100);
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .03em;
+}
+.shift-card-copy {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+.shift-card-title-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 9px;
+}
+.shift-card-title-row strong {
+  overflow: hidden;
+  color: #26352e;
+  font-size: 14px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shift-card-detail,
+.shift-card-time,
+.shift-card-coverage {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.shift-card-time {
+  color: #43534b;
+  font-weight: 800;
+}
+.shift-card-side {
+  display: grid;
+  justify-items: end;
+  gap: 9px;
+  color: #53635b;
+  font-size: 12px;
+  font-weight: 850;
+}
+.shift-card-side .primary-button,
+.shift-card-side .secondary-button {
+  min-height: 36px;
+  padding: 0 12px;
+}
 #caregiverClock textarea { display: block; width: 100%; min-height: 90px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font: inherit; }
 #timesheetList article + article, #caregiverTimesheets article + article { border-top: 1px solid var(--line); }
-@media (max-width: 600px) { .shift-row > button { width: 100%; } }
+@media (max-width: 600px) {
+  .shift-row > button,
+  .shift-card-side .primary-button,
+  .shift-card-side .secondary-button { width: 100%; }
+  .shift-card { grid-template-columns: 1fr; }
+  .shift-card-side { justify-items: stretch; }
+}
 .row-icon { display: grid; flex: 0 0 46px; place-items: center; width: 46px; height: 46px; border: 1px solid rgba(20, 50, 39, .07); border-radius: 14px; color: var(--forest-800); background: var(--mint-100); font-size: 14px; font-weight: 850; }
 .row-copy { min-width: 0; flex: 1; }
 .row-copy strong { display: block; overflow: hidden; color: #26352e; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
@@ -918,20 +981,20 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   .schedule-board-top .primary-button {
     width: 100%;
   }
-  .location-chips,
-  .schedule-date-strip {
+  .location-chips {
     flex-wrap: nowrap;
     overflow-x: auto;
     padding-bottom: 2px;
   }
-  .location-chip,
-  .schedule-date-strip button {
+  .location-chip {
     flex: 0 0 auto;
   }
-  .schedule-insights {
-    grid-template-columns: repeat(3, minmax(110px, 1fr));
-    overflow-x: auto;
-    padding-bottom: 2px;
+  .shift-block {
+    grid-template-columns: 54px minmax(0, 1fr);
+  }
+  .shift-block small {
+    grid-column: 2;
+    text-align: left;
   }
   .priority-strip {
     display: flex;
