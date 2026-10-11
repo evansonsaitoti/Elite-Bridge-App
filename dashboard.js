@@ -46,6 +46,7 @@
   const search = document.getElementById('globalSearch');
   const inviteDialog = document.getElementById('inviteDialog');
   const inviteForm = document.getElementById('inviteForm');
+  const shiftDetailDialog = document.getElementById('shiftDetailDialog');
   let toastTimer;
 
   function notify(message) {
@@ -595,6 +596,11 @@
     };
     return `${format(start)} - ${format(end)}`;
   }
+  function fullDateTime(value) {
+    if (!value) return 'Not set';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+  }
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   }
@@ -614,6 +620,49 @@
       const city = String(shift.location?.city || '').toLowerCase();
       return status === employerShiftFilter || city === employerShiftFilter.toLowerCase();
     });
+  }
+
+  function findEmployerShift(id) {
+    return employerShifts.find((shift) => String(shift.id) === String(id));
+  }
+
+  function renderShiftDetail(shift) {
+    if (!shiftDetailDialog || !shift) return;
+    const title = shift.title || shift.serviceType || 'Care shift';
+    const cityState = `${shift.location?.city || ''}${shift.location?.state ? `, ${shift.location.state}` : ''}`.trim();
+    const status = String(shift.status || 'open').toLowerCase();
+    const filled = Number(shift.assignedCaregivers || 0);
+    const needed = Number(shift.numberOfCaregivers || 1);
+    const coverageText = `${filled}/${needed} positions filled`;
+    const statusClass = status === 'open' ? 'open' : status === 'assigned' ? 'assigned' : 'neutral';
+    const pickupCopy = shift.assignmentMode === 'instant' ? 'Caregivers can claim this shift immediately.' : 'Caregivers can request this shift and wait for your approval.';
+    document.getElementById('shiftDetailTitle').textContent = title;
+    document.getElementById('shiftDetailSubtitle').textContent = `${shiftDateLabel(shift.startTime)} · ${shiftTimeLabel(shift.startTime, shift.endTime)}`;
+    document.getElementById('shiftDetailBody').innerHTML = `
+      <div class="shift-detail-status">
+        <span class="status ${statusClass}">${escapeHtml(status)}</span>
+        <strong>${escapeHtml(coverageText)}</strong>
+      </div>
+      <div class="shift-detail-grid">
+        <div><span>Location</span><strong>${escapeHtml(cityState || 'Care location')}</strong></div>
+        <div><span>Start</span><strong>${escapeHtml(fullDateTime(shift.startTime))}</strong></div>
+        <div><span>End</span><strong>${escapeHtml(fullDateTime(shift.endTime))}</strong></div>
+        <div><span>Caregiver type</span><strong>${escapeHtml(shift.caregiverType || 'Caregiver')}</strong></div>
+        <div><span>Assignment</span><strong>${escapeHtml(shift.assignmentMode === 'instant' ? 'Instant pickup' : 'Employer review')}</strong></div>
+        <div><span>Priority</span><strong>${escapeHtml(shift.urgency || 'Standard')}</strong></div>
+      </div>
+      <div class="shift-detail-note">
+        <span>Care notes</span>
+        <p>${escapeHtml(shift.responsibilities || pickupCopy)}</p>
+      </div>`;
+    const actions = document.getElementById('shiftDetailActions');
+    if (!actions) return;
+    actions.innerHTML = status === 'open'
+      ? `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Keep open for pickup</button><button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(title)}">Invite caregiver</button>`
+      : status === 'assigned'
+        ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button><button class="primary-button" type="button" data-close-shift-detail>Done</button>`
+        : `<button class="primary-button" type="button" data-close-shift-detail>Done</button>`;
+    shiftDetailDialog.showModal();
   }
 
   function renderShiftRows(container, shifts, employerView) {
@@ -640,7 +689,7 @@
           ? `<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button><button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`
           : employerView && expectedRole === 'employer' && status === 'assigned' ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
       return `
-      <article class="shift-card" data-searchable>
+      <article class="shift-card" data-searchable data-shift-card-id="${shift.id}" tabindex="0" role="button" aria-label="Open details for ${escapeHtml(shift.title || shift.serviceType || 'care shift')}">
         <div class="shift-time-tile">
           <span>${escapeHtml(shiftDateLabel(shift.startTime))}</span>
           <strong>${escapeHtml(shiftTimeLabel(shift.startTime, shift.endTime))}</strong>
@@ -654,7 +703,7 @@
           </div>
           <div class="shift-coverage-track" aria-label="${escapeHtml(coverageText)}"><span style="width:${Math.min(100, Math.round((filled / Math.max(needed, 1)) * 100))}%"></span></div>
         </div>
-        <div class="shift-card-side">${action || '<span class="shift-muted-action">No action needed</span>'}</div>
+        <div class="shift-card-side">${action}<button class="secondary-button detail-button" type="button" data-shift-detail="${shift.id}">Details</button></div>
       </article>`;
     }).join('');
   }
@@ -681,13 +730,49 @@
     const container = document.getElementById('applicationList');
     if (!container) return;
     const pending = applications.filter(a => a.status === 'pending');
-    if (!pending.length) { renderEmpty(container, 'No applications to review', 'Caregiver applications appear here when you choose employer review.'); return; }
-    container.innerHTML = pending.map(a => `<article class="surface-pad" data-searchable><strong>${escapeHtml(`${a.first_name} ${a.last_name}`)}</strong><p>${escapeHtml(a.shift_title)} · ${dateTime(a.start_time)} – ${dateTime(a.end_time)}</p><p>${escapeHtml(a.note || '')}</p><button class="primary-button" type="button" data-application-id="${a.id}" data-decision="approved">Approve caregiver</button> <button class="secondary-button" type="button" data-application-id="${a.id}" data-decision="rejected">Decline</button></article>`).join('');
+    if (!pending.length) { renderEmpty(container, 'No pending claims', 'Caregiver requests will appear here when an open shift needs your review.'); return; }
+    container.innerHTML = pending.map((a) => {
+      const name = `${a.first_name || ''} ${a.last_name || ''}`.trim() || 'Caregiver';
+      const initials = name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || 'CG';
+      return `<article class="claim-card" data-searchable>
+        <div class="claim-card-head">
+          <span class="claim-avatar">${escapeHtml(initials)}</span>
+          <span class="claim-copy"><strong>${escapeHtml(name)}</strong><small>${escapeHtml(a.shift_title || 'Care shift')}</small></span>
+          <span class="status warning">Pending claim</span>
+        </div>
+        <div class="claim-meta">
+          <span>${escapeHtml(dateTime(a.start_time))}</span>
+          <span>${escapeHtml(dateTime(a.end_time))}</span>
+          <span>Employer approval required</span>
+        </div>
+        ${a.note ? `<p class="claim-note">${escapeHtml(a.note)}</p>` : ''}
+        <div class="claim-actions">
+          <button class="primary-button" type="button" data-application-id="${a.id}" data-decision="approved">Approve caregiver</button>
+          <button class="secondary-button" type="button" data-application-id="${a.id}" data-decision="rejected">Decline</button>
+        </div>
+      </article>`;
+    }).join('');
   }
 
   document.addEventListener('click', async event => {
+    const closeShiftDetail = event.target.closest('[data-close-shift-detail]');
+    if (closeShiftDetail) {
+      shiftDetailDialog?.close();
+      return;
+    }
+    const detailTrigger = event.target.closest('[data-shift-detail]');
+    if (detailTrigger) {
+      renderShiftDetail(findEmployerShift(detailTrigger.dataset.shiftDetail));
+      return;
+    }
+    const shiftCard = event.target.closest('[data-shift-card-id]');
+    if (shiftCard && !event.target.closest('button, a, input, select, textarea')) {
+      renderShiftDetail(findEmployerShift(shiftCard.dataset.shiftCardId));
+      return;
+    }
     const inviteShift = event.target.closest('[data-invite-shift-id]');
     if (inviteShift) {
+      shiftDetailDialog?.close();
       inviteForm?.reset();
       const result = document.getElementById('inviteResult');
       if (result) result.hidden = true;
@@ -705,7 +790,8 @@
     }
     const pickup = event.target.closest('[data-open-pickup]');
     if (pickup) {
-      notify('This shift is open for qualified caregivers to pick up.');
+      shiftDetailDialog?.close();
+      notify('This shift is open for qualified caregivers to pick up. Claims will appear under Pending caregiver claims.');
       return;
     }
     const button = event.target.closest('[data-application-id], [data-shift-op]');
@@ -721,6 +807,16 @@
     } catch (error) { notify(error.message); }
     finally { savingTime = false; button.disabled = false; }
   });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    const shiftCard = document.activeElement?.closest?.('[data-shift-card-id]');
+    if (!shiftCard) return;
+    event.preventDefault();
+    renderShiftDetail(findEmployerShift(shiftCard.dataset.shiftCardId));
+  });
+  document.getElementById('shiftDetailClose')?.addEventListener('click', () => shiftDetailDialog?.close());
+  shiftDetailDialog?.addEventListener('click', (event) => { if (event.target === shiftDetailDialog) shiftDetailDialog.close(); });
 
   let employerManualTimesheets = [];
   function renderTimesheets(container, sheets, employerView, applications = []) {
