@@ -1,0 +1,59 @@
+name: Check Elite Bridge TestFlight build status
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  status:
+    name: Check ${{ matrix.app }} in App Store Connect
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: Elite Work
+            directory: elitebridge-employer
+          - app: Elite Care
+            directory: elitebridge-mobile
+    steps:
+      - name: Checkout release metadata
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install pnpm and app dependencies
+        run: |
+          npm install --global pnpm@9.12.0
+          pnpm --dir "${{ matrix.directory }}" install --no-frozen-lockfile
+
+      - name: Prepare App Store Connect API key
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+        run: |
+          test -n "$ASC_API_KEY_P8"
+          printf '%s' "$ASC_API_KEY_P8" > /tmp/AuthKey.p8
+          chmod 600 /tmp/AuthKey.p8
+
+      - name: Read TestFlight build status
+        working-directory: ${{ matrix.directory }}
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: /tmp/AuthKey.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: F42HSPN3W4
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
+          CI: "1"
+        run: npx eas-cli@latest submit:status --platform ios --profile production --json --non-interactive
+
+      - name: Remove temporary App Store Connect API key
+        if: always()
+        run: rm -f /tmp/AuthKey.p8
