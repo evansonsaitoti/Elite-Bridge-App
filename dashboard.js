@@ -610,6 +610,8 @@
     container.innerHTML = visibleShifts.map((shift) => {
       const cityState = `${shift.location?.city || ''}${shift.location?.state ? `, ${shift.location.state}` : ''}`.trim();
       const status = shift.status || 'open';
+      const rateCleanup = employerView && expectedRole === 'employer' && Number(shift.hourlyRate) !== 30 && ['open', 'assigned'].includes(status)
+        ? `<button class="secondary-button" type="button" data-shift-op="set-rate-30" data-shift-id="${shift.id}">Set $30/hr</button>` : '';
       const action = !employerView && expectedRole === 'caregiver'
         ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
         : employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
@@ -624,7 +626,7 @@
             <span class="shift-card-coverage">${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span>
           </div>
         </div>
-        <div class="shift-card-side"><strong>${money(shift.hourlyRate)}/hr</strong>${action}</div>
+        <div class="shift-card-side"><strong>${money(shift.hourlyRate)}/hr</strong>${rateCleanup}${action}</div>
       </article>`;
     }).join('');
   }
@@ -660,10 +662,12 @@
     if (!button || savingTime) return;
     const operation = button.dataset.shiftOp;
     if (operation === 'cancel' && !window.confirm('Cancel this shift and notify assigned caregivers?')) return;
+    if (operation === 'set-rate-30' && !window.confirm('Update this live shift caregiver pay rate to $30/hr?')) return;
     savingTime = true; button.disabled = true;
     try {
-      const route = button.dataset.applicationId ? `/bookings/employer/applications/${button.dataset.applicationId}` : operation === 'cancel' ? `/bookings/employer/${button.dataset.shiftId}/cancel` : `/bookings/${button.dataset.shiftId}/${operation}`;
-      await api(route, { method: button.dataset.applicationId || operation === 'cancel' ? 'PATCH' : 'POST', body: JSON.stringify(button.dataset.applicationId ? { status: button.dataset.decision } : {}) });
+      const route = button.dataset.applicationId ? `/bookings/employer/applications/${button.dataset.applicationId}` : operation === 'cancel' ? `/bookings/employer/${button.dataset.shiftId}/cancel` : operation === 'set-rate-30' ? `/bookings/employer/${button.dataset.shiftId}` : `/bookings/${button.dataset.shiftId}/${operation}`;
+      const body = button.dataset.applicationId ? { status: button.dataset.decision } : operation === 'set-rate-30' ? { hourlyRate: 30 } : {};
+      await api(route, { method: button.dataset.applicationId || operation === 'cancel' || operation === 'set-rate-30' ? 'PATCH' : 'POST', body: JSON.stringify(body) });
       notify('Shift update saved.');
       await (expectedRole === 'employer' ? loadEmployer() : loadCaregiver());
     } catch (error) { notify(error.message); }
@@ -1121,7 +1125,46 @@
     finally { savingTime = false; button.disabled = false; }
   });
 
+  function renderClientRecords(clients) {
+    const container = document.getElementById('clientRecordList');
+    if (!container) return;
+    employerClients = clients || [];
+    if (!employerClients.length) {
+      renderEmpty(container, 'No saved client locations yet', 'Add Barry, Manchester, and Gloucester so schedules and invoices start from clean records.');
+      return;
+    }
+    container.innerHTML = employerClients.map((client) => `
+      <article class="client-record-card" data-searchable>
+        <div>
+          <strong>${escapeHtml(client.clientName)}</strong>
+          <span>${escapeHtml(client.locationName)} · ${escapeHtml(client.city)}, ${escapeHtml(client.state)}</span>
+          <small>${escapeHtml(client.address || 'Address to be added')}</small>
+        </div>
+        <div class="client-rate-stack"><span>Bill ${money(client.billingRate)}/hr</span><span>Pay ${money(client.caregiverRate)}/hr</span></div>
+      </article>`).join('');
+  }
+
+  document.getElementById('clientForm')?.addEventListener('submit', async event => {
+    event.preventDefault(); if (savingTime) return;
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    const payload = Object.fromEntries(['clientName','locationName','address','city','state','zipCode','contactName','contactPhone','billingRate','caregiverRate','notes'].map(key => [key, String(data.get(key) || '').trim()]));
+    const button = form.querySelector('button[type="submit"]');
+    savingTime = true; button.disabled = true; button.textContent = 'Saving client...';
+    try {
+      const result = await api('/clients/employer', { method: 'POST', body: JSON.stringify(payload) });
+      renderClientRecords([result.client, ...employerClients]);
+      form.reset();
+      document.getElementById('clientState').value = 'MA';
+      document.getElementById('clientBillingRate').value = '40';
+      document.getElementById('clientCaregiverRate').value = '30';
+      notify('Client location saved.');
+    } catch (error) { notify(error.message || 'Could not save this client record.'); }
+    finally { savingTime = false; button.disabled = false; button.textContent = 'Save client location'; }
+  });
+
   let employerExpenses = [];
+  let employerClients = [];
   let selectedExpenseReceipt = null;
   const expenseCategories = {
     gas: 'Gas',
@@ -1552,8 +1595,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult, clientResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer'), api('/clients/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     employerShifts = shifts;
@@ -1571,6 +1614,7 @@
     renderClientInvoices();
     if (expenseResult.status === 'fulfilled') renderExpenses(expenseResult.value);
     else renderExpenses({ expenses: [] });
+    renderClientRecords(clientResult.status === 'fulfilled' ? clientResult.value.clients || [] : []);
     if (profile?.companyName) {
       session.user.companyName = profile.companyName;
       session.storage.setItem('user', JSON.stringify(session.user));
