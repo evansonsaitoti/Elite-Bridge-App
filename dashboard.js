@@ -499,33 +499,6 @@
       card.hidden = location !== 'all' && card.dataset.locationSchedule !== location;
     });
   }));
-  document.querySelectorAll('[data-prefill-shift]').forEach((button) => button.addEventListener('click', () => {
-    activateView('shifts');
-    const city = button.dataset.shiftCity || '';
-    const date = button.dataset.shiftDate || '';
-    const start = button.dataset.shiftStart || '';
-    const end = button.dataset.shiftEnd || '';
-    const values = {
-      shiftTitle: `${city || 'Client'} care visit`,
-      serviceType: 'Companionship',
-      startDate: date,
-      endDate: date,
-      startTime: start,
-      endTime: end,
-      hourlyRate: '30',
-      city,
-      state: 'MA',
-      numberOfCaregivers: '1',
-      assignmentMode: 'review',
-      urgency: 'standard',
-    };
-    Object.entries(values).forEach(([id, value]) => {
-      const field = document.getElementById(id);
-      if (field && value) field.value = value;
-    });
-    document.getElementById('address')?.focus();
-    notify(`Shift form prepared for ${city || 'this location'} at $30/hr.`);
-  }));
   document.querySelectorAll('[data-invite-caregiver]').forEach((button) => button.addEventListener('click', () => {
     if (!inviteDialog) return;
     inviteForm?.reset();
@@ -609,6 +582,19 @@
     const date = new Date(value);
     return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
   }
+  function shiftDateLabel(value) {
+    if (!value) return 'TBD';
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric' }).format(date);
+  }
+  function shiftTimeLabel(start, end) {
+    const format = (value) => {
+      if (!value) return 'TBD';
+      const date = new Date(value);
+      return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit' }).format(date);
+    };
+    return `${format(start)} - ${format(end)}`;
+  }
   function escapeHtml(value) {
     return String(value ?? '').replace(/[&<>'"]/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[char]));
   }
@@ -644,21 +630,29 @@
     container.innerHTML = visibleShifts.map((shift) => {
       const cityState = `${shift.location?.city || ''}${shift.location?.state ? `, ${shift.location.state}` : ''}`.trim();
       const status = shift.status || 'open';
+      const filled = Number(shift.assignedCaregivers || 0);
+      const needed = Number(shift.numberOfCaregivers || 1);
+      const coverageText = `${filled}/${needed} filled`;
+      const statusClass = status === 'open' ? 'open' : status === 'assigned' ? 'assigned' : 'neutral';
       const action = !employerView && expectedRole === 'caregiver'
         ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
         : employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
       return `
       <article class="shift-card" data-searchable>
-        <div class="shift-card-main">
-          <span class="shift-badge">${employerView ? 'SH' : '$'}</span>
-          <div class="shift-card-copy">
-            <div class="shift-card-title-row"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span class="status ${status === 'open' ? '' : 'neutral'}">${escapeHtml(status)}</span></div>
-            <span class="shift-card-detail">${escapeHtml(cityState || 'Care location')}</span>
-            <span class="shift-card-time">${dateTime(shift.startTime)} - ${dateTime(shift.endTime)}</span>
-            <span class="shift-card-coverage">${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span>
-          </div>
+        <div class="shift-time-tile">
+          <span>${escapeHtml(shiftDateLabel(shift.startTime))}</span>
+          <strong>${escapeHtml(shiftTimeLabel(shift.startTime, shift.endTime))}</strong>
         </div>
-        <div class="shift-card-side"><strong>${money(shift.hourlyRate)}/hr</strong>${action}</div>
+        <div class="shift-card-copy">
+          <div class="shift-card-title-row"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span class="status ${statusClass}">${escapeHtml(status)}</span></div>
+          <div class="shift-meta-row">
+            <span>${escapeHtml(cityState || 'Care location')}</span>
+            <span>${escapeHtml(coverageText)}</span>
+            <span>${money(shift.hourlyRate)}/hr</span>
+          </div>
+          <div class="shift-coverage-track" aria-label="${escapeHtml(coverageText)}"><span style="width:${Math.min(100, Math.round((filled / Math.max(needed, 1)) * 100))}%"></span></div>
+        </div>
+        <div class="shift-card-side">${action || '<span class="shift-muted-action">No action needed</span>'}</div>
       </article>`;
     }).join('');
   }
