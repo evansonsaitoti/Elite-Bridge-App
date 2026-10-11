@@ -35,6 +35,29 @@ jobs:
           pnpm check
           pnpm audit:release
 
+      - name: Configure Apple signing validation
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+          ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+        run: |
+          for secret_name in ASC_API_KEY_P8 ASC_KEY_ID ASC_ISSUER_ID; do
+            if [ -z "${!secret_name}" ]; then
+              echo "Missing required signing secret: $secret_name" >&2
+              exit 1
+            fi
+          done
+          key_path="$RUNNER_TEMP/AuthKey_${ASC_KEY_ID}.p8"
+          printf '%s' "$ASC_API_KEY_P8" > "$key_path"
+          chmod 600 "$key_path"
+          {
+            echo "EXPO_ASC_API_KEY_PATH=$key_path"
+            echo "EXPO_ASC_KEY_ID=$ASC_KEY_ID"
+            echo "EXPO_ASC_ISSUER_ID=$ASC_ISSUER_ID"
+            echo "EXPO_APPLE_TEAM_ID=F42HSPN3W4"
+            echo "EXPO_APPLE_TEAM_TYPE=INDIVIDUAL"
+          } >> "$GITHUB_ENV"
+
       - name: Build Employer iOS app
         working-directory: elitebridge-employer
         env:
@@ -42,6 +65,8 @@ jobs:
         run: pnpm dlx eas-cli@latest build --platform ios --profile production --non-interactive
 
       - name: Prepare and validate Care app
+        if: ${{ !cancelled() }}
+        id: care_validation
         working-directory: elitebridge-mobile
         env:
           EXPO_PUBLIC_API_URL: https://elite-bridge-shared-api-evans.vercel.app
@@ -52,7 +77,12 @@ jobs:
           pnpm audit:release
 
       - name: Build Care iOS app
+        if: ${{ !cancelled() && steps.care_validation.outcome == 'success' }}
         working-directory: elitebridge-mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: pnpm dlx eas-cli@latest build --platform ios --profile production --non-interactive
+
+      - name: Remove temporary signing key
+        if: ${{ always() }}
+        run: rm -f "$RUNNER_TEMP/AuthKey_${{ secrets.EXPO_ASC_KEY_ID }}.p8"
