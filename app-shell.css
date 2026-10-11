@@ -761,37 +761,44 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .shift-row .row-copy { min-width: 170px; }
 .shift-card {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 14px;
+  grid-template-columns: 132px minmax(0, 1fr) auto;
+  gap: 15px;
   align-items: center;
-  padding: 15px 0;
-  border-top: 1px solid #edf1ef;
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid #dfe8e3;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #fff, #fbfdfc);
+  box-shadow: 0 8px 22px rgba(22, 52, 39, .045);
 }
-.shift-card:first-child { border-top: 0; }
-.shift-card-main {
-  display: flex;
-  min-width: 0;
-  align-items: flex-start;
-  gap: 12px;
-}
-.shift-badge {
+.shift-card:first-child { margin-top: 0; }
+.shift-time-tile {
   display: grid;
-  flex: 0 0 48px;
-  place-items: center;
-  width: 48px;
-  height: 48px;
-  border: 1px solid rgba(20, 50, 39, .08);
+  gap: 6px;
+  align-self: stretch;
+  align-content: center;
+  padding: 12px;
   border-radius: 16px;
-  color: var(--forest-800);
-  background: var(--mint-100);
-  font-size: 13px;
-  font-weight: 900;
-  letter-spacing: .03em;
+  color: var(--forest-950);
+  background: #eef7e8;
+  border-left: 5px solid var(--forest-700);
+}
+.shift-time-tile span {
+  color: #65746d;
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.shift-time-tile strong {
+  font-size: 16px;
+  line-height: 1.15;
+  letter-spacing: -.025em;
 }
 .shift-card-copy {
   display: grid;
   min-width: 0;
-  gap: 5px;
+  gap: 9px;
 }
 .shift-card-title-row {
   display: flex;
@@ -802,23 +809,40 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .shift-card-title-row strong {
   overflow: hidden;
   color: #26352e;
-  font-size: 14px;
+  font-size: 16px;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.shift-card-detail,
-.shift-card-time,
-.shift-card-coverage {
-  overflow: hidden;
-  color: var(--muted);
-  font-size: 11px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+.shift-meta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
-.shift-card-time {
-  color: #43534b;
+.shift-meta-row span {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  padding: 5px 9px;
+  border: 1px solid #e2ebe6;
+  border-radius: 999px;
+  color: #4d5f56;
+  background: #fff;
+  font-size: 11px;
   font-weight: 800;
+}
+.shift-coverage-track {
+  overflow: hidden;
+  height: 7px;
+  border-radius: 999px;
+  background: #e9efec;
+}
+.shift-coverage-track span {
+  display: block;
+  min-width: 8px;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--forest-700), #34a853);
 }
 .shift-card-side {
   display: grid;
@@ -833,13 +857,18 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   min-height: 36px;
   padding: 0 12px;
 }
+.shift-muted-action {
+  color: #7b8781;
+  font-size: 11px;
+}
 #caregiverClock textarea { display: block; width: 100%; min-height: 90px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; font: inherit; }
 #timesheetList article + article, #caregiverTimesheets article + article { border-top: 1px solid var(--line); }
 @media (max-width: 600px) {
   .shift-row > button,
   .shift-card-side .primary-button,
   .shift-card-side .secondary-button { width: 100%; }
-  .shift-card { grid-template-columns: 1fr; }
+  .shift-card { grid-template-columns: 1fr; padding: 13px; }
+  .shift-time-tile { align-self: auto; }
   .shift-card-side { justify-items: stretch; }
 }
 .row-icon { display: grid; flex: 0 0 46px; place-items: center; width: 46px; height: 46px; border: 1px solid rgba(20, 50, 39, .07); border-radius: 14px; color: var(--forest-800); background: var(--mint-100); font-size: 14px; font-weight: 850; }
