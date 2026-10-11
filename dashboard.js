@@ -1153,9 +1153,16 @@
     const button = form.querySelector('button[type="submit"]');
     savingTime = true; button.disabled = true; button.textContent = 'Saving client...';
     try {
-      const client = { ...payload, id: Date.now(), billingRate: Number(payload.billingRate || 40), caregiverRate: Number(payload.caregiverRate || 30), createdAt: new Date().toISOString() };
+      let client;
+      try {
+        const result = await api('/clients/employer', { method: 'POST', body: JSON.stringify(payload) });
+        client = result.client;
+      } catch (apiError) {
+        client = { ...payload, id: Date.now(), billingRate: Number(payload.billingRate || 40), caregiverRate: Number(payload.caregiverRate || 30), createdAt: new Date().toISOString() };
+      }
       const next = [client, ...employerClients];
       localStorage.setItem('eliteBridgeClientRecords', JSON.stringify(next));
+      employerClients = next;
       renderClientRecords(next);
       form.reset();
       document.getElementById('clientState').value = 'MA';
@@ -1598,8 +1605,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult, clientResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer'), api('/clients/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     employerShifts = shifts;
@@ -1617,7 +1624,9 @@
     renderClientInvoices();
     if (expenseResult.status === 'fulfilled') renderExpenses(expenseResult.value);
     else renderExpenses({ expenses: [] });
-    renderClientRecords(savedClientRecords());
+    employerClients = clientResult.status === 'fulfilled' ? clientResult.value.clients || [] : savedClientRecords();
+    if (clientResult.status === 'fulfilled') localStorage.setItem('eliteBridgeClientRecords', JSON.stringify(employerClients));
+    renderClientRecords(employerClients);
     if (profile?.companyName) {
       session.user.companyName = profile.companyName;
       session.storage.setItem('user', JSON.stringify(session.user));
