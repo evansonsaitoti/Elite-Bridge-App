@@ -588,14 +588,26 @@
       renderEmpty(container, employerView ? 'No shifts posted yet' : 'No open shifts nearby yet', employerView ? 'Post your first care shift to begin matching with caregivers.' : 'New care opportunities will appear here as employers post them.', employerView ? 'Post a shift' : '', employerView ? 'shifts' : 'overview');
       return;
     }
-    container.innerHTML = shifts.map((shift) => `
-      <article class="list-row shift-row" data-searchable>
-        <span class="row-icon">${employerView ? 'SH' : '$'}</span>
-        <span class="row-copy"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span>${escapeHtml(shift.location?.city || '')}${shift.location?.state ? `, ${escapeHtml(shift.location.state)}` : ''} · ${dateTime(shift.startTime)} – ${dateTime(shift.endTime)} · ${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span></span>
-        <span class="row-meta"><span class="status ${shift.status === 'open' ? '' : 'neutral'}">${escapeHtml(shift.status || 'open')}</span><br>${money(shift.hourlyRate)}/hr</span>
-        ${!employerView && expectedRole === 'caregiver' ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`) : ''}
-        ${employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(shift.status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : ''}
-      </article>`).join('');
+    container.innerHTML = shifts.map((shift) => {
+      const cityState = `${shift.location?.city || ''}${shift.location?.state ? `, ${shift.location.state}` : ''}`.trim();
+      const status = shift.status || 'open';
+      const action = !employerView && expectedRole === 'caregiver'
+        ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
+        : employerView && expectedRole === 'employer' && ['open', 'assigned'].includes(status) ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
+      return `
+      <article class="shift-card" data-searchable>
+        <div class="shift-card-main">
+          <span class="shift-badge">${employerView ? 'SH' : '$'}</span>
+          <div class="shift-card-copy">
+            <div class="shift-card-title-row"><strong>${escapeHtml(shift.title || shift.serviceType || 'Care shift')}</strong><span class="status ${status === 'open' ? '' : 'neutral'}">${escapeHtml(status)}</span></div>
+            <span class="shift-card-detail">${escapeHtml(cityState || 'Care location')}</span>
+            <span class="shift-card-time">${dateTime(shift.startTime)} - ${dateTime(shift.endTime)}</span>
+            <span class="shift-card-coverage">${Number(shift.assignedCaregivers || 0)}/${Number(shift.numberOfCaregivers || 1)} positions filled</span>
+          </div>
+        </div>
+        <div class="shift-card-side"><strong>${money(shift.hourlyRate)}/hr</strong>${action}</div>
+      </article>`;
+    }).join('');
   }
 
   function renderActivities(container, activities) {
