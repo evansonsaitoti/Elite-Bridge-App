@@ -113,7 +113,7 @@ jobs:
         run: npm install --global pnpm@9.12.0
 
       - name: Install app dependencies
-        working-directory: elitebridge-employer
+        working-directory: elitebridge-mobile
         run: pnpm install --no-frozen-lockfile
 
       - name: Download existing signed Care IPA from the completed build run
@@ -158,4 +158,14 @@ jobs:
         working-directory: elitebridge-mobile
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          EXPO_ASC_API_KEY_PATH: /tmp/AuthKey.p8
+          EXPO_ASC_KEY_ID: ${{ secrets.EXPO_ASC_KEY_ID }}
+          EXPO_ASC_ISSUER_ID: ${{ secrets.EXPO_ASC_ISSUER_ID }}
+          EXPO_APPLE_TEAM_ID: F42HSPN3W4
+          EXPO_APPLE_TEAM_TYPE: INDIVIDUAL
+          CI: "1"
         run: npx eas-cli@latest submit --platform ios --path "$CARE_IPA" --profile production --non-interactive --wait
+
+      - name: Remove temporary App Store Connect API key
+        if: always()
+        run: rm -f /tmp/AuthKey.p8
