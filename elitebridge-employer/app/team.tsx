@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, Alert, Linking, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Alert, Linking, Platform, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
@@ -19,7 +19,7 @@ export default function TeamScreen() {
   const [inviteEmail, setInviteEmail] = useState("");
   const [invitePhone, setInvitePhone] = useState("");
   const [inviteLoading, setInviteLoading] = useState(false);
-  const [lastInvite, setLastInvite] = useState<{ inviteUrl: string; appLink: string; emailSent: boolean; smsSent: boolean } | null>(null);
+  const [lastInvite, setLastInvite] = useState<{ inviteUrl: string; appLink: string; emailSent: boolean; smsSent: boolean; recipientEmail: string; recipientPhone: string } | null>(null);
 
   const load = useCallback(async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
@@ -54,6 +54,8 @@ export default function TeamScreen() {
         appLink: response.appLinks?.caregiver || response.inviteUrl,
         emailSent: response.emailSent,
         smsSent: response.smsSent,
+        recipientEmail: email,
+        recipientPhone: phone,
       });
       setInviteFirstName("");
       setInviteLastName("");
@@ -69,12 +71,29 @@ export default function TeamScreen() {
     }
   }, [inviteEmail, inviteFirstName, inviteLastName, inviteLoading, invitePhone, load]);
 
-  const shareInvite = useCallback((mode: "email" | "text" | "open") => {
+  const shareInvite = useCallback(async (mode: "email" | "text" | "open") => {
     if (!lastInvite) return;
+    if (mode === "email" && !lastInvite.recipientEmail) {
+      Alert.alert("Email address needed", "Create an invite with the caregiver's email address to send it by email.");
+      return;
+    }
+    if (mode === "text" && !lastInvite.recipientPhone) {
+      Alert.alert("Phone number needed", "Create an invite with the caregiver's phone number to send it by text.");
+      return;
+    }
     const message = `Join our care team on Elite Bridge.\n\nAccept your secure invitation, create access with your email, phone and password, then finish the rest of your profile later: ${lastInvite.inviteUrl}\nDownload the caregiver app: ${lastInvite.appLink}`;
-    if (mode === "email") void Linking.openURL(`mailto:?subject=${encodeURIComponent("Your Elite Bridge invitation")}&body=${encodeURIComponent(message)}`);
-    if (mode === "text") void Linking.openURL(`sms:?body=${encodeURIComponent(message.replace(/\n\n/g, " "))}`);
-    if (mode === "open") void Linking.openURL(lastInvite.appLink);
+    const separator = Platform.OS === "ios" ? "&" : "?";
+    const url = mode === "email"
+      ? `mailto:${encodeURIComponent(lastInvite.recipientEmail)}?subject=${encodeURIComponent("Your Elite Bridge invitation")}&body=${encodeURIComponent(message)}`
+      : mode === "text"
+        ? `sms:${encodeURIComponent(lastInvite.recipientPhone)}${separator}body=${encodeURIComponent(message.replace(/\n\n/g, " "))}`
+        : lastInvite.appLink;
+    try {
+      if (!(await Linking.canOpenURL(url))) throw new Error("No compatible app is available on this device.");
+      await Linking.openURL(url);
+    } catch (error) {
+      Alert.alert("Unable to open sharing", error instanceof Error ? error.message : "Install or configure an email or messaging app, then try again.");
+    }
   }, [lastInvite]);
 
   return <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
@@ -86,7 +105,7 @@ export default function TeamScreen() {
       <TextInput autoCapitalize="none" autoCorrect={false} keyboardType="email-address" onChangeText={setInviteEmail} placeholder="Email address" placeholderTextColor={colors.muted} style={styles.input} value={inviteEmail} />
       <TextInput keyboardType="phone-pad" onChangeText={setInvitePhone} placeholder="Phone number for text invite" placeholderTextColor={colors.muted} style={styles.input} value={invitePhone} />
       <TouchableOpacity activeOpacity={0.85} disabled={inviteLoading} onPress={handleInvite} style={[styles.inviteButton, inviteLoading && styles.inviteButtonDisabled]}><Text style={styles.inviteButtonText}>{inviteLoading ? "Creating invite..." : "Send onboarding invite"}</Text></TouchableOpacity>
-      {lastInvite ? <View style={styles.sharePanel}><Text style={styles.shareTitle}>Last invite is ready</Text><Text style={styles.shareBody}>{lastInvite.emailSent || lastInvite.smsSent ? `Sent by ${[lastInvite.emailSent ? "email" : "", lastInvite.smsSent ? "text" : ""].filter(Boolean).join(" and ")}.` : "Use the buttons below to share it manually."}</Text><View style={styles.shareActions}><TouchableOpacity onPress={() => shareInvite("email")} style={styles.shareButton}><Text style={styles.shareButtonText}>Email</Text></TouchableOpacity><TouchableOpacity onPress={() => shareInvite("text")} style={styles.shareButton}><Text style={styles.shareButtonText}>Text</Text></TouchableOpacity><TouchableOpacity onPress={() => shareInvite("open")} style={styles.shareButton}><Text style={styles.shareButtonText}>Open app</Text></TouchableOpacity></View></View> : null}
+      {lastInvite ? <View style={styles.sharePanel}><Text style={styles.shareTitle}>Last invite is ready</Text><Text style={styles.shareBody}>{lastInvite.emailSent || lastInvite.smsSent ? `Sent by ${[lastInvite.emailSent ? "email" : "", lastInvite.smsSent ? "text" : ""].filter(Boolean).join(" and ")}.` : "Email or text delivery was not confirmed. Use a button below to send the invitation link manually."}</Text><View style={styles.shareActions}><TouchableOpacity onPress={() => shareInvite("email")} style={styles.shareButton}><Text style={styles.shareButtonText}>Email</Text></TouchableOpacity><TouchableOpacity onPress={() => shareInvite("text")} style={styles.shareButton}><Text style={styles.shareButtonText}>Text</Text></TouchableOpacity><TouchableOpacity onPress={() => shareInvite("open")} style={styles.shareButton}><Text style={styles.shareButtonText}>Open app</Text></TouchableOpacity></View></View> : null}
     </View>
     {loading ? <ActivityIndicator color={colors.green} size="large" style={styles.loader} /> : null}
     {!loading && team.length === 0 ? <View style={styles.empty}><Ionicons color={colors.green} name="person-add-outline" size={34} /><Text style={styles.emptyTitle}>Your team directory is ready</Text><Text style={styles.emptyBody}>Approve a caregiver application or let a qualified caregiver claim an instant shift. Their employee record will then appear here.</Text><TouchableOpacity onPress={() => router.push("/shifts")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>Manage shifts</Text></TouchableOpacity></View> : null}
