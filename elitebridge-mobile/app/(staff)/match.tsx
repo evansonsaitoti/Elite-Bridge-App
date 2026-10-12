@@ -188,7 +188,7 @@ export default function StaffMatch() {
         </ScrollView>
 
         <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background }}>
-          {savedMessage ? <Text accessibilityRole="status" style={{ textAlign: "center", color: "#1B5E3F", fontSize: 11, fontWeight: "800", marginBottom: 7 }}>{savedMessage}</Text> : null}
+          {savedMessage ? <Text style={{ textAlign: "center", color: "#1B5E3F", fontSize: 11, fontWeight: "800", marginBottom: 7 }}>{savedMessage}</Text> : null}
           <TouchableOpacity accessibilityRole="button" disabled={saving} onPress={() => void savePreferences()} style={{ minHeight: 50, borderRadius: 14, backgroundColor: "#0B4A36", alignItems: "center", justifyContent: "center", opacity: saving ? 0.65 : 1 }}>
             <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "900" }}>{saving ? "Saving preferences…" : "Save preferences"}</Text>
           </TouchableOpacity>
