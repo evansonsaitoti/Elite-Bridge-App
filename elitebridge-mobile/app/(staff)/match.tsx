@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
@@ -17,9 +17,11 @@ const serviceOptions = ["Personal care", "Companionship", "Meal prep", "Respite"
 export default function StaffMatch() {
   const colors = useColors();
   const [preferences, setPreferences] = useState<CaregiverPreferences>(defaultCaregiverPreferences);
+  const [saving, setSaving] = useState(false);
+  const [savedMessage, setSavedMessage] = useState("");
 
   useEffect(() => {
-    getCaregiverPreferences().then(setPreferences);
+    getCaregiverPreferences().then(setPreferences).catch(() => setPreferences(defaultCaregiverPreferences));
   }, []);
 
   const matchScore = useMemo(() => {
@@ -32,6 +34,7 @@ export default function StaffMatch() {
   }, [preferences]);
 
   const togglePreference = (field: "availability" | "preferredServices", value: string) => {
+    setSavedMessage("");
     setPreferences((current) => {
       const exists = current[field].includes(value);
       return {
@@ -43,130 +46,154 @@ export default function StaffMatch() {
 
   const savePreferences = async () => {
     const distance = Number(preferences.maxDistanceMiles);
-    if (!Number.isFinite(distance) || distance <= 0) {
-      Alert.alert("Check travel distance", "Enter a valid maximum travel distance.");
+    if (!Number.isFinite(distance) || distance <= 0 || distance > 200) {
+      Alert.alert("Check travel distance", "Enter a distance from 1 to 200 miles.");
       return;
     }
+    setSaving(true);
+    setSavedMessage("");
     try {
       await saveCaregiverPreferences(preferences);
       if (sharedApiConfigured) await syncCaregiverMatchingProfile(preferences);
-      Alert.alert("Care Match saved", "Your matching profile is active. Eligible employer shift offers will be sent to this app.");
+      setSavedMessage(sharedApiConfigured ? "Saved and synced with your agency" : "Saved on this device");
+      Keyboard.dismiss();
     } catch (error) {
       Alert.alert("Care Match not synced", error instanceof Error ? error.message : "Please try again when you are online.");
+    } finally {
+      setSaving(false);
     }
   };
 
-  const primaryServices = preferences.preferredServices.length ? preferences.preferredServices : ["Companionship", "Respite"];
-  const primaryAvailability = preferences.availability.length ? preferences.availability : ["Open availability"];
+  const selectedServices = preferences.preferredServices.length;
+  const selectedHours = preferences.availability.length;
+  const toggleStyle = (active: boolean) => ({
+    borderRadius: 999,
+    paddingHorizontal: 13,
+    paddingVertical: 10,
+    backgroundColor: active ? "#0B4A36" : colors.surface,
+    borderWidth: 1,
+    borderColor: active ? "#0B4A36" : colors.border,
+    minHeight: 42,
+    justifyContent: "center" as const,
+  });
 
   return (
     <ScreenContainer>
-      <ScrollView
-        style={{ flex: 1, backgroundColor: colors.background }}
-        contentContainerStyle={{ padding: 18, paddingBottom: 128 }}
-      >
-        <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>
-          ELITE BRIDGE CAREGIVER
-        </Text>
-        <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>Care Match</Text>
-        <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>
-          Control which employer Shift Offers match your profile and appear in this app.
-        </Text>
-
-        <View style={{ backgroundColor: "#0B1220", borderRadius: 22, padding: 18, marginBottom: 14 }}>
-          <Text style={{ color: "#F5D28B", fontSize: 10, fontWeight: "900", letterSpacing: 2 }}>
-            MATCH READINESS
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: colors.background }}
+          contentContainerStyle={{ padding: 18, paddingBottom: 24 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={{ color: "#B7791F", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>PERSONALIZED SHIFT DISCOVERY</Text>
+          <Text style={{ fontSize: 27, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>Find shifts that fit</Text>
+          <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 19, marginTop: 5, marginBottom: 16 }}>
+            Set your schedule, care strengths, and travel range. We’ll use these preferences to surface relevant opportunities.
           </Text>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 14, marginTop: 14 }}>
-            <View style={{ width: 78, height: 78, borderRadius: 24, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center" }}>
-              <Text style={{ color: "#0A4A35", fontSize: 26, fontWeight: "900" }}>{matchScore}</Text>
-              <Text style={{ color: "#0A4A35", fontSize: 10, fontWeight: "900" }}>Score</Text>
+
+          <View style={{ backgroundColor: "#0B3D2E", borderRadius: 20, padding: 16, marginBottom: 18 }}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <View>
+                <Text style={{ color: "#B8E0CF", fontSize: 10, fontWeight: "900", letterSpacing: 1.2 }}>MATCH PROFILE</Text>
+                <Text style={{ color: "#FFFFFF", fontSize: 16, fontWeight: "900", marginTop: 4 }}>Your preferences are set</Text>
+              </View>
+              <View style={{ width: 58, height: 58, borderRadius: 18, backgroundColor: "#EAF4EF", alignItems: "center", justifyContent: "center" }}>
+                <Text style={{ color: "#0B4A36", fontSize: 21, fontWeight: "900" }}>{matchScore}</Text>
+                <Text style={{ color: "#466557", fontSize: 9, fontWeight: "900" }}>READY</Text>
+              </View>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={{ color: "#FFFFFF", fontSize: 18, fontWeight: "900", lineHeight: 24 }}>
-                Your profile is tuned for priority offers.
-              </Text>
-              <Text style={{ color: "#B8C0CC", fontSize: 12, lineHeight: 18, marginTop: 5 }}>
-                Best fit: {primaryServices.slice(0, 2).join(" + ")} · {primaryAvailability.slice(0, 2).join(", ")}
-              </Text>
+            <View style={{ height: 6, borderRadius: 99, backgroundColor: "rgba(255,255,255,0.18)", marginTop: 14, overflow: "hidden" }}>
+              <View style={{ width: `${matchScore}%`, height: 6, borderRadius: 99, backgroundColor: "#D9A441" }} />
+            </View>
+            <Text style={{ color: "#D7E9E1", fontSize: 11, lineHeight: 16, marginTop: 9 }}>
+              {selectedHours} time preferences · {selectedServices} care skills · up to {preferences.maxDistanceMiles || "0"} miles
+            </Text>
+          </View>
+
+          <View style={{ borderRadius: 18, backgroundColor: colors.surface, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>
+            <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "900" }}>When can you work?</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 4, marginBottom: 12 }}>Select every time that works for you.</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {availabilityOptions.map((item) => {
+                const active = preferences.availability.includes(item);
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => togglePreference("availability", item)}
+                    style={toggleStyle(active)}
+                  >
+                    <Text style={{ color: active ? "#FFFFFF" : colors.foreground, fontSize: 12, fontWeight: "800" }}>{item}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
           </View>
-        </View>
 
-        <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border }}>
-          <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "900" }}>Care Match preferences</Text>
-          <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 5 }}>
-            Choose your preferred hours, care categories and travel range. Employers can publish either instant-claim or approval-required shifts.
-          </Text>
-
-          <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900", marginTop: 14, marginBottom: 8 }}>
-            Availability
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {availabilityOptions.map((item) => {
-              const active = preferences.availability.includes(item);
-              return (
-                <TouchableOpacity
-                  key={item}
-                  onPress={() => togglePreference("availability", item)}
-                  style={{ borderRadius: 999, paddingHorizontal: 11, paddingVertical: 8, backgroundColor: active ? "#0A4A35" : "#F2F4F7" }}
-                >
-                  <Text style={{ color: active ? "#FFFFFF" : "#475467", fontSize: 12, fontWeight: "800" }}>{item}</Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={{ borderRadius: 18, backgroundColor: colors.surface, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>
+            <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "900" }}>What care do you provide?</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 4, marginBottom: 12 }}>Choose the services you’re comfortable supporting.</Text>
+            <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
+              {serviceOptions.map((item) => {
+                const active = preferences.preferredServices.includes(item);
+                return (
+                  <TouchableOpacity
+                    key={item}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: active }}
+                    onPress={() => togglePreference("preferredServices", item)}
+                    style={toggleStyle(active)}
+                  >
+                    <Text style={{ color: active ? "#FFFFFF" : colors.foreground, fontSize: 12, fontWeight: "800" }}>{item}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
           </View>
 
-          <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900", marginTop: 14, marginBottom: 8 }}>
-            Preferred care work
-          </Text>
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8 }}>
-            {serviceOptions.map((item) => {
-              const active = preferences.preferredServices.includes(item);
-              return (
-                <TouchableOpacity
-                  key={item}
-                  onPress={() => togglePreference("preferredServices", item)}
-                  style={{ borderRadius: 999, paddingHorizontal: 11, paddingVertical: 8, backgroundColor: active ? "#C58A24" : "#F2F4F7" }}
-                >
-                  <Text style={{ color: active ? "#FFFFFF" : "#475467", fontSize: 12, fontWeight: "800" }}>{item}</Text>
-                </TouchableOpacity>
-              );
-            })}
+          <View style={{ borderRadius: 18, backgroundColor: colors.surface, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>
+            <Text style={{ color: colors.foreground, fontSize: 16, fontWeight: "900" }}>How far can you travel?</Text>
+            <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 4 }}>Set the maximum one-way distance for a shift.</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", marginTop: 11, borderRadius: 12, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.background, paddingHorizontal: 12 }}>
+              <TextInput
+                accessibilityLabel="Maximum travel distance in miles"
+                value={preferences.maxDistanceMiles}
+                onChangeText={(maxDistanceMiles) => { setSavedMessage(""); setPreferences((current) => ({ ...current, maxDistanceMiles })); }}
+                keyboardType="number-pad"
+                returnKeyType="done"
+                onSubmitEditing={() => Keyboard.dismiss()}
+                placeholder="15"
+                placeholderTextColor="#98A2B3"
+                style={{ flex: 1, minHeight: 48, color: colors.foreground, fontSize: 15, fontWeight: "800" }}
+              />
+              <Text style={{ color: colors.muted, fontSize: 13, fontWeight: "800" }}>miles</Text>
+            </View>
           </View>
-
-          <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900", marginTop: 14, marginBottom: 7 }}>
-            Maximum travel distance
-          </Text>
-          <TextInput
-            value={preferences.maxDistanceMiles}
-            onChangeText={(maxDistanceMiles) => setPreferences((current) => ({ ...current, maxDistanceMiles }))}
-            keyboardType="number-pad"
-            placeholder="15"
-            placeholderTextColor="#98A2B3"
-            style={{ borderWidth: 1, borderColor: colors.border, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 12, color: colors.foreground }}
-          />
 
           <TouchableOpacity
-            onPress={() => setPreferences((current) => ({ ...current, instantOffers: !current.instantOffers }))}
-            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 14, backgroundColor: "#F9FAFB", borderRadius: 12, padding: 13 }}
+            accessibilityRole="button"
+            accessibilityState={{ selected: preferences.instantOffers }}
+            onPress={() => { setSavedMessage(""); setPreferences((current) => ({ ...current, instantOffers: !current.instantOffers })); }}
+            style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: colors.surface, borderRadius: 18, padding: 16, borderWidth: 1, borderColor: colors.border, marginBottom: 12 }}
           >
             <View style={{ flex: 1, paddingRight: 12 }}>
-              <Text style={{ color: colors.foreground, fontSize: 13, fontWeight: "900" }}>Instant priority offers</Text>
-              <Text style={{ color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 3 }}>
-                Show urgent rescue shifts when your profile is a strong match.
-              </Text>
+              <Text style={{ color: colors.foreground, fontSize: 15, fontWeight: "900" }}>Show urgent offers first</Text>
+              <Text style={{ color: colors.muted, fontSize: 12, lineHeight: 17, marginTop: 3 }}>Highlight short-notice shifts when your profile fits.</Text>
             </View>
-            <View style={{ width: 46, height: 28, borderRadius: 999, backgroundColor: preferences.instantOffers ? "#0A4A35" : "#D0D5DD", justifyContent: "center", padding: 3, alignItems: preferences.instantOffers ? "flex-end" : "flex-start" }}>
-              <View style={{ width: 22, height: 22, borderRadius: 11, backgroundColor: "#FFFFFF" }} />
-            </View>
+            <Switch value={preferences.instantOffers} onValueChange={(instantOffers) => { setSavedMessage(""); setPreferences((current) => ({ ...current, instantOffers })); }} trackColor={{ false: "#D0D5DD", true: "#A9D9C1" }} thumbColor={preferences.instantOffers ? "#0B4A36" : "#FFFFFF"} />
           </TouchableOpacity>
+        </ScrollView>
 
-          <TouchableOpacity onPress={savePreferences} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 14, alignItems: "center", marginTop: 14 }}>
-            <Text style={{ color: "#FFFFFF", fontWeight: "900", fontSize: 14 }}>Save Care Match</Text>
+        <View style={{ paddingHorizontal: 18, paddingTop: 8, paddingBottom: 8, backgroundColor: colors.background }}>
+          {savedMessage ? <Text accessibilityRole="status" style={{ textAlign: "center", color: "#1B5E3F", fontSize: 11, fontWeight: "800", marginBottom: 7 }}>{savedMessage}</Text> : null}
+          <TouchableOpacity accessibilityRole="button" disabled={saving} onPress={() => void savePreferences()} style={{ minHeight: 50, borderRadius: 14, backgroundColor: "#0B4A36", alignItems: "center", justifyContent: "center", opacity: saving ? 0.65 : 1 }}>
+            <Text style={{ color: "#FFFFFF", fontSize: 15, fontWeight: "900" }}>{saving ? "Saving preferences…" : "Save preferences"}</Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </KeyboardAvoidingView>
     </ScreenContainer>
   );
 }
