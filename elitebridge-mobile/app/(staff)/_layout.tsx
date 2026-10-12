@@ -9,9 +9,9 @@ import { useColors } from "@/hooks/use-colors";
 import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 const STAFF_TABS = [
-  { label: "Work", route: "/(staff)/home", match: "/home", icon: "briefcase.fill" },
+  { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
   { label: "Match", route: "/(staff)/match", match: "/match", icon: "sparkles" },
-  { label: "Clock", route: "/(staff)/clock", match: "/clock", icon: "clock.fill" },
+  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "calendar" },
   { label: "Chat", route: "/(staff)/chat", match: "/chat", icon: "message.fill" },
   { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
 ] as const;
