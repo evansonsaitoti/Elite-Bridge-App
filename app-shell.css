@@ -597,6 +597,10 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .timesheet-action-button:hover { border-color: #9cbdab; background: #edf6f0; }
 .timesheet-approve-button { min-height: 38px; padding: 8px 14px; font-size: 11px; }
 .timesheet-approval-record { color: var(--forest-800) !important; font-size: 11px !important; }
+.invoice-email-review { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:15px; }
+.invoice-email-review .secondary-button { flex:0 1 auto; min-height:42px; }
+.invoice-email-review small { color:var(--muted); font-size:12px; line-height:1.45; }
+@media (max-width:600px) { .invoice-email-review .secondary-button { width:100%; } .invoice-email-review small { display:block; width:100%; } }
 .timesheet-email-confirm { display: flex; align-items: flex-start; gap: 10px; margin-top: 15px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; color: var(--muted); background: #f7faf7; font-size: 11px; line-height: 1.5; }
 .timesheet-email-confirm input { flex: 0 0 auto; width: 17px; height: 17px; margin: 1px 0 0; accent-color: var(--forest-700); }
 .timesheet-email-dialog .dialog-actions > * { min-width: 140px; }
