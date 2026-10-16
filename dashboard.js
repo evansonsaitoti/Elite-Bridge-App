@@ -1236,7 +1236,7 @@
     if(!Number.isFinite(total)||Math.abs(subtotal-total)>0.01){
       throw new Error('Invoice service items do not match the stored total. Please correct the draft before downloading or emailing.');
     }
-    const logo=document.querySelector('.brand-home img[src*="logo"]')||document.querySelector('img[src*="logo"]');
+    const logo=document.getElementById('invoicePdfBrandLogo');
     if(!logo||!logo.complete||!logo.naturalWidth){
       throw new Error('Elite Bridge official logo is still loading. Please wait and try the invoice PDF again.');
     }
@@ -1268,7 +1268,7 @@
       logoBytes,pdfAscii(NL+'endstream')
     ]));
     let chunks=[];
-    if(rows.length<=4){chunks=[rows];}
+    if(rows.length<=3){chunks=[rows];}
     else if(rows.length<=14){const midpoint=Math.ceil(rows.length/2);chunks=[rows.slice(0,midpoint),rows.slice(midpoint)];}
     else {for(let i=0;i<rows.length;i+=14) chunks.push(rows.slice(i,i+14));}
     const totalHours=rows.reduce((sum,row)=>sum+row.hours,0);
@@ -1419,7 +1419,7 @@
           payment(sumY+132);
         }else{
           const sumY=groupY+39;
-          if(sumY+114+132>738)throw new Error('Too many services to display on one invoice page.');
+          if(sumY+123+90+9>740)throw new Error('Too many services to display on one invoice page.');
           summary(sumY);
           payment(sumY+123);
         }
