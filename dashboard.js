@@ -1465,10 +1465,20 @@
     const form = document.getElementById('clientInvoiceForm'); if (!form) return;
     const today = new Date();
     const localDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-    const due = new Date(today); due.setDate(due.getDate() + 30);
+    const due = new Date(today); due.setDate(due.getDate() + 7);
     form.elements.invoiceDate.value = localDate(today); form.elements.dueDate.value = localDate(due);
   }
   resetClientInvoiceDates();
+  // Future invoices default to seven calendar days from the invoice date.
+  const clientInvoiceDateInput = document.getElementById('clientInvoiceForm')?.elements?.invoiceDate;
+  clientInvoiceDateInput?.addEventListener('change', () => {
+    const form = document.getElementById('clientInvoiceForm');
+    const issue = new Date(String(clientInvoiceDateInput.value || '') + 'T12:00:00');
+    if (Number.isNaN(issue.getTime()) || !form) return;
+    issue.setDate(issue.getDate() + 7);
+    const localDate = date => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    form.elements.dueDate.value = localDate(issue);
+  });
   renderClientInvoices();
   document.getElementById('clientInvoiceForm')?.addEventListener('submit', async event => {
     event.preventDefault(); if (savingTime) return;
