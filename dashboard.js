@@ -1173,79 +1173,86 @@
 
   let employerInvoices = [];
   function invoicePdfBlob(invoice) {
-    const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
-    const dateLabel = value => formatDateOnly(value);
+    const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value || 0));
     const items = Array.isArray(invoice.line_items) ? invoice.line_items : [];
-    const morning = items.filter(item => item.description === 'Morning care');
-    const evening = items.filter(item => item.description === 'Evening care');
-    const summarize = list => ({ hours: list.reduce((sum, item) => sum + Number(item.hours || 0), 0), amount: list.reduce((sum, item) => sum + Number(item.amount || 0), 0), caregiver: list[0]?.caregiver || '', start: list[0]?.startTime || '', end: list[0]?.endTime || '' });
-    const am = summarize(morning), pm = summarize(evening);
+    const rows = items.map(item => ({
+      service: [formatDateOnly(item.serviceDate), item.description || 'Care service', [item.startTime, item.endTime].filter(Boolean).join('-')].filter(Boolean).join(' · '),
+      hours: Number(item.hours || 0),
+      amount: Number(item.amount || 0)
+    }));
     const logo = document.querySelector('img[src*="logo"]');
-    const canvas = document.createElement('canvas'); canvas.width = logo?.naturalWidth || 300; canvas.height = logo?.naturalHeight || 94;
-    const context = canvas.getContext('2d'); if (!context) throw new Error('Could not prepare the invoice PDF.');
+    const canvas = document.createElement('canvas');
+    canvas.width = logo?.naturalWidth || 300; canvas.height = logo?.naturalHeight || 94;
+    const context = canvas.getContext('2d');
+    if (!context) throw new Error('Could not prepare the invoice PDF.');
     context.fillStyle = '#fff'; context.fillRect(0, 0, canvas.width, canvas.height);
     if (logo?.complete && logo.naturalWidth) context.drawImage(logo, 0, 0, canvas.width, canvas.height);
     const logoUrl = canvas.toDataURL('image/jpeg', .92);
     const logoBytes = Uint8Array.from(atob(logoUrl.split(',')[1]), c => c.charCodeAt(0));
-    const ops = [];
-    const text = (x, top, size, value, bold = false, color = '20352A') => {
-      const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
-      ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg BT /${bold ? 'F2' : 'F1'} ${size} Tf ${x} ${792 - top - size} Td (${pdfEscape(value)}) Tj ET`);
-    };
-    const rect = (x, top, width, height, fill) => { const [r, g, b] = fill.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255); ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ${x} ${792 - top - height} ${width} ${height} re f`); };
-    const line = (x1, top, x2, color = 'DCE6DF', width = 1) => { const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255); ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${width} w ${x1} ${792 - top} m ${x2} ${792 - top} l S`); };
-    ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
-    text(372, 7, 10, 'ELITE BRIDGE STAFFING', true, '064024'); text(372, 23, 9, '(508) 251-9346', false, '607067'); text(372, 38, 9, 'info@elitebridgestaffing.com', false, '607067'); text(372, 53, 9, 'elitebridgestaffing.com', false, '607067');
-    line(50, 108, 562, '064024', 4);
-    text(50, 126, 25, 'INVOICE', true, '064024'); text(50, 157, 10, `Invoice ${invoice.invoice_number || ''}`, true, '20352A');
-    text(362, 130, 8, 'INVOICE DATE', true, '607067'); text(362, 146, 10, dateLabel(invoice.invoice_date), false, '20352A');
-    text(462, 130, 8, 'DUE DATE', true, '607067'); text(462, 146, 10, dateLabel(invoice.due_date), false, '20352A');
-    rect(50, 180, 512, 88, 'F3F8EE'); line(50, 180, 562); line(50, 268, 562); line(50, 180, 50); line(562, 180, 562);
-    text(64, 191, 8, 'BILL TO', true, '607067'); text(64, 210, 13, invoice.client_name || '', true, '20352A');
-    const addressLines = String(invoice.billing_address || '').split(/\r?\n/).filter(Boolean).slice(0, 2);
-    addressLines.forEach((row, index) => text(64, 229 + index * 12, 9, row.slice(0, 65), false, '607067'));
-    if (invoice.client_email) text(64, 251, 9, invoice.client_email, false, '607067');
-    text(350, 191, 8, 'SERVICE PERIOD', true, '607067'); text(350, 210, 11, `${dateLabel(invoice.service_start_date)} - ${dateLabel(invoice.service_end_date)}`, true, '20352A');
-    text(350, 233, 8, 'SERVICE DAYS', true, '607067'); text(350, 249, 11, String(Array.isArray(invoice.service_days) ? invoice.service_days.length : 0), true, '20352A');
-    const tableTop = 292; rect(50, tableTop, 512, 23, '064024');
-    text(60, tableTop + 7, 8, 'SERVICE', true, 'FFFFFF'); text(255, tableTop + 7, 8, 'HOURS', true, 'FFFFFF'); text(326, tableTop + 7, 8, 'RATE', true, 'FFFFFF');  text(503, tableTop + 7, 8, 'AMOUNT', true, 'FFFFFF');
-    // Client-facing invoices show actual dated visits, never caregiver identities.
-    const rows = items.map(item => ({
-      name: `${dateLabel(item.serviceDate)} · ${item.description || 'Care service'} ${item.startTime || ''}-${item.endTime || ''}`,
-      hours: Number(item.hours || 0),
-      amount: Number(item.amount || 0),
-      rate: Number(item.hours || 0) > 0 ? Number(item.amount || 0) / Number(item.hours) : 0
-    }));
-    const visibleRows = rows.slice(0, 3);
-    visibleRows.forEach((row, index) => {
-      const top = tableTop + 23 + index * 30;
-      rect(50, top, 512, 30, index ? 'F8FBF9' : 'FFFFFF');
-      line(50, top + 30, 562, 'DCE6DF', .7);
-      text(60, top + 10, 8, row.name.slice(0, 40));
-      text(275, top + 10, 9, row.hours.toFixed(2));
-      text(349, top + 10, 9, moneyPrecise(row.rate));
-      text(503, top + 10, 9, moneyPrecise(row.amount));
+    const objects = [null];
+    const add = value => { objects.push(value); return objects.length - 1; };
+    const catalogId = add(null), pagesId = add(null);
+    const regularId = add(pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'));
+    const boldId = add(pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'));
+    const imageId = add(pdfJoin([pdfAscii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\\nstream\\n`), logoBytes, pdfAscii('\\nendstream')]));
+    const pageIds = [];
+    const chunks = [];
+    for (let i = 0; i < rows.length; i += 13) chunks.push(rows.slice(i, i + 13));
+    if (!chunks.length) chunks.push([]);
+    chunks.forEach((chunk, pageIndex) => {
+      const ops = [];
+      const text = (x, top, size, value, bold = false, color = '20352A') => {
+        const [r,g,b] = color.match(/.{2}/g).map(v => parseInt(v,16)/255);
+        ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg BT /${bold ? 'F2' : 'F1'} ${size} Tf ${x} ${792-top-size} Td (${pdfEscape(String(value ?? ''))}) Tj ET`);
+      };
+      const rect = (x,top,width,height,fill) => {
+        const [r,g,b] = fill.match(/.{2}/g).map(v => parseInt(v,16)/255);
+        ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} rg ${x} ${792-top-height} ${width} ${height} re f`);
+      };
+      ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
+      text(365, 10, 10, 'ELITE BRIDGE STAFFING', true, '064024');
+      text(365, 28, 9, 'elitebridgestaffing.com');
+      rect(50, 106, 512, 3, '064024');
+      text(50, 125, 22, pageIndex ? 'INVOICE - CONTINUED' : 'INVOICE', true, '064024');
+      text(50, 156, 10, `Invoice ${invoice.invoice_number || ''}`);
+      text(350, 145, 9, `Date: ${formatDateOnly(invoice.invoice_date)}`);
+      text(350, 161, 9, `Due: ${formatDateOnly(invoice.due_date)}`);
+      text(50, 193, 9, 'BILL TO', true);
+      text(50, 211, 12, String(invoice.client_name || '').slice(0, 45), true);
+      String(invoice.billing_address || '').split(/\\r?\\n/).filter(Boolean).slice(0,3).forEach((v,i)=>text(50,229+i*14,9,v.slice(0,60)));
+      text(350, 193, 9, 'SERVICE PERIOD', true);
+      text(350, 211, 9, `${formatDateOnly(invoice.service_start_date)} - ${formatDateOnly(invoice.service_end_date)}`);
+      rect(50, 285, 512, 26, '064024');
+      text(60, 293, 9, 'DATE / SERVICE', true, 'FFFFFF');
+      text(380, 293, 9, 'HOURS', true, 'FFFFFF');
+      text(456, 293, 9, 'AMOUNT', true, 'FFFFFF');
+      chunk.forEach((row,i) => {
+        const y = 311 + i*26;
+        if (i%2===1) rect(50,y,512,26,'F3F8EE');
+        text(60,y+8,8,row.service.slice(0,67));
+        text(390,y+8,9,row.hours.toFixed(2));
+        text(473,y+8,9,moneyPrecise(row.amount));
+      });
+      if (pageIndex === chunks.length-1) {
+        text(350, 670, 11, `TOTAL DUE: ${moneyPrecise(invoice.total)}`, true, '064024');
+        text(50, 706, 9, 'Cheque payable to: Elite Bridge Staffing LLC.', true);
+        text(50, 721, 8, 'Include invoice number with payment.');
+      }
+      text(50, 773, 8, `Elite Bridge Staffing · Page ${pageIndex+1} of ${chunks.length}`);
+      const stream = pdfAscii(ops.join('\\n'));
+      const pageId = add(null);
+      const streamId = add(pdfJoin([pdfAscii(`<< /Length ${stream.length} >>\\nstream\\n`), stream, pdfAscii('\\nendstream')]));
+      objects[pageId] = pdfAscii(`<< /Type /Page /Parent ${pagesId} 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 ${regularId} 0 R /F2 ${boldId} 0 R >> /XObject << /Im1 ${imageId} 0 R >> >> /Contents ${streamId} 0 R >>`);
+      pageIds.push(pageId);
     });
-    const dayCount = Array.isArray(invoice.service_days) ? invoice.service_days.length : 0;
-    text(60, 411, 8, `${rows.length} dated service entries across ${dayCount} service days${rows.length > visibleRows.length ? ' (see invoice details for remaining entries)' : ''}.`, false, '607067');
-    rect(356, 422, 206, 68, 'F3F8EE'); line(356, 422, 562); line(356, 490, 562); text(370, 435, 9, 'SUBTOTAL', true, '607067'); text(493, 435, 10, moneyPrecise(invoice.subtotal), true, '20352A'); text(370, 460, 11, 'TOTAL DUE', true, '064024'); text(481, 459, 15, moneyPrecise(invoice.total), true, '064024');
-    if (invoice.notes) { text(50, 526, 8, 'NOTE', true, '607067'); text(50, 542, 9, String(invoice.notes).slice(0, 105), false, '20352A'); }
-    text(50, 625, 9, 'Cheque payable to: Elite Bridge Staffing LLC. Include invoice number with payment.', false, '607067');
-    text(50, 651, 9, 'Thank you for choosing Elite Bridge Staffing.', true, '064024');
-    line(50, 770, 562); text(50, 777, 7, 'Elite Bridge Staffing · Client billing statement', false, '607067'); text(467, 777, 7, String(invoice.status || 'draft').toUpperCase(), true, '607067');
-    const stream = pdfAscii(ops.join('\n'));
-    const objects = [];
-    objects[1] = pdfAscii('<< /Type /Catalog /Pages 2 0 R >>'); objects[2] = pdfAscii('<< /Type /Pages /Kids [6 0 R] /Count 1 >>');
-    objects[3] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'); objects[4] = pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>');
-    objects[5] = pdfJoin([pdfAscii(`<< /Type /XObject /Subtype /Image /Width ${canvas.width} /Height ${canvas.height} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${logoBytes.length} >>\nstream\n`), logoBytes, pdfAscii('\nendstream')]);
-    objects[6] = pdfAscii('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents 7 0 R >>');
-    objects[7] = pdfJoin([pdfAscii(`<< /Length ${stream.length} >>\nstream\n`), stream, pdfAscii('\nendstream')]);
-    const parts = [pdfAscii('%PDF-1.4\n')], offsets = [0]; let length = parts[0].length;
-    for (let id = 1; id < objects.length; id++) { const before = pdfAscii(`${id} 0 obj\n`), after = pdfAscii('\nendobj\n'); offsets[id] = length; parts.push(before, objects[id], after); length += before.length + objects[id].length + after.length; }
-    const xrefOffset = length; let xref = `xref\n0 ${objects.length}\n0000000000 65535 f \n`;
-    for (let id = 1; id < objects.length; id++) xref += `${String(offsets[id]).padStart(10, '0')} 00000 n \n`;
-    parts.push(pdfAscii(`${xref}trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`));
-    return new Blob([pdfJoin(parts)], { type: 'application/pdf' });
+    objects[catalogId] = pdfAscii(`<< /Type /Catalog /Pages ${pagesId} 0 R >>`);
+    objects[pagesId] = pdfAscii(`<< /Type /Pages /Kids [${pageIds.map(id=>id+' 0 R').join(' ')}] /Count ${pageIds.length} >>`);
+    const parts = [pdfAscii('%PDF-1.4\\n')], offsets=[0]; let length=parts[0].length;
+    for(let id=1;id<objects.length;id++){const before=pdfAscii(`${id} 0 obj\\n`),after=pdfAscii('\\nendobj\\n');offsets[id]=length;parts.push(before,objects[id],after);length+=before.length+objects[id].length+after.length;}
+    const xrefOffset=length;let xref=`xref\\n0 ${objects.length}\\n0000000000 65535 f \\n`;
+    for(let id=1;id<objects.length;id++)xref+=`${String(offsets[id]).padStart(10,'0')} 00000 n \\n`;
+    parts.push(pdfAscii(`${xref}trailer\\n<< /Size ${objects.length} /Root ${catalogId} 0 R >>\\nstartxref\\n${xrefOffset}\\n%%EOF`));
+    return new Blob([pdfJoin(parts)],{type:'application/pdf'});
   }
   function invoiceFilename(invoice) { return `${String(invoice.invoice_number || 'EliteBridge').replace(/[^a-z0-9_-]/gi, '_')}_Invoice.pdf`; }
   function renderClientInvoices() {
