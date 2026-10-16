@@ -53,6 +53,22 @@ describe("Email provider acknowledgement", () => {
     expect(second).toEqual(first);
     expect(first.html?.match(/elite-bridge-official-signature/g)).toHaveLength(1);
   });
+  it("renders a mobile-safe two-column signature with logo on left and details on right", () => {
+    const html = addEliteBridgeEmailSignature({ ...message, html:"<p>Thanks for choosing Elite Bridge.</p>" }).html || "";
+    const start = html.indexOf("<!-- elite-bridge-official-signature -->");
+    const sig = html.slice(start);
+    expect(sig).toContain('width="35%"');
+    expect(sig).toContain('width="65%"');
+    expect(sig).toContain("table-layout:fixed");
+    expect(sig).toContain("border-left:2px solid #b9791f");
+    expect(sig).not.toContain("border-top:2px solid #b9791f");
+    expect(sig).not.toContain("Non-medical home care services");
+    expect(sig).not.toContain(">Elite Bridge Staffing LLC</td>");
+    expect(sig.indexOf('alt="Elite Bridge')).toBeLessThan(sig.indexOf("📞"));
+    expect(sig).toContain("📧");
+    expect(sig).toContain("🌐");
+    expect(sig).toContain("www.elitebridgestaffing.com");
+  });
   it("escapes plaintext markup, preserves clickable URLs and appends the signature", () => {
     const result = addEliteBridgeEmailSignature({ ...message, text: 'Visit https://app.elitebridgestaffing.com\n<script>alert(1)</script>' });
     expect(result.html).toContain('&lt;script&gt;');
