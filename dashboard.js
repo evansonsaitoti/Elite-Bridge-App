@@ -1159,7 +1159,7 @@
       const blob = timesheetPdfBlob(staffName, month, entries, { approvedByName: String(data.get('approvedByName') || '').trim(), approvalDate: String(data.get('approvalDate') || '') });
       const bytes = new Uint8Array(await blob.arrayBuffer());
       let binary = ''; for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-      await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
+      await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary), testOnly: data.get('testOnly') === 'true' }) });
       timesheetEmailDialog.close(); form.reset();
       notify('Timesheet PDF emailed successfully.');
     } catch (error) {
@@ -1289,6 +1289,15 @@
     finally { savingTime = false; button.disabled = false; button.textContent = 'Save draft invoice'; }
   });
   const clientInvoiceEmailDialog = document.getElementById('clientInvoiceEmailDialog');
+  const invoiceEmailForm = document.getElementById('clientInvoiceEmailForm');
+  if (invoiceEmailForm && !invoiceEmailForm.querySelector('[name="testOnly"]')) {
+    const label = document.createElement('label');
+    label.style.cssText = 'display:flex;align-items:center;gap:8px;margin:12px 0';
+    const check = document.createElement('input');
+    check.type = 'checkbox'; check.name = 'testOnly'; check.value = 'true';
+    label.append(check, document.createTextNode('Send test only (keep invoice as draft)'));
+    invoiceEmailForm.querySelector('button[type="submit"]')?.before(label);
+  }
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-invoice-action]');
     if (button) {
@@ -1297,7 +1306,7 @@
       if (button.dataset.invoiceAction === 'view') { const details = document.querySelector(`[data-invoice-details="${CSS.escape(String(invoice.id))}"]`); if (details) details.hidden = !details.hidden; return; }
       if (button.dataset.invoiceAction === 'download') { try { downloadTimesheetPdf(invoicePdfBlob(invoice), invoiceFilename(invoice)); notify('Client invoice PDF downloaded.'); } catch (error) { notify(error.message || 'Could not create the invoice PDF.'); } return; }
       const form = document.getElementById('clientInvoiceEmailForm'); form.elements.invoiceId.value = invoice.id; form.elements.recipient.value = invoice.client_email || '';
-      form.elements.confirmInvoiceEmail.checked = false; const error = document.getElementById('clientInvoiceEmailError'); if (error) { error.hidden = true; error.textContent = ''; }
+      form.elements.confirmInvoiceEmail.checked = false; if (form.elements.testOnly) form.elements.testOnly.checked = false; const error = document.getElementById('clientInvoiceEmailError'); if (error) { error.hidden = true; error.textContent = ''; }
       document.getElementById('clientInvoiceEmailSummary').textContent = `Email invoice ${invoice.invoice_number} for ${invoice.client_name} (${money(invoice.total)}). Sending issues the invoice to the client.`;
       clientInvoiceEmailDialog.showModal(); document.getElementById('clientInvoiceRecipient').focus();
     }
@@ -1314,7 +1323,7 @@
       const blob = invoicePdfBlob(invoice), bytes = new Uint8Array(await blob.arrayBuffer()); let binary = '';
       for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
       await api(`/client-invoices/employer/${encodeURIComponent(String(invoice.id))}/email`, { method: 'POST', body: JSON.stringify({ recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary) }) });
-      clientInvoiceEmailDialog.close(); form.reset(); notify(`Invoice ${invoice.invoice_number} emailed to the client.`); await loadEmployer();
+      clientInvoiceEmailDialog.close(); form.reset(); notify(data.get('testOnly') === 'true' ? `Test invoice ${invoice.invoice_number} emailed; draft preserved.` : `Invoice ${invoice.invoice_number} emailed to the client.`); await loadEmployer();
     } catch (error) { const message = error.message || 'Could not send the invoice PDF.'; const area = document.getElementById('clientInvoiceEmailError'); if (area) { area.textContent = message; area.hidden = false; } notify(message); }
     finally { savingTime = false; button.disabled = false; }
   });
