@@ -39,6 +39,16 @@ describe("Email provider acknowledgement", () => {
     expect(first.html).toContain('<img src="https://app.elitebridgestaffing.com/invoice-approved-logo.webp"');
     expect(first.html).toContain("info@elitebridgestaffing.com");
     expect(first.html).toContain("144 Thissell Ave");
+    expect(first.html).toContain("📞");
+    expect(first.html).toContain("📧");
+    expect(first.html).toContain("🌐");
+    expect(first.html).toContain('href="https://www.elitebridgestaffing.com"');
+    expect(first.html).toContain(">www.elitebridgestaffing.com</a>");
+    expect(first.html).not.toContain(">Elite Bridge Staffing LLC</td></tr>");
+    expect(first.html).not.toContain(">Staffing You Can Rely On</td></tr>");
+    expect(first.text).toContain("📞 (508) 251-9346");
+    expect(first.text).toContain("📧 info@elitebridgestaffing.com");
+    expect(first.text).toContain("🌐 www.elitebridgestaffing.com");
     expect(first.text).toContain(ELITE_BRIDGE_TEXT_SIGNATURE);
     expect(second).toEqual(first);
     expect(first.html?.match(/elite-bridge-official-signature/g)).toHaveLength(1);
