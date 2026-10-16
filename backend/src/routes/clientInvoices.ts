@@ -168,12 +168,68 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
     if (pdf.length > 2_400_000 || !pdf.subarray(0, 5).equals(Buffer.from("%PDF-")) || !pdf.includes(Buffer.from("%%EOF"))) {
       throw new AppError(400, "The invoice PDF could not be verified. Download it again and retry.");
     }
+    const amount = "$" + Number(invoice.total).toFixed(2);
+    const safeNumber = escapeEmailHtml(String(invoice.invoice_number || ""));
+    const safeName = escapeEmailHtml(String(invoice.client_name || ""));
+    const humanDate = (value: unknown) => {
+      const date = new Date(String(value));
+      return Number.isNaN(date.getTime()) ? String(value).slice(0,10) :
+        date.toLocaleDateString("en-US", { month:"long",day:"numeric",year:"numeric",timeZone:"UTC" });
+    };
+    const servicePeriod = humanDate(invoice.service_start_date) + " - " + humanDate(invoice.service_end_date);
+    const safePeriod = escapeEmailHtml(servicePeriod);
+    const isTest = data.testOnly;
+    const subject = (isTest ? "[INTERNAL TEST — NOT ISSUED] " : "") +
+      "Elite Bridge Staffing invoice " + String(invoice.invoice_number);
+    const bodyText = isTest
+      ? [
+          "INTERNAL TEST — not issued to the client.",
+          "",
+          "This message lets the Elite Bridge team review the attached approved-layout invoice PDF.",
+          "Invoice: " + invoice.invoice_number,
+          "Client: " + invoice.client_name,
+          "Service period: " + servicePeriod,
+          "Total: " + amount,
+          "",
+          "The invoice remains a draft. No client payment is requested by this test."
+        ].join("\n")
+      : [
+          "Hello,",
+          "",
+          "Please find attached invoice " + invoice.invoice_number + " from Elite Bridge Staffing LLC.",
+          "Service period: " + servicePeriod,
+          "Total amount due: " + amount,
+          "Payment due: " + humanDate(invoice.due_date),
+          "",
+          "Please make cheques payable to Elite Bridge Staffing LLC.",
+          "Payment remittance: 144 Thissell Ave, Dracut, MA 01826.",
+          "",
+          "Thank you for choosing Elite Bridge Staffing."
+        ].join("\n");
+    const bodyHtml = isTest
+      ? '<p style="color:#9a5b17;font-weight:bold;">INTERNAL TEST — NOT ISSUED TO THE CLIENT</p>' +
+        '<p>Review the attached, approved-layout invoice PDF before issuing it.</p>' +
+        '<p><strong>Invoice:</strong> ' + safeNumber + '<br><strong>Client:</strong> ' + safeName +
+        '<br><strong>Service period:</strong> ' + safePeriod +
+        '<br><strong>Total:</strong> ' + amount + '</p>' +
+        '<p>This invoice remains a draft; this test does not request payment.</p>'
+      : '<p>Hello,</p><p>Please find attached invoice <strong>' + safeNumber +
+        '</strong> from Elite Bridge Staffing LLC.</p>' +
+        '<p><strong>Service period:</strong> ' + safePeriod +
+        '<br><strong>Total amount due:</strong> ' + amount +
+        '<br><strong>Payment due:</strong> ' + escapeEmailHtml(humanDate(invoice.due_date)) + '</p>' +
+        '<p>Cheques may be made payable to <strong>Elite Bridge Staffing LLC</strong>.' +
+        '<br>Remittance: 144 Thissell Ave, Dracut, MA 01826.</p>' +
+        '<p>Thank you for choosing Elite Bridge Staffing.</p>';
+    // The shared email service appends the official logo-and-contact signature
+    // to both HTML and plaintext, and preserves the PDF attachment bytes.
     const sent = await sendEmail({
-      from: "Elite Bridge Staffing <info@elitebridgestaffing.com>", to: data.recipient,
-      subject: `${data.testOnly ? "[TEST] " : ""}Elite Bridge invoice ${invoice.invoice_number}`,
-      text: `Attached is invoice ${invoice.invoice_number} for ${invoice.client_name}. Total due: $${Number(invoice.total).toFixed(2)}. Please handle this billing record securely.`,
-      html: `<p>Attached is invoice <strong>${escapeEmailHtml(invoice.invoice_number)}</strong> for <strong>${escapeEmailHtml(invoice.client_name)}</strong>.</p><p>Total due: <strong>$${Number(invoice.total).toFixed(2)}</strong>.</p>`,
-      attachments: [{ filename: `${invoice.invoice_number}_Invoice.pdf`, content: pdf, contentType: "application/pdf" }],
+      from: "Elite Bridge Staffing <info@elitebridgestaffing.com>",
+      to: data.recipient,
+      subject,
+      text: bodyText,
+      html: bodyHtml,
+      attachments: [{ filename: String(invoice.invoice_number) + "_Invoice.pdf", content: pdf, contentType: "application/pdf" }],
     });
     if (!sent) throw new AppError(503, "Email delivery is not configured on the Elite Bridge server.");
     if (data.testOnly) return res.json({ sent: true, testOnly: true, invoiceStatus: "draft" });

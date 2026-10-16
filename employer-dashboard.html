@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#064024">
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=desktop-command-bar-20261011">
+  <link rel="stylesheet" href="/app-shell.css?v=invoice-approved-review-20261016">
   <link rel="preload" as="image" href="/invoice-approved-logo.webp">
 </head>
 <body data-role="employer">
@@ -500,7 +500,12 @@
         <div class="dialog-head"><div><p class="eyebrow">Client billing</p><h2 id="clientInvoiceEmailTitle">Email invoice PDF</h2><p id="clientInvoiceEmailSummary">Choose the recipient for this invoice PDF.</p><p id="clientInvoiceEmailError" class="timesheet-email-error" role="alert" hidden></p></div><button class="dialog-close" id="clientInvoiceEmailClose" type="button" aria-label="Close invoice email form">×</button></div>
         <input type="hidden" name="invoiceId">
         <div class="field"><label for="clientInvoiceRecipient">Recipient email</label><input id="clientInvoiceRecipient" name="recipient" type="email" maxlength="254" autocomplete="email" required placeholder="client@example.com"></div>
+        <div class="invoice-email-review">
+          <button class="secondary-button" id="clientInvoicePreviewPdf" type="button">Download PDF to review</button>
+          <small>Review the logo, layout, service hours, and total before sending.</small>
+        </div>
         <label class="timesheet-email-confirm"><input name="confirmInvoiceEmail" type="checkbox" required><span>I confirm this invoice and recipient email are correct.</span></label>
+        <label class="timesheet-email-confirm"><input name="testOnly" type="checkbox" value="true"><span>Send test only — keep this invoice as a draft</span></label>
         <div class="dialog-actions"><button class="secondary-button" id="clientInvoiceEmailCancel" type="button">Cancel</button><button class="primary-button" type="submit">Send invoice PDF</button></div>
       </form>
     </dialog>
@@ -522,7 +527,7 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=approved-invoice-reference-20261016"></script>
+  <script src="/dashboard.js?v=approved-invoice-signature-20261016"></script>
 </body>
 </html>
 

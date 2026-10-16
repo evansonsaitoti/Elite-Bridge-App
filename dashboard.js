@@ -1485,15 +1485,6 @@
     finally { savingTime = false; button.disabled = false; button.textContent = 'Save draft invoice'; }
   });
   const clientInvoiceEmailDialog = document.getElementById('clientInvoiceEmailDialog');
-  const invoiceEmailForm = document.getElementById('clientInvoiceEmailForm');
-  if (invoiceEmailForm && !invoiceEmailForm.querySelector('[name="testOnly"]')) {
-    const label = document.createElement('label');
-    label.style.cssText = 'display:flex;align-items:center;gap:8px;margin:12px 0';
-    const check = document.createElement('input');
-    check.type = 'checkbox'; check.name = 'testOnly'; check.value = 'true';
-    label.append(check, document.createTextNode('Send test only (keep invoice as draft)'));
-    invoiceEmailForm.querySelector('button[type="submit"]')?.before(label);
-  }
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-invoice-action]');
     if (button) {
@@ -1503,11 +1494,21 @@
       if (button.dataset.invoiceAction === 'download') { try { downloadTimesheetPdf(invoicePdfBlob(invoice), invoiceFilename(invoice)); notify('Client invoice PDF downloaded.'); } catch (error) { notify(error.message || 'Could not create the invoice PDF.'); } return; }
       const form = document.getElementById('clientInvoiceEmailForm'); form.elements.invoiceId.value = invoice.id; form.elements.recipient.value = invoice.client_email || '';
       form.elements.confirmInvoiceEmail.checked = false; if (form.elements.testOnly) form.elements.testOnly.checked = false; const error = document.getElementById('clientInvoiceEmailError'); if (error) { error.hidden = true; error.textContent = ''; }
-      document.getElementById('clientInvoiceEmailSummary').textContent = `Email invoice ${invoice.invoice_number} for ${invoice.client_name} (${money(invoice.total)}). Sending issues the invoice to the client.`;
+      document.getElementById('clientInvoiceEmailSummary').textContent = `Invoice ${invoice.invoice_number} for ${invoice.client_name} (${money(invoice.total)}). Review the attached PDF, then choose a test or official send.`;
       clientInvoiceEmailDialog.showModal(); document.getElementById('clientInvoiceRecipient').focus();
     }
     if (event.target.closest('#clientInvoiceEmailClose, #clientInvoiceEmailCancel')) clientInvoiceEmailDialog?.close();
     if (event.target === clientInvoiceEmailDialog) clientInvoiceEmailDialog.close();
+  });
+  document.getElementById('clientInvoicePreviewPdf')?.addEventListener('click', () => {
+    const id = document.getElementById('clientInvoiceEmailForm')?.elements?.invoiceId?.value;
+    const invoice = employerInvoices.find(item => String(item.id) === String(id || ''));
+    if (!invoice) { notify('Choose a saved invoice first.'); return; }
+    try {
+      // The same binary PDF generator is used for both preview/download and email.
+      downloadTimesheetPdf(invoicePdfBlob(invoice), invoiceFilename(invoice));
+      notify('Approved-layout invoice PDF downloaded for review.');
+    } catch (error) { notify(error.message || 'Could not generate the invoice PDF.'); }
   });
   document.addEventListener('submit', async event => {
     const form = event.target; if (!form.matches('[data-client-invoice-email]')) return;
