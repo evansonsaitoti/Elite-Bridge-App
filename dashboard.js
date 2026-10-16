@@ -132,7 +132,8 @@
 
 
   function todayInputValue() {
-    return new Date().toISOString().slice(0, 10);
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   }
 
   function contractFieldValue(id, fallback = '') {
@@ -1207,17 +1208,29 @@
     text(350, 191, 8, 'SERVICE PERIOD', true, '607067'); text(350, 210, 11, `${dateLabel(invoice.service_start_date)} - ${dateLabel(invoice.service_end_date)}`, true, '20352A');
     text(350, 233, 8, 'SERVICE DAYS', true, '607067'); text(350, 249, 11, String(Array.isArray(invoice.service_days) ? invoice.service_days.length : 0), true, '20352A');
     const tableTop = 292; rect(50, tableTop, 512, 23, '064024');
-    text(60, tableTop + 7, 8, 'SERVICE', true, 'FFFFFF'); text(255, tableTop + 7, 8, 'HOURS', true, 'FFFFFF'); text(326, tableTop + 7, 8, 'RATE', true, 'FFFFFF'); text(412, tableTop + 7, 8, 'CAREGIVER', true, 'FFFFFF'); text(503, tableTop + 7, 8, 'AMOUNT', true, 'FFFFFF');
-    const rows = [
-      { name: `Morning care ${am.start}-${am.end}`, caregiver: am.caregiver, hours: am.hours, amount: am.amount },
-      { name: `Evening care ${pm.start}-${pm.end}`, caregiver: pm.caregiver, hours: pm.hours, amount: pm.amount },
-    ];
-    rows.forEach((row, index) => { const top = tableTop + 23 + index * 30; rect(50, top, 512, 30, index ? 'F8FBF9' : 'FFFFFF'); line(50, top + 30, 562, 'DCE6DF', .7); text(60, top + 10, 8, row.name.slice(0, 34)); text(255, top + 10, 9, row.hours.toFixed(2)); text(326, top + 10, 9, moneyPrecise(invoice.hourly_rate)); text(412, top + 10, 8, row.caregiver.slice(0, 15)); text(503, top + 10, 9, moneyPrecise(row.amount)); });
+    text(60, tableTop + 7, 8, 'SERVICE', true, 'FFFFFF'); text(255, tableTop + 7, 8, 'HOURS', true, 'FFFFFF'); text(326, tableTop + 7, 8, 'RATE', true, 'FFFFFF');  text(503, tableTop + 7, 8, 'AMOUNT', true, 'FFFFFF');
+    // Client-facing invoices show actual dated visits, never caregiver identities.
+    const rows = items.map(item => ({
+      name: `${dateLabel(item.serviceDate)} · ${item.description || 'Care service'} ${item.startTime || ''}-${item.endTime || ''}`,
+      hours: Number(item.hours || 0),
+      amount: Number(item.amount || 0),
+      rate: Number(item.hours || 0) > 0 ? Number(item.amount || 0) / Number(item.hours) : 0
+    }));
+    const visibleRows = rows.slice(0, 3);
+    visibleRows.forEach((row, index) => {
+      const top = tableTop + 23 + index * 30;
+      rect(50, top, 512, 30, index ? 'F8FBF9' : 'FFFFFF');
+      line(50, top + 30, 562, 'DCE6DF', .7);
+      text(60, top + 10, 8, row.name.slice(0, 40));
+      text(275, top + 10, 9, row.hours.toFixed(2));
+      text(349, top + 10, 9, moneyPrecise(row.rate));
+      text(503, top + 10, 9, moneyPrecise(row.amount));
+    });
     const dayCount = Array.isArray(invoice.service_days) ? invoice.service_days.length : 0;
-    text(60, 385, 8, `Daily visits for ${dayCount} selected service day${dayCount === 1 ? '' : 's'}; dates fall within the service period above.`, false, '607067');
+    text(60, 411, 8, `${rows.length} dated service entries across ${dayCount} service days${rows.length > visibleRows.length ? ' (see invoice details for remaining entries)' : ''}.`, false, '607067');
     rect(356, 422, 206, 68, 'F3F8EE'); line(356, 422, 562); line(356, 490, 562); text(370, 435, 9, 'SUBTOTAL', true, '607067'); text(493, 435, 10, moneyPrecise(invoice.subtotal), true, '20352A'); text(370, 460, 11, 'TOTAL DUE', true, '064024'); text(481, 459, 15, moneyPrecise(invoice.total), true, '064024');
     if (invoice.notes) { text(50, 526, 8, 'NOTE', true, '607067'); text(50, 542, 9, String(invoice.notes).slice(0, 105), false, '20352A'); }
-    text(50, 625, 9, 'Payment is due by the date shown above. Please include the invoice number with payment.', false, '607067');
+    text(50, 625, 9, 'Cheque payable to: Elite Bridge Staffing LLC. Include invoice number with payment.', false, '607067');
     text(50, 651, 9, 'Thank you for choosing Elite Bridge Staffing.', true, '064024');
     line(50, 770, 562); text(50, 777, 7, 'Elite Bridge Staffing · Client billing statement', false, '607067'); text(467, 777, 7, String(invoice.status || 'draft').toUpperCase(), true, '607067');
     const stream = pdfAscii(ops.join('\n'));
