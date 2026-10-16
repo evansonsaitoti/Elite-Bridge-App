@@ -168,8 +168,10 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
     if (pdf.length > 2_400_000 || !pdf.subarray(0, 5).equals(Buffer.from("%PDF-")) || !pdf.includes(Buffer.from("%%EOF"))) {
       throw new AppError(400, "The invoice PDF could not be verified. Download it again and retry.");
     }
-    const amount = "$" + Number(invoice.total).toFixed(2);
+    const amount = "$" + Number(invoice.total).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     const safeNumber = escapeEmailHtml(String(invoice.invoice_number || ""));
+    const firstName = String(invoice.client_name || "Client").trim().split(/\s+/)[0] || "Client";
+    const safeFirstName = escapeEmailHtml(firstName);
     const safeName = escapeEmailHtml(String(invoice.client_name || ""));
     const humanDate = (value: unknown) => {
       const date = new Date(String(value));
@@ -177,33 +179,38 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
         date.toLocaleDateString("en-US", { month:"long",day:"numeric",year:"numeric",timeZone:"UTC" });
     };
     const servicePeriod = humanDate(invoice.service_start_date) + " - " + humanDate(invoice.service_end_date);
+    const dueDate = humanDate(invoice.due_date);
+    const issueDate = new Date(String(invoice.invoice_date));
+    const paymentDate = new Date(String(invoice.due_date));
+    const withinSevenDays = !Number.isNaN(issueDate.getTime()) && !Number.isNaN(paymentDate.getTime()) &&
+      Math.round((paymentDate.getTime() - issueDate.getTime()) / 86400000) === 7;
     const safePeriod = escapeEmailHtml(servicePeriod);
     const isTest = data.testOnly;
-    const subject = (isTest ? "[INTERNAL TEST — NOT ISSUED] " : "") +
-      "Elite Bridge Staffing invoice " + String(invoice.invoice_number);
+    const subject = isTest
+      ? "[INTERNAL TEST — NOT ISSUED] Elite Bridge invoice " + String(invoice.invoice_number)
+      : "Elite Bridge Staffing | Invoice " + String(invoice.invoice_number) + " — Due " + dueDate;
     const bodyText = isTest
       ? [
-          "INTERNAL TEST — not issued to the client.",
-          "",
+          "INTERNAL TEST — not issued to the client.", "",
           "This message lets the Elite Bridge team review the attached approved-layout invoice PDF.",
           "Invoice: " + invoice.invoice_number,
           "Client: " + invoice.client_name,
           "Service period: " + servicePeriod,
           "Total: " + amount,
-          "",
+          "Payment due: " + dueDate, "",
           "The invoice remains a draft. No client payment is requested by this test."
         ].join("\n")
       : [
-          "Hello,",
-          "",
-          "Please find attached invoice " + invoice.invoice_number + " from Elite Bridge Staffing LLC.",
-          "Service period: " + servicePeriod,
-          "Total amount due: " + amount,
-          "Payment due: " + humanDate(invoice.due_date),
-          "",
-          "Please make cheques payable to Elite Bridge Staffing LLC.",
-          "Payment remittance: 144 Thissell Ave, Dracut, MA 01826.",
-          "",
+          "Dear " + firstName + ",", "",
+          "Please find attached invoice " + invoice.invoice_number + " for care services provided from " + servicePeriod + ".",
+          "The invoice includes a detailed itemization of the services and hours.", "",
+          "Invoice amount: " + amount,
+          "Payment due: " + dueDate + (withinSevenDays ? " (seven days after the invoice date)" : ""), "",
+          "Payment by cheque:",
+          "Payable to: Elite Bridge Staffing LLC",
+          "144 Thissell Ave",
+          "Dracut, MA 01826", "",
+          "Please include the invoice number with your payment. If you have any questions, feel free to reply to this email.", "",
           "Thank you for choosing Elite Bridge Staffing."
         ].join("\n");
     const bodyHtml = isTest
@@ -211,15 +218,20 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
         '<p>Review the attached, approved-layout invoice PDF before issuing it.</p>' +
         '<p><strong>Invoice:</strong> ' + safeNumber + '<br><strong>Client:</strong> ' + safeName +
         '<br><strong>Service period:</strong> ' + safePeriod +
-        '<br><strong>Total:</strong> ' + amount + '</p>' +
+        '<br><strong>Total:</strong> ' + amount + '<br><strong>Payment due:</strong> ' + escapeEmailHtml(dueDate) + '</p>' +
         '<p>This invoice remains a draft; this test does not request payment.</p>'
-      : '<p>Hello,</p><p>Please find attached invoice <strong>' + safeNumber +
-        '</strong> from Elite Bridge Staffing LLC.</p>' +
-        '<p><strong>Service period:</strong> ' + safePeriod +
-        '<br><strong>Total amount due:</strong> ' + amount +
-        '<br><strong>Payment due:</strong> ' + escapeEmailHtml(humanDate(invoice.due_date)) + '</p>' +
-        '<p>Cheques may be made payable to <strong>Elite Bridge Staffing LLC</strong>.' +
-        '<br>Remittance: 144 Thissell Ave, Dracut, MA 01826.</p>' +
+      : '<p>Dear ' + safeFirstName + ',</p>' +
+        '<p>Please find attached invoice <strong>' + safeNumber + '</strong> for care services provided from ' +
+        '<strong>' + safePeriod + '</strong>. The invoice includes a detailed itemization of the services and hours.</p>' +
+        '<table role="presentation" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin:18px 0;width:100%;max-width:480px;font-size:14px;">' +
+        '<tr><td style="padding:9px 12px;background:#f3f7f4;color:#586a60;">Invoice amount</td>' +
+        '<td style="padding:9px 12px;background:#f3f7f4;font-weight:700;text-align:right;color:#064024;">' + amount + '</td></tr>' +
+        '<tr><td style="padding:9px 12px;border-bottom:1px solid #e3e8e4;color:#586a60;">Payment due</td>' +
+        '<td style="padding:9px 12px;border-bottom:1px solid #e3e8e4;text-align:right;font-weight:700;">' + escapeEmailHtml(dueDate) + '</td></tr></table>' +
+        (withinSevenDays ? '<p>Payment is due within seven days of the invoice date.</p>' : '') +
+        '<p><strong>Payment by cheque</strong><br>Payable to: Elite Bridge Staffing LLC<br>' +
+        '144 Thissell Ave<br>Dracut, MA 01826</p>' +
+        '<p>Please include the invoice number with your payment. If you have any questions, feel free to reply to this email.</p>' +
         '<p>Thank you for choosing Elite Bridge Staffing.</p>';
     // The shared email service appends the official logo-and-contact signature
     // to both HTML and plaintext, and preserves the PDF attachment bytes.

@@ -42,6 +42,9 @@ describe("Email provider acknowledgement", () => {
     expect(first.html).toContain("📞");
     expect(first.html).toContain("📧");
     expect(first.html).toContain("🌐");
+    expect(first.html).toContain("📍");
+    expect(first.html).toContain("font-size:9px;line-height:1;display:inline-block;width:13px");
+    expect(first.html).toContain("📍</span> 144 Thissell Ave");
     expect(first.html).toContain('href="https://www.elitebridgestaffing.com"');
     expect(first.html).toContain(">www.elitebridgestaffing.com</a>");
     expect(first.html).not.toContain(">Elite Bridge Staffing LLC</td></tr>");
@@ -49,6 +52,10 @@ describe("Email provider acknowledgement", () => {
     expect(first.text).toContain("📞 (508) 251-9346");
     expect(first.text).toContain("📧 info@elitebridgestaffing.com");
     expect(first.text).toContain("🌐 www.elitebridgestaffing.com");
+    expect(first.text).toContain("📍 144 Thissell Ave");
+    expect(first.html).toContain("📍</span> 144 Thissell Ave");
+    expect(first.html).toContain("font-size:9px;line-height:1;display:inline-block;width:13px");
+    expect(first.text).toContain("📍 144 Thissell Ave, Dracut, MA 01826");
     expect(first.text).toContain(ELITE_BRIDGE_TEXT_SIGNATURE);
     expect(second).toEqual(first);
     expect(first.html?.match(/elite-bridge-official-signature/g)).toHaveLength(1);
@@ -67,6 +74,10 @@ describe("Email provider acknowledgement", () => {
     expect(sig.indexOf('alt="Elite Bridge')).toBeLessThan(sig.indexOf("📞"));
     expect(sig).toContain("📧");
     expect(sig).toContain("🌐");
+    expect(sig).toContain("📍");
+    expect(sig).not.toContain("font-size:13px");
+    expect(sig).toContain("📍");
+    expect(sig).not.toContain("font-size:13px");
     expect(sig).toContain("www.elitebridgestaffing.com");
   });
   it("escapes plaintext markup, preserves clickable URLs and appends the signature", () => {
