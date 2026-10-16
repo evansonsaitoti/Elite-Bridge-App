@@ -25,8 +25,9 @@ export const ELITE_BRIDGE_TEXT_SIGNATURE = [
   "--",
   "Elite Bridge Staffing LLC",
   "Staffing You Can Rely On",
-  "(508) 251-9346 | info@elitebridgestaffing.com",
-  "elitebridgestaffing.com",
+  "📞 (508) 251-9346",
+  "📧 info@elitebridgestaffing.com",
+  "🌐 www.elitebridgestaffing.com",
   "144 Thissell Ave, Dracut, MA 01826"
 ].join("\n");
 
@@ -46,14 +47,10 @@ export function addEliteBridgeEmailSignature(message: EmailMessage): EmailMessag
     '<tr><td style="padding:12px 0 7px 0;">',
     '<img src="' + LOGO_URL + '" width="244" height="61" alt="Elite Bridge — Staffing You Can Rely On" style="display:block;width:244px;height:61px;max-width:100%;border:0;" />',
     '</td></tr>',
-    '<tr><td style="color:#064024;font-weight:700;font-size:13px;padding-top:2px;">Elite Bridge Staffing LLC</td></tr>',
-    '<tr><td style="color:#586a60;font-size:12px;padding-top:3px;">Non-medical home care | Staffing You Can Rely On</td></tr>',
-    '<tr><td style="font-size:12px;padding-top:7px;">',
-    '<a href="tel:+15082519346" style="color:#064024;text-decoration:none;">(508) 251-9346</a>',
-    '<span style="color:#b9791f;">&nbsp; | &nbsp;</span>',
-    '<a href="mailto:info@elitebridgestaffing.com" style="color:#064024;text-decoration:none;">info@elitebridgestaffing.com</a>',
-    '</td></tr>',
-    '<tr><td style="font-size:12px;padding-top:4px;"><a href="https://elitebridgestaffing.com" style="color:#064024;text-decoration:none;">elitebridgestaffing.com</a></td></tr>',
+    '<tr><td style="color:#586a60;font-size:12px;padding-top:4px;">Non-medical home care services</td></tr>',
+    '<tr><td style="font-size:12px;padding-top:9px;"><span style="font-size:15px;vertical-align:middle;" aria-hidden="true">📞</span> &nbsp;<a href="tel:+15082519346" style="color:#064024;text-decoration:none;">(508) 251-9346</a></td></tr>',
+    '<tr><td style="font-size:12px;padding-top:5px;"><span style="font-size:15px;vertical-align:middle;" aria-hidden="true">📧</span> &nbsp;<a href="mailto:info@elitebridgestaffing.com" style="color:#064024;text-decoration:none;">info@elitebridgestaffing.com</a></td></tr>',
+    '<tr><td style="font-size:12px;padding-top:5px;"><span style="font-size:15px;vertical-align:middle;" aria-hidden="true">🌐</span> &nbsp;<a href="https://www.elitebridgestaffing.com" style="color:#064024;text-decoration:none;">www.elitebridgestaffing.com</a></td></tr>',
     '<tr><td style="font-size:11px;color:#68766f;padding-top:5px;">144 Thissell Ave, Dracut, MA 01826</td></tr>',
     '</table></div>'
   ].join("\n");
