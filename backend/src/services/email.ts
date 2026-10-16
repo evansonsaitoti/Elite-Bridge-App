@@ -57,7 +57,13 @@ export function addEliteBridgeEmailSignature(message: EmailMessage): EmailMessag
     '<tr><td style="font-size:11px;color:#68766f;padding-top:5px;">144 Thissell Ave, Dracut, MA 01826</td></tr>',
     '</table></div>'
   ].join("\n");
-  return { ...message, text, html };
+  // Respect full-document templates, too: insert before </body> rather than
+  // nesting one HTML document inside another. The signature marker remains
+  // idempotent across both representations.
+  const finalHtml = message.html && /<\/body>/i.test(message.html)
+    ? message.html.replace(/<\/body>/i, html.slice(html.indexOf('<!-- ' + SIGNATURE_MARKER), html.lastIndexOf('</div>')) + '</body>')
+    : html;
+  return { ...message, text, html: finalHtml };
 }
 
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
