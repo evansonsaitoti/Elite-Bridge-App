@@ -33,6 +33,7 @@ const createSchema = z.object({
 const invoiceEmailSchema = z.object({
   recipient: z.string().trim().email().max(254).transform(value => value.toLowerCase()),
   pdfBase64: z.string().min(100).max(3_200_000).regex(/^[A-Za-z0-9+/]+={0,2}$/),
+  testOnly: z.boolean().default(false),
 });
 
 async function ensureClientInvoices() {
@@ -162,18 +163,20 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
     `) as any).rows[0];
     if (!invoice) throw new AppError(404, "Client invoice not found.");
     if (invoice.status !== "draft") throw new AppError(409, "Only draft invoices can be emailed.");
+    // Never issue a client invoice as part of a test email.
     const pdf = Buffer.from(data.pdfBase64, "base64");
     if (pdf.length > 2_400_000 || !pdf.subarray(0, 5).equals(Buffer.from("%PDF-")) || !pdf.includes(Buffer.from("%%EOF"))) {
       throw new AppError(400, "The invoice PDF could not be verified. Download it again and retry.");
     }
     const sent = await sendEmail({
       from: "Elite Bridge Staffing <info@elitebridgestaffing.com>", to: data.recipient,
-      subject: `Elite Bridge invoice ${invoice.invoice_number}`,
+      subject: `${data.testOnly ? "[TEST] " : ""}Elite Bridge invoice ${invoice.invoice_number}`,
       text: `Attached is invoice ${invoice.invoice_number} for ${invoice.client_name}. Total due: $${Number(invoice.total).toFixed(2)}. Please handle this billing record securely.`,
       html: `<p>Attached is invoice <strong>${escapeEmailHtml(invoice.invoice_number)}</strong> for <strong>${escapeEmailHtml(invoice.client_name)}</strong>.</p><p>Total due: <strong>$${Number(invoice.total).toFixed(2)}</strong>.</p>`,
       attachments: [{ filename: `${invoice.invoice_number}_Invoice.pdf`, content: pdf, contentType: "application/pdf" }],
     });
     if (!sent) throw new AppError(503, "Email delivery is not configured on the Elite Bridge server.");
+    if (data.testOnly) return res.json({ sent: true, testOnly: true, invoiceStatus: "draft" });
     await db.execute(sql`
       UPDATE client_invoices SET status = 'sent', sent_to = ${data.recipient}, sent_at = CURRENT_TIMESTAMP,
         updated_at = CURRENT_TIMESTAMP WHERE id = ${id} AND employer_id = ${employer.id} AND status = 'draft'
