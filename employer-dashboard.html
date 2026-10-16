@@ -7,8 +7,10 @@
   <meta name="description" content="Elite Bridge employer workspace for care shifts, caregivers, attendance, messages and payroll.">
   <title>Employer workspace | Elite Bridge</title>
   <link rel="stylesheet" href="/app-shell.css?v=desktop-command-bar-20261011">
+  <link rel="preload" as="image" href="/invoice-approved-logo.webp">
 </head>
 <body data-role="employer">
+  <img id="invoicePdfBrandLogo" src="/invoice-approved-logo.webp" alt="" aria-hidden="true" hidden>
   <div class="app-frame">
     <header class="app-header">
       <div class="brand-panel"><a class="brand-home" href="#overview" data-view="overview" aria-label="Go to Elite Bridge dashboard home"><img src="/logo.png" alt="Elite Bridge"></a></div>
@@ -520,7 +522,7 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/dashboard.js?v=desktop-command-bar-20261011"></script>
+  <script src="/dashboard.js?v=approved-invoice-reference-20261016"></script>
 </body>
 </html>
 
