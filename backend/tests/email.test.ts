@@ -60,6 +60,15 @@ describe("Email provider acknowledgement", () => {
       filename:"invoice.pdf",content:pdf.toString("base64"),content_type:"application/pdf"
     });
   });
+  it("inserts the footer inside full HTML documents without adding a nested document", () => {
+    const result = addEliteBridgeEmailSignature({
+      ...message, html:"<!doctype html><html><body><p>Care update</p></body></html>"
+    });
+    expect(result.html).toContain("<p>Care update</p>");
+    expect(result.html).toContain("elite-bridge-official-signature");
+    expect(result.html).toContain("</body></html>");
+    expect(result.html?.match(/<\/body>/gi)).toHaveLength(1);
+  });
   it("escapes user supplied names in HTML emails", () => {
     expect(escapeEmailHtml('<img src=x onerror="bad"> & O\'Neil')).toBe('&lt;img src=x onerror=&quot;bad&quot;&gt; &amp; O&#39;Neil');
   });
