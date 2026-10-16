@@ -181,8 +181,17 @@ router.post("/employer/:invoiceId/email", authMiddleware, async (req: AuthReques
     res.json({ sent: true });
   } catch (error: any) {
     if (error instanceof AppError) return next(error);
-    console.error("Client invoice email delivery failed", { providerStatus: error?.response?.status, providerCode: error?.code, errorName: error?.name });
-    next(new AppError(502, "Email delivery failed. Check that info@elitebridgestaffing.com is verified for outbound email and that the recipient address is valid."));
+    const providerStatus = error?.response?.status;
+    const providerCode = error?.response?.data?.name || error?.response?.data?.code || error?.code;
+    console.error("Client invoice email delivery failed", { providerStatus, providerCode, errorName: error?.name });
+    const detail = providerStatus === 401 || providerStatus === 403
+      ? "The Elite Bridge email provider rejected its API credentials or sending permissions. Contact the administrator to check the production RESEND_API_KEY."
+      : providerStatus === 422
+      ? "The email provider rejected the sender, recipient, or attachment. Check the sending address and recipient, then retry."
+      : providerStatus === 429
+      ? "The email provider is rate limiting requests. Please retry later."
+      : "The email provider could not complete delivery. Please contact the administrator; the invoice remains a draft.";
+    next(new AppError(502, detail));
   }
 });
 
