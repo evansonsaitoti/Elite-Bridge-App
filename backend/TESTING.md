@@ -1,6 +1,12 @@
 # Workflow verification
 
-Run `npm install`, `npm run build`, and `npm test` from `backend`.
+Use Node.js 20.20.2 (the verified CI runtime) with npm 11.9.0. The older npm
+10 peer-dependency resolver can crash with `edgesOut` while resolving Vitest.
+Install the tested npm version with `npm install --global npm@11.9.0`, then run
+`npm ci`, `npm run build`, and `npm test` from `backend`.
+
+Commit `package-lock.json` whenever backend dependencies change. CI uses `npm ci`
+to install that exact dependency graph and reject manifest/lockfile drift.
 
 The backend suite runs the real Express routes and SQL against a disposable,
 in-memory PostgreSQL database using PGlite. It never uses the production database.

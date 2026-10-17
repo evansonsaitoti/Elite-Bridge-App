@@ -49,11 +49,12 @@ describe('Existing web dashboards', () => {
   it('submits overnight dates, facility time zone and staffing positions from the existing form', async () => {
     const { w, document, calls } = await dashboard('employer');
     const form = document.getElementById('shiftForm') as HTMLFormElement;
-    const values = { title: 'Night coverage', startDate: '2026-09-18', endDate: '2026-09-19', startTime: '22:00', endTime: '06:00', numberOfCaregivers: '3', address: 'Test House', city: 'Lowell', state: 'MA', zipCode: '01852', responsibilities: 'Handover' };
+    const values = { title: 'Night coverage', startDate: '2026-09-18', endDate: '2026-09-19', startTime: '22:00', endTime: '06:00', numberOfCaregivers: '3', hourlyRate: '30', address: 'Test House', city: 'Lowell', state: 'MA', zipCode: '01852', responsibilities: 'Handover' };
     for (const [name, value] of Object.entries(values)) (form.elements.namedItem(name) as HTMLInputElement).value = value;
+    expect(form.checkValidity()).toBe(true);
     form.dispatchEvent(new w.Event('submit', { bubbles: true, cancelable: true }));
     await vi.waitFor(() => expect(calls.some(c => c.path === '/bookings' && c.method === 'POST')).toBe(true));
-    expect(calls.find(c => c.path === '/bookings' && c.method === 'POST')?.body).toMatchObject({ endDate: '2026-09-19', timeZone: 'America/New_York', numberOfCaregivers: 3, assignmentMode: 'review' });
+    expect(calls.find(c => c.path === '/bookings' && c.method === 'POST')?.body).toMatchObject({ endDate: '2026-09-19', timeZone: 'America/New_York', numberOfCaregivers: 3, assignmentMode: 'review', pay: { hourlyRate: 30 } });
   });
   it('records caregiver time through the shared API without pretending missing GPS is verified', async () => {
     const { document, calls } = await dashboard('caregiver');
