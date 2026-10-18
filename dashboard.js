@@ -1487,6 +1487,76 @@
     return new Blob([pdfJoin(parts)],{type:'application/pdf'});
   }
   function invoiceFilename(invoice) { return `${String(invoice.invoice_number || 'EliteBridge').replace(/[^a-z0-9_-]/gi, '_')}_Invoice.pdf`; }
+  function renderClientReceipts(loadFailed = false) {
+    const container = document.getElementById('clientReceiptList');
+    const summary = document.getElementById('clientReceiptSummary');
+    const count = document.getElementById('invoiceReceiptCount');
+    if (!container) return;
+    if (count) count.textContent = String(employerReceipts.length);
+    if (loadFailed) {
+      if (summary) summary.innerHTML = '';
+      renderEmpty(container, 'Receipts unavailable', 'The receipt register could not be loaded. Please refresh the dashboard.');
+      return;
+    }
+    if (!employerReceipts.length) {
+      if (summary) summary.innerHTML = '';
+      renderEmpty(container, 'No receipts recorded yet', 'Receipts for payments received will appear here, separate from your invoice ledger.');
+      return;
+    }
+    const pending = employerReceipts.filter(receipt => receipt.clearance_status === 'pending_clearance').length;
+    const total = employerReceipts.reduce((sum, receipt) => sum + Number(receipt.amount || 0), 0);
+    if (summary) summary.innerHTML = [
+      '<div><span>Recorded receipts</span><strong>' + employerReceipts.length + '</strong></div>',
+      '<div><span>Amount recorded</span><strong>' + money(total) + '</strong></div>',
+      '<div><span>Awaiting bank clearance</span><strong>' + pending + '</strong></div>'
+    ].join('');
+    container.innerHTML = employerReceipts.map(receipt => {
+      const safe = value => escapeHtml(String(value ?? ''));
+      const status = receipt.clearance_status === 'cleared' ? 'Bank cleared' :
+        receipt.clearance_status === 'returned' ? 'Cheque returned' : 'Bank clearance pending';
+      const state = receipt.clearance_status === 'cleared' ? 'cleared' :
+        receipt.clearance_status === 'returned' ? 'returned' : 'pending';
+      const method = receipt.payment_method === 'cheque' ? 'Cheque' :
+        receipt.payment_method === 'bank_transfer' ? 'Bank transfer' :
+        receipt.payment_method === 'cash' ? 'Cash' : 'Other payment';
+      return '<article class="receipt-entry" data-searchable>' +
+        '<div class="receipt-entry-top">' +
+          '<span class="receipt-entry-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"></path><path d="M9 8h6M9 12h6"></path><path d="m9 16 1.5 1.5 3-3"></path></svg></span>' +
+          '<div class="receipt-entry-title"><strong>' + safe(receipt.receipt_number) + '</strong>' +
+          '<span>' + safe(receipt.client_name) + ' · Invoice ' + safe(receipt.invoice_number) + '</span></div>' +
+          '<span class="receipt-state receipt-state--' + state + '">' + safe(status) + '</span>' +
+        '</div>' +
+        '<div class="receipt-info-grid">' +
+          '<div><small>Amount received</small><strong>' + money(receipt.amount) + '</strong></div>' +
+          '<div><small>Date received</small><strong>' + safe(formatDateOnly(receipt.received_on)) + '</strong></div>' +
+          '<div><small>Payment method</small><strong>' + safe(method) + '</strong></div>' +
+          '<div><small>Invoice</small><strong>' + safe(receipt.invoice_number) + '</strong></div>' +
+        '</div>' +
+        '<div class="receipt-entry-foot">' +
+          '<button class="secondary-button receipt-download" type="button" data-receipt-download="' + safe(receipt.id) + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 17v3h16v-3"></path></svg> Download receipt PDF</button>' +
+          (receipt.receipt_sent_at ? '<span class="receipt-email-status">✓ Emailed ' + safe(formatDateOnly(receipt.receipt_sent_at)) + '</span>' :
+            '<span class="receipt-email-status">Not yet emailed</span>') +
+        '</div>' +
+      '</article>';
+    }).join('');
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-receipt-download]');
+    if (!button || button.disabled) return;
+    const receipt = employerReceipts.find(item => String(item.id) === button.dataset.receiptDownload);
+    if (!receipt) { notify('This receipt is not available. Please refresh the dashboard.'); return; }
+    try {
+      const pdf = receiptPdfBlob(receipt);
+      const name = String(receipt.receipt_number || 'Elite_Bridge_Receipt').replace(/[^a-z0-9_-]/gi, '_');
+      downloadTimesheetPdf(pdf, name + '_Receipt.pdf');
+      notify('Receipt PDF downloaded.');
+    } catch (error) {
+      notify(error.message || 'Could not generate this receipt PDF.');
+    }
+  });
+
   function renderClientInvoices() {
     const container = document.getElementById('clientInvoiceList'); if (!container) return;
     if (!employerInvoices.length) { renderEmpty(container, 'No client invoices yet', 'Create a draft from completed service dates. Client invoices stay separate from payroll timesheets.'); return; }
