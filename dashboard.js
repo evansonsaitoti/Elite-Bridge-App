@@ -339,15 +339,34 @@
     renderContractPreview();
   }
 
+  function setInvoiceTab(tabName) {
+    const receiptsSelected = tabName === 'receipts';
+    const invoices = document.getElementById('invoiceTabInvoices');
+    const receipts = document.getElementById('invoiceTabReceipts');
+    if (invoices) invoices.hidden = receiptsSelected;
+    if (receipts) receipts.hidden = !receiptsSelected;
+    document.querySelectorAll('[data-invoice-tab]').forEach(button => {
+      const selected = button.dataset.invoiceTab === (receiptsSelected ? 'receipts' : 'invoices');
+      button.setAttribute('aria-selected', String(selected));
+      button.tabIndex = selected ? 0 : -1;
+      button.classList.toggle('active', selected);
+    });
+    const heading = document.querySelector('[data-view-panel="invoices"] .page-head h1');
+    if (heading) heading.textContent = receiptsSelected ? 'Receipts' : 'Invoices';
+  }
   function activateView(viewName) {
-    const view = document.querySelector(`[data-view-panel="${viewName}"]`) || document.querySelector('[data-view-panel="overview"]');
+    // Receipts are a dedicated view under Client Billing, sharing the Invoices
+    // panel without changing its existing invoice builder or ledger.
+    const targetView = viewName === 'receipts' ? 'invoices' : viewName;
+    const view = document.querySelector(`[data-view-panel="${targetView}"]`) || document.querySelector('[data-view-panel="overview"]');
     document.querySelectorAll('[data-view-panel]').forEach((panel) => { panel.hidden = panel !== view; });
     document.querySelectorAll('[data-view]').forEach((link) => {
-      const isActive = link.dataset.view === view.dataset.viewPanel;
+      const isActive = link.dataset.view === viewName;
       link.classList.toggle('active', isActive);
       if (isActive) link.setAttribute('aria-current', 'page');
       else link.removeAttribute('aria-current');
     });
+    if (targetView === 'invoices') setInvoiceTab(viewName === 'receipts' ? 'receipts' : 'invoices');
     closeMobileNav();
     if (accountMenu) accountMenu.hidden = true;
     if (helpMenu) helpMenu.hidden = true;
@@ -361,6 +380,22 @@
     event.preventDefault();
     activateView(link.dataset.view);
   }));
+  // Direct links (#receipts) and in-page tabs share a single route.
+  document.querySelectorAll('[data-invoice-tab]').forEach(button => {
+    button.addEventListener('click', () => activateView(button.dataset.invoiceTab));
+    button.addEventListener('keydown', event => {
+      const tabs = Array.from(document.querySelectorAll('[data-invoice-tab]'));
+      const idx = tabs.indexOf(button);
+      const next = event.key === 'ArrowRight' ? (idx + 1) % tabs.length :
+        event.key === 'ArrowLeft' ? (idx + tabs.length - 1) % tabs.length :
+        event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : -1;
+      if (next < 0) return;
+      event.preventDefault();
+      const target = tabs[next];
+      activateView(target.dataset.invoiceTab);
+      target.focus();
+    });
+  });
   activateView(location.hash.slice(1) || 'overview');
   const manualEntryForm = document.querySelector('[data-manual-entry]');
   if (manualEntryForm) { const today = todayInputValue(); manualEntryForm.elements.startDate.value = today; manualEntryForm.elements.endDate.value = today; }
@@ -1172,6 +1207,7 @@
   });
 
   let employerInvoices = [];
+  let employerReceipts = [];
   function invoicePdfBlob(invoice) {
     // Faithful recreation of the approved Elite Bridge two-page invoice design.
     // Both Download PDF and Email PDF use this same branded, itemized generator.
@@ -2024,8 +2060,8 @@
   });
 
   async function loadEmployer() {
-    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, expenseResult, clientResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/expenses/employer'), api('/clients/employer')
+    const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, receiptResult, expenseResult, clientResult] = await Promise.allSettled([
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/client-invoices/employer/receipts'), api('/expenses/employer'), api('/clients/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     employerShifts = shifts;
@@ -2041,6 +2077,8 @@
     const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];
     employerInvoices = clientInvoiceResult.status === 'fulfilled' ? clientInvoiceResult.value.invoices || [] : [];
     renderClientInvoices();
+    employerReceipts = receiptResult.status === 'fulfilled' ? receiptResult.value.receipts || [] : [];
+    renderClientReceipts(receiptResult.status !== 'fulfilled');
     if (expenseResult.status === 'fulfilled') renderExpenses(expenseResult.value);
     else renderExpenses({ expenses: [] });
     employerClients = clientResult.status === 'fulfilled' ? clientResult.value.clients || [] : savedClientRecords();
