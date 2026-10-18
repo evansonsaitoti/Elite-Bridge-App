@@ -353,6 +353,12 @@
     });
     const heading = document.querySelector('[data-view-panel="invoices"] .page-head h1');
     if (heading) heading.textContent = receiptsSelected ? 'Receipts' : 'Invoices';
+    const description = document.getElementById('invoicePageDescription');
+    if (description) description.textContent = receiptsSelected
+      ? 'Review saved payment receipts and track bank clearance separately from issued invoices.'
+      : 'Create official client invoices separate from caregiver timesheets and payroll records.';
+    const contractTools = document.querySelector('[data-view-panel="invoices"] .page-head [data-go-view="contracts"]');
+    if (contractTools) contractTools.hidden = receiptsSelected;
   }
   function activateView(viewName) {
     // Receipts are a dedicated view under Client Billing, sharing the Invoices
