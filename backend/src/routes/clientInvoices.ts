@@ -136,6 +136,35 @@ router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
   } catch (error) { next(error); }
 });
 
+
+/**
+ * Employer-only receipt register. Returns every saved receipt rather than only
+ * the latest receipt attached to each invoice. All records are scoped to the
+ * logged-in employer; no bank-cleared status is inferred from cheque receipt.
+ */
+router.get("/employer/receipts", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureClientInvoices();
+    const employer = await getEmployer(req);
+    const result = await db.execute(sql`
+      SELECT r.id, r.invoice_id, r.receipt_number, r.amount,
+             r.payment_method, r.received_on, r.clearance_status,
+             r.receipt_sent_to, r.receipt_sent_cc, r.receipt_sent_at,
+             r.cheque_reference, r.notes,
+             i.invoice_number, i.client_name, i.client_email, i.billing_address,
+             i.invoice_date, i.service_start_date, i.service_end_date,
+             i.total AS invoice_total
+      FROM client_invoice_receipts r
+      INNER JOIN client_invoices i
+        ON i.id = r.invoice_id AND i.employer_id = r.employer_id
+      WHERE r.employer_id = ${employer.id}
+      ORDER BY r.received_on DESC, r.id DESC
+      LIMIT 200
+    `);
+    res.json({ receipts: (result as any).rows });
+  } catch (error) { next(error); }
+});
+
 router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureClientInvoices();
