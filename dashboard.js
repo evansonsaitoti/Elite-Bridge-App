@@ -1487,6 +1487,166 @@
     return new Blob([pdfJoin(parts)],{type:'application/pdf'});
   }
   function invoiceFilename(invoice) { return `${String(invoice.invoice_number || 'EliteBridge').replace(/[^a-z0-9_-]/gi, '_')}_Invoice.pdf`; }
+  function receiptPdfBlob(receipt) {
+    // Generate a private PDF in the authenticated browser from the saved
+    // receipt record. Cheque received must never be presented as bank cleared.
+    const value = Number(receipt.amount);
+    if (!(value > 0) || !Number.isFinite(value)) throw new Error('Receipt amount is invalid.');
+    if (!receipt.receipt_number || !receipt.invoice_number || !receipt.client_name) {
+      throw new Error('Receipt details are incomplete. Refresh the dashboard.');
+    }
+    const currency = n => new Intl.NumberFormat('en-US', { style:'currency', currency:'USD' }).format(Number(n || 0));
+    const fullDate = v => {
+      const raw = String(v || '').slice(0, 10);
+      const date = new Date(raw + 'T12:00:00');
+      return /^\d{4}-\d{2}-\d{2}$/.test(raw) && !Number.isNaN(date.getTime())
+        ? date.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }) : raw;
+    };
+    const method = receipt.payment_method === 'cheque' ? 'Cheque' :
+      receipt.payment_method === 'cash' ? 'Cash' :
+      receipt.payment_method === 'bank_transfer' ? 'Bank transfer' : 'Other';
+    const returned = receipt.clearance_status === 'returned';
+    const cleared = receipt.clearance_status === 'cleared';
+    const state = returned ? 'Cheque returned' : cleared ? 'Bank cleared' :
+      receipt.payment_method === 'cheque' ? 'Bank clearance pending' : 'Confirmation pending';
+    const note = returned
+      ? 'The cheque was returned. This historical receipt does not confirm payment.'
+      : cleared ? 'Bank clearance has been confirmed for the recorded payment.'
+      : receipt.payment_method === 'cheque'
+        ? 'A cheque was received. This receipt does not certify that funds have cleared the bank.'
+        : 'Payment was recorded as received. Final settlement has not been confirmed.';
+
+    const image = document.getElementById('invoicePdfBrandLogo');
+    if (!image || !image.complete || !image.naturalWidth) {
+      throw new Error('The receipt logo is still loading. Please wait and try again.');
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Could not prepare the receipt PDF.');
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+    const encoded = canvas.toDataURL('image/jpeg', 0.94).split(',')[1];
+    const logoBytes = Uint8Array.from(atob(encoded), c => c.charCodeAt(0));
+    const NL = String.fromCharCode(10);
+    const objects = [null];
+    const add = content => { objects.push(content); return objects.length - 1; };
+    const rootId = add(null), pagesId = add(null);
+    const regularId = add(pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'));
+    const boldId = add(pdfAscii('<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>'));
+    const imageId = add(pdfJoin([
+      pdfAscii('<< /Type /XObject /Subtype /Image /Width ' + canvas.width +
+        ' /Height ' + canvas.height + ' /ColorSpace /DeviceRGB /BitsPerComponent 8' +
+        ' /Filter /DCTDecode /Length ' + logoBytes.length + ' >>' + NL + 'stream' + NL),
+      logoBytes, pdfAscii(NL + 'endstream')
+    ]));
+    const ink = '1C3029', forest = '064024', gold = 'B9791F', muted = '5C6D62',
+      line = 'DFE7E2', pale = 'F5F8F5', white = 'FFFFFF';
+    const rgb = hex => hex.match(/.{2}/g).map(part => (parseInt(part,16)/255).toFixed(3)).join(' ');
+    const ops = [];
+    const fill = (x, top, width, height, hex) =>
+      ops.push(rgb(hex) + ' rg ' + x + ' ' + (792-top-height) + ' ' + width + ' ' + height + ' re f');
+    const stroke = (x1, y1, x2, y2, hex=line, width=1) =>
+      ops.push(rgb(hex) + ' RG ' + width + ' w ' + x1 + ' ' + (792-y1) +
+        ' m ' + x2 + ' ' + (792-y2) + ' l S');
+    const write = (x, top, size, value, weight='regular', hex=ink) =>
+      ops.push(rgb(hex) + ' rg BT /' + (weight==='bold'?'F2':'F1') + ' ' + size +
+        ' Tf ' + x + ' ' + (792-top-size) + ' Td (' + pdfEscape(value) + ') Tj ET');
+    const measure = (value, size, weight='regular') => {
+      ctx.font = (weight==='bold'?'bold ':'') + size + 'px Arial';
+      return ctx.measureText(String(value)).width;
+    };
+    const right = (edge, top, size, value, weight='regular', hex=ink) =>
+      write(Math.max(43, edge-measure(value,size,weight)), top, size, value, weight, hex);
+    const fit = (x, top, max, size, value, weight='regular', hex=ink) => {
+      let font = size;
+      while (font > 7 && measure(value,font,weight) > max) font -= 0.3;
+      write(x,top,font,value,weight,hex);
+    };
+
+    ops.push('q 220 0 0 55 43 ' + (792-29-55) + ' cm /Im1 Do Q');
+    right(569,30,10,'ELITE BRIDGE STAFFING LLC','bold',forest);
+    right(569,47,8.2,'144 Thissell Ave', 'regular',muted);
+    right(569,61,8.2,'Dracut, MA 01826','regular',muted);
+    right(569,76,8.2,'(508) 251-9346 | elitebridgestaffing.com','regular',muted);
+    stroke(43,101,569,101,gold,1.4);
+    write(43,117,26,'PAYMENT RECEIPT','bold',forest);
+    write(43,153,10.4,'Acknowledgment of payment instrument received','regular',muted);
+
+    fill(43,191,526,88,forest);
+    write(59,202,9,'AMOUNT RECEIVED','bold','C3D7CB');
+    write(59,224,28,currency(value),'bold',white);
+    right(553,205,9,'PAYMENT METHOD','bold','C3D7CB');
+    right(553,230,16,method.toUpperCase(),'bold',white);
+
+    fill(43,295,253,132,pale);
+    fill(307,295,262,132,pale);
+    write(56,306,8.7,'RECEIVED FROM','bold',gold);
+    fit(56,324,228,15,String(receipt.client_name),'bold',forest);
+    const address = String(receipt.billing_address||'').split(/\r?\n/).filter(Boolean);
+    address.slice(0,2).forEach((lineText,i) => fit(56,349+i*17,226,9.8,lineText,'regular',muted));
+    write(320,306,8.7,'RECEIPT DETAILS','bold',gold);
+    write(320,327,8.5,'Receipt no.','regular',muted);
+    right(555,327,9,receipt.receipt_number,'bold',forest);
+    write(320,351,8.5,'Date received','regular',muted);
+    right(555,351,9,fullDate(receipt.received_on),'bold',forest);
+    write(320,376,8.5,'Payment method','regular',muted);
+    right(555,376,9,method,'bold',forest);
+    write(320,401,8.5,'Status','regular',muted);
+    right(555,401,8.4,state,'bold',returned?'A44743':cleared?forest:gold);
+
+    write(43,447,11,'RELATED INVOICE','bold',forest);
+    stroke(43,468,569,468,gold,0.9);
+    const items = [
+      ['Invoice number',receipt.invoice_number],
+      ['Service period',fullDate(receipt.service_start_date) + ' - ' + fullDate(receipt.service_end_date)],
+      ['Invoice amount',currency(receipt.invoice_total)],
+      ['Receipt amount',currency(value)]
+    ];
+    items.forEach((pair,index)=>{
+      const top=479+index*33;
+      if(index%2===1) fill(43,top-4,526,30,pale);
+      write(55,top+2,10,pair[0],'regular',muted);
+      right(555,top+1,10.2,pair[1],index===3?'bold':'regular',index===3?forest:ink);
+      stroke(43,top+29,569,top+29,line,0.45);
+    });
+    fill(43,629,526,77,pale);
+    write(56,639,10,'PAYMENT STATUS','bold',forest);
+    write(56,660,9.5,note,'regular',muted);
+    write(56,683,8.1,'This document acknowledges receipt; retain it with your billing records.','regular',muted);
+    stroke(43,744,569,744,line,1);
+    write(43,750,8,'ELITE BRIDGE STAFFING LLC | PAYMENT RECEIPT','bold',muted);
+    right(569,750,8,'PAGE 1 OF 1','bold',muted);
+
+    const content = pdfAscii(ops.join(NL));
+    const pageId = add(null);
+    const streamId = add(pdfJoin([
+      pdfAscii('<< /Length ' + content.length + ' >>' + NL + 'stream' + NL),
+      content, pdfAscii(NL+'endstream')
+    ]));
+    objects[pageId] = pdfAscii('<< /Type /Page /Parent ' + pagesId + ' 0 R /MediaBox [0 0 612 792]' +
+      ' /Resources << /Font << /F1 '+regularId+' 0 R /F2 '+boldId+
+      ' 0 R >> /XObject << /Im1 '+imageId+' 0 R >> >> /Contents '+streamId+' 0 R >>');
+    objects[rootId] = pdfAscii('<< /Type /Catalog /Pages '+pagesId+' 0 R >>');
+    objects[pagesId] = pdfAscii('<< /Type /Pages /Kids ['+pageId+' 0 R] /Count 1 >>');
+    const parts = [pdfAscii('%PDF-1.4' + NL)], offsets = [0];
+    let length = parts[0].length;
+    for (let id=1;id<objects.length;id++) {
+      const head = pdfAscii(id+' 0 obj'+NL), tail=pdfAscii(NL+'endobj'+NL);
+      offsets[id]=length;
+      parts.push(head,objects[id],tail);
+      length+=head.length+objects[id].length+tail.length;
+    }
+    const xrefAt=length;
+    let xref='xref'+NL+'0 '+objects.length+NL+'0000000000 65535 f '+NL;
+    for (let id=1;id<objects.length;id++) xref+=String(offsets[id]).padStart(10,'0')+' 00000 n '+NL;
+    parts.push(pdfAscii(xref+'trailer'+NL+'<< /Size '+objects.length+' /Root '+rootId+
+      ' 0 R >>'+NL+'startxref'+NL+xrefAt+NL+'%%EOF'));
+    return new Blob([pdfJoin(parts)],{type:'application/pdf'});
+  }
+
   function renderClientReceipts(loadFailed = false) {
     const container = document.getElementById('clientReceiptList');
     const summary = document.getElementById('clientReceiptSummary');
