@@ -65,6 +65,28 @@ async function ensureClientInvoices() {
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  // Receipts acknowledge payment instruments received, not bank-cleared funds.
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS client_invoice_receipts (
+      id SERIAL PRIMARY KEY,
+      invoice_id INTEGER NOT NULL REFERENCES client_invoices(id) ON DELETE CASCADE,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      receipt_number VARCHAR(60) NOT NULL UNIQUE,
+      amount DECIMAL(15,2) NOT NULL CHECK (amount > 0),
+      payment_method VARCHAR(24) NOT NULL CHECK (payment_method IN ('cheque','cash','bank_transfer','other')),
+      received_on DATE NOT NULL,
+      clearance_status VARCHAR(30) NOT NULL DEFAULT 'pending_clearance'
+        CHECK (clearance_status IN ('pending_clearance','cleared','returned')),
+      cheque_reference VARCHAR(100),
+      notes TEXT NOT NULL DEFAULT '',
+      receipt_sent_to VARCHAR(254),
+      receipt_sent_cc VARCHAR(254),
+      receipt_sent_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(invoice_id, receipt_number)
+    )
+  `);
   clientInvoicesReady = true;
 }
 
@@ -93,11 +115,22 @@ router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
     await ensureClientInvoices();
     const employer = await getEmployer(req);
     const result = await db.execute(sql`
-      SELECT id, invoice_number, client_name, client_email, billing_address, invoice_date, due_date,
-             service_start_date, service_end_date, hourly_rate, service_days, line_items, subtotal,
-             total, notes, status, sent_to, sent_at, created_at
-      FROM client_invoices WHERE employer_id = ${employer.id}
-      ORDER BY invoice_date DESC, id DESC LIMIT 100
+      SELECT i.id, i.invoice_number, i.client_name, i.client_email, i.billing_address, i.invoice_date, i.due_date,
+             i.service_start_date, i.service_end_date, i.hourly_rate, i.service_days, i.line_items, i.subtotal,
+             i.total, i.notes, i.status, i.sent_to, i.sent_at, i.created_at,
+             r.receipt_number, r.amount AS receipt_amount, r.payment_method AS receipt_method,
+             r.received_on AS receipt_received_on, r.clearance_status AS receipt_clearance_status,
+             r.receipt_sent_to, r.receipt_sent_cc, r.receipt_sent_at
+      FROM client_invoices i
+      LEFT JOIN LATERAL (
+        SELECT receipt_number, amount, payment_method, received_on, clearance_status,
+               receipt_sent_to, receipt_sent_cc, receipt_sent_at
+        FROM client_invoice_receipts
+        WHERE invoice_id = i.id AND employer_id = i.employer_id
+        ORDER BY received_on DESC, id DESC LIMIT 1
+      ) r ON TRUE
+      WHERE i.employer_id = ${employer.id}
+      ORDER BY i.invoice_date DESC, i.id DESC LIMIT 100
     `);
     res.json({ invoices: (result as any).rows });
   } catch (error) { next(error); }
