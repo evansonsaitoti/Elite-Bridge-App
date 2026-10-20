@@ -175,8 +175,16 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
             "<p><strong>Step 1 — Create your account</strong><br>Accept the secure invitation and choose a password. Your profile can be completed later.</p>",
             `<p><a href="${signupUrl}" style="display:inline-block;background:#064024;color:#fff;padding:13px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Accept caregiver invitation</a></p>`,
             "<p><strong>Step 2 — Install Elite Care</strong><br>After registration, download the caregiver app and sign in using the same account.</p>",
-            `<p><a href="${iosUrl}">Download on the App Store (iPhone)</a></p>`,
-            `<p><a href="${androidUrl}">Get it on Google Play (Android)</a></p>`,
+            '<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:18px 0;"><tr>' +
+              '<td style="padding:0 12px 12px 0;vertical-align:middle;">' +
+                `<a href="${iosUrl}" aria-label="Download Elite Care on the Apple App Store" style="display:inline-block;text-decoration:none;">` +
+                  '<img alt="Download on the App Store" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" width="175" height="59" style="display:block;width:175px;height:auto;border:0;max-width:100%;" />' +
+                '</a></td>' +
+              '<td style="padding:0 0 12px 0;vertical-align:middle;">' +
+                `<a href="${androidUrl}" aria-label="Get Elite Care on Google Play" style="display:inline-block;text-decoration:none;">` +
+                  '<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" width="190" height="74" style="display:block;width:190px;height:auto;border:0;max-width:100%;" />' +
+                '</a></td></tr></table>',
+            `<p>If the store images are hidden in your email app: <a href="${iosUrl}">App Store for iPhone</a> · <a href="${androidUrl}">Google Play for Android</a>.</p>`,
             "<p>If the iOS App Store listing is not available in your region, complete registration in your browser and contact the agency for app access.</p>",
             "<p>Your secure invitation expires in 7 days.</p>",
           ].join(""),
