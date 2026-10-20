@@ -170,23 +170,49 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
             "Your invitation expires in 7 days. If your iOS store listing is not yet available, you can still finish registration in your browser.",
           ].join("\n"),
           html: [
-            `<p>Hello ${displayName},</p>`,
-            `<p><strong>${displayAgency}</strong> invited you to join their care team on Elite Bridge.</p>`,
-            "<p><strong>Step 1 — Create your account</strong><br>Accept the secure invitation and choose a password. Your profile can be completed later.</p>",
-            `<p><a href="${signupUrl}" style="display:inline-block;background:#064024;color:#fff;padding:13px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Accept caregiver invitation</a></p>`,
-            "<p><strong>Step 2 — Install Elite Care</strong><br>After registration, download the caregiver app and sign in using the same account.</p>",
-            '<table role="presentation" border="0" cellspacing="0" cellpadding="0" style="border-collapse:collapse;margin:18px 0;"><tr>' +
-              '<td style="padding:0 12px 12px 0;vertical-align:middle;">' +
-                `<a href="${iosUrl}" aria-label="Download Elite Care on the Apple App Store" style="display:inline-block;text-decoration:none;">` +
-                  '<img alt="Download on the App Store" src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" width="175" height="59" style="display:block;width:175px;height:auto;border:0;max-width:100%;" />' +
-                '</a></td>' +
-              '<td style="padding:0 0 12px 0;vertical-align:middle;">' +
-                `<a href="${androidUrl}" aria-label="Get Elite Care on Google Play" style="display:inline-block;text-decoration:none;">` +
-                  '<img alt="Get it on Google Play" src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" width="190" height="74" style="display:block;width:190px;height:auto;border:0;max-width:100%;" />' +
-                '</a></td></tr></table>',
-            `<p>If the store images are hidden in your email app: <a href="${iosUrl}">App Store for iPhone</a> · <a href="${androidUrl}">Google Play for Android</a>.</p>`,
-            "<p>If the iOS App Store listing is not available in your region, complete registration in your browser and contact the agency for app access.</p>",
-            "<p>Your secure invitation expires in 7 days.</p>",
+            '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width,initial-scale=1"></head>',
+            '<body style="margin:0;padding:0;background:#f3f7f4;font-family:Arial,Helvetica,sans-serif;color:#173b29;">',
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;background:#f3f7f4;border-collapse:collapse;"><tr><td align="center" style="padding:22px 10px 30px;">',
+            '<table role="presentation" width="580" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:580px;border-collapse:separate;border-spacing:0;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e0eae3;">',
+            // Host the real Elite Bridge logo on the existing production web app.
+            '<tr><td align="center" style="background:#ffffff;padding:24px 24px 17px;border-top:5px solid #c39a42;">',
+            '<img src="https://app.elitebridgestaffing.com/logo.png" alt="Elite Bridge Staffing — Staffing you can rely on" width="220" style="display:block;width:220px;max-width:90%;height:auto;border:0;outline:none;text-decoration:none;" />',
+            '<div style="font-size:11px;font-weight:bold;letter-spacing:2.4px;color:#a37b2c;margin-top:17px;">CAREGIVER INVITATION</div>',
+            '</td></tr>',
+            '<tr><td style="padding:8px 32px 27px;">',
+            `<p style="margin:10px 0 14px;font-size:15px;line-height:1.55;color:#456354;">Hello ${displayName},</p>`,
+            '<h1 style="font-size:28px;line-height:1.17;letter-spacing:-0.6px;color:#0b4028;margin:0 0 16px;font-weight:800;">Your care team is ready to welcome you.</h1>',
+            `<p style="font-size:15px;line-height:1.65;color:#4a6254;margin:0 0 22px;"><strong style="color:#0b4028;">${displayAgency}</strong> invited you to join their team on Elite Care. Set up your secure account in a few minutes, then access your shifts and schedule.</p>`,
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:separate;border-spacing:0;background:#f5f9f6;border:1px solid #dfebe3;border-radius:12px;">',
+            '<tr><td style="padding:20px 20px 22px;">',
+            '<p style="font-size:11px;font-weight:800;letter-spacing:1.6px;color:#956d23;margin:0 0 9px;">STEP 01 / GET STARTED</p>',
+            '<h2 style="font-size:18px;line-height:1.3;color:#0b4028;margin:0 0 7px;">Create your caregiver account</h2>',
+            '<p style="font-size:13px;line-height:1.6;color:#536c5c;margin:0 0 18px;">Confirm your details and choose a password. You can complete your profile later.</p>',
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;"><tr><td align="center" bgcolor="#0b492e" style="background:#0b492e;border-radius:9px;padding:0;">',
+            `<a href="${signupUrl}" style="display:block;padding:16px 13px;border-radius:9px;color:#ffffff;text-decoration:none;font-size:15px;line-height:1.25;font-weight:800;text-align:center;">Accept invitation &rarr;</a>`,
+            '</td></tr></table>',
+            '<p style="font-size:12px;line-height:1.5;color:#607166;margin:12px 0 0;text-align:center;">Your secure invitation is valid for 7 days.</p>',
+            '</td></tr></table>',
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:25px;">',
+            '<tr><td><p style="font-size:11px;font-weight:800;letter-spacing:1.6px;color:#956d23;margin:0 0 8px;">STEP 02 / YOUR MOBILE APP</p>',
+            '<h2 style="font-size:18px;line-height:1.3;color:#0b4028;margin:0 0 8px;">Take Elite Care with you</h2>',
+            '<p style="font-size:13px;line-height:1.6;color:#536c5c;margin:0 0 16px;">Once registered, download the app and sign in with the same email and password.</p></td></tr></table>',
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;width:100%;"><tr>',
+            '<td align="center" width="50%" style="width:50%;padding:0 5px 0 0;vertical-align:middle;">',
+            `<a href="${iosUrl}" aria-label="Download Elite Care on the App Store" style="display:inline-block;text-decoration:none;">`,
+            '<img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="163" style="display:block;width:163px;max-width:100%;height:auto;border:0;" />',
+            '</a></td>',
+            '<td align="center" width="50%" style="width:50%;padding:0 0 0 5px;vertical-align:middle;">',
+            `<a href="${androidUrl}" aria-label="Get Elite Care on Google Play" style="display:inline-block;text-decoration:none;">`,
+            '<img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="177" style="display:block;width:177px;max-width:100%;height:auto;border:0;" />',
+            '</a></td></tr></table>',
+            `<p style="font-size:12px;line-height:1.55;color:#65786d;margin:15px 0 0;text-align:center;">Store badges not visible? <a href="${iosUrl}" style="color:#0b492e;text-decoration:underline;">App Store</a> &nbsp;·&nbsp; <a href="${androidUrl}" style="color:#0b492e;text-decoration:underline;">Google Play</a></p>`,
+            '<p style="font-size:12px;line-height:1.6;color:#66766b;margin:12px 0 0;">If the iPhone listing is unavailable in your region, you can still register and use your account in the web dashboard.</p>',
+            '</td></tr>',
+            '<tr><td style="background:#f7faf8;border-top:1px solid #e5eee8;padding:21px 24px;text-align:center;">',
+            '<strong style="font-size:12px;color:#0b4028;">ELITE BRIDGE STAFFING LLC</strong>',
+            '<p style="font-size:12px;line-height:1.7;color:#657669;margin:7px 0 0;">Staffing you can rely on<br /><a href="https://www.elitebridgestaffing.com" style="color:#0b492e;text-decoration:none;">www.elitebridgestaffing.com</a><br />info@elitebridgestaffing.com &nbsp;|&nbsp; (508) 251-9346</p>',
+            '</td></tr></table></td></tr></table></body></html>',
           ].join(""),
         });
       } catch {
