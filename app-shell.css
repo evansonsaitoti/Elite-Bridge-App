@@ -2850,3 +2850,10 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
   .care-training-grid { grid-template-columns: 1fr; gap: 11px; }
   .care-module { padding: 14px; }
 }
+
+/* Caregiver install links: optional app download after successful web registration */
+.caregiver-app-links { margin-bottom: 17px; background: linear-gradient(120deg,#f7fbf8,#fff); }
+.caregiver-app-actions { display:flex; flex-wrap:wrap; gap:10px; }
+.caregiver-app-actions .secondary-button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; padding:11px 16px; }
+.caregiver-app-caveat { color:var(--muted); font-size:11px; line-height:1.5; margin:12px 0 0; }
+@media (max-width:680px) { .caregiver-app-actions { flex-direction:column; }.caregiver-app-actions .secondary-button { width:100%; } }
