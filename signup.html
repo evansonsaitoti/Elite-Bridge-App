@@ -792,6 +792,9 @@
             if (role === 'caregiver') {
                 installSection.hidden = false;
                 loading.style.display = 'none';
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('inviteBanner').style.display = 'none';
+                installSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
                 setTimeout(redirectAfterSignup, 900);
             }
