@@ -21,7 +21,7 @@
     }[ch]));
   }
   function token() {
-    try { return sessionStorage.getItem('token') || localStorage.getItem('token'); }
+    try { return localStorage.getItem('token') || sessionStorage.getItem('token'); }
     catch (_) { return null; }
   }
   async function request(path, options = {}) {
