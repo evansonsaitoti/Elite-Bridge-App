@@ -47,9 +47,15 @@ function buildCaregiverInviteUrl(token: string) {
   return `${webAppUrl()}/signup?role=caregiver&invite=${encodeURIComponent(token)}`;
 }
 
+// Apple App Store Connect ID from elitebridge-mobile/eas.json (iOS caregiver app).
+// A direct Apple listing may not be publicly released in every country yet.
+const CAREGIVER_IOS_STORE_URL = "https://apps.apple.com/us/app/id6770962152";
+const CAREGIVER_ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver";
 function appDownloadLinks() {
   return {
-    caregiver: config.CAREGIVER_APP_URL || `${webAppUrl()}/signup?role=caregiver`,
+    caregiver: config.CAREGIVER_APP_URL || CAREGIVER_IOS_STORE_URL,
+    ios: config.CAREGIVER_APP_URL || CAREGIVER_IOS_STORE_URL,
+    android: CAREGIVER_ANDROID_STORE_URL,
     employer: config.EMPLOYER_APP_URL || webAppUrl(),
   };
 }
@@ -142,11 +148,38 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
     let smsSent = false;
     if (data.email) {
       try {
+        const displayName = escapeEmailHtml(data.firstName);
+        const displayAgency = escapeEmailHtml(employer.companyName);
+        const signupUrl = escapeEmailHtml(inviteUrl);
+        const iosUrl = escapeEmailHtml(appLinks.ios);
+        const androidUrl = escapeEmailHtml(appLinks.android);
         emailSent = await sendEmail({
           to: data.email,
           subject: `${employer.companyName} invited you to Elite Bridge`,
-          text: `${employer.companyName} invited you to join their care team on Elite Bridge.\n\nAccept your secure invitation within 7 days and create access with your email, phone and password. You can finish profile details later: ${inviteUrl}\nDownload the caregiver app: ${appLinks.caregiver}`,
-          html: `<p>Hello ${escapeEmailHtml(data.firstName)},</p><p><strong>${escapeEmailHtml(employer.companyName)}</strong> invited you to join their care team on Elite Bridge.</p><p>Create access with your email, phone and password. You can finish profile details later.</p><p><a href="${escapeEmailHtml(inviteUrl)}">Accept caregiver invitation</a></p><p><a href="${escapeEmailHtml(appLinks.caregiver)}">Download the caregiver app</a></p><p>This secure invitation expires in 7 days.</p>`,
+          text: [
+            `Hello ${data.firstName},`,
+            "",
+            `${employer.companyName} invited you to join their care team on Elite Bridge.`,
+            "Step 1: Accept the secure invitation and create your caregiver account:",
+            inviteUrl,
+            "",
+            "Step 2: Install the caregiver app, then sign in with the same email and password.",
+            "iPhone / App Store: " + appLinks.ios,
+            "Android / Google Play: " + appLinks.android,
+            "",
+            "Your invitation expires in 7 days. If your iOS store listing is not yet available, you can still finish registration in your browser.",
+          ].join("\n"),
+          html: [
+            `<p>Hello ${displayName},</p>`,
+            `<p><strong>${displayAgency}</strong> invited you to join their care team on Elite Bridge.</p>`,
+            "<p><strong>Step 1 — Create your account</strong><br>Accept the secure invitation and choose a password. Your profile can be completed later.</p>",
+            `<p><a href="${signupUrl}" style="display:inline-block;background:#064024;color:#fff;padding:13px 20px;border-radius:8px;text-decoration:none;font-weight:bold">Accept caregiver invitation</a></p>`,
+            "<p><strong>Step 2 — Install Elite Care</strong><br>After registration, download the caregiver app and sign in using the same account.</p>",
+            `<p><a href="${iosUrl}">Download on the App Store (iPhone)</a></p>`,
+            `<p><a href="${androidUrl}">Get it on Google Play (Android)</a></p>`,
+            "<p>If the iOS App Store listing is not available in your region, complete registration in your browser and contact the agency for app access.</p>",
+            "<p>Your secure invitation expires in 7 days.</p>",
+          ].join(""),
         });
       } catch {
         console.error("Invitation email could not be delivered; check the email provider log");
@@ -154,7 +187,7 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
     }
     if (data.phone && smsReady()) {
       try {
-        await sendSms(data.phone, `${employer.companyName} invited you to Elite Bridge. Create access now and finish your profile later: ${inviteUrl} App: ${appLinks.caregiver}`);
+        await sendSms(data.phone, `${employer.companyName} invited you to Elite Bridge. Create access now and finish your profile later: ${inviteUrl} iPhone: ${appLinks.ios} Android: ${appLinks.android}`);
         smsSent = true;
       } catch {
         console.error("Invitation SMS could not be delivered; check the SMS provider log");

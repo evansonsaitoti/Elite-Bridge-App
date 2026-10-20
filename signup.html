@@ -494,6 +494,13 @@
                 grid-template-columns: 1fr;
             }
         }
+
+        .signup-app-options { margin: 12px 0 20px; padding: 18px; background: #f1f8f4; border: 1px solid #cfe4d8; border-radius: 15px; }
+        .signup-app-options[hidden] { display: none !important; }
+        .signup-app-options strong { display: block; color: #064024; font-size: 16px; }
+        .signup-app-options p, .signup-app-options small { display: block; color: #53675a; font-size: 12px; line-height: 1.6; margin: 8px 0; }
+        .signup-app-options a { display: block; margin-top: 10px; padding: 12px; border-radius: 10px; color: #064024; background: #fff; border: 1px solid #c6dbcf; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none; }
+        .signup-app-options a:focus-visible { outline: 3px solid #b9892e; outline-offset: 2px; }
     </style>
 </head>
 <body>
@@ -525,6 +532,14 @@
 
         <div class="error-message" id="errorMessage"></div>
         <div class="success-message" id="successMessage"></div>
+        <div class="signup-app-options" id="signupAppOptions" hidden>
+            <strong>Account created — continue in Elite Care</strong>
+            <p>Your caregiver account is ready. Use the same email and password in the app, or continue in your browser.</p>
+            <a href="https://apps.apple.com/us/app/id6770962152" target="_blank" rel="noopener noreferrer">Download on the App Store</a>
+            <a href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer">Get it on Google Play</a>
+            <a href="/caregiver-dashboard.html">Continue to caregiver dashboard</a>
+            <small>If the iPhone app listing is not available in your region, continue using the web dashboard.</small>
+        </div>
         <div class="invite-banner" id="inviteBanner"></div>
 
         <section class="invite-required" id="inviteRequired" aria-labelledby="inviteRequiredTitle">
@@ -630,6 +645,7 @@
     const params = new URLSearchParams(window.location.search);
     const requestedRole = params.get('role');
     const inviteToken = params.get('invite');
+    const installSection = document.getElementById('signupAppOptions');
     if (requestedRole === 'caregiver' || requestedRole === 'employer') {
         document.getElementById(requestedRole).checked = true;
         updateCompanySection();
@@ -662,6 +678,11 @@
             errorDiv.textContent = error.message || 'This invitation could not be opened.';
             errorDiv.style.display = 'block';
             submitBtn.disabled = true;
+            const banner = document.getElementById('inviteBanner');
+            if (banner) {
+                banner.textContent = 'This invitation needs a fresh link from your employer. Your existing account can still sign in.';
+                banner.classList.add('active');
+            }
         }
     }
 
@@ -764,13 +785,25 @@
             localStorage.setItem('token', data.token);
             localStorage.setItem('user', JSON.stringify(data.user));
 
-            successDiv.textContent = 'Account created successfully. Redirecting...';
+            successDiv.textContent = role === 'caregiver'
+                ? 'Caregiver account created successfully. You can install Elite Care and sign in, or continue on the web.'
+                : 'Employer account created successfully. Opening your workspace…';
             successDiv.style.display = 'block';
-
-            setTimeout(redirectAfterSignup, 900);
+            if (role === 'caregiver') {
+                installSection.hidden = false;
+                loading.style.display = 'none';
+                document.getElementById('signupForm').style.display = 'none';
+                document.getElementById('inviteBanner').style.display = 'none';
+                installSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                setTimeout(redirectAfterSignup, 900);
+            }
 
         } catch (error) {
             errorDiv.textContent = error.message || 'An error occurred. Please try again.';
+            if (/already exists/i.test(errorDiv.textContent)) {
+                errorDiv.textContent += ' You may already have an account. Use the Log in link to continue.';
+            }
             errorDiv.style.display = 'block';
             submitBtn.style.display = 'block';
             loading.style.display = 'none';
