@@ -501,6 +501,58 @@
         .signup-app-options p, .signup-app-options small { display: block; color: #53675a; font-size: 12px; line-height: 1.6; margin: 8px 0; }
         .signup-app-options a { display: block; margin-top: 10px; padding: 12px; border-radius: 10px; color: #064024; background: #fff; border: 1px solid #c6dbcf; font-size: 13px; font-weight: 800; text-align: center; text-decoration: none; }
         .signup-app-options a:focus-visible { outline: 3px solid #b9892e; outline-offset: 2px; }
+
+
+        /* Refined, action-first experience for people opening a private invitation */
+        .logo-section img { max-width: 230px; height: auto; max-height: 62px; object-fit: contain; }
+        .invite-flow .logo-section { margin-bottom: 20px; }
+        .invite-flow .logo-section h1 { font-size: 1.75rem; letter-spacing: -.04em; margin-bottom: 4px; }
+        .invite-flow .logo-section p { font-size: .9rem; }
+        .invite-flow .role-selector,
+        .invite-flow .role-selector-label { display: none !important; }
+        .invite-flow #signupForm > div:first-child { margin: 0 !important; }
+        .invite-flow .invite-banner { display: flex; flex-direction: column; gap: 5px; padding: 14px 16px; margin-bottom: 22px; background: #f3f9f5; border: 1px solid #d7e6dc; border-left: 4px solid #c9a052; border-radius: 12px; color: #415f4b; }
+        .invite-flow .invite-banner strong { font-size: 13px; color: #0b422c; }
+        .invite-flow .invite-banner span { font-size: 12px; line-height: 1.5; }
+        .invite-flow .form-group input[readonly] { background: #f5f8f6; color: #476151; }
+        .invite-flow .btn-signup { border-radius: 12px; background: #0b492e; box-shadow: 0 10px 20px rgba(6,65,37,.13); }
+        .invite-flow .terms { font-size: .8rem; color: #64756c; }
+        .invite-flow .app-hero { background: linear-gradient(145deg,#0d492f 0%,#092e21 100%); }
+        .invite-flow .hero-copy h2 { font-size: clamp(2.4rem,4vw,3.8rem); line-height:1.07; }
+        .signup-app-options .signup-store-badges { display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;margin:17px 0 14px; }
+        .signup-app-options .signup-store-badges .store-badge { display:inline-flex;align-items:center;justify-content:center;width:auto;min-width:0;background:transparent;border:0;padding:0;margin:0;box-shadow:none; }
+        .signup-app-options .signup-store-badges img { display:block;width:100%;max-width:170px;height:auto; }
+        .signup-app-options .continue-web { color:#fff;background:#0b492e;border-color:#0b492e;margin-top:6px; }
+        @media (max-width: 900px) {
+            body { display:block; padding:0; background:#f4f8f5; }
+            .container { max-width: none; }
+            .signup-shell { display:block; min-height:100vh; border-radius:0; box-shadow:none; }
+            .app-hero { min-height:280px; height:auto; padding:90px 25px 39px; }
+            .hero-brand { left:25px; top:23px; }
+            .hero-copy h2 { font-size:clamp(1.9rem,5.5vw,2.8rem);line-height:1.08; }
+            .hero-copy p { font-size:.92rem; margin:10px 0 0;line-height:1.5; }
+            .hero-tags { display:none; }
+            .form-card { position:relative; margin-top:0; padding:32px 28px 45px; border-radius:0; box-shadow:none; }
+            body.invite-flow .app-hero { display:none; }
+            body.invite-flow .form-card { padding:24px 24px 45px; }
+            .logo-section { margin-bottom:21px; }
+            .logo-section img { height:auto;max-height:58px; margin-bottom:12px; }
+            .invite-flow .logo-section { margin-bottom:17px; }
+        }
+        @media (max-width: 480px) {
+            .app-hero { min-height:260px; padding:83px 22px 32px; }
+            .form-card { margin-top:0; padding:26px 22px 40px; border-radius:0;box-shadow:none; }
+            body.invite-flow .form-card { padding:21px 20px 38px; }
+            .invite-flow .logo-section img { max-width:215px; max-height:55px; margin-bottom:10px; }
+            .invite-flow .logo-section h1 { font-size:1.48rem; }
+            .invite-flow .logo-section p { font-size:.85rem; }
+            .invite-flow .invite-banner { margin-bottom:18px; }
+            .invite-flow .form-group { margin-bottom:12px; }
+            .invite-flow .form-group input { min-height:47px; }
+            .invite-flow .form-row { grid-template-columns:1fr; gap:0; }
+            .invite-flow .btn-signup { min-height:52px; }
+            .signup-app-options .signup-store-badges img { max-width:155px; }
+        }
     </style>
 </head>
 <body>
@@ -525,9 +577,9 @@
     </section>
     <div class="form-card">
         <div class="logo-section">
-            <img src="logo.webp" alt="Elite Bridge Logo">
-            <h1>Elite Bridge</h1>
-            <p>Create your account</p>
+            <img src="/logo.png" alt="Elite Bridge Staffing logo">
+            <h1 id="signupPageTitle">Elite Bridge</h1>
+            <p id="signupPageSubtitle">Create your account</p>
         </div>
 
         <div class="error-message" id="errorMessage"></div>
@@ -535,12 +587,14 @@
         <div class="signup-app-options" id="signupAppOptions" hidden>
             <strong>Account created — continue in Elite Care</strong>
             <p>Your caregiver account is ready. Use the same email and password in the app, or continue in your browser.</p>
-            <a href="https://apps.apple.com/us/app/id6770962152" target="_blank" rel="noopener noreferrer">Download on the App Store</a>
-            <a href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer">Get it on Google Play</a>
-            <a href="/caregiver-dashboard.html">Continue to caregiver dashboard</a>
+            <div class="signup-store-badges" aria-label="Download Elite Care">
+                <a class="store-badge" href="https://apps.apple.com/us/app/id6770962152" target="_blank" rel="noopener noreferrer"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="165"></a>
+                <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="184"></a>
+            </div>
+            <a class="continue-web" href="/caregiver-dashboard.html">Continue in your browser →</a>
             <small>If the iPhone app listing is not available in your region, continue using the web dashboard.</small>
         </div>
-        <div class="invite-banner" id="inviteBanner"></div>
+        <div class="invite-banner" id="inviteBanner" role="status"></div>
 
         <section class="invite-required" id="inviteRequired" aria-labelledby="inviteRequiredTitle">
             <span class="invite-required-kicker">Elite Care access</span>
@@ -556,7 +610,7 @@
 
         <form id="signupForm" onsubmit="handleSignup(event)">
             <div style="margin-bottom: 25px;">
-                <label style="display: block; font-weight: 600; color: var(--primary-dark); margin-bottom: 12px;">I am a:</label>
+                <label class="role-selector-label" style="display: block; font-weight: 600; color: var(--primary-dark); margin-bottom: 12px;">I am a:</label>
                 <div class="role-selector">
                     <div class="role-option">
                         <input type="radio" id="caregiver" name="role" value="caregiver" required onchange="updateCompanySection()">
@@ -646,6 +700,14 @@
     const requestedRole = params.get('role');
     const inviteToken = params.get('invite');
     const installSection = document.getElementById('signupAppOptions');
+    // An employer invitation is an action-first registration page, not a marketing landing page.
+    document.body.classList.toggle('invite-flow', Boolean(inviteToken));
+    if (inviteToken) {
+        document.getElementById('signupPageTitle').textContent = 'Join Elite Care';
+        document.getElementById('signupPageSubtitle').textContent = 'Complete your caregiver account';
+        const button = document.getElementById('submitBtn');
+        if (button) button.textContent = 'Create my caregiver account';
+    }
     if (requestedRole === 'caregiver' || requestedRole === 'employer') {
         document.getElementById(requestedRole).checked = true;
         updateCompanySection();
@@ -672,7 +734,12 @@
             document.getElementById('phone').value = invitation.phone || '';
             if (invitation.email) document.getElementById('email').readOnly = true;
             const banner = document.getElementById('inviteBanner');
-            banner.textContent = `${invitation.companyName} invited you to join their care team in Elite Care. Create account access now; you can finish profile details later.`;
+            banner.replaceChildren();
+            const heading = document.createElement('strong');
+            heading.textContent = 'Invitation from ' + invitation.companyName;
+            const summary = document.createElement('span');
+            summary.textContent = 'Create your account now. You can complete your caregiver profile later.';
+            banner.append(heading, summary);
             banner.classList.add('active');
         } catch (error) {
             errorDiv.textContent = error.message || 'This invitation could not be opened.';
