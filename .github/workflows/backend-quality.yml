@@ -27,8 +27,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install dependencies
-        run: npm install
+      # npm 10 can crash while resolving the Vitest peer dependency graph.
+      - name: Use tested npm version
+        run: npm install --global npm@11.9.0
+
+      - name: Install locked dependencies
+        run: npm ci
 
       - name: Build TypeScript
         run: npm run build
