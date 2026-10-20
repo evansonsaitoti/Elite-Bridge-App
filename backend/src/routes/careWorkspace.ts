@@ -123,7 +123,7 @@ function output(r:any) {
     contactName:r.contact_name||"",contactPhone:r.contact_phone||"",
     serviceAddress:r.service_address||"",preferredDays:r.preferred_days||[],
     serviceTasks:r.service_tasks||[],preferredWindow:r.preferred_window,
-    plannedStartDate:r.planned_start_date?String(r.planned_start_date).slice(0,10):"",
+    plannedStartDate:r.planned_start_date?(r.planned_start_date instanceof Date?r.planned_start_date.toISOString().slice(0,10):String(r.planned_start_date).slice(0,10)):"",
     intakeStatus:r.intake_status,coordinationNotes:r.coordination_notes||"",
     createdAt:r.created_at,updatedAt:r.updated_at
   };
