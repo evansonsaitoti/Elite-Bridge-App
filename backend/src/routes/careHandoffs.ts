@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { createHash } from "crypto";
 import { z } from "zod";
 import { sql } from "drizzle-orm";
 import { db } from "../db";
@@ -30,7 +31,7 @@ async function ensureHandoffs() {
     await db.execute(sql`CREATE TABLE IF NOT EXISTS care_handoff_items (
       id BIGSERIAL PRIMARY KEY,
       employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
-      client_key VARCHAR(950) NOT NULL,
+      client_key VARCHAR(64) NOT NULL,
       source_shift_id INTEGER NOT NULL REFERENCES shift_posts(id) ON DELETE CASCADE,
       author_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       kind VARCHAR(8) NOT NULL CHECK(kind IN ('note','task')),
@@ -59,7 +60,7 @@ function fingerprint(shift: any): string {
   if (!name || !address) {
     throw new AppError(409, "This shift needs both a care recipient and a service address for secure handoffs.");
   }
-  return [name, address, clean(shift.city), clean(shift.state), clean(shift.zip_code)].join("|");
+  return createHash("sha256").update([name, address, clean(shift.city), clean(shift.state), clean(shift.zip_code)].join("|")).digest("hex");
 }
 
 async function access(req: AuthRequest, shiftId: number) {
