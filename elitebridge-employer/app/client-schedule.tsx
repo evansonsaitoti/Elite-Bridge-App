@@ -31,6 +31,7 @@ export default function ClientScheduleScreen() {
   const [serviceType, setServiceType] = useState("Personal care");
   const [caregiverType, setCaregiverType] = useState("Caregiver");
   const [responsibilities, setResponsibilities] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
   const [assignmentMode, setAssignmentMode] = useState<"instant"|"review">("review");
   const [busy, setBusy] = useState(false);
   const [loadError, setLoadError] = useState("");
@@ -43,8 +44,9 @@ export default function ClientScheduleScreen() {
         const list = await getEmployerClientLocations();
         if (active) {
           setClients(list);
-          setSelected(current => current && list.some(c => c.id === current) ? current :
-            list.find(c => String(c.id) === clientId)?.id ?? null);
+          const target = list.find(c => String(c.id) === clientId);
+          setSelected(current => current && list.some(c => c.id === current) ? current : target?.id ?? null);
+          if (target) setContactPhone(target.contactPhone);
           setLoadError("");
         }
       } catch (error) {
@@ -74,6 +76,10 @@ export default function ClientScheduleScreen() {
       Alert.alert("Check schedule", "Enter the first date, 1–7 days, and valid start/end times for the visit windows. Times must be same-day and end after start.");
       return;
     }
+    if (!client.address.trim() || !client.contactName.trim() || !/^[+()0-9 .-]{7,40}$/.test(contactPhone.trim())) {
+      Alert.alert("Contact details required", "A saved street address, on-site contact name, and valid on-site phone are required before publishing. Update the client record or enter a phone number here.");
+      return;
+    }
     if (!serviceType.trim() || !caregiverType.trim() || !responsibilities.trim()) {
       Alert.alert("Care details required", "Enter the service, caregiver qualification and responsibilities.");
       return;
@@ -97,7 +103,7 @@ export default function ClientScheduleScreen() {
           address: location.address, city: location.city, state: location.state, zipCode: location.zipCode,
           // Public shift pay must use caregiver rate, never the private client billing rate.
           hourlyRate: location.caregiverRate, responsibilities: responsibilities.trim(),
-          contactName: location.contactName || location.clientName, contactPhone: location.contactPhone || "",
+          contactName: location.contactName || location.clientName, contactPhone: contactPhone.trim(),
           urgency: "standard", assignmentMode,
         };
         await createEmployerShift(draft);
@@ -132,7 +138,7 @@ export default function ClientScheduleScreen() {
         </TouchableOpacity> : null}
         <Text style={styles.heading}>Choose client</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
-          {clients.map(c => <TouchableOpacity key={c.id} accessibilityRole="button" onPress={() => { setSelected(c.id); setConfirmedPartial(false); }}
+          {clients.map(c => <TouchableOpacity key={c.id} accessibilityRole="button" onPress={() => { setSelected(c.id); setContactPhone(c.contactPhone); setConfirmedPartial(false); }}
             style={[styles.choice, selected === c.id && styles.choiceSelected]}>
             <Text style={{ color: selected === c.id ? "#FFF" : colors.green, fontWeight: "900" }}>{c.clientName}</Text>
             <Text style={{ color: selected === c.id ? "#DCF0E3" : colors.muted, fontSize: 11 }}>{c.locationName} · {c.city}</Text>
@@ -143,6 +149,7 @@ export default function ClientScheduleScreen() {
           <Text style={{ color: "#CEE9DC", fontSize: 12, marginTop: 6 }}>{client.locationName} · {client.city}, {client.state}</Text>
           <Text style={{ color: "#FFFFFF", fontSize: 12, marginTop: 7 }}>Caregiver pay: ${client.caregiverRate.toFixed(2)}/hr</Text>
         </View> : null}
+        {field("On-site contact phone",contactPhone,setContactPhone)}
         <Text style={styles.heading}>Visit windows</Text>
         {field("First visit date (YYYY-MM-DD)",startDate,setStartDate,"numbers-and-punctuation")}
         {field("Consecutive days (1–7)",days,setDays,"number-pad")}
