@@ -142,7 +142,7 @@ export function CareSiteChecklistPanel() {
           <Text style={{ fontSize: 12, fontWeight: "800", color: GREEN }}>{recorded} of {total} reviewed</Text>
         </View>
         <View style={{ height: 9, borderRadius: 9, overflow: "hidden", marginTop: 9, backgroundColor: "#E6EEE8" }}>
-          <View style={{ height: "100%", width: (total ? (100 * recorded / total) : 0) + "%", backgroundColor: GREEN, borderRadius: 9 }} />
+          <View style={{ height: "100%", width: ((total ? (100 * recorded / total) : 0) + "%") as `${number}%`, backgroundColor: GREEN, borderRadius: 9 }} />
         </View>
         <Text style={{ color: MUTED, fontSize: 12, marginTop: 8 }}>{done} done · {notNeeded} not needed · {total - recorded} to review</Text>
         <Text style={{ color: DARK, fontWeight: "900", fontSize: 13, marginTop: 15, marginBottom: 9 }}>Visit</Text>
