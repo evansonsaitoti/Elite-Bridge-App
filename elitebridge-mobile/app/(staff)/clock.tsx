@@ -1,4 +1,4 @@
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { captureClockLocation } from "@/lib/shared-api";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -76,6 +76,7 @@ function getClockWindowStatus(shift: ScheduledShift): { label: string; tone: "go
 
 export default function StaffClock() {
   const colors = useColors();
+  const router = useRouter();
   const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
   const { user } = useAuth();
   const {
@@ -271,6 +272,11 @@ export default function StaffClock() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        <TouchableOpacity onPress={()=>router.push("/(staff)/handoff")} accessibilityRole="button"
+          style={{backgroundColor:"#EAF4EE",borderRadius:14,padding:15,marginBottom:14,borderWidth:1,borderColor:"#CDE1D3"}}>
+          <Text style={{color:"#0A4A35",fontSize:15,fontWeight:"900"}}>↗ Caregiver handoff</Text>
+          <Text style={{color:"#4D725E",fontSize:12,marginTop:5}}>Leave next-shift to-dos before you finish today.</Text>
+        </TouchableOpacity>
         <View style={{ marginBottom: 20 }}>
           <TouchableOpacity accessibilityRole="button" onPress={() => void refresh()}><Text style={{ color: colors.primary, fontWeight: "700", marginBottom: 10 }}>Refresh shared records</Text></TouchableOpacity>
           {syncError ? <Text accessibilityRole="alert" style={{ color: colors.error, marginBottom: 10 }}>{syncError}. Connect and refresh before recording time.</Text> : null}
