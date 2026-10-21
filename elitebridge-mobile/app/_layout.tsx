@@ -1,6 +1,6 @@
 import "@/global.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -45,6 +45,15 @@ export default function RootLayout() {
   const [frame, setFrame] = useState<Rect>(initialFrame);
 
   useEffect(() => { initManusRuntime(); }, []);
+  const router = useRouter();
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.type === "team_message") router.push("/(staff)/chat");
+      else if (data?.type === "care_handoff") router.push("/(staff)/handoff");
+    });
+    return () => sub.remove();
+  }, [router]);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
     setInsets(metrics.insets);
