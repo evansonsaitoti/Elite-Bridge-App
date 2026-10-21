@@ -88,7 +88,7 @@ export function CareSiteChecklistPanel() {
       style={{borderRadius:10,borderWidth:1,borderColor:active?GREEN:"#D8E6DC",
         backgroundColor:active?GREEN:"#FFFFFF",paddingVertical:10,paddingHorizontal:12,
         opacity:disabled?0.5:1,minHeight:42,alignItems:"center",justifyContent:"center"}}>
-      <Text style={{fontSize:12,fontWeight:"850",color:active?"#FFFFFF":GREEN}}>{label}</Text>
+      <Text style={{fontSize:12,fontWeight:"800",color:active?"#FFFFFF":GREEN}}>{label}</Text>
     </TouchableOpacity>;
   const done=checklist?.tasks.filter(x=>x.status==="done").length||0;
   const recorded=checklist?.tasks.filter(x=>x.status!=="pending").length||0;
@@ -123,7 +123,7 @@ export function CareSiteChecklistPanel() {
       </View>:null}
     </View>
     {checklist?<View>
-      <Text style={{fontWeight:"900",fontSize:18,color:"#113D29",marginTop:17,marginBottom:10}}>Barry's home to-do list</Text>
+      <Text style={{fontWeight:"900",fontSize:18,color:"#113D29",marginTop:17,marginBottom:10}}>Care-site to-do list</Text>
       {checklist.tasks.map(task=>{
         const mondayOnly=task.frequency==="monday";
         const cannotMarkMonday=mondayOnly&&!monday;
@@ -135,7 +135,7 @@ export function CareSiteChecklistPanel() {
             <View style={{flex:1}}>
               <Text style={{fontWeight:"900",fontSize:14,lineHeight:19,color:"#173C29"}}>{task.title}</Text>
               <Text style={{color:MUTED,fontSize:11,lineHeight:17,marginTop:5}}>{task.instructions}</Text>
-              {mondayOnly?<Text style={{color:"#926A24",fontSize:11,fontWeight:"850",marginTop:5}}>
+              {mondayOnly?<Text style={{color:"#926A24",fontSize:11,fontWeight:"800",marginTop:5}}>
                 {monday?"Monday task — due today":"Monday task — not due today"}
               </Text>:null}
               {task.status!=="pending"?<Text style={{fontSize:11,color:statusColor,fontWeight:"800",marginTop:8}}>
