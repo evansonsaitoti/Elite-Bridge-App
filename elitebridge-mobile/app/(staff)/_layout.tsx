@@ -35,7 +35,11 @@ export default function StaffLayout() {
             router.replace("/(root)");
             return;
           }
-          void enableCaregiverPushNotifications().catch(() => false);
+          void AsyncStorage.getItem("elitebridge-caregiver-settings-v1")
+            .then((value) => {
+              if (!value || JSON.parse(value)?.pushAlerts !== false) return enableCaregiverPushNotifications();
+              return false;
+            }).catch(() => false);
           setReady(true);
         } catch { router.replace("/(root)"); }
       })
