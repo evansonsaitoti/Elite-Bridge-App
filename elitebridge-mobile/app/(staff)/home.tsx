@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, Alert, Image, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -25,7 +26,13 @@ export default function StaffHome() {
   const upcoming = [...shifts]
     .filter((shift) => new Date(shift.scheduledEnd).getTime() > Date.now())
     .sort((a, b) => new Date(a.scheduledStart).getTime() - new Date(b.scheduledStart).getTime())[0];
-  useFocusEffect(useCallback(() => { void enableCaregiverPushNotifications().catch(() => false); return () => {}; }, []));
+  useFocusEffect(useCallback(() => {
+    void AsyncStorage.getItem("elitebridge-caregiver-settings-v1").then((value) => {
+      if (!value || JSON.parse(value)?.pushAlerts !== false) return enableCaregiverPushNotifications();
+      return false;
+    }).catch(() => false);
+    return () => {};
+  }, []));
   const reload = async () => { setRefreshing(true); try { await refresh(); } finally { setRefreshing(false); } };
   const doClockOut = async () => {
     if (!active || working) return;
