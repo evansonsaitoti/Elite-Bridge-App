@@ -131,6 +131,15 @@ export async function removeCaregiverDevice(token: string) {
   });
 }
 
+export async function fetchCaregiverProfilePhoto(): Promise<string | null> {
+  const result = await request<{ photo: string | null }>("/api/caregivers/me/photo");
+  return result.photo;
+}
+
+export async function uploadCaregiverProfilePhoto(photo: string): Promise<void> {
+  await request<{ saved: boolean }>("/api/caregivers/me/photo", { method: "PUT", body: JSON.stringify({ photo }) });
+}
+
 export async function clearCaregiverBackendSession() {
   await AsyncStorage.removeItem(TOKEN_KEY);
 }
