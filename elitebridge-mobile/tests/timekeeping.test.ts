@@ -45,7 +45,7 @@ describe("timekeepingReducer", () => {
     expect(getActiveEntry(state.entries, baseEntry.staffKey)?.id).toBe("time-1");
   });
 
-  it("tracks a completed break and subtracts it from worked time", () => {
+  it("tracks a completed paid break without deducting payable time", () => {
     let state = timekeepingReducer(initialTimekeepingState, {
       type: "clock_in",
       entry: baseEntry,
@@ -76,8 +76,8 @@ describe("timekeepingReducer", () => {
     const completed = state.entries[0];
     expect(completed.status).toBe("completed");
     expect(calculateBreakMilliseconds(completed)).toBe(30 * 60 * 1000);
-    expect(calculateWorkedMilliseconds(completed)).toBe(7.5 * 60 * 60 * 1000);
-    expect(formatDuration(calculateWorkedMilliseconds(completed))).toBe("07:30:00");
+    expect(calculateWorkedMilliseconds(completed)).toBe(8 * 60 * 60 * 1000);
+    expect(formatDuration(calculateWorkedMilliseconds(completed))).toBe("08:00:00");
   });
 
   it("supports correction requests, resubmission and approval", () => {

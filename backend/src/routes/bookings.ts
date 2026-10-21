@@ -1274,6 +1274,9 @@ router.post("/:shiftId/clock-out", authMiddleware, async (req: AuthRequest, res,
     `);
     const clockInAt = new Date(utcTimestamp(clockIn.timestamp)!);
     const clockOutAt = new Date(utcTimestamp((clockOut as any).rows[0].timestamp)!);
+    // This existing visit workflow records breaks as paid time. Preserve the full
+    // server-timestamp interval for payable hours; never silently deduct them.
+    // Any future unpaid-break support requires explicit pay classification.
     const workedMinutes = Math.max(0, Math.round((clockOutAt.getTime() - clockInAt.getTime()) / 60000));
     const assignedRate = Number(assignment.caregiver_pay_rate);
     const profileRate = Number(assignment.caregiver_profile_rate);

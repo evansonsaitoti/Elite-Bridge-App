@@ -2,7 +2,8 @@ import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db";
 import { caregivers, users } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+import { ensureCoreTables } from "../db/bootstrap";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 
@@ -36,6 +37,62 @@ router.put("/me/matching", authMiddleware, async (req: AuthRequest, res, next) =
       await db.insert(caregivers).values({ userId: req.user.id, hourlyRate: "0", specialties: data.preferredServices, certifications: [], availability, isAvailable: true });
     }
     res.json({ message: "Matching profile updated" });
+  } catch (error) { next(error); }
+});
+
+// Personal contact information is private to the signed-in caregiver.
+// The user phone syncs with Elite Work's shared user record; private service-area
+// and emergency-contact notes are not exposed in generic agency listing payloads.
+async function ensureCaregiverDetailsTable() {
+  await ensureCoreTables();
+  await db.execute(sql`CREATE TABLE IF NOT EXISTS caregiver_personal_details (
+    user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+    service_area TEXT NOT NULL DEFAULT '',
+    emergency_contact TEXT NOT NULL DEFAULT '',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+  )`);
+}
+const detailsSchema = z.object({
+  phone: z.string().trim().max(20),
+  address: z.string().trim().max(200),
+  emergencyContact: z.string().trim().max(200),
+}).strict();
+
+router.get("/me/details", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    await ensureCaregiverDetailsTable();
+    const result = await db.execute(sql`
+      SELECT u.phone, d.service_area, d.emergency_contact
+      FROM users u LEFT JOIN caregiver_personal_details d ON d.user_id = u.id
+      WHERE u.id = ${req.user.id}
+    `);
+    const item = (result as any).rows[0];
+    if (!item) throw new AppError(404, "Account not found");
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ details: {
+      phone: item.phone || "", address: item.service_area || "",
+      emergencyContact: item.emergency_contact || "",
+    } });
+  } catch (error) { next(error); }
+});
+
+router.put("/me/details", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const values = detailsSchema.parse(req.body);
+    await ensureCaregiverDetailsTable();
+    await db.transaction(async (tx) => {
+      const updated = await tx.execute(sql`UPDATE users SET phone = ${values.phone || null},
+        updated_at = CURRENT_TIMESTAMP WHERE id = ${req.user!.id} RETURNING id`);
+      if (!(updated as any).rows.length) throw new AppError(404, "Account not found");
+      await tx.execute(sql`INSERT INTO caregiver_personal_details (user_id, service_area, emergency_contact)
+        VALUES (${req.user!.id}, ${values.address}, ${values.emergencyContact})
+        ON CONFLICT (user_id) DO UPDATE SET service_area = EXCLUDED.service_area,
+          emergency_contact = EXCLUDED.emergency_contact, updated_at = CURRENT_TIMESTAMP`);
+    });
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ details: values, saved: true });
   } catch (error) { next(error); }
 });
 
