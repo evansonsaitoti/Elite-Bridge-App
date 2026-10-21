@@ -38,6 +38,7 @@ export type TimeEntry = {
   scheduledEnd: string;
   clockInAt: string;
   clockOutAt: string | null;
+  approvedWorkedMinutes?: number | null;
   clockInLocation: ClockLocation | null;
   clockOutLocation: ClockLocation | null;
   breaks: BreakPeriod[];
@@ -193,6 +194,10 @@ export function calculateWorkedMilliseconds(entry: TimeEntry, now = new Date()):
   const endedAt = entry.clockOutAt
     ? new Date(entry.clockOutAt).getTime()
     : now.getTime();
+  // Completed shifts use the same authoritative minutes that Elite Work receives.
+  if (entry.clockOutAt && typeof entry.approvedWorkedMinutes === "number" && Number.isFinite(entry.approvedWorkedMinutes)) {
+    return Math.max(0, entry.approvedWorkedMinutes) * 60_000;
+  }
   // Recorded breaks in this workflow are paid. Do not subtract them from payable hours.
   // A future unpaid-break feature must record its type explicitly on both server and client.
   return Math.max(0, endedAt - startedAt);
