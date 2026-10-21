@@ -225,7 +225,9 @@ router.post("/shifts/:shiftId/items", async(req:AuthRequest,res,next)=>{
       }
     }
     res.setHeader("Cache-Control","no-store");
-    res.status(201).json({item:mapItem({...saved,first_name:req.user!.email,last_name:""})});
+    const author=rows(await db.execute(sql`SELECT first_name,last_name FROM users
+      WHERE id=${req.user!.id} LIMIT 1`))[0] || {};
+    res.status(201).json({item:mapItem({...saved,first_name:author.first_name,last_name:author.last_name})});
   }catch(error){next(error);}
 });
 
