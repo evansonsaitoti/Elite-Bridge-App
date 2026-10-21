@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge caregiver workspace for shifts, schedules, time tracking, messages and earnings.">
   <title>Caregiver workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=caregiver-invite-continuity-20261020">
+  <link rel="stylesheet" href="/app-shell.css?v=handoffs-chat-20261021">
 </head>
 <body data-role="caregiver">
   <div class="app-frame">
@@ -29,7 +29,8 @@
       <nav class="nav-shell" id="appNavigation" aria-label="Caregiver workspace">
         <a class="nav-link" href="/operations.html"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 5 3.5 8.5 7 10 3.5-1.5 7-5 7-10V6l-7-3Z"></path><path d="m8.5 12 2.5 2.5 4.5-5"></path></svg></span>Incidents & SMS alerts</a>
         <div class="nav-section"><p class="nav-label">Workspace</p><a class="nav-link active mobile-primary" href="#overview" data-view="overview"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10.5 9-7.5 9 7.5"></path><path d="M5.5 9.5V21h13V9.5"></path><path d="M9.5 21v-6h5v6"></path></svg></span>Overview</a><a class="nav-link mobile-primary" href="#available" data-view="available"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="6" width="18" height="15" rx="2"></rect><path d="M8 3v6M16 3v6M3 11h18"></path></svg></span>Available shifts<span class="nav-count">Live</span></a><a class="nav-link mobile-primary" href="#schedule" data-view="schedule"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"></rect><path d="M8 3v4M16 3v4M3 10h18M8 14h3M14 14h2M8 17h3"></path></svg></span>Schedule</a><a class="nav-link mobile-primary" href="#clock" data-view="clock"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg></span>Time clock</a></div>
-        <div class="nav-section"><p class="nav-label">Communication</p><a class="nav-link" href="#messages" data-view="messages"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 4V5Z"></path><path d="M8 10h8M8 13h5"></path></svg></span>Messages</a><a class="nav-link" href="#updates" data-view="updates"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg></span>Care updates</a></div>
+        <div class="nav-section"><p class="nav-label">Communication</p><a class="nav-link" href="#handoffs" data-view="handoffs"><span class="nav-icon nav-icon--green">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h10v18H7z"></path><path d="M9 8h6M9 12h6M9 16h4"></path><path d="m9 16 1 1 2-2"></path></svg></span>Care handoffs</a><a class="nav-link" href="#messages" data-view="messages"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16v12H8l-4 4V5Z"></path><path d="M8 10h8M8 13h5"></path></svg></span>Messages</a><a class="nav-link" href="#updates" data-view="updates"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 9a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"></path></svg></span>Care updates</a></div>
         <div class="nav-section"><p class="nav-label">My work</p><a class="nav-link" href="#earnings" data-view="earnings"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 6H9a3 3 0 0 0 0 6h6a3 3 0 0 1 0 6H6"></path></svg></span>Earnings</a><a class="nav-link" href="#training" data-view="training"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 7 9-4 9 4-9 4-9-4Z"></path><path d="M6 9v7c4 3 8 3 12 0V9"></path><path d="M21 8v8"></path></svg></span>Caregiver training</a><a class="nav-link" href="#documents" data-view="documents"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h8l4 4v14H6V3Z"></path><path d="M14 3v5h5M9 14h6M9 17h4"></path></svg></span>Documents</a><a class="nav-link" href="#profile" data-view="profile"><span class="nav-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21a8 8 0 0 1 16 0"></path></svg></span>Profile & availability</a></div>
         <button class="mobile-more-tab" id="mobileMoreTab" type="button" aria-expanded="false" aria-label="Open more navigation" aria-controls="appNavigation"><span class="nav-icon"><svg class="more-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="1"></circle><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></svg><svg class="close-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></span><span class="mobile-more-label">More</span></button>
         <div class="sidebar-foot"><strong>Mobile app connected</strong><p>Your account and connected profile information stay together across web and mobile.</p><a href="/onboarding">Review your setup →</a></div>
@@ -58,7 +59,42 @@
       <section data-view-panel="available" hidden><div class="page-head"><div><p class="eyebrow">Opportunities</p><h1>Available shifts</h1><p>Review open care work posted by employers.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Open care shifts</h2><p>Live opportunities from Elite Bridge</p></div></div><div id="availableShiftList"></div></div></section>
       <section data-view-panel="schedule" hidden><div class="page-head"><div><p class="eyebrow">My work</p><h1>Schedule</h1><p>Your accepted and upcoming care visits will appear here.</p></div></div><div class="surface surface-pad"><div id="assignedShiftList"><div class="empty-state"><div><span class="empty-mark">▦</span><strong>No scheduled visits yet</strong><p>When an employer confirms you for a shift, it will appear here and in your mobile app.</p><button class="primary-button" type="button" data-go-view="available">Find a shift</button></div></div></div></div></section>
       <section data-view-panel="clock" hidden><div class="page-head"><div><p class="eyebrow">Timekeeping</p><h1>Time clock</h1><p>Attendance and timesheets are shared with your mobile app and employer. Breaks are recorded as paid time.</p></div><button class="secondary-button" id="refreshTime" type="button">Refresh</button></div><div class="surface surface-pad"><div id="caregiverClock"></div></div><div class="surface surface-pad"><h2>My timesheets</h2><div id="caregiverTimesheets"></div></div></section>
-      <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Conversations</h2><p>Your recent contacts</p></div></div><div id="conversationList"></div></div></section>
+      <section data-view-panel="handoffs" hidden>
+        <div class="page-head"><div><p class="eyebrow">Care continuity</p><h1>Caregiver handoffs</h1>
+          <p>Leave non-medical handoff notes and next-shift to-do items for the caregiver assigned to the same client.</p></div></div>
+        <div class="care-web-handoffs">
+          <div class="surface surface-pad">
+            <div class="surface-head"><div><h2>Next-shift checklist</h2><p>Client-specific and visible only to their assigned team.</p></div></div>
+            <label for="careWebHandoffClient">Client</label>
+            <select id="careWebHandoffClient" aria-label="Select assigned client"><option value="">Loading assigned clients…</option></select>
+            <div id="careWebHandoffList" aria-live="polite"></div>
+          </div>
+          <form class="surface surface-pad" id="careWebHandoffForm">
+            <div class="surface-head"><div><h2>Leave a handoff</h2><p>Share a reminder or to-do for the next caregiver.</p></div></div>
+            <label for="careWebHandoffKind">Record type</label>
+            <select id="careWebHandoffKind"><option value="task">☐ To-do task</option><option value="note">Handoff note</option></select>
+            <label for="careWebHandoffContent">What should the next caregiver know?</label>
+            <textarea id="careWebHandoffContent" maxlength="700" minlength="4" required rows="5" placeholder="Write a clear, non-medical handoff…"></textarea>
+            <p class="care-web-disclaimer">Do not enter diagnoses, treatment details, door codes or confidential financial information. Report urgent matters through the incident workflow.</p>
+            <button class="primary-button" type="submit">Save to care team</button>
+            <p id="careWebHandoffStatus" role="status"></p>
+          </form>
+        </div>
+      </section>
+      <section data-view-panel="messages" hidden><div class="page-head"><div><p class="eyebrow">Communication</p><h1>Messages</h1><p>Care-related conversations connected to your account.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Conversations</h2><p>Your recent contacts</p></div></div><div id="conversationList" hidden></div>
+        <div class="care-web-chat">
+          <div class="care-web-chat-header"><div><h2>Secure team chat</h2><p>Agency and caregiver messages are synchronized with Elite Work and Elite Care.</p></div>
+            <select id="careWebChatPeer" aria-label="Choose team contact"><option value="">Loading contacts…</option></select>
+          </div>
+          <div class="care-web-thread" id="careWebChatThread" role="log" aria-live="polite"></div>
+          <form id="careWebChatForm" class="care-web-chat-form">
+            <label for="careWebChatText">New message</label>
+            <textarea id="careWebChatText" maxlength="2000" rows="3" required placeholder="Write a private message to your connected care team…"></textarea>
+            <button class="primary-button" type="submit">Send secure message</button>
+          </form>
+          <p class="care-web-disclaimer">Push previews do not expose private client information. Messages are for ordinary care-team communication, not emergencies.</p>
+          <p id="careWebChatStatus" role="status"></p>
+        </div></div></section>
       <section data-view-panel="updates" hidden><div class="page-head"><div><p class="eyebrow">Care communication</p><h1>Care updates</h1><p>Important visit notes and employer updates stay organized here.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">◎</span><strong>No care updates yet</strong><p>Updates connected to scheduled care will appear here.</p></div></div></div></section>
       <section data-view-panel="earnings" hidden><div class="page-head"><div><p class="eyebrow">Payments</p><h1>Earnings</h1><p>Track recorded earnings from completed Elite Bridge care.</p></div></div><div class="metric-grid"><article class="metric-card"><span class="metric-label">Total earnings <i class="metric-dot"></i></span><strong class="metric-value">See overview</strong><span class="metric-foot">All recorded payments</span></article><article class="metric-card"><span class="metric-label">Pending <i class="metric-dot"></i></span><strong class="metric-value">$0</strong><span class="metric-foot">Awaiting processing</span></article></div></section>
       <section data-view-panel="documents" hidden><div class="page-head"><div><p class="eyebrow">Trust & compliance</p><h1>Documents</h1><p>Keep credentials and verification status easy to review.</p></div></div><div class="surface surface-pad"><div class="empty-state"><div><span class="empty-mark">✓</span><strong>Document upload is coming to web</strong><p>Your existing mobile verification status remains connected. Secure web upload will be added here.</p></div></div></div></section>
@@ -78,5 +114,6 @@
   <script>document.getElementById('dayPart').textContent = new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening';</script>
   <script src="/dashboard.js?v=mobile-tabs-20261001"></script>
   <script src="/care-workspace.js?v=care-workspace-intake-20261020"></script>
+  <script src="/care-team-web.js?v=handoffs-chat-20261021"></script>
 </body>
 </html>
