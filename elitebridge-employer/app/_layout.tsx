@@ -1,6 +1,7 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as Notifications from "expo-notifications";
+import { useEffect } from "react";
 
 import { colors } from "../lib/theme";
 
@@ -14,6 +15,15 @@ Notifications.setNotificationHandler({
 });
 
 export default function RootLayout() {
+  const router = useRouter();
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(response => {
+      const data = response.notification.request.content.data;
+      if (data?.type === "team_message") router.push("/messages");
+      else if (data?.type === "care_handoff") router.push("/handoffs");
+    });
+    return () => sub.remove();
+  }, [router]);
   return (
     <>
       <StatusBar style="dark" />
