@@ -55,12 +55,12 @@ export default function StaffLayout() {
     <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
     <View style={{
       flexDirection: "row",
-      minHeight: 72 + Math.max(insets.bottom, 8),
+      minHeight: 61 + Math.max(insets.bottom, 8),
       marginHorizontal: 0,
       marginBottom: 0,
       paddingHorizontal: 8,
-      paddingTop: 8,
-      paddingBottom: 8,
+      paddingTop: 6,
+      paddingBottom: 6,
       borderRadius: 0,
       backgroundColor: colors.surface,
       shadowColor: "#101828",
@@ -73,10 +73,10 @@ export default function StaffLayout() {
         const active = pathname.includes(tab.match);
         const tint = active ? colors.primary : colors.muted;
         return <Pressable key={tab.route} accessibilityRole="button" accessibilityState={{ selected: active }} onPress={() => router.replace(tab.route)} style={({ pressed }) => ({ flex: 1, alignItems: "center", justifyContent: "center", opacity: pressed ? 0.7 : 1, transform: [{ translateY: active ? -2 : 0 }] })}>
-          <View style={{ width: active ? 56 : 48, height: active ? 52 : 46, borderRadius: active ? 19 : 17, alignItems: "center", justifyContent: "center", backgroundColor: active ? "#FFFFFF" : "#EAF4EF", borderWidth: 1, borderColor: active ? colors.primary : "#D9E9E2" }}>
-            <IconSymbol size={active ? 28 : 25} name={tab.icon} color={tint} />
+          <View style={{ width: active ? 50 : 44, height: active ? 47 : 42, borderRadius: active ? 19 : 17, alignItems: "center", justifyContent: "center", backgroundColor: active ? "#FFFFFF" : "#EAF4EF", borderWidth: 1, borderColor: active ? colors.primary : "#D9E9E2" }}>
+            <IconSymbol size={active ? 26 : 24} name={tab.icon} color={tint} />
           </View>
-          <Text numberOfLines={1} style={{ marginTop: 4, fontSize: 10.5, fontWeight: active ? "900" : "700", color: tint }}>{tab.label}</Text>
+          <Text numberOfLines={1} style={{ marginTop: 3, fontSize: 10.5, fontWeight: active ? "900" : "700", color: tint }}>{tab.label}</Text>
         </Pressable>;
       })}
     </View>
