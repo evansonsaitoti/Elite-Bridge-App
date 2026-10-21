@@ -27,6 +27,7 @@ export default function HandoffsScreen() {
   const [saving,setSaving]=useState(false);
   const [busyId,setBusyId]=useState<number|null>(null);
   const [error,setError]=useState("");
+  const [showTeamNotes,setShowTeamNotes]=useState(false);
 
   const refresh=useCallback(async(userRefresh=false)=>{
     if(userRefresh)setRefreshing(true);
@@ -98,13 +99,21 @@ export default function HandoffsScreen() {
     <ScrollView keyboardShouldPersistTaps="handled"
       contentContainerStyle={{padding:18,paddingBottom:70}}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={()=>void refresh(true)}/>}>
-      <Text style={{color:"#A57C34",fontWeight:"900",fontSize:11,letterSpacing:1.3}}>ELITE BRIDGE · CARE TEAM</Text>
-      <Text style={{fontSize:27,fontWeight:"900",color:"#093F29",marginTop:5}}>Caregiver handoff</Text>
-      <Text style={{fontSize:13,lineHeight:20,color:"#60756A",marginTop:8,marginBottom:18}}>
-        Share what needs doing next. Notes and checklists stay with the client for the next assigned caregiver.
+      <Text style={{color:"#AE812B",fontWeight:"900",fontSize:11,letterSpacing:1.4}}>ELITE CARE · CAREGIVER</Text>
+      <Text style={{fontSize:27,fontWeight:"900",color:"#093F29",marginTop:4}}>Tasks</Text>
+      <Text style={{fontSize:13,lineHeight:20,color:"#60756A",marginTop:5,marginBottom:16}}>
+        Today's household checklist and handover history, shared across shifts.
       </Text>
 
       <CareSiteChecklistPanel />
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Show or hide additional care team notes"
+        onPress={()=>setShowTeamNotes(value=>!value)}
+        style={{borderRadius:17,borderWidth:1,borderColor:"#D5E7DA",backgroundColor:"#FFFFFF",minHeight:55,
+          paddingHorizontal:16,alignItems:"center",flexDirection:"row",justifyContent:"space-between",marginBottom:15}}>
+        <Text style={{fontSize:15,fontWeight:"900",color:"#075B42"}}>Additional care-team notes</Text>
+        <Text style={{fontSize:19,color:"#075B42"}}>{showTeamNotes?"−":"+"}</Text>
+      </TouchableOpacity>
+      {showTeamNotes ? <>
       {error?<Text accessibilityRole="alert" style={{color:"#A23831",backgroundColor:"#FFF0EC",padding:13,borderRadius:10,marginBottom:14}}>{error}</Text>:null}
       {loading?<ActivityIndicator color="#0B5536" size="large" style={{marginVertical:25}}/>:null}
       {!loading&&!clients.length?<View style={{backgroundColor:"#FFF",padding:24,borderRadius:16,borderColor:"#E2EAE4",borderWidth:1}}>
@@ -161,6 +170,7 @@ export default function HandoffsScreen() {
           {completed.map(x=>card(x))}
         </View>:null}
       </View>:null}
+      </> : null}
     </ScrollView>
   </SafeAreaView>;
 }
