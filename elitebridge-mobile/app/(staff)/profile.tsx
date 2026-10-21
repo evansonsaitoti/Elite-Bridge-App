@@ -32,7 +32,6 @@ export default function StaffProfile() {
   const [profileDraft, setProfileDraft] = useState({
     phone: "",
     address: "",
-    availability: "",
     emergencyContact: "",
   });
   const [settings, setSettings] = useState({
