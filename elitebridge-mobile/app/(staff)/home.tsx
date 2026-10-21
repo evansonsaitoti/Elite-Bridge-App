@@ -43,14 +43,14 @@ export default function StaffHome() {
     if (!ready) { Alert.alert("Loading", "Your shifts are still being synchronized."); return; }
     if (error) { Alert.alert("Sync unavailable", error + ". Pull down to refresh before recording attendance."); return; }
     if (active) {
-      Alert.alert("Clock out of this shift?", "Review unfinished tasks and care notes before ending your visit.", [
+      Alert.alert("Before you clock out", "Check the shared Tasks list, leave any handover notes, and confirm your visit is finished. Outstanding tasks do not prevent clock-out.", [
         { text: "Review tasks", onPress: () => router.push("/(staff)/handoff") },
         { text: "Cancel", style: "cancel" },
         { text: "Clock Out", onPress: () => void doClockOut() },
       ]);
       return;
     }
-    if (!upcoming) { Alert.alert("No assigned shift", "Your employer must assign a shift before you can clock in.", [{ text: "View shifts", onPress: () => router.push("/(staff)/shifts") }, { text: "OK" }]); return; }
+    if (!upcoming) { Alert.alert("No assigned shift", "Shared care-site tasks are separate from staff assignments. Your employer must assign a shift in Elite Work before you can clock in.", [{ text: "View shifts", onPress: () => router.push("/(staff)/shifts") }, { text: "OK" }]); return; }
     setWorking(true);
     try {
       const location = await captureClockLocation();
