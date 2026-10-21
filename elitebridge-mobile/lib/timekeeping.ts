@@ -193,7 +193,9 @@ export function calculateWorkedMilliseconds(entry: TimeEntry, now = new Date()):
   const endedAt = entry.clockOutAt
     ? new Date(entry.clockOutAt).getTime()
     : now.getTime();
-  return Math.max(0, endedAt - startedAt - calculateBreakMilliseconds(entry, now));
+  // Recorded breaks in this workflow are paid. Do not subtract them from payable hours.
+  // A future unpaid-break feature must record its type explicitly on both server and client.
+  return Math.max(0, endedAt - startedAt);
 }
 
 export function calculateWorkedHours(entry: TimeEntry): number {
