@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, Linking, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
+import * as ImagePicker from "expo-image-picker";
+import { Alert, Image, Linking, ScrollView, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, sharedApiConfigured } from "@/lib/shared-api";
+import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, fetchCaregiverProfilePhoto, uploadCaregiverProfilePhoto, sharedApiConfigured } from "@/lib/shared-api";
 import { disableCaregiverPushNotifications, enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 type LocalSession = { email?: string; name?: string };
@@ -22,13 +23,15 @@ export default function StaffProfile() {
   const router = useRouter();
   const [session, setSession] = useState<LocalSession>({});
   const [deleting, setDeleting] = useState(false);
+  const [photo, setPhoto] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showAdvancedAccount, setShowAdvancedAccount] = useState(false);
   const [activePanel, setActivePanel] = useState<ProfilePanel>(null);
   const [profileDraft, setProfileDraft] = useState({
-    phone: "(508) 251-9346",
-    address: "Greater Lowell, MA",
-    availability: "Evenings, weekends and short-notice coverage",
-    emergencyContact: "Elite Bridge Staffing support",
+    phone: "",
+    address: "",
+    availability: "",
+    emergencyContact: "",
   });
   const [settings, setSettings] = useState({
     pushAlerts: true,
@@ -56,6 +59,39 @@ export default function StaffProfile() {
       Alert.alert("Could not load profile", "Your saved profile details could not be loaded on this device.");
     });
   }, []);
+
+  useEffect(() => {
+    if (!sharedApiConfigured) return;
+    fetchCaregiverProfilePhoto().then(setPhoto).catch(() => {});
+  }, []);
+
+  const chooseProfilePhoto = async () => {
+    if (uploadingPhoto) return;
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert("Photo permission needed", "Allow photo access to select your profile picture.");
+        return;
+      }
+      const picked = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ["images"], allowsEditing: true, aspect: [1, 1], quality: 0.25, base64: true,
+      });
+      if (picked.canceled || !picked.assets[0]?.base64) return;
+      const asset = picked.assets[0];
+      const mime = asset.mimeType === "image/png" ? "image/png" : "image/jpeg";
+      const value = "data:" + mime + ";base64," + asset.base64;
+      if (value.length > 600000) {
+        Alert.alert("Photo too large", "Please choose a smaller photo.");
+        return;
+      }
+      setUploadingPhoto(true);
+      await uploadCaregiverProfilePhoto(value);
+      setPhoto(value);
+      Alert.alert("Photo uploaded", "Your picture is saved in the shared Elite Bridge caregiver profile.");
+    } catch (error) {
+      Alert.alert("Photo could not be uploaded", error instanceof Error ? error.message : "Please try again.");
+    } finally { setUploadingPhoto(false); }
+  };
 
   const handleLogout = () => {
     Alert.alert("Sign out", "Sign out of Elite Bridge on this device?", [
@@ -343,9 +379,14 @@ export default function StaffProfile() {
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>Manage your caregiver profile, requests, settings and agency connection.</Text>
 
       <View style={{ backgroundColor: colors.surface, borderRadius: 18, padding: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 14 }}>
-        <View style={{ width: 58, height: 58, borderRadius: 18, backgroundColor: "#0A4A35", alignItems: "center", justifyContent: "center", marginBottom: 14 }}>
-          <Text style={{ color: "#EBCB8B", fontSize: 19, fontWeight: "900" }}>EB</Text>
-        </View>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Upload caregiver profile picture" disabled={uploadingPhoto}
+          onPress={() => void chooseProfilePhoto()} style={{ alignSelf: "flex-start", marginBottom: 14 }}>
+          {photo ? <Image source={{ uri: photo }} style={{ width: 86, height: 86, borderRadius: 23 }} accessibilityLabel="Your profile picture" /> :
+            <View style={{ width: 86, height: 86, borderRadius: 23, backgroundColor: "#0A4A35", alignItems: "center", justifyContent: "center" }}>
+              <Text style={{ color: "#EBCB8B", fontSize: 25, fontWeight: "900" }}>EB</Text>
+            </View>}
+          <Text style={{ color: "#075B42", fontSize: 12, fontWeight: "900", marginTop: 8 }}>{uploadingPhoto ? "Uploading…" : "Upload profile photo"}</Text>
+        </TouchableOpacity>
         <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{displayName}</Text>
         <Text style={{ fontSize: 13, color: colors.muted, marginTop: 5 }}>{displayEmail}</Text>
         <View style={{ alignSelf: "flex-start", marginTop: 12, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: sharedApiConfigured ? "#ECFDF3" : "#F2F4F7" }}>

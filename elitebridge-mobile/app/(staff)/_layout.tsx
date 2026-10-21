@@ -10,10 +10,10 @@ import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 const STAFF_TABS = [
   { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
-  { label: "Match", route: "/(staff)/match", match: "/match", icon: "sparkles" },
-  { label: "Earnings", route: "/(staff)/earnings", match: "/earnings", icon: "calendar" },
-  { label: "Chat", route: "/(staff)/chat", match: "/chat", icon: "message.fill" },
-  { label: "Profile", route: "/(staff)/profile", match: "/profile", icon: "person.crop.circle.fill" },
+  { label: "Shifts", route: "/(staff)/shifts", match: "/shifts", icon: "calendar" },
+  { label: "Tasks", route: "/(staff)/handoff", match: "/handoff", icon: "checklist" },
+  { label: "Clients", route: "/(staff)/clients", match: "/clients", icon: "person.2" },
+  { label: "More", route: "/(staff)/more", match: "/more", icon: "square.grid.2x2" },
 ] as const;
 
 export default function StaffLayout() {
@@ -51,16 +51,16 @@ export default function StaffLayout() {
     <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
     <View style={{
       flexDirection: "row",
-      minHeight: 86 + Math.max(insets.bottom, 8),
-      marginHorizontal: 14,
-      marginBottom: Math.max(insets.bottom, 8),
+      minHeight: 72 + Math.max(insets.bottom, 8),
+      marginHorizontal: 0,
+      marginBottom: 0,
       paddingHorizontal: 8,
       paddingTop: 8,
       paddingBottom: 8,
-      borderRadius: 30,
+      borderRadius: 0,
       backgroundColor: colors.surface,
       shadowColor: "#101828",
-      shadowOpacity: 0.12,
+      shadowOpacity: 0.05,
       shadowRadius: 18,
       shadowOffset: { width: 0, height: 8 },
       elevation: 8,

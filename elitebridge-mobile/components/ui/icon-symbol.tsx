@@ -26,6 +26,21 @@ const MAPPING = {
   "dollarsign.circle.fill": "paid",
   "chevron.left.forwardslash.chevron.right": "code",
   "chevron.right": "chevron-right",
+  "checklist": "checklist",
+  "person.2": "people-outline",
+  "doc.text": "description",
+  "note.text": "sticky-note-2",
+  "message": "chat-bubble-outline",
+  "bell": "notifications-none",
+  "line.3.horizontal": "menu",
+  "timer": "timer",
+  "clock": "schedule",
+  "square.grid.2x2": "grid-view",
+  "person.crop.circle": "account-circle",
+  "calendar.badge.plus": "event-available",
+  "slider.horizontal.3": "tune",
+  "arrow.left.arrow.right": "swap-horiz",
+  "exclamationmark.shield": "report-problem",
 } as IconMapping;
 
 /**

@@ -39,6 +39,30 @@ router.put("/me/matching", authMiddleware, async (req: AuthRequest, res, next) =
   } catch (error) { next(error); }
 });
 
+// Caregiver-owned profile photo, exposed via the existing caregiver profile reads in Elite Work.
+// Limit payload size to keep database and employer record responses bounded.
+router.get("/me/photo", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const result = await db.select({ profileImage: users.profileImage }).from(users).where(eq(users.id, req.user.id)).limit(1);
+    if (!result.length) throw new AppError(404, "Account not found");
+    res.json({ photo: result[0].profileImage || null });
+  } catch (error) { next(error); }
+});
+
+router.put("/me/photo", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    if (!req.user || req.user.role !== "caregiver") throw new AppError(403, "Caregiver access required");
+    const { photo } = z.object({
+      photo: z.string().max(600000).regex(/^data:image\/(?:jpeg|png);base64,[A-Za-z0-9+/=]+$/),
+    }).parse(req.body);
+    // The data URI stores an explicitly selected, compressed image; no device library access is granted to the server.
+    const changed = await db.update(users).set({ profileImage: photo, updatedAt: new Date() }).where(eq(users.id, req.user.id)).returning({ id: users.id });
+    if (!changed.length) throw new AppError(404, "Account not found");
+    res.json({ saved: true });
+  } catch (error) { next(error); }
+});
+
 // List all caregivers (for employer discovery)
 router.get("/", authMiddleware, async (req, res, next) => {
   try {
