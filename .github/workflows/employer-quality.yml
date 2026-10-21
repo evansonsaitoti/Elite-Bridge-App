@@ -44,6 +44,9 @@ jobs:
       - name: TypeScript check
         run: pnpm check
 
+      - name: Audit employer release routes and safety
+        run: pnpm audit:release
+
       - name: Export iOS bundle
         run: npx expo export --platform ios --output-dir dist-ios
 
