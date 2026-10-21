@@ -1,146 +1,204 @@
-import { useMemo, useState } from "react";
-import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, Alert, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Switch, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useRouter } from "expo-router";
-
-import { createEmployerShift, ShiftInput } from "../lib/api";
+import { useFocusEffect, useLocalSearchParams, useRouter } from "expo-router";
+import { createEmployerShift, getEmployerClientLocations, getStoredEmployer, type EmployerClientLocation, type ShiftInput } from "../lib/api";
 import { colors } from "../lib/theme";
 
-const client = {
-  name: "Barry Schwartz",
-  address: "27 Pleasant Street",
-  city: "Manchester",
-  state: "MA",
-  zipCode: "01944",
-  phone: "(914) 450-6397",
-};
-
-const visits = [
-  { day: "Thursday", startTime: "10:00", endTime: "13:00" },
-  { day: "Thursday", startTime: "16:00", endTime: "21:00" },
-  { day: "Friday", startTime: "10:00", endTime: "13:00" },
-  { day: "Friday", startTime: "16:00", endTime: "21:00" },
-  { day: "Saturday", startTime: "10:00", endTime: "13:00" },
-  { day: "Saturday", startTime: "16:00", endTime: "21:00" },
-  { day: "Sunday", startTime: "10:00", endTime: "13:00" },
-  { day: "Sunday", startTime: "16:00", endTime: "21:00" },
-];
-
-const dayOffsets: Record<string, number> = { Thursday: 0, Friday: 1, Saturday: 2, Sunday: 3 };
-
-function addDays(date: string, days: number) {
-  const base = new Date(`${date}T12:00:00Z`);
-  base.setUTCDate(base.getUTCDate() + days);
-  return base.toISOString().slice(0, 10);
+function addDays(date: string, offset: number) {
+  const d = new Date(date + "T12:00:00Z");
+  if (Number.isNaN(d.getTime())) return "";
+  d.setUTCDate(d.getUTCDate() + offset);
+  return d.toISOString().slice(0, 10);
 }
-
+function validDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
+  return addDays(value, 0) === value;
+}
+function validTime(value: string) {
+  if (!/^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value)) return false;
+  return true;
+}
 export default function ClientScheduleScreen() {
   const router = useRouter();
+  const { clientId } = useLocalSearchParams<{ clientId?: string }>();
+  const [clients, setClients] = useState<EmployerClientLocation[]>([]);
+  const [selected, setSelected] = useState<number | null>(null);
   const [startDate, setStartDate] = useState("");
-  const [rate, setRate] = useState("40");
+  const [days, setDays] = useState("4");
+  const [morning, setMorning] = useState(true);
+  const [evening, setEvening] = useState(true);
+  const [morningStart, setMorningStart] = useState("");
+  const [morningEnd, setMorningEnd] = useState("");
+  const [eveningStart, setEveningStart] = useState("");
+  const [eveningEnd, setEveningEnd] = useState("");
   const [serviceType, setServiceType] = useState("Personal care");
   const [caregiverType, setCaregiverType] = useState("Caregiver");
-  const [responsibilities, setResponsibilities] = useState("Personal care, companionship, meal support, light housekeeping, and safety monitoring.");
-  const [assignmentMode, setAssignmentMode] = useState<"instant" | "review">("review");
+  const [responsibilities, setResponsibilities] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactName, setContactName] = useState("");
+  const [assignmentMode, setAssignmentMode] = useState<"instant"|"review">("review");
   const [busy, setBusy] = useState(false);
-
-  const preview = useMemo(() => visits.map((visit) => ({ ...visit, date: startDate ? addDays(startDate, dayOffsets[visit.day]) : "Select start date" })), [startDate]);
-
-  const postSchedule = async () => {
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(startDate)) return Alert.alert("Add start date", "Enter the Thursday date in YYYY-MM-DD format.");
-    const hourlyRate = Number(rate);
-    if (!Number.isFinite(hourlyRate) || hourlyRate <= 0) return Alert.alert("Check rate", "Enter a valid hourly rate.");
-    setBusy(true);
-    try {
-      const posted = [];
-      for (const visit of preview) {
-        const input: ShiftInput = {
-          careRecipientName: client.name,
-          serviceType,
-          caregiverType,
-          startDate: visit.date,
-          timeZone: "America/New_York",
-          numberOfCaregivers: 1,
-          startTime: visit.startTime,
-          endTime: visit.endTime,
-          address: client.address,
-          city: client.city,
-          state: client.state,
-          zipCode: client.zipCode,
-          hourlyRate,
-          responsibilities,
-          contactName: client.name,
-          contactPhone: client.phone,
-          urgency: "standard",
-          assignmentMode,
-        };
-        const result = await createEmployerShift(input);
-        posted.push(result.shift.id);
+  const [loadError, setLoadError] = useState("");
+  const [confirmedPartial, setConfirmedPartial] = useState(false);
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    void (async () => {
+      try {
+        if (!await getStoredEmployer()) { router.replace("/sign-in"); return; }
+        const list = await getEmployerClientLocations();
+        if (active) {
+          setClients(list);
+          const target = list.find(c => String(c.id) === clientId);
+          setSelected(current => current && list.some(c => c.id === current) ? current : target?.id ?? null);
+          if (target) { setContactPhone(target.contactPhone); setContactName(target.contactName || target.clientName); }
+          setLoadError("");
+        }
+      } catch (error) {
+        if (active) setLoadError(error instanceof Error ? error.message : "Unable to load your clients.");
       }
-      Alert.alert(
-        "Client schedule posted",
-        `Created ${posted.length} shifts for ${client.name}. Next you can allocate staff from the shifts page.`,
-        [{ text: "Allocate staff", onPress: () => router.replace("/shifts") }]
-      );
-    } catch (error) {
-      Alert.alert("Schedule not posted", error instanceof Error ? error.message : "Please try again.");
-    } finally {
-      setBusy(false);
+    })();
+    return () => { active = false; };
+  }, [clientId, router]));
+
+  const client = clients.find(c => c.id === selected);
+  const numberDays = Number(days);
+  const preview = useMemo(() => {
+    if (!validDate(startDate) || !Number.isInteger(numberDays) || numberDays < 1 || numberDays > 7) return [];
+    const list: { date: string; startTime: string; endTime: string; label: string }[] = [];
+    for (let i = 0; i < numberDays; i++) {
+      const date = addDays(startDate, i);
+      if (morning) list.push({ date, startTime: morningStart, endTime: morningEnd, label: "First visit" });
+      if (evening) list.push({ date, startTime: eveningStart, endTime: eveningEnd, label: "Second visit" });
     }
+    return list;
+  }, [startDate,numberDays,morning,evening,morningStart,morningEnd,eveningStart,eveningEnd]);
+
+  const postSchedule = () => {
+    if (busy || confirmedPartial) return;
+    if (!client) { Alert.alert("Choose a client", "Select a saved client location first."); return; }
+    if (!preview.length || preview.some(v => !validTime(v.startTime) || !validTime(v.endTime) || v.startTime >= v.endTime)) {
+      Alert.alert("Check schedule", "Enter the first date, 1–7 days, and valid start/end times for the visit windows. Times must be same-day and end after start.");
+      return;
+    }
+    if (!client.address.trim() || !contactName.trim() || !/^[+()0-9 .-]{7,40}$/.test(contactPhone.trim())) {
+      Alert.alert("Contact details required", "A saved street address, on-site contact name, and valid on-site phone are required before publishing. You can enter or correct the contact details here.");
+      return;
+    }
+    if (!serviceType.trim() || !caregiverType.trim() || !responsibilities.trim()) {
+      Alert.alert("Care details required", "Enter the service, caregiver qualification and responsibilities.");
+      return;
+    }
+    Alert.alert("Publish care schedule?", `Create ${preview.length} shifts for ${client.clientName} at ${client.locationName}, using the saved caregiver pay rate of $${client.caregiverRate.toFixed(2)}/hr? Each shift is published separately; do not post the same schedule twice.`, [
+      { text: "Cancel", style: "cancel" },
+      { text: "Publish", onPress: () => void submit(client, preview) },
+    ]);
   };
 
-  return (
-    <SafeAreaView edges={["bottom"]} style={styles.safe}>
-      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-          <View style={styles.clientCard}>
-            <Text style={styles.kicker}>New client</Text>
-            <Text style={styles.clientName}>{client.name}</Text>
-            <Text style={styles.clientMeta}>{client.address}, {client.city}, {client.state} {client.zipCode}</Text>
-            <Text style={styles.clientMeta}>{client.phone}</Text>
-          </View>
+  const submit = async (location: EmployerClientLocation, rows: typeof preview) => {
+    if (busy) return;
+    setBusy(true);
+    let created = 0;
+    try {
+      for (const visit of rows) {
+        const draft: ShiftInput = {
+          careRecipientName: location.clientName, serviceType: serviceType.trim(),
+          caregiverType: caregiverType.trim(), startDate: visit.date, timeZone: "America/New_York",
+          numberOfCaregivers: 1, startTime: visit.startTime, endTime: visit.endTime,
+          address: location.address, city: location.city, state: location.state, zipCode: location.zipCode,
+          // Public shift pay must use caregiver rate, never the private client billing rate.
+          hourlyRate: location.caregiverRate, responsibilities: responsibilities.trim(),
+          contactName: contactName.trim(), contactPhone: contactPhone.trim(),
+          urgency: "standard", assignmentMode,
+        };
+        await createEmployerShift(draft);
+        created++;
+      }
+      Alert.alert("Schedule published", `${created} shifts were created for ${location.clientName}.`, [
+        { text: "View shifts", onPress: () => router.replace("/shifts") },
+      ]);
+      setConfirmedPartial(true);
+    } catch (error) {
+      if (created) setConfirmedPartial(true);
+      Alert.alert("Schedule only partially created", `${created} of ${rows.length} shifts were created. ${error instanceof Error ? error.message : "The remaining visits failed."} Review posted shifts before adding any missing visits to avoid duplicates.`, [
+        { text: "Review shifts", onPress: () => router.replace("/shifts") },
+      ]);
+    } finally { setBusy(false); }
+  };
 
-          <Text style={styles.section}>Schedule</Text>
-          <Field label="Thursday start date" helper="YYYY-MM-DD. The app creates Thu-Sun automatically." placeholder="2026-10-08" value={startDate} onChangeText={setStartDate} keyboardType="numbers-and-punctuation" />
-          <View style={styles.scheduleCard}>
-            {preview.map((visit, index) => <View key={`${visit.day}-${visit.startTime}`} style={[styles.visitRow, index === preview.length - 1 && styles.lastRow]}><Text style={styles.visitDay}>{visit.day}</Text><Text style={styles.visitTime}>{visit.date} · {visit.startTime} - {visit.endTime}</Text></View>)}
-          </View>
+  const field=(label:string,value:string,onChangeText:(v:string)=>void,keyboardType:"default"|"numbers-and-punctuation"|"number-pad"="default") =>
+    <View style={{ marginTop: 12 }}><Text style={styles.label}>{label}</Text>
+      <TextInput accessibilityLabel={label} autoCorrect={false} keyboardType={keyboardType}
+        value={value} onChangeText={onChangeText} placeholderTextColor="#82918A" style={styles.input} />
+    </View>;
 
-          <Text style={styles.section}>Care and pay</Text>
-          <Field label="Service" value={serviceType} onChangeText={setServiceType} />
-          <Field label="Caregiver type" value={caregiverType} onChangeText={setCaregiverType} />
-          <Field label="Client bill rate" helper="Private agency rate. Caregiver pay is set later when allocating staff." value={rate} onChangeText={setRate} keyboardType="decimal-pad" />
-          <Field label="Responsibilities" value={responsibilities} onChangeText={setResponsibilities} multiline numberOfLines={4} style={styles.multiline} />
-
-          <Text style={styles.section}>Staff allocation option</Text>
-          <View style={styles.modeRow}>
-            <TouchableOpacity onPress={() => setAssignmentMode("review")} style={[styles.mode, assignmentMode === "review" && styles.modeActive]}>
-              <Text style={[styles.modeTitle, assignmentMode === "review" && styles.modeTitleActive]}>Review first</Text>
-              <Text style={[styles.modeBody, assignmentMode === "review" && styles.modeBodyActive]}>Staff apply, then you approve the caregiver you want.</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setAssignmentMode("instant")} style={[styles.mode, assignmentMode === "instant" && styles.modeActive]}>
-              <Text style={[styles.modeTitle, assignmentMode === "instant" && styles.modeTitleActive]}>Instant claim</Text>
-              <Text style={[styles.modeBody, assignmentMode === "instant" && styles.modeBodyActive]}>Available matched staff can claim open visits immediately.</Text>
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.note}>After posting, open any shift and tap Allocate staff to assign Gladis, Catherine, Lucy, or another connected caregiver directly.</Text>
-
-          <TouchableOpacity disabled={busy} onPress={() => void postSchedule()} style={[styles.primary, busy && styles.disabled]}>{busy ? <ActivityIndicator color="#FFFFFF" /> : <Text style={styles.primaryText}>Post 8 visits for Barry</Text>}</TouchableOpacity>
+  return <SafeAreaView edges={["bottom"]} style={{ flex: 1, backgroundColor: colors.background }}>
+    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+      <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ padding: 18, paddingBottom: 40 }}>
+        <Text style={styles.title}>Client schedule</Text>
+        <Text style={styles.subtitle}>Create verified visits for a client already saved in your employer account.</Text>
+        {loadError ? <Text accessibilityRole="alert" style={styles.error}>{loadError}</Text> : null}
+        {!clients.length && !loadError ? <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/clients")} style={styles.secondary}>
+          <Text style={styles.secondaryText}>Add a client record first →</Text>
+        </TouchableOpacity> : null}
+        <Text style={styles.heading}>Choose client</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, paddingBottom: 4 }}>
+          {clients.map(c => <TouchableOpacity key={c.id} accessibilityRole="button" onPress={() => { setSelected(c.id); setContactPhone(c.contactPhone); setContactName(c.contactName || c.clientName); setConfirmedPartial(false); }}
+            style={[styles.choice, selected === c.id && styles.choiceSelected]}>
+            <Text style={{ color: selected === c.id ? "#FFF" : colors.green, fontWeight: "900" }}>{c.clientName}</Text>
+            <Text style={{ color: selected === c.id ? "#DCF0E3" : colors.muted, fontSize: 11 }}>{c.locationName} · {c.city}</Text>
+          </TouchableOpacity>)}
         </ScrollView>
-      </KeyboardAvoidingView>
-    </SafeAreaView>
-  );
+        {client ? <View style={styles.client}>
+          <Text style={{ color: "#FFF", fontWeight: "900", fontSize: 19 }}>{client.clientName}</Text>
+          <Text style={{ color: "#CEE9DC", fontSize: 12, marginTop: 6 }}>{client.locationName} · {client.city}, {client.state}</Text>
+          <Text style={{ color: "#FFFFFF", fontSize: 12, marginTop: 7 }}>Caregiver pay: ${client.caregiverRate.toFixed(2)}/hr</Text>
+        </View> : null}
+        {field("On-site contact name",contactName,setContactName)}
+        {field("On-site contact phone",contactPhone,setContactPhone)}
+        <Text style={styles.heading}>Visit windows</Text>
+        {field("First visit date (YYYY-MM-DD)",startDate,setStartDate,"numbers-and-punctuation")}
+        {field("Consecutive days (1–7)",days,setDays,"number-pad")}
+        <View style={styles.toggle}><Text style={styles.toggleText}>First daily visit</Text><Switch value={morning} onValueChange={setMorning}/></View>
+        {morning ? <View style={styles.pair}>{field("Start (HH:MM)",morningStart,setMorningStart,"numbers-and-punctuation")}{field("End (HH:MM)",morningEnd,setMorningEnd,"numbers-and-punctuation")}</View> : null}
+        <View style={styles.toggle}><Text style={styles.toggleText}>Second daily visit</Text><Switch value={evening} onValueChange={setEvening}/></View>
+        {evening ? <View style={styles.pair}>{field("Start (HH:MM)",eveningStart,setEveningStart,"numbers-and-punctuation")}{field("End (HH:MM)",eveningEnd,setEveningEnd,"numbers-and-punctuation")}</View> : null}
+        <Text style={styles.heading}>Care requirements</Text>
+        {field("Service",serviceType,setServiceType)}
+        {field("Caregiver type",caregiverType,setCaregiverType)}
+        {field("Responsibilities",responsibilities,setResponsibilities)}
+        <Text style={styles.heading}>Caregiver response</Text>
+        <View style={styles.pair}>
+          {(["review","instant"] as const).map(mode => <TouchableOpacity key={mode} accessibilityRole="button" onPress={() => setAssignmentMode(mode)}
+            style={[styles.mode,assignmentMode===mode&&styles.choiceSelected]}>
+            <Text style={{ fontWeight: "900", color: assignmentMode===mode?"#FFF":colors.green }}>{mode==="review"?"Review first":"Instant claim"}</Text>
+          </TouchableOpacity>)}
+        </View>
+        <Text style={styles.heading}>Review before posting ({preview.length} visits)</Text>
+        {preview.length ? preview.map((visit,i) => <View key={visit.date+visit.label+i} style={styles.visit}>
+          <Text style={{ color: colors.ink, fontWeight: "800" }}>{visit.date} · {visit.label}</Text>
+          <Text style={{ color: colors.muted, marginTop: 3 }}>{visit.startTime || "Start?"} – {visit.endTime || "End?"}</Text>
+        </View>) : <Text style={styles.subtitle}>Choose a date and visit windows to see a preview.</Text>}
+        {confirmedPartial ? <Text style={styles.error}>This schedule was already submitted or partially submitted. Review existing shifts before creating more.</Text> : null}
+        <TouchableOpacity accessibilityRole="button" disabled={busy||confirmedPartial} onPress={postSchedule} style={[styles.primary,(busy||confirmedPartial)&&{opacity:0.55}]}>
+          {busy ? <ActivityIndicator color="#FFF"/> : <Text style={styles.primaryText}>Review and publish {preview.length} visits</Text>}
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
+  </SafeAreaView>;
 }
 
-function Field({ label, helper, style, ...props }: { label: string; helper?: string } & React.ComponentProps<typeof TextInput>) {
-  return <View style={styles.field}><Text style={styles.label}>{label}</Text><TextInput {...props} autoCorrect={false} placeholderTextColor="#8A9790" style={[styles.input, style]} />{helper ? <Text style={styles.helper}>{helper}</Text> : null}</View>;
-}
-
-const styles = StyleSheet.create({
-  safe: { backgroundColor: colors.background, flex: 1 }, fill: { flex: 1 }, content: { padding: 20, paddingBottom: 44 },
-  clientCard: { backgroundColor: colors.greenDark, borderRadius: 20, padding: 18 }, kicker: { color: colors.gold, fontSize: 11, fontWeight: "900", letterSpacing: 1.5, textTransform: "uppercase" }, clientName: { color: "#FFFFFF", fontSize: 25, fontWeight: "900", marginTop: 8 }, clientMeta: { color: "#D7E8DF", fontSize: 13, lineHeight: 19, marginTop: 3 },
-  section: { color: colors.ink, fontSize: 19, fontWeight: "900", marginTop: 24 }, field: { marginTop: 12 }, label: { color: colors.ink, fontSize: 12, fontWeight: "800", marginBottom: 7 }, input: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 12, borderWidth: 1, color: colors.ink, fontSize: 14, minHeight: 50, paddingHorizontal: 13 }, helper: { color: colors.muted, fontSize: 10, marginTop: 4 }, multiline: { minHeight: 108, paddingTop: 13, textAlignVertical: "top" },
-  scheduleCard: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 16, borderWidth: 1, marginTop: 12, paddingHorizontal: 14 }, visitRow: { borderBottomColor: colors.border, borderBottomWidth: 1, paddingVertical: 12 }, lastRow: { borderBottomWidth: 0 }, visitDay: { color: colors.ink, fontSize: 13, fontWeight: "900" }, visitTime: { color: colors.muted, fontSize: 12, marginTop: 3 },
-  modeRow: { flexDirection: "row", gap: 10, marginTop: 12 }, mode: { backgroundColor: colors.card, borderColor: colors.border, borderRadius: 14, borderWidth: 1, flex: 1, minHeight: 118, padding: 13 }, modeActive: { backgroundColor: colors.green, borderColor: colors.green }, modeTitle: { color: colors.ink, fontSize: 14, fontWeight: "900" }, modeTitleActive: { color: "#FFFFFF" }, modeBody: { color: colors.muted, fontSize: 11, lineHeight: 16, marginTop: 6 }, modeBodyActive: { color: "#D9E9E2" }, note: { color: colors.muted, fontSize: 12, lineHeight: 18, marginTop: 12 },
-  primary: { alignItems: "center", backgroundColor: colors.green, borderRadius: 14, justifyContent: "center", marginTop: 22, minHeight: 54 }, primaryText: { color: "#FFFFFF", fontSize: 15, fontWeight: "900" }, disabled: { opacity: 0.6 },
+const styles=StyleSheet.create({
+  title:{fontSize:27,fontWeight:"900",color:colors.ink},subtitle:{fontSize:12,color:colors.muted,lineHeight:19,marginTop:6},
+  error:{color:"#A3332D",padding:13,borderRadius:11,backgroundColor:"#FFF1ED",marginTop:12},
+  heading:{fontSize:18,fontWeight:"900",color:colors.ink,marginTop:21,marginBottom:10},
+  label:{fontWeight:"800",fontSize:12,color:colors.ink,marginBottom:6},input:{borderWidth:1,borderColor:colors.border,borderRadius:12,backgroundColor:colors.card,minHeight:48,paddingHorizontal:12,color:colors.ink},
+  secondary:{backgroundColor:colors.greenSoft,borderRadius:14,padding:15,marginTop:13},secondaryText:{fontWeight:"900",color:colors.green},
+  choice:{borderRadius:14,borderWidth:1,borderColor:colors.border,backgroundColor:colors.card,padding:12,minWidth:135},choiceSelected:{backgroundColor:colors.green,borderColor:colors.green},
+  client:{backgroundColor:colors.greenDark,padding:18,borderRadius:18,marginTop:15},
+  toggle:{flexDirection:"row",alignItems:"center",justifyContent:"space-between",backgroundColor:colors.card,borderRadius:14,borderWidth:1,borderColor:colors.border,marginTop:12,padding:13},
+  toggleText:{fontWeight:"800",fontSize:14,color:colors.ink},
+  pair:{flexDirection:"row",gap:10},mode:{flex:1,minHeight:47,alignItems:"center",justifyContent:"center",borderRadius:12,borderColor:colors.border,borderWidth:1,backgroundColor:colors.card},
+  visit:{borderWidth:1,borderColor:colors.border,backgroundColor:colors.card,borderRadius:12,padding:12,marginBottom:7},
+  primary:{backgroundColor:colors.green,borderRadius:14,alignItems:"center",justifyContent:"center",marginTop:22,minHeight:52},primaryText:{fontWeight:"900",fontSize:15,color:"#FFF"},
 });

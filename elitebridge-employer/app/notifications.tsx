@@ -1,18 +1,34 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { EmployerNotification, getEmployerNotifications, markAllEmployerNotificationsRead, markEmployerNotificationRead } from "../lib/api";
 import { colors } from "../lib/theme";
 
 export default function NotificationsScreen() {
+  const router = useRouter();
   const [items, setItems] = useState<EmployerNotification[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const load = useCallback(async (refresh = false) => { refresh ? setRefreshing(true) : setLoading(true); try { setItems(await getEmployerNotifications()); } catch (error) { Alert.alert("Unable to load notifications", error instanceof Error ? error.message : "Please try again."); } finally { setLoading(false); setRefreshing(false); } }, []);
   useFocusEffect(useCallback(() => { void load(); }, [load]));
-  const read = async (item: EmployerNotification) => { if (item.is_read) return; try { await markEmployerNotificationRead(item.id); setItems((current) => current.map((value) => value.id === item.id ? { ...value, is_read: true } : value)); } catch {} };
+  const read = async (item: EmployerNotification) => {
+    if (!item.is_read) {
+      try {
+        await markEmployerNotificationRead(item.id);
+        setItems(current => current.map(value => value.id === item.id ? { ...value, is_read: true } : value));
+      } catch (error) {
+        Alert.alert("Could not mark as read", error instanceof Error ? error.message : "Please try again.");
+        return;
+      }
+    }
+    if (item.type === "timesheet_ready" || item.type === "timesheet_review") router.push("/time");
+    else if (item.type === "team_message") router.push("/messages");
+    else if (item.type === "care_handoff" || item.type === "care_checklist") router.push("/handoffs");
+    else if (item.type === "shift_application") router.push("/applications");
+    else if (item.type === "shift_callout" || item.type === "shift_rescue") router.push("/shifts");
+  };
   const readAll = async () => { try { await markAllEmployerNotificationsRead(); setItems((current) => current.map((item) => ({ ...item, is_read: true }))); } catch (error) { Alert.alert("Could not update notifications", error instanceof Error ? error.message : "Please try again."); } };
   return <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
     <View style={styles.header}><View><Text style={styles.title}>Updates</Text><Text style={styles.subtitle}>{items.filter((item) => !item.is_read).length} unread</Text></View>{items.some((item) => !item.is_read) ? <TouchableOpacity onPress={() => void readAll()}><Text style={styles.readAll}>Mark all read</Text></TouchableOpacity> : null}</View>

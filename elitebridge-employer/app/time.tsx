@@ -3,10 +3,14 @@ import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, useRouter } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
 
 import { getEmployerAttendance, getEmployerTimesheets, getStoredEmployer, reviewTimesheet, EmployerTimesheet, ShiftActivity } from "../lib/api";
 import { colors } from "../lib/theme";
 import { EmployerTabBar } from "../components/employer-tab-bar";
+
+const escapeHtml = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export default function TimeScreen() {
   const router = useRouter();
@@ -18,6 +22,7 @@ export default function TimeScreen() {
   const [reviewing, setReviewing] = useState<number | null>(null);
   const [reviewNote, setReviewNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const load = useCallback(async (refresh = false) => {
     refresh ? setRefreshing(true) : setLoading(true);
@@ -47,6 +52,32 @@ export default function TimeScreen() {
   const pendingTimesheets = timesheets.filter((item) => item.status === "pending_approval").length;
   const payrollTotal = timesheets.reduce((sum, item) => sum + Number(item.total_amount || 0), 0);
 
+  const exportTimesheets = async () => {
+    if (exporting || loading || !timesheets.length) return;
+    setExporting(true);
+    try {
+      const rows = timesheets.map(sheet =>
+        "<tr><td>" + escapeHtml(sheet.first_name + " " + sheet.last_name) + "</td><td>" +
+        escapeHtml(sheet.shift_title) + "</td><td>" +
+        escapeHtml(new Date(sheet.clock_in_at).toLocaleString("en-US")) + "</td><td>" +
+        escapeHtml(new Date(sheet.clock_out_at).toLocaleString("en-US")) + "</td><td>" +
+        Number(sheet.worked_hours).toFixed(2) + "</td><td>" +
+        escapeHtml(sheet.status.replace(/_/g, " ")) + "</td></tr>"
+      ).join("");
+      const html = '<html><head><meta name="viewport" content="width=device-width,initial-scale=1"/><style>body{font-family:Helvetica,Arial,sans-serif;padding:28px;color:#173B2C}header{border-bottom:3px solid #075B42;padding-bottom:16px;margin-bottom:20px}h1{color:#075B42;font-size:24px}table{width:100%;border-collapse:collapse;font-size:10px}th,td{border:1px solid #CFDED2;padding:8px;text-align:left}th{background:#EAF4EF}p{font-size:11px;color:#596E60}</style></head><body><header><h1>ELITE BRIDGE STAFFING</h1><strong>Employer Timesheets</strong><p>Generated ' +
+        escapeHtml(new Date().toLocaleString("en-US")) + '</p></header><table><thead><tr><th>Caregiver</th><th>Shift</th><th>Clock In</th><th>Clock Out</th><th>Hours</th><th>Status</th></tr></thead><tbody>' +
+        rows + '</tbody></table><p>For agency review. Pending approval is not a payroll payment confirmation.</p></body></html>';
+      const result = await Print.printToFileAsync({ html });
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(result.uri, { mimeType: "application/pdf", dialogTitle: "Share employer timesheets" });
+      } else {
+        await Print.printAsync({ html });
+      }
+    } catch (error) {
+      Alert.alert("PDF not generated", error instanceof Error ? error.message : "Please try again.");
+    } finally { setExporting(false); }
+  };
+
   return <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
     <View style={styles.summary}><View><Text style={styles.summaryLabel}>CURRENT ATTENDANCE</Text><Text style={styles.summaryValue}>{clockedIn} clocked in</Text><Text style={styles.summaryBody}>Live activity from caregivers assigned through Elite Bridge shifts.</Text></View><View style={styles.clockIcon}><Ionicons color="#FFFFFF" name="time" size={27} /></View></View>
     <View style={styles.timesheetSummary}>
@@ -73,6 +104,10 @@ export default function TimeScreen() {
         </View> : null}
       </View>
     ))}
+    <TouchableOpacity accessibilityRole="button" disabled={loading || exporting || !timesheets.length}
+      onPress={() => void exportTimesheets()} style={[styles.emptyButton, { alignSelf: "flex-start", opacity: loading || exporting || !timesheets.length ? 0.5 : 1 }]}>
+      <Text style={styles.emptyButtonText}>{exporting ? "Preparing PDF…" : "Generate & share timesheets PDF"}</Text>
+    </TouchableOpacity>
     <View style={styles.headingRow}><Text style={styles.heading}>Recent activity</Text><TouchableOpacity onPress={() => void load(true)}><Ionicons color={colors.green} name="refresh" size={21} /></TouchableOpacity></View>
     {loading ? <ActivityIndicator color={colors.green} size="large" style={styles.loader} /> : null}
     {!loading && activities.length === 0 ? <View style={styles.empty}><Ionicons color={colors.green} name="time-outline" size={36} /><Text style={styles.emptyTitle}>No time activity yet</Text><Text style={styles.emptyBody}>Clock-ins and clock-outs from assigned caregiver visits will appear here automatically.</Text><TouchableOpacity onPress={() => router.push("/shifts")} style={styles.emptyButton}><Text style={styles.emptyButtonText}>View schedule</Text></TouchableOpacity></View> : null}

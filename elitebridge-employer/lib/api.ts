@@ -59,6 +59,25 @@ export type ShiftInput = {
   assignmentMode: "instant" | "review";
 };
 
+export type EmployerClientLocation = {
+  id: number; clientName: string; locationName: string; address: string;
+  city: string; state: string; zipCode: string;
+  contactName: string; contactPhone: string; billingRate: number;
+  caregiverRate: number; notes: string; createdAt: string; updatedAt: string;
+};
+export type EmployerClientLocationInput = Omit<EmployerClientLocation,"id"|"createdAt"|"updatedAt">;
+
+export async function getEmployerClientLocations(): Promise<EmployerClientLocation[]> {
+  const result = await request<{ clients: EmployerClientLocation[] }>("/api/clients/employer");
+  return result.clients;
+}
+export async function createEmployerClientLocation(input: EmployerClientLocationInput): Promise<EmployerClientLocation> {
+  const result = await request<{ client: EmployerClientLocation }>("/api/clients/employer", {
+    method: "POST", body: JSON.stringify(input),
+  });
+  return result.client;
+}
+
 export type ClientInvoice = {
   id: number;
   invoice_number: string;

@@ -36,16 +36,24 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (!source.includes("Team directory")) failures.push("Employee team directory is missing.");
 if (!source.includes("Time & attendance")) failures.push("Time and attendance workspace is missing.");
+if (!source.includes("Generate & share timesheets PDF")) failures.push("Employer timesheet PDF export is missing.");
 if (!source.includes("Account controls")) failures.push("Protected account controls access is missing.");
 if (!source.includes("openEmployerShiftForPickup")) failures.push("Publishing a review-mode shift for caregiver pickup is missing.");
 if (!source.includes("getClientInvoices") || !source.includes("createClientInvoice")) failures.push("Official client invoice access is missing.");
+const clientSource = fs.readFileSync(path.join(appDir, "clients.tsx"), "utf8");
+const scheduleSource = fs.readFileSync(path.join(appDir, "client-schedule.tsx"), "utf8");
+const appLayoutSource = fs.readFileSync(path.join(appDir, "_layout.tsx"), "utf8");
+if (!clientSource.includes("getEmployerClientLocations") || !clientSource.includes("createEmployerClientLocation")) failures.push("Clients is not connected to live employer records.");
+if (!scheduleSource.includes("getEmployerClientLocations") || !scheduleSource.includes("caregiverRate") || !scheduleSource.includes("Publish care schedule?")) failures.push("Client schedule must use saved client and explicit confirmation.");
+if (/Barry Schwartz|27 Pleasant Street|Post 8 visits for Barry/.test(scheduleSource)) failures.push("Client scheduling contains a fixed real-world client profile.");
+if (!appLayoutSource.includes('data?.type === "care_checklist"') || !appLayoutSource.includes('data?.type === "timesheet_ready"')) failures.push("Employer push routing must include caregiver handovers and timesheets.");
 const dashboardSource = fs.readFileSync(path.join(appDir, "dashboard.tsx"), "utf8");
 if (!dashboardSource.includes('route: "/invoices"')) failures.push("The home invoice action is not connected to the invoice screen.");
 const shiftSource = fs.readFileSync(path.join(appDir, "shifts.tsx"), "utf8");
 if (!shiftSource.includes('label="All locations"')) failures.push("The schedule location filter is missing its All locations option.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
-if (appConfig.expo.version !== "1.3.8") failures.push("Employer release version must be 1.3.8.");
-if (appConfig.expo.ios.buildNumber !== "42") failures.push("Employer iOS build number must be 42.");
+if (appConfig.expo.version !== "1.3.9") failures.push("Employer release version must be 1.3.9.");
+if (appConfig.expo.ios.buildNumber !== "43") failures.push("Employer iOS build number must be 43.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));

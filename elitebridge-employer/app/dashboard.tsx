@@ -18,7 +18,7 @@ const quickActions: {
   route: string;
 }[] = [
   { title: "Post a shift", detail: "Create a care opportunity", icon: "calendar-outline", tint: colors.green, background: "#DDF4F1", route: "/post-shift" },
-  { title: "Client record", detail: "Prepare care details", icon: "heart-circle-outline", tint: colors.green, background: "#FFF1C9", route: "/clients" },
+  { title: "Client record", detail: "View and add saved clients", icon: "heart-circle-outline", tint: colors.green, background: "#FFF1C9", route: "/clients" },
   { title: "Add expense", detail: "Gas, ads, receipts", icon: "receipt-outline", tint: colors.green, background: "#F7E4D4", route: "/expenses" },
   { title: "Invite caregiver", detail: "Send signup link", icon: "people-outline", tint: colors.green, background: "#E7F3DC", route: "/team" },
   { title: "Care handoffs", detail: "Next-shift notes and tasks", icon: "checkbox-outline", tint: colors.green, background: "#E2F3E9", route: "/handoffs" },
