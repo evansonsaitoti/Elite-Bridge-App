@@ -45,7 +45,11 @@ export default function StaffLayout() {
 
   if (!ready) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
-  const needsTopInset = pathname.includes("/home");
+  // Pages using a plain ScrollView need the native status-bar inset;
+  // screens using ScreenContainer or their own SafeAreaView already manage it.
+  const needsTopInset = ["/home", "/shifts", "/handoff", "/clients", "/more",
+    "/notifications", "/timesheets", "/opportunities", "/earnings"]
+    .some(route => pathname.includes(route));
 
   return <View style={{ flex: 1, backgroundColor: colors.background }}>
     <View style={{ flex: 1, paddingTop: needsTopInset ? insets.top : 0 }}><Slot /></View>
