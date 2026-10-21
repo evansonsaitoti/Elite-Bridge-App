@@ -65,7 +65,7 @@ export default function StaffHome() {
     <ScrollView style={{ flex: 1, backgroundColor: "#F5F9F6" }} showsVerticalScrollIndicator={false}
       contentContainerStyle={{ padding: 16, paddingBottom: 30 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void reload()} />}>
-      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 20, gap: 12 }}>
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 12 }}>
         <Image source={require("../../assets/images/elitebridge-logo.png")} style={{ width: 52, height: 52, borderRadius: 15 }} resizeMode="contain" />
         <View style={{ flex: 1 }}>
           <Text style={{ color: "#064732", fontSize: 27, fontWeight: "900" }}>Elite Care</Text>
@@ -79,22 +79,22 @@ export default function StaffHome() {
         </TouchableOpacity>
       </View>
 
-      <View style={{ borderRadius: 22, overflow: "hidden", backgroundColor: "#FFFFFF", borderColor: "#DFE9E3", borderWidth: 1, marginBottom: 16 }}>
-        <Image source={require("../../assets/images/caregiver-welcome-hero.jpg")} style={{ width: "100%", height: 173 }} resizeMode="cover" accessibilityLabel="Caregiver providing compassionate care" />
-        <View style={{ paddingHorizontal: 18, paddingVertical: 14 }}>
-          <Text style={{ fontSize: 22, fontWeight: "900", color: "#07503B" }}>Ready for today's care?</Text>
+      <View style={{ borderRadius: 22, overflow: "hidden", backgroundColor: "#FFFFFF", borderColor: "#DFE9E3", borderWidth: 1, marginBottom: 13 }}>
+        <Image source={require("../../assets/images/caregiver-welcome-hero.jpg")} style={{ width: "100%", height: 123 }} resizeMode="cover" accessibilityLabel="Caregiver providing compassionate care" />
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12 }}>
+          <Text style={{ fontSize: 19, fontWeight: "900", color: "#07503B" }}>Ready for today's care?</Text>
           <Text style={{ color: "#66776E", fontSize: 13, marginTop: 4 }}>Your work makes a difference every day.</Text>
         </View>
       </View>
 
       <TouchableOpacity accessibilityRole="button" accessibilityLabel={active ? "Clock Out" : "Clock In"}
         disabled={working} onPress={() => void onClock()}
-        style={{ minHeight: 67, borderRadius: 40, backgroundColor: GREEN, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, opacity: working ? 0.7 : 1 }}>
+        style={{ minHeight: 59, borderRadius: 40, backgroundColor: GREEN, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 12, opacity: working ? 0.7 : 1 }}>
         {working ? <ActivityIndicator color="#FFFFFF" /> : <IconSymbol name="timer" size={29} color="#FFFFFF" />}
-        <Text style={{ fontSize: 24, color: "#FFFFFF", fontWeight: "800" }}>{working ? "Saving…" : active ? "Clock Out" : "Clock In"}</Text>
+        <Text style={{ fontSize: 20, color: "#FFFFFF", fontWeight: "800" }}>{working ? "Saving…" : active ? "Clock Out" : "Clock In"}</Text>
       </TouchableOpacity>
       <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/clock")}
-        style={{ borderRadius: 19, backgroundColor: "#EAF4EF", borderColor: "#D8E8DE", borderWidth: 1, paddingVertical: 12, paddingHorizontal: 16, marginTop: 11, marginBottom: 18, flexDirection: "row", alignItems: "center", gap: 12 }}>
+        style={{ borderRadius: 19, backgroundColor: "#EAF4EF", borderColor: "#D8E8DE", borderWidth: 1, paddingVertical: 10, paddingHorizontal: 14, marginTop: 9, marginBottom: 15, flexDirection: "row", alignItems: "center", gap: 12 }}>
         <IconSymbol name="clock" size={26} color={GREEN} />
         <View style={{ flex: 1 }}>
           <Text style={{ fontSize: 15, color: "#163D2E", fontWeight: "800" }}>{!ready ? "Loading shift…" : error ? "Agency sync needs attention" : active ? "Shift in progress" : upcoming ? "Not clocked in" : "No assigned shift"}</Text>
@@ -103,16 +103,16 @@ export default function StaffHome() {
         <IconSymbol name="chevron.right" size={17} color="#62796C" />
       </TouchableOpacity>
 
-      <Text style={{ color: "#152923", fontWeight: "900", fontSize: 24, marginBottom: 12 }}>Quick actions</Text>
+      <Text style={{ color: "#152923", fontWeight: "900", fontSize: 22, marginBottom: 12 }}>Quick actions</Text>
       <View style={{ flexDirection: "row", flexWrap: "wrap", justifyContent: "space-between", rowGap: 12 }}>
         {ACTIONS.map((item) => (
           <TouchableOpacity key={item.label} accessibilityRole="button" accessibilityLabel={item.label}
             onPress={() => router.push(item.route)}
-            style={{ width: "48.2%", minHeight: 179, borderRadius: 21, padding: 16, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#DFE9E3" }}>
-            <View style={{ backgroundColor: item.tint, borderRadius: 18, width: 66, height: 66, justifyContent: "center", alignItems: "center", marginBottom: 14 }}>
-              <IconSymbol name={item.icon} size={33} color={GREEN} />
+            style={{ width: "48.2%", minHeight: 151, borderRadius: 20, padding: 14, backgroundColor: "#FFFFFF", borderWidth: 1, borderColor: "#DFE9E3" }}>
+            <View style={{ backgroundColor: item.tint, borderRadius: 17, width: 57, height: 57, justifyContent: "center", alignItems: "center", marginBottom: 11 }}>
+              <IconSymbol name={item.icon} size={29} color={GREEN} />
             </View>
-            <Text style={{ fontSize: 17, fontWeight: "900", color: "#16251E" }}>{item.label}</Text>
+            <Text style={{ fontSize: 16, fontWeight: "900", color: "#16251E" }}>{item.label}</Text>
             <Text style={{ color: "#61736A", fontSize: 12, marginTop: 5, lineHeight: 18 }}>{item.detail}</Text>
           </TouchableOpacity>
         ))}
