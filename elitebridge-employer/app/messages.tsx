@@ -61,9 +61,9 @@ export default function EmployerTeamMessages(){
     if(!message||!selectedId||sending)return;
     setSending(true);
     try {
-      await sendTeamMessage(selectedId,message);
+      const saved=await sendTeamMessage(selectedId,message);
       setDraft("");
-      setMessages(await getTeamConversation(selectedId));
+      setMessages(current=>[...current,saved]);
       setError("");
     }catch(e){setError(e instanceof Error?e.message:"Unable to send message.");}
     finally{setSending(false);}
