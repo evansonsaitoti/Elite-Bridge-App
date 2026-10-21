@@ -59,11 +59,13 @@ requireSource("app/(onboarding)/bank-account.tsx", 'router.push("/(onboarding)/r
 requireSource("app/(onboarding)/review.tsx", 'router.replace("/(staff)/home")');
 requireSource("app/(staff)/profile.tsx", "Request support");
 requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
-requireSource("app/(staff)/home.tsx", "Call-out reported");
+requireSource("app/(staff)/opportunities.tsx", "Call-out reported");
+requireSource("app/(staff)/home.tsx", "Clock Out");
+requireSource("app/(staff)/timesheets.tsx", "Generate & Share PDF");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.version !== "1.3.0") throw new Error("Caregiver release version must be 1.3.0");
-if (config.expo.ios.buildNumber !== "66") throw new Error("Caregiver iOS build number must be 66");
+if (config.expo.version !== "1.3.1") throw new Error("Caregiver release version must be 1.3.0");
+if (config.expo.ios.buildNumber !== "67") throw new Error("Caregiver iOS build number must be 66");
 requireSource("app/_layout.tsx", 'initialRouteName: "(root)"');
 requireSource("app/(root)/index.tsx", "Meaningful work. Better-fit shifts.");
 requireSource("app/(auth)/login.tsx", "separate Elite Bridge Employer app");
