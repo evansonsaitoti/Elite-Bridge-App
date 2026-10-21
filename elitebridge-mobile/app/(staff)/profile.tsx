@@ -359,7 +359,7 @@ export default function StaffProfile() {
         <Text style={{ fontSize: 19, fontWeight: "900", color: colors.foreground }}>{displayName}</Text>
         <Text style={{ fontSize: 13, color: colors.muted, marginTop: 5 }}>{displayEmail}</Text>
         <View style={{ alignSelf: "flex-start", marginTop: 12, borderRadius: 999, paddingHorizontal: 10, paddingVertical: 7, backgroundColor: sharedApiConfigured ? "#ECFDF3" : "#F2F4F7" }}>
-          <Text style={{ color: sharedApiConfigured ? "#067647" : "#475467", fontSize: 11, fontWeight: "900" }}>{sharedApiConfigured ? "Secure agency sync enabled" : "Secure device access"}</Text>
+          <Text style={{ color: sharedApiConfigured ? "#067647" : "#475467", fontSize: 11, fontWeight: "900" }}>{sharedApiConfigured ? "Shared agency service configured" : "Secure device access"}</Text>
         </View>
       </View>
 
@@ -395,8 +395,8 @@ export default function StaffProfile() {
       <View style={{ backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 18, overflow: "hidden" }}>
         <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "900", padding: 15, paddingBottom: 4 }}>Form submissions</Text>
         {[
-          { icon: "↺", label: "My submissions", detail: "Visit notes, clock corrections and requests" },
-          { icon: "↓", label: "Shared with me", detail: "Agency documents and care instructions" },
+          { icon: "↺", label: "My submissions", detail: "Actual timesheets and handover notes" },
+          { icon: "↓", label: "Shared with me", detail: "Published shared care checklists" },
         ].map((item, index) => (
           <TouchableOpacity
             key={item.label}
@@ -417,9 +417,9 @@ export default function StaffProfile() {
       <View style={{ backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, marginBottom: 18, overflow: "hidden" }}>
         <Text style={{ color: colors.foreground, fontSize: 17, fontWeight: "900", padding: 15, paddingBottom: 4 }}>More</Text>
         {[
-          { icon: "↗", label: "My activity", detail: "Applications, accepted offers and call-outs" },
+          { icon: "↗", label: "My activity", detail: "Recorded visits and time history" },
           { icon: "◎", label: "Personal information", detail: displayEmail },
-          { icon: "⚙", label: "Settings", detail: "Notifications, language and app preferences" },
+          { icon: "⚙", label: "Settings", detail: "Push notification preferences" },
         ].map((item, index) => (
           <TouchableOpacity
             key={item.label}
