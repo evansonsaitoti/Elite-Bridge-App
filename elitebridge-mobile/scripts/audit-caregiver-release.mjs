@@ -58,6 +58,13 @@ requireSource("app/(onboarding)/background-check.tsx", 'router.push("/(onboardin
 requireSource("app/(onboarding)/bank-account.tsx", 'router.push("/(onboarding)/review")');
 requireSource("app/(onboarding)/review.tsx", 'router.replace("/(staff)/home")');
 requireSource("app/(staff)/profile.tsx", "Request support");
+requireSource("app/(staff)/profile.tsx", "My Profile");
+requireSource("app/(staff)/more.tsx", 'title:"My Profile"');
+const profileSource = fs.readFileSync(path.join(root, "app/(staff)/profile.tsx"), "utf8");
+if (/Mrs\\. A\\.|Family appointment|CPR certificate verified through Dec 2027|My Profile & Photo/.test(profileSource)) {
+  throw new Error("Caregiver profile contains unverified sample records or outdated labels");
+}
+
 requireSource("app/(staff)/profile.tsx", "deleteCaregiverBackendAccount()");
 requireSource("app/(staff)/opportunities.tsx", "Call-out reported");
 requireSource("app/(staff)/home.tsx", "Clock Out");
