@@ -16,6 +16,8 @@ export default function ClientsScreen() {
   const router = useRouter();
   const [items, setItems] = useState<EmployerClientLocation[]>([]);
   const [form, setForm] = useState<EmployerClientLocationInput>(empty);
+  const [billingInput, setBillingInput] = useState("");
+  const [caregiverInput, setCaregiverInput] = useState("");
   const [editing, setEditing] = useState(false);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [busy, setBusy] = useState(false);
@@ -37,21 +39,23 @@ export default function ClientsScreen() {
   useFocusEffect(useCallback(() => { void load(); }, [load]));
 
   const update = (key: keyof EmployerClientLocationInput, value: string) =>
-    setForm(previous => ({ ...previous, [key]: key === "billingRate" || key === "caregiverRate" ? Number(value) : value }));
+    setForm(previous => ({ ...previous, [key]: value }));
 
   const save = async () => {
     if (busy) return;
+    const billingRate = Number(billingInput);
+    const caregiverRate = Number(caregiverInput);
     if (!form.clientName.trim() || !form.locationName.trim() || !form.city.trim() || !/^[A-Za-z]{2}$/.test(form.state) ||
-        !Number.isFinite(form.billingRate) || form.billingRate <= 0 ||
-        !Number.isFinite(form.caregiverRate) || form.caregiverRate <= 0) {
+        !billingInput.trim() || !caregiverInput.trim() || !Number.isFinite(billingRate) || billingRate <= 0 ||
+        !Number.isFinite(caregiverRate) || caregiverRate <= 0) {
       Alert.alert("Complete client record", "Enter the client, care location, city, two-letter state and positive billing and caregiver rates.");
       return;
     }
     setBusy(true);
     try {
-      const item = await createEmployerClientLocation({ ...form, state: form.state.toUpperCase() });
+      const item = await createEmployerClientLocation({ ...form, billingRate, caregiverRate, state: form.state.toUpperCase() });
       setItems(previous => [...previous, item].sort((a,b) => a.clientName.localeCompare(b.clientName)));
-      setEditing(false); setForm(empty); setError("");
+      setEditing(false); setForm(empty); setBillingInput(""); setCaregiverInput(""); setError("");
       Alert.alert("Client record saved", "This client location is saved in your secure employer workspace.");
     } catch (reason) {
       Alert.alert("Client not saved", reason instanceof Error ? reason.message : "Check your connection and try again.");
@@ -95,8 +99,8 @@ export default function ClientsScreen() {
         {input("zipCode", "ZIP", "01852")}
         {input("contactName", "On-site contact", "Optional")}
         {input("contactPhone", "Contact phone", "Optional")}
-        {input("billingRate", "Client billing rate per hour ($)", "35.00", { numeric: true })}
-        {input("caregiverRate", "Caregiver pay rate per hour ($)", "25.00", { numeric: true })}
+        <View style={{ marginTop: 13 }}><Text style={styles.label}>Client billing rate per hour ($)</Text><TextInput accessibilityLabel="Client billing rate" value={billingInput} onChangeText={setBillingInput} keyboardType="decimal-pad" placeholder="35.00" placeholderTextColor="#809186" style={styles.input}/></View>
+        <View style={{ marginTop: 13 }}><Text style={styles.label}>Caregiver pay rate per hour ($)</Text><TextInput accessibilityLabel="Caregiver hourly rate" value={caregiverInput} onChangeText={setCaregiverInput} keyboardType="decimal-pad" placeholder="25.00" placeholderTextColor="#809186" style={styles.input}/></View>
         {input("notes", "Operational notes", "Nonclinical care and schedule notes", { multiline: true })}
         <TouchableOpacity disabled={busy} accessibilityRole="button" onPress={() => void save()} style={[styles.primary, busy && { opacity: 0.6 }]}>
           <Text style={styles.primaryText}>{busy ? "Saving…" : "Save client record"}</Text>
@@ -127,7 +131,7 @@ export default function ClientsScreen() {
           <Text style={styles.info}>Client rate: ${item.billingRate.toFixed(2)}/hr · Caregiver rate: ${item.caregiverRate.toFixed(2)}/hr</Text>
           {item.contactName ? <Text style={styles.info}>Contact: {item.contactName}{item.contactPhone ? " · " + item.contactPhone : ""}</Text> : null}
           {item.notes ? <Text style={styles.info}>Notes: {item.notes}</Text> : null}
-          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/client-schedule")} style={styles.secondary}>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push({ pathname: "/client-schedule", params: { clientId: String(item.id) } })} style={styles.secondary}>
             <Text style={{ color: colors.green, fontWeight: "900" }}>Create care schedule →</Text>
           </TouchableOpacity>
         </View> : null}
