@@ -13,7 +13,7 @@ const failures = [];
 const welcomeImages = ["employer-welcome-hero.jpg", "employer-welcome-matches.jpg", "employer-welcome-review.jpg", "employer-welcome-operations.jpg"];
 for (const image of welcomeImages) if (!fs.existsSync(path.join(root, "assets", "images", image))) failures.push(`Missing Employer welcome image: ${image}`);
 
-const expectedRoutes = ["index.tsx", "sign-in.tsx", "register.tsx", "dashboard.tsx", "shifts.tsx", "post-shift.tsx", "applications.tsx", "team.tsx", "time.tsx", "account.tsx", "profile.tsx", "notifications.tsx", "operations.tsx", "clients.tsx", "client-schedule.tsx", "allocate-staff.tsx", "expenses.tsx", "invoices.tsx"];
+const expectedRoutes = ["index.tsx", "sign-in.tsx", "register.tsx", "dashboard.tsx", "shifts.tsx", "post-shift.tsx", "applications.tsx", "team.tsx", "time.tsx", "account.tsx", "profile.tsx", "notifications.tsx", "operations.tsx", "clients.tsx", "client-schedule.tsx", "allocate-staff.tsx", "expenses.tsx", "invoices.tsx", "messages.tsx", "handoffs.tsx"];
 for (const route of expectedRoutes) if (!files.includes(route)) failures.push(`Missing declared route: ${route}`);
 const unexpectedRoutes = files.filter((route) => !expectedRoutes.includes(route) && route !== "_layout.tsx");
 if (unexpectedRoutes.length) failures.push(`Unexpected route files: ${unexpectedRoutes.join(", ")}`);
@@ -44,8 +44,8 @@ if (!dashboardSource.includes('route: "/invoices"')) failures.push("The home inv
 const shiftSource = fs.readFileSync(path.join(appDir, "shifts.tsx"), "utf8");
 if (!shiftSource.includes('label="All locations"')) failures.push("The schedule location filter is missing its All locations option.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
-if (appConfig.expo.version !== "1.3.6") failures.push("Employer release version must be 1.3.6.");
-if (appConfig.expo.ios.buildNumber !== "40") failures.push("Employer iOS build number must be 40.");
+if (appConfig.expo.version !== "1.3.7") failures.push("Employer release version must be 1.3.7.");
+if (appConfig.expo.ios.buildNumber !== "41") failures.push("Employer iOS build number must be 41.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
