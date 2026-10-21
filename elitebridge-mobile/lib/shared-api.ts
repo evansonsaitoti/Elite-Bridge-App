@@ -234,7 +234,7 @@ export async function clockOutOfShift(shiftId: number, notes = "", location?: Cl
 }
 
 export type SharedTimeActivity = { id: number; shift_id: number; caregiver_id: number; type: string; timestamp: string; location: ClockLocation | null; notes: string | null };
-export type SharedTimesheet = { id: number; shift_id: number; clock_in_at: string; clock_out_at: string; status: string; notes: string | null; agency_note: string | null; approved_at: string | null; created_at: string; updated_at: string };
+export type SharedTimesheet = { id: number; shift_id: number; clock_in_at: string; clock_out_at: string; worked_minutes: number; status: string; notes: string | null; agency_note: string | null; approved_at: string | null; created_at: string; updated_at: string };
 export function fetchMyTimekeeping() {
   return request<{ activities: SharedTimeActivity[]; timesheets: SharedTimesheet[] }>("/api/bookings/caregiver/timekeeping");
 }
