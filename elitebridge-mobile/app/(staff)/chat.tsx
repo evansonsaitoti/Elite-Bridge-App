@@ -61,10 +61,9 @@ export default function StaffChat() {
     if(!body||!selectedId||sending)return;
     setSending(true);
     try {
-      await sendTeamMessage(selectedId,body);
+      const saved=await sendTeamMessage(selectedId,body);
       setDraft("");
-      const items=await getTeamConversation(selectedId);
-      setMessages(items);
+      setMessages(current=>[...current,saved]);
       setError("");
     }catch(e){
       setError(e instanceof Error?e.message:"Could not send message. Please try again.");
