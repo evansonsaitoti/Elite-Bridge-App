@@ -36,6 +36,7 @@ if (!source.includes("Review first")) failures.push("Employer-approval assignmen
 if (!source.includes("Push notification settings")) failures.push("Push notification settings access is missing.");
 if (!source.includes("Team directory")) failures.push("Employee team directory is missing.");
 if (!source.includes("Time & attendance")) failures.push("Time and attendance workspace is missing.");
+if (!source.includes("Generate & share timesheets PDF")) failures.push("Employer timesheet PDF export is missing.");
 if (!source.includes("Account controls")) failures.push("Protected account controls access is missing.");
 if (!source.includes("openEmployerShiftForPickup")) failures.push("Publishing a review-mode shift for caregiver pickup is missing.");
 if (!source.includes("getClientInvoices") || !source.includes("createClientInvoice")) failures.push("Official client invoice access is missing.");
