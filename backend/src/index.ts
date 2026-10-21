@@ -27,6 +27,8 @@ import adminRoutes from "./routes/admin";
 import aiRoutes from "./routes/ai";
 import notificationRoutes from "./routes/notifications";
 import operationsRoutes from "./routes/operations";
+import teamMessagesRoutes from "./routes/teamMessages";
+import careHandoffsRoutes from "./routes/careHandoffs";
 import smsRoutes from "./routes/sms";
 import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
 
@@ -79,6 +81,8 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/operations", operationsRoutes);
+app.use("/api/team-messages", teamMessagesRoutes);
+app.use("/api/care-handoffs", careHandoffsRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/mcp", mcpRoutes);
 

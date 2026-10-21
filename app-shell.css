@@ -2857,3 +2857,38 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .caregiver-app-actions .secondary-button { display:inline-flex; align-items:center; justify-content:center; min-height:44px; text-decoration:none; padding:11px 16px; }
 .caregiver-app-caveat { color:var(--muted); font-size:11px; line-height:1.5; margin:12px 0 0; }
 @media (max-width:680px) { .caregiver-app-actions { flex-direction:column; }.caregiver-app-actions .secondary-button { width:100%; } }
+
+
+/* Elite Bridge Care Continuity: secure chat + next-shift handoffs */
+.care-web-chat { display:grid;gap:12px;max-width:920px;margin:auto; }
+.care-web-chat-header {display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+.care-web-chat-header h2 {color:#11442c;font-size:20px;letter-spacing:-.02em;margin:0 0 5px;}
+.care-web-chat-header p {color:#687b6e;font-size:12px;line-height:1.5;margin:0;}
+.care-web-chat-header select {min-width:210px;max-width:100%;border:1px solid #d6e6da;background:#fff;border-radius:11px;padding:12px;color:#174b32;font-size:13px;font-weight:800;}
+.care-web-thread {display:flex;flex-direction:column;gap:12px;max-height:480px;min-height:180px;overflow:auto;background:#f8fbf9;border:1px solid #e0e9e2;border-radius:16px;padding:16px;}
+.care-web-bubble {max-width:85%;padding:13px 15px;border-radius:15px;background:#fff;border:1px solid #dde9df;align-self:flex-start;overflow-wrap:anywhere;}
+.care-web-bubble.mine {background:#0a4a35;border-color:#0a4a35;align-self:flex-end;}
+.care-web-bubble p {margin:0;color:#224b36;font-size:13px;line-height:1.6;white-space:pre-wrap;}
+.care-web-bubble.mine p {color:#fff;}
+.care-web-bubble small {display:block;color:#87998c;font-size:10px;margin-top:7px;}
+.care-web-bubble.mine small {color:#c2e1d0;}
+.care-web-chat-form {display:grid;gap:9px;}
+.care-web-chat-form label,.care-web-handoffs label {font-size:12px;font-weight:850;color:#264e36;}
+.care-web-chat-form textarea,.care-web-handoffs textarea,.care-web-handoffs select {width:100%;min-height:48px;border:1px solid #d4e4d8;background:#fff;border-radius:11px;padding:12px;color:#153d28;font:inherit;font-size:13px;}
+.care-web-chat-form button {justify-self:start;min-height:42px;}
+.care-web-handoffs {display:grid;grid-template-columns:minmax(0,1.05fr) minmax(280px,.95fr);gap:16px;align-items:start;}
+.care-web-handoffs form {display:grid;gap:12px;}
+.care-web-handoffs .surface-head {margin-bottom:12px;}
+.care-web-handoffs h3 {font-size:15px;color:#0c432b;margin:21px 0 12px;}
+.care-web-handoffs h3:first-child {margin-top:16px;}
+.care-web-handoff-item {padding:13px;border:1px solid #dbe9de;border-radius:12px;margin-bottom:10px;background:#fbfdfc;}
+.care-web-handoff-item p {white-space:pre-wrap;overflow-wrap:anywhere;font-size:13px;line-height:1.55;color:#2e4c39;margin:0 0 7px;font-weight:600;}
+.care-web-handoff-item small {display:block;color:#6f8777;font-size:11px;}
+.care-web-handoff-item button {margin-top:9px;min-height:37px;}
+.care-web-completed {display:inline-block;font-size:11px;font-weight:900;color:#1b7a49;margin-top:7px;}
+.care-web-disclaimer {font-size:11px;line-height:1.55;color:#6f8074;margin:8px 0 0;}
+.care-web-placeholder {font-size:12px;line-height:1.65;color:#789083;padding:12px 4px;}
+.care-web-error {color:#a53831;font-weight:700;font-size:12px;}
+#careWebHandoffStatus:not(:empty),#careWebChatStatus:not(:empty){font-size:12px;padding:10px;border-radius:9px;background:#f2f8f3;}
+@media(max-width:850px){.care-web-handoffs{grid-template-columns:1fr;}.care-web-chat-header{align-items:stretch;flex-direction:column;gap:12px;}.care-web-chat-header select{width:100%;max-width:none;}}
+@media(max-width:480px){.care-web-thread{max-height:58vh;min-height:160px;padding:11px;}.care-web-bubble{max-width:92%;}.care-web-chat-form button{width:100%;}.care-web-handoffs{gap:12px;}}

@@ -21,6 +21,8 @@ const quickActions: {
   { title: "Client record", detail: "Prepare care details", icon: "heart-circle-outline", tint: colors.green, background: "#FFF1C9", route: "/clients" },
   { title: "Add expense", detail: "Gas, ads, receipts", icon: "receipt-outline", tint: colors.green, background: "#F7E4D4", route: "/expenses" },
   { title: "Invite caregiver", detail: "Send signup link", icon: "people-outline", tint: colors.green, background: "#E7F3DC", route: "/team" },
+  { title: "Care handoffs", detail: "Next-shift notes and tasks", icon: "checkbox-outline", tint: colors.green, background: "#E2F3E9", route: "/handoffs" },
+  { title: "Team messages", detail: "Send in-app alerts", icon: "chatbubbles-outline", tint: colors.green, background: "#E4ECFF", route: "/messages" },
   { title: "Timesheets", detail: "Review missed clock-ins", icon: "time-outline", tint: colors.green, background: "#EAE4FF", route: "/time" },
   { title: "Invoices", detail: "Bill clients", icon: "document-text-outline", tint: colors.green, background: "#FFF1C9", route: "/invoices" },
 ];

@@ -339,6 +339,16 @@ export default function StaffHome() {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open caregiver handoff notes and next-shift to-do list"
+        onPress={() => router.push("/(staff)/handoff")}
+        style={{backgroundColor:"#0A4A35",borderRadius:16,padding:16,marginBottom:15,flexDirection:"row",alignItems:"center",justifyContent:"space-between",gap:12}}>
+        <View style={{flex:1}}>
+          <Text style={{color:"#F1CD82",fontWeight:"900",fontSize:10,letterSpacing:1.4}}>CARE TEAM HANDOFF</Text>
+          <Text style={{color:"#FFFFFF",fontSize:16,fontWeight:"900",marginTop:5}}>Notes & to-do list for the next caregiver</Text>
+          <Text style={{color:"#D1E8DB",fontSize:12,marginTop:6}}>Read open tasks, leave a handoff and mark completed work.</Text>
+        </View>
+        <Text style={{color:"#FFFFFF",fontSize:25,fontWeight:"900"}}>→</Text>
+      </TouchableOpacity>
       <View style={{ marginBottom: 12 }}>
         <Text style={{ color: "#B7791F", fontSize: 10, fontWeight: "900", letterSpacing: 1.3 }}>YOUR DAY</Text>
         <Text style={{ color: colors.foreground, fontSize: 25, fontWeight: "900", lineHeight: 30, marginTop: 5 }}>Work that fits your schedule.</Text>
