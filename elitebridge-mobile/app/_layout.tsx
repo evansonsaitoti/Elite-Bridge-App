@@ -52,7 +52,7 @@ export default function RootLayout() {
       if (data?.type === "team_message") router.push("/(staff)/chat");
       else if (data?.type === "care_handoff" || data?.type === "care_checklist") router.push("/(staff)/handoff");
       else if (data?.type === "timesheet_review" || data?.type === "timesheet_ready") router.push("/(staff)/timesheets");
-      else if (data?.type === "shift_assignment" || data?.type === "shift_assigned" || data?.type === "shift_update" || data?.type === "rescue_offer") router.push("/(staff)/shifts");
+      else if (data?.type === "shift_assignment" || data?.type === "direct_shift_assignment" || data?.type === "shift_application" || data?.type === "shift_assigned" || data?.type === "shift_update" || data?.type === "rescue_offer") router.push("/(staff)/shifts");
     });
     return () => sub.remove();
   }, [router]);
