@@ -64,8 +64,8 @@ requireSource("app/(staff)/home.tsx", "Clock Out");
 requireSource("app/(staff)/timesheets.tsx", "Generate & Share PDF");
 
 const config = JSON.parse(fs.readFileSync(path.join(root, "app.json"), "utf8"));
-if (config.expo.version !== "1.3.2") throw new Error("Caregiver release version must be 1.3.2");
-if (config.expo.ios.buildNumber !== "68") throw new Error("Caregiver iOS build number must be 68");
+if (config.expo.version !== "1.3.3") throw new Error("Caregiver release version must be 1.3.3");
+if (config.expo.ios.buildNumber !== "69") throw new Error("Caregiver iOS build number must be 69");
 requireSource("app/_layout.tsx", 'initialRouteName: "(root)"');
 requireSource("app/(root)/index.tsx", "Meaningful work. Better-fit shifts.");
 requireSource("app/(auth)/login.tsx", "separate Elite Bridge Employer app");
