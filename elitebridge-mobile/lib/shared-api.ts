@@ -131,6 +131,20 @@ export async function removeCaregiverDevice(token: string) {
   });
 }
 
+export type CaregiverPersonalDetails = { phone: string; address: string; emergencyContact: string };
+
+export async function fetchCaregiverPersonalDetails(): Promise<CaregiverPersonalDetails> {
+  const result = await request<{ details: CaregiverPersonalDetails }>("/api/caregivers/me/details");
+  return result.details;
+}
+
+export async function saveCaregiverPersonalDetails(details: CaregiverPersonalDetails): Promise<CaregiverPersonalDetails> {
+  const result = await request<{ details: CaregiverPersonalDetails; saved: boolean }>("/api/caregivers/me/details", {
+    method: "PUT", body: JSON.stringify(details),
+  });
+  return result.details;
+}
+
 export async function fetchCaregiverProfilePhoto(): Promise<string | null> {
   const result = await request<{ photo: string | null }>("/api/caregivers/me/photo");
   return result.photo;
