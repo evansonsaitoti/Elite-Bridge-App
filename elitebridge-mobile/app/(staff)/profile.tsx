@@ -6,7 +6,7 @@ import { Alert, Image, Linking, ScrollView, Switch, Text, TextInput, TouchableOp
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, fetchCaregiverProfilePhoto, uploadCaregiverProfilePhoto, sharedApiConfigured } from "@/lib/shared-api";
+import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, fetchCaregiverPersonalDetails, saveCaregiverPersonalDetails, fetchCaregiverProfilePhoto, uploadCaregiverProfilePhoto, sharedApiConfigured } from "@/lib/shared-api";
 import { disableCaregiverPushNotifications, enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 type LocalSession = { email?: string; name?: string };
@@ -15,7 +15,7 @@ const SUPPORT_EMAIL = "info@elitebridgestaffing.com";
 const SUPPORT_URL = "https://elitebridgestaffing.com/contact/";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
-const PROFILE_DRAFT_KEY = "elitebridge-caregiver-profile-draft-v1";
+const PROFILE_DRAFT_KEY = "elitebridge-caregiver-profile-draft-v1"; // Old device-only values are not silently reused as agency records.
 const SETTINGS_KEY = "elitebridge-caregiver-settings-v1";
 
 export default function StaffProfile() {
@@ -24,6 +24,8 @@ export default function StaffProfile() {
   const [session, setSession] = useState<LocalSession>({});
   const [deleting, setDeleting] = useState(false);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileSyncError, setProfileSyncError] = useState("");
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [showAdvancedAccount, setShowAdvancedAccount] = useState(false);
   const [activePanel, setActivePanel] = useState<ProfilePanel>(null);
@@ -43,20 +45,23 @@ export default function StaffProfile() {
   useEffect(() => {
     Promise.all([
       AsyncStorage.getItem("elitebridge-session"),
-      AsyncStorage.getItem(PROFILE_DRAFT_KEY),
       AsyncStorage.getItem(SETTINGS_KEY),
-    ]).then(([rawSession, rawProfile, rawSettings]) => {
+      fetchCaregiverPersonalDetails(),
+    ]).then(([rawSession, rawSettings, details]) => {
       if (rawSession) {
         try { setSession(JSON.parse(rawSession) as LocalSession); } catch { setSession({}); }
-      }
-      if (rawProfile) {
-        try { setProfileDraft((current) => ({ ...current, ...JSON.parse(rawProfile) })); } catch { /* Keep safe defaults. */ }
       }
       if (rawSettings) {
         try { setSettings((current) => ({ ...current, ...JSON.parse(rawSettings) })); } catch { /* Keep safe defaults. */ }
       }
+      setProfileDraft(details);
+      setProfileSyncError("");
     }).catch(() => {
-      Alert.alert("Could not load profile", "Your saved profile details could not be loaded on this device.");
+      setProfileSyncError("Could not load saved personal details from the agency. Check your connection and reopen this screen.");
+      void AsyncStorage.getItem("elitebridge-session").then((raw) => {
+        if (!raw) return;
+        try { setSession(JSON.parse(raw) as LocalSession); } catch { /* Keep safe defaults */ }
+      });
     });
   }, []);
 
@@ -191,12 +196,17 @@ export default function StaffProfile() {
   const panelCard = { backgroundColor: colors.surface, borderRadius: 18, borderWidth: 1, borderColor: colors.border, padding: 15, marginBottom: 18 } as const;
   const inputStyle = { borderWidth: 1, borderColor: colors.border, color: colors.foreground, backgroundColor: colors.background, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 11, marginTop: 8 } as const;
   const saveProfile = async () => {
+    if (savingProfile) return;
+    setSavingProfile(true);
     try {
-      await AsyncStorage.setItem(PROFILE_DRAFT_KEY, JSON.stringify(profileDraft));
-      Alert.alert("Personal information saved", "Your profile updates were saved on this device.");
-    } catch {
-      Alert.alert("Could not save profile", "Please try again.");
-    }
+      const saved = await saveCaregiverPersonalDetails(profileDraft);
+      setProfileDraft(saved);
+      setProfileSyncError("");
+      Alert.alert("Profile updated", "Your details were saved to your secure caregiver account.");
+    } catch (error) {
+      setProfileSyncError("Details were not saved to the agency. Please retry.");
+      Alert.alert("Could not save profile", error instanceof Error ? error.message : "Check your connection and retry.");
+    } finally { setSavingProfile(false); }
   };
   const saveSettings = async () => {
     try {
@@ -232,22 +242,13 @@ export default function StaffProfile() {
     if (activePanel === "timeOff") {
       return (
         <View style={panelCard}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Time off requests</Text>
-            <TouchableOpacity accessibilityRole="button" onPress={() => setActivePanel(null)}><Text style={{ color: colors.muted, fontWeight: "900" }}>Close</Text></TouchableOpacity>
-          </View>
-          {[
-            { title: "Family appointment", date: "Aug 26, 2026", status: "Pending agency review", type: "Unpaid time off" },
-            { title: "Sick leave", date: "Sep 2, 2026", status: "Draft - not submitted", type: "Sick leave" },
-          ].map((item) => (
-            <View key={item.title} style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12 }}>
-              <Text style={{ color: colors.foreground, fontWeight: "900", fontSize: 15 }}>{item.title}</Text>
-              <Text style={{ color: colors.muted, marginTop: 3 }}>{item.type} • {item.date}</Text>
-              <Text style={{ color: "#0A4A35", marginTop: 6, fontWeight: "800" }}>{item.status}</Text>
-            </View>
-          ))}
-          <TouchableOpacity accessibilityRole="button" onPress={() => Alert.alert("Request support", "Contact your agency coordinator to submit a new time-off or schedule request.")} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
-            <Text style={{ color: "white", fontWeight: "900" }}>Request support</Text>
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Time off</Text>
+          <Text style={{ color: colors.muted, marginTop: 9, lineHeight: 20 }}>
+            Time-off balances and requests are not yet linked to your agency account. Contact your coordinator to request leave or check its status.
+          </Text>
+          <TouchableOpacity accessibilityRole="button" onPress={contactSupport}
+            style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 14 }}>
+            <Text style={{ color: "#FFFFFF", fontWeight: "900" }}>Request support</Text>
           </TouchableOpacity>
         </View>
       );
@@ -256,21 +257,18 @@ export default function StaffProfile() {
     if (activePanel === "submissions") {
       return (
         <View style={panelCard}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>My submissions</Text>
-            <TouchableOpacity accessibilityRole="button" onPress={() => setActivePanel(null)}><Text style={{ color: colors.muted, fontWeight: "900" }}>Close</Text></TouchableOpacity>
-          </View>
-          {[
-            { title: "Visit note - Mrs. A.", detail: "Meal preparation and companionship completed.", status: "Submitted" },
-            { title: "Clock correction", detail: "Requested correction for 6:38 PM clock-out.", status: "Under review" },
-            { title: "Availability update", detail: profileDraft.availability, status: "Saved" },
-          ].map((item) => (
-            <View key={item.title} style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12 }}>
-              <Text style={{ color: colors.foreground, fontWeight: "900" }}>{item.title}</Text>
-              <Text style={{ color: colors.muted, lineHeight: 19, marginTop: 3 }}>{item.detail}</Text>
-              <Text style={{ color: "#C58A24", fontWeight: "900", marginTop: 6 }}>{item.status}</Text>
-            </View>
-          ))}
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>My submissions</Text>
+          <Text style={{ color: colors.muted, lineHeight: 20, marginTop: 8 }}>
+            Access your actual submitted timesheets and shared caregiver handovers. No example requests are shown as real records.
+          </Text>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/timesheets")}
+            style={{ backgroundColor: "#EAF4EF", padding: 14, borderRadius: 12, marginTop: 14 }}>
+            <Text style={{ color: "#0A4A35", fontWeight: "900" }}>My Timesheets →</Text>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/handoff")}
+            style={{ backgroundColor: "#EAF4EF", padding: 14, borderRadius: 12, marginTop: 8 }}>
+            <Text style={{ color: "#0A4A35", fontWeight: "900" }}>Shared handovers →</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -278,20 +276,14 @@ export default function StaffProfile() {
     if (activePanel === "shared") {
       return (
         <View style={panelCard}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Shared with me</Text>
-            <TouchableOpacity accessibilityRole="button" onPress={() => setActivePanel(null)}><Text style={{ color: colors.muted, fontWeight: "900" }}>Close</Text></TouchableOpacity>
-          </View>
-          {[
-            { title: "Care plan: Mrs. A.", detail: "Companionship, meal prep, mobility reminders and family notes." },
-            { title: "Agency handbook", detail: "Clock-in standards, visit documentation and escalation steps." },
-            { title: "Credential reminder", detail: "CPR certificate verified through Dec 2027." },
-          ].map((item) => (
-            <TouchableOpacity key={item.title} accessibilityRole="button" onPress={() => showFeature(item.title, item.detail)} style={{ borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12 }}>
-              <Text style={{ color: colors.foreground, fontWeight: "900" }}>{item.title}</Text>
-              <Text style={{ color: colors.muted, lineHeight: 19, marginTop: 3 }}>{item.detail}</Text>
-            </TouchableOpacity>
-          ))}
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>Shared with me</Text>
+          <Text style={{ color: colors.muted, marginTop: 8, lineHeight: 20 }}>
+            Published care-site checklists are available under Tasks. Agency documents that have not been connected are not displayed here.
+          </Text>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/handoff")}
+            style={{ backgroundColor: "#EAF4EF", borderRadius: 12, padding: 14, marginTop: 14 }}>
+            <Text style={{ color: "#0A4A35", fontWeight: "900" }}>Open shared care checklists →</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -299,23 +291,14 @@ export default function StaffProfile() {
     if (activePanel === "activity") {
       return (
         <View style={panelCard}>
-          <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-            <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>My activity</Text>
-            <TouchableOpacity accessibilityRole="button" onPress={() => setActivePanel(null)}><Text style={{ color: colors.muted, fontWeight: "900" }}>Close</Text></TouchableOpacity>
-          </View>
-          {[
-            { time: "Today", text: "Accepted priority shift: Companionship + meal prep." },
-            { time: "Yesterday", text: "Clock record saved for agency review." },
-            { time: "This week", text: "Profile preferences updated for evening and weekend work." },
-          ].map((item) => (
-            <View key={item.text} style={{ flexDirection: "row", gap: 12, borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12 }}>
-              <View style={{ width: 10, height: 10, borderRadius: 999, backgroundColor: "#0A4A35", marginTop: 5 }} />
-              <View style={{ flex: 1 }}>
-                <Text style={{ color: "#C58A24", fontWeight: "900", fontSize: 12 }}>{item.time}</Text>
-                <Text style={{ color: colors.foreground, marginTop: 3, lineHeight: 19 }}>{item.text}</Text>
-              </View>
-            </View>
-          ))}
+          <Text style={{ color: colors.foreground, fontSize: 18, fontWeight: "900" }}>My activity</Text>
+          <Text style={{ color: colors.muted, marginTop: 9, lineHeight: 20 }}>
+            View recorded attendance and the status of actual submitted timesheets in your timekeeping history.
+          </Text>
+          <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/clock")}
+            style={{ backgroundColor: "#EAF4EF", borderRadius: 12, padding: 14, marginTop: 14 }}>
+            <Text style={{ color: "#0A4A35", fontWeight: "900" }}>Open time records →</Text>
+          </TouchableOpacity>
         </View>
       );
     }
@@ -337,8 +320,9 @@ export default function StaffProfile() {
           <TextInput accessibilityLabel="Service area" value={profileDraft.address} onChangeText={(address) => setProfileDraft((draft) => ({ ...draft, address }))} style={inputStyle} />
           <Text style={{ color: colors.muted, fontSize: 12, marginTop: 12 }}>Emergency contact</Text>
           <TextInput accessibilityLabel="Emergency contact" value={profileDraft.emergencyContact} onChangeText={(emergencyContact) => setProfileDraft((draft) => ({ ...draft, emergencyContact }))} style={inputStyle} />
-          <TouchableOpacity accessibilityRole="button" onPress={() => void saveProfile()} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 14 }}>
-            <Text style={{ color: "white", fontWeight: "900" }}>Save personal information</Text>
+          {profileSyncError ? <Text accessibilityRole="alert" style={{ color: "#A23831", marginTop: 12, lineHeight: 18 }}>{profileSyncError}</Text> : null}
+          <TouchableOpacity accessibilityRole="button" disabled={savingProfile} onPress={() => void saveProfile()} style={{ backgroundColor: savingProfile ? "#9CBBAA" : "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 14 }}>
+            <Text style={{ color: "white", fontWeight: "900" }}>{savingProfile ? "Saving…" : "Save personal information"}</Text>
           </TouchableOpacity>
         </View>
       );
@@ -374,7 +358,7 @@ export default function StaffProfile() {
     <ScreenContainer>
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18, paddingBottom: 128 }}>
       <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>ELITE BRIDGE CAREGIVER</Text>
-        <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>Profile</Text>
+        <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>My Profile</Text>
         <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/operations")} style={{ padding: 16, backgroundColor: "#07533c", borderRadius: 12, marginVertical: 12 }}><Text style={{ color: "#fff", fontWeight: "800" }}>Incident reports & SMS alerts</Text></TouchableOpacity>
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>Manage your caregiver profile, requests, settings and agency connection.</Text>
 
@@ -411,9 +395,9 @@ export default function StaffProfile() {
         </View>
         <View style={{ flexDirection: "row", gap: 9 }}>
           {[
-            { label: "Time off", value: "0" },
-            { label: "Sick leave", value: "0" },
-            { label: "Unpaid", value: "0" },
+            { label: "Time off", value: "—" },
+            { label: "Sick leave", value: "—" },
+            { label: "Unpaid", value: "—" },
           ].map((item) => (
             <View key={item.label} style={{ flex: 1, minHeight: 86, borderRadius: 18, backgroundColor: "#F2F4F7", padding: 12, justifyContent: "center" }}>
               <Text style={{ color: "#667085", fontSize: 11, fontWeight: "800" }}>{item.label}</Text>
