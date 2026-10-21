@@ -38,6 +38,7 @@ export function useSharedTimekeeping() {
       locationLabel: shift ? `${shift.location.address}, ${shift.location.city}` : "",
       scheduledStart: shift?.startTime || start.timestamp, scheduledEnd: shift?.endTime || start.timestamp,
       clockInAt: start.timestamp, clockOutAt: end?.timestamp || null,
+      approvedWorkedMinutes: end && sheet ? Number(sheet.worked_minutes) : null,
       clockInLocation: start.location, clockOutLocation: end?.location || null,
       breaks: events.filter(a => a.type === "break_start" && (!end || a.id < end.id)).map(b => ({ id: String(b.id), startedAt: b.timestamp, endedAt: events.find(a => a.type === "break_end" && a.id > b.id)?.timestamp || null })),
       notes: sheet?.notes || "", status: !end ? "in_progress" : sheet?.status === "approved" ? "approved" : sheet?.status === "correction_requested" ? "correction_requested" : "completed",
