@@ -184,6 +184,12 @@ router.get("/sites/:siteId",async(req:AuthRequest,res,next)=>{
       SELECT a.created_at,a.user_id
       FROM care_site_checklist_actions a WHERE a.site_id=t.site_id
         AND a.task_id=t.id AND a.status='done'
+        AND NOT EXISTS (
+          SELECT 1 FROM care_site_checklist_actions corrected
+          WHERE corrected.site_id=a.site_id AND corrected.task_id=a.task_id
+            AND corrected.visit_date=a.visit_date AND corrected.visit_period=a.visit_period
+            AND corrected.id>a.id
+        )
       ORDER BY a.id DESC LIMIT 1
     ) last_done ON true
     LEFT JOIN users lu ON lu.id=last_done.user_id
