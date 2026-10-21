@@ -2,7 +2,7 @@ import { useRouter } from "expo-router";
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 const options = [
-  { title:"My Profile & Photo",route:"/(staff)/profile",icon:"person.crop.circle" },
+  { title:"My Profile",route:"/(staff)/profile",icon:"person.crop.circle" },
   { title:"Notifications",route:"/(staff)/notifications",icon:"bell" },
   { title:"Timesheets",route:"/(staff)/timesheets",icon:"doc.text" },
   { title:"Available Shifts & Call-outs",route:"/(staff)/opportunities",icon:"calendar.badge.plus" },
