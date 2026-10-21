@@ -34,12 +34,7 @@ export default function StaffProfile() {
     address: "",
     emergencyContact: "",
   });
-  const [settings, setSettings] = useState({
-    pushAlerts: true,
-    smsAlerts: true,
-    emailSummary: true,
-    locationClock: true,
-  });
+  const [settings, setSettings] = useState({ pushAlerts: true });
 
   useEffect(() => {
     Promise.all([
@@ -207,32 +202,25 @@ export default function StaffProfile() {
       Alert.alert("Could not save profile", error instanceof Error ? error.message : "Check your connection and retry.");
     } finally { setSavingProfile(false); }
   };
-  const saveSettings = async () => {
-    try {
-      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(settings));
-      Alert.alert("Settings saved", "Your notification and privacy preferences were saved.");
-    } catch {
-      Alert.alert("Could not save settings", "Please try again.");
-    }
-  };
   const updateSetting = async (key: keyof typeof settings, value: boolean) => {
-    if (key === "pushAlerts") {
-      try {
+    try {
+      if (key === "pushAlerts") {
         if (value) {
           const enabled = await enableCaregiverPushNotifications();
           if (!enabled) {
-            Alert.alert("Notifications are off", "Allow notifications in your device settings to receive shift updates.");
+            Alert.alert("Notifications are off", "Enable notifications in iOS settings to receive shift and care-team updates.");
             return;
           }
         } else {
           await disableCaregiverPushNotifications();
         }
-      } catch {
-        Alert.alert("Notification setting unavailable", "Please try again when your device is online.");
-        return;
       }
+      const next = { ...settings, [key]: value };
+      await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+      setSettings(next);
+    } catch {
+      Alert.alert("Setting unavailable", "Please try again when your device is online.");
     }
-    setSettings((current) => ({ ...current, [key]: value }));
   };
 
   const renderActivePanel = () => {
@@ -335,8 +323,6 @@ export default function StaffProfile() {
         </View>
         {[
           { key: "pushAlerts" as const, label: "Push notifications", detail: "Priority shifts, assignments and call-outs" },
-          { key: "emailSummary" as const, label: "Email summaries", detail: "Weekly activity and submission updates" },
-          { key: "locationClock" as const, label: "Location for clock in/out", detail: "Used only when recording visit time" },
         ].map((item) => (
           <View key={item.key} style={{ flexDirection: "row", alignItems: "center", borderTopWidth: 1, borderTopColor: colors.border, paddingVertical: 12 }}>
             <View style={{ flex: 1, paddingRight: 10 }}>
@@ -346,9 +332,9 @@ export default function StaffProfile() {
             <Switch value={settings[item.key]} onValueChange={(value) => void updateSetting(item.key, value)} />
           </View>
         ))}
-        <TouchableOpacity accessibilityRole="button" onPress={() => void saveSettings()} style={{ backgroundColor: "#0A4A35", borderRadius: 12, padding: 13, alignItems: "center", marginTop: 8 }}>
-          <Text style={{ color: "white", fontWeight: "900" }}>Save settings</Text>
-        </TouchableOpacity>
+        <Text style={{ color: colors.muted, marginTop: 10, fontSize: 12 }}>
+          Notification preference is saved on this device. SMS alerts are managed in Incident Reports & SMS.
+        </Text>
       </View>
     );
   };
