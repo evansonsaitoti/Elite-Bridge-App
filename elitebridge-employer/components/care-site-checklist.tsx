@@ -171,7 +171,7 @@ export function CareSiteChecklistPanel() {
           style={{borderRadius:12,padding:15,backgroundColor:signing||recorded<1?"#B0C8B8":GREEN,alignItems:"center"}}>
           <Text style={{color:"#FFF",fontSize:14,fontWeight:"900"}}>{signing?"Saving…":"✓ Finish visit checklist"}</Text>
         </TouchableOpacity>
-        {saved?<Text style={{color:"#107346",fontWeight:"750",fontSize:12,marginTop:11}}>{saved}</Text>:null}
+        {saved?<Text style={{color:"#107346",fontWeight:"700",fontSize:12,marginTop:11}}>{saved}</Text>:null}
       </View>
       {checklist.recentSignoffs.length>0?<View style={{marginTop:19}}>
         <Text style={{fontSize:17,color:GREEN,fontWeight:"900",marginBottom:10}}>Previous handoffs</Text>
