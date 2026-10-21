@@ -5,6 +5,7 @@ import {
   TouchableOpacity, View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { CareSiteChecklistPanel } from "@/components/care-site-checklist";
 import {
   completeHandoffTask, getHandoffClients, getHandoffItems, postHandoff,
   type HandoffClient, type HandoffItem,
@@ -103,6 +104,7 @@ export default function HandoffsScreen() {
         Share what needs doing next. Notes and checklists stay with the client for the next assigned caregiver.
       </Text>
 
+      <CareSiteChecklistPanel />
       {error?<Text accessibilityRole="alert" style={{color:"#A23831",backgroundColor:"#FFF0EC",padding:13,borderRadius:10,marginBottom:14}}>{error}</Text>:null}
       {loading?<ActivityIndicator color="#0B5536" size="large" style={{marginVertical:25}}/>:null}
       {!loading&&!clients.length?<View style={{backgroundColor:"#FFF",padding:24,borderRadius:16,borderColor:"#E2EAE4",borderWidth:1}}>

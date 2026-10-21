@@ -2892,3 +2892,42 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 #careWebHandoffStatus:not(:empty),#careWebChatStatus:not(:empty){font-size:12px;padding:10px;border-radius:9px;background:#f2f8f3;}
 @media(max-width:850px){.care-web-handoffs{grid-template-columns:1fr;}.care-web-chat-header{align-items:stretch;flex-direction:column;gap:12px;}.care-web-chat-header select{width:100%;max-width:none;}}
 @media(max-width:480px){.care-web-thread{max-height:58vh;min-height:160px;padding:11px;}.care-web-bubble{max-width:92%;}.care-web-chat-form button{width:100%;}.care-web-handoffs{gap:12px;}}
+
+
+/* Location-based visit checklist: clear, full-size tap targets for caregivers. */
+.sitecheck-surface { margin-bottom:18px; }
+.sitecheck-controls { display:grid;grid-template-columns:minmax(0,1fr) minmax(110px,185px);gap:8px 14px;margin-top:12px;align-items:center; }
+.sitecheck-controls label { display:block;font-size:11px;font-weight:850;color:#315741; }
+.sitecheck-controls select { width:100%;padding:11px;border-radius:11px;background:#fff;border:1px solid #d5e4d9;color:#173f2a;font-size:13px;min-height:45px; }
+.sitecheck-summary { padding:12px 14px;border-radius:11px;background:#edf7f0;color:#10492d;font-size:12px;font-weight:850;margin:15px 0;line-height:1.5; }
+.sitecheck-task { margin:10px 0;padding:14px;border-radius:14px;border:1px solid #dce9e0;background:#fff; }
+.sitecheck-task-head {display:flex;align-items:flex-start;gap:12px;}
+.sitecheck-task-head > div {min-width:0;flex:1;}
+.sitecheck-task-head strong {display:block;font-size:14px;line-height:1.4;color:#133c29;font-weight:850;}
+.sitecheck-task-head p {font-size:12px;line-height:1.5;color:#667b6c;margin:5px 0 0;}
+.sitecheck-tick { flex:0 0 32px;width:32px;height:32px;border-radius:11px;display:flex;align-items:center;justify-content:center;border:1px solid #d2e3d7;background:#f1f5f2;color:#9caea2;font-size:18px;font-weight:900; }
+.sitecheck-tick.done {background:#e0f5e8;color:#0d7645;border-color:#b5dec5;}
+.sitecheck-tick.na {background:#f3eee4;color:#856d45;border-color:#e2d8c5;}
+.sitecheck-actions { display:flex;gap:7px;flex-wrap:wrap;margin:13px 0 0 44px; }
+.sitecheck-actions button {min-height:42px;font-size:12px;padding:8px 12px;}
+.sitecheck-meta,.sitecheck-last { font-size:11px;line-height:1.5;color:#24804b;margin-top:7px;font-weight:750; }
+.sitecheck-last {color:#687c6f;font-weight:550;}
+.sitecheck-frequency { display:inline-block;margin-top:9px;padding:5px 8px;background:#fef7e9;border-radius:7px;color:#916b2c;font-size:11px;font-weight:850; }
+.sitecheck-finish {margin-top:18px;padding:17px;border-radius:14px;background:#f5faf6;border:1px solid #dcebe0;display:grid;gap:10px;}
+.sitecheck-finish h3 {margin:0;font-size:16px;color:#0c482e;}
+.sitecheck-finish p {font-size:12px;color:#697a6c;margin:0;line-height:1.5;}
+.sitecheck-finish label {font-size:11px;color:#375b45;font-weight:850;}
+.sitecheck-finish textarea {padding:12px;font-size:13px;border-radius:10px;border:1px solid #d5e4db;background:#fff;min-height:68px;resize:vertical;}
+.sitecheck-finish button {min-height:46px;justify-self:start;}
+.sitecheck-finish button:disabled {opacity:.55;cursor:not-allowed;}
+.sitecheck-history-title {font-size:16px;color:#143e2b;margin:20px 0 8px;}
+.sitecheck-signoff {padding:11px 13px;border-radius:11px;background:#f9fcfa;border:1px solid #e5eee7;font-size:11px;color:#697b6b;line-height:1.5;margin-bottom:8px;}
+.sitecheck-signoff strong {color:#1a5132;}
+.sitecheck-signoff p {margin:6px 0 0;color:#436450;font-size:12px;line-height:1.5;}
+@media(max-width:590px){
+ .sitecheck-controls {grid-template-columns:1fr 1fr;gap:7px;}
+ .sitecheck-controls select {font-size:12px;}
+ .sitecheck-actions {margin-left:0;}
+ .sitecheck-actions button {flex:1 1 95px;}
+ .sitecheck-finish button {width:100%;}
+}

@@ -29,6 +29,7 @@ import notificationRoutes from "./routes/notifications";
 import operationsRoutes from "./routes/operations";
 import teamMessagesRoutes from "./routes/teamMessages";
 import careHandoffsRoutes from "./routes/careHandoffs";
+import careSiteChecklistRoutes from "./routes/careSiteChecklist";
 import smsRoutes from "./routes/sms";
 import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
 
@@ -83,6 +84,7 @@ app.use("/api/notifications", notificationRoutes);
 app.use("/api/operations", operationsRoutes);
 app.use("/api/team-messages", teamMessagesRoutes);
 app.use("/api/care-handoffs", careHandoffsRoutes);
+app.use("/api/care-site-checklists", careSiteChecklistRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/mcp", mcpRoutes);
 

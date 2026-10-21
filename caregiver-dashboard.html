@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#063e2c">
   <meta name="description" content="Elite Bridge caregiver workspace for shifts, schedules, time tracking, messages and earnings.">
   <title>Caregiver workspace | Elite Bridge</title>
-  <link rel="stylesheet" href="/app-shell.css?v=handoffs-chat-20261021">
+  <link rel="stylesheet" href="/app-shell.css?v=barry-site-checklist-20261021">
 </head>
 <body data-role="caregiver">
   <div class="app-frame">
@@ -62,6 +62,31 @@
       <section data-view-panel="handoffs" hidden>
         <div class="page-head"><div><p class="eyebrow">Care continuity</p><h1>Caregiver handoffs</h1>
           <p>Leave non-medical handoff notes and next-shift to-do items for the caregiver assigned to the same client.</p></div></div>
+        <div class="surface surface-pad sitecheck-surface">
+          <div class="surface-head"><div><p class="eyebrow">Shared location checklist</p>
+            <h2>Before you leave · Care chores</h2>
+            <p>Mark completed or not needed. The next caregiver can see when each chore was last done.</p></div>
+            <span class="manual-entry-pill">Saved across visits</span></div>
+          <div class="sitecheck-controls">
+            <label for="sitecheckSite">Care recipient / location</label>
+            <select id="sitecheckSite"><option value="">Loading location…</option></select>
+            <label for="sitecheckPeriod">Visit</label>
+            <select id="sitecheckPeriod"><option value="morning">Morning</option><option value="evening">Evening</option><option value="other">Other</option></select>
+          </div>
+          <div class="sitecheck-summary" id="sitecheckSummary"></div>
+          <div id="sitecheckTasks" aria-live="polite"><p class="care-web-placeholder">Loading checklist…</p></div>
+          <div class="sitecheck-finish">
+            <h3>Finish this visit</h3>
+            <p>After checking tasks, save your visit handoff for the next caregiver.</p>
+            <label for="sitecheckVisitNote">Handoff note (optional)</label>
+            <textarea id="sitecheckVisitNote" maxlength="300" rows="2" placeholder="Only non-medical information for the next visit"></textarea>
+            <button id="sitecheckFinish" type="button" class="primary-button">✓ Finish visit checklist</button>
+          </div>
+          <h3 class="sitecheck-history-title">Recent caregiver handoffs</h3>
+          <div id="sitecheckHistory" aria-live="polite"></div>
+          <p id="sitecheckMessage" role="status" aria-live="polite"></p>
+          <p class="care-web-disclaimer">Only agency-authorized household tasks. No diagnoses, eye-drop doses, medication records or private access codes.</p>
+        </div>
         <div class="care-web-handoffs">
           <div class="surface surface-pad">
             <div class="surface-head"><div><h2>Next-shift checklist</h2><p>Client-specific and visible only to their assigned team.</p></div></div>
@@ -115,5 +140,6 @@
   <script src="/dashboard.js?v=mobile-tabs-20261001"></script>
   <script src="/care-workspace.js?v=care-workspace-intake-20261020"></script>
   <script src="/care-team-web.js?v=handoffs-chat-20261021"></script>
+  <script src="/care-site-checklist.js?v=barry-site-checklist-20261021"></script>
 </body>
 </html>
