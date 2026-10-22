@@ -21,7 +21,7 @@
     },
     "android": {
       "package": "com.elitebridgestaffing.employer",
-      "versionCode": 40
+      "versionCode": 43
     },
     "plugins": [
       "expo-notifications",
