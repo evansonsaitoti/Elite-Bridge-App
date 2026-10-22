@@ -1,4 +1,5 @@
 name: Elite Bridge Android Builds
+# Release parity: Android Care 69 and Work 43 match iOS build numbering.
 # Android store release trigger for the signed AABs on the internal Google Play testing track.
 
 on:
