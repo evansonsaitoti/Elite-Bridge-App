@@ -302,6 +302,7 @@
   }
 
   function initializeContractGenerator() {
+    if (window.EliteDigitalContract) { window.EliteDigitalContract.init(); return; }
     const form = document.getElementById('contractForm');
     if (!form) return;
 

@@ -266,10 +266,9 @@
           <div>
             <p class="eyebrow">Client agreements</p>
             <h1>Elite Bridge contract</h1>
-            <p>Fill the client details on the left. The contract preview on the right stays formatted like the Elite Bridge agreement.</p>
+            <p>Fill out the digital form to create your two-page service agreement and care plan. Preview, download, or save a draft before sending.</p>
           </div>
           <div class="page-actions">
-            <button class="secondary-button" type="button" id="emailContractTop">Email client</button>
             <button class="primary-button" type="button" id="printContractTop">Download PDF</button>
           </div>
         </div>
@@ -289,105 +288,32 @@
         </section>
 
         <div class="contract-builder">
-          <form class="surface surface-pad contract-form" id="contractForm">
-            <div class="section-heading">
-              <div>
-                <p class="eyebrow">Agreement details</p>
-                <h2>Fill in the agreement</h2>
-              </div>
-            </div>
+          <form class="surface surface-pad contract-form" id="contractForm" style="position:static">
+            <div class="section-heading"><div><p class="eyebrow">Digital agreement</p><h2>Fill in the agreement</h2><p>Enter the details once. Both pages update automatically.</p></div></div>
             <div class="form-grid">
-              <label>Client name<input id="contractClientName" type="text" placeholder="Edward Kowaloff" required></label>
-              <label>Care recipient<input id="contractCareRecipient" type="text" placeholder="Hollis Kowaloff"></label>
-              <label>Start date<input id="contractStartDate" type="date"></label>
-              <label>Client email<input id="contractClientEmail" type="email" placeholder="client@example.com"></label>
-              <fieldset class="classic-checks full">
-                <legend>Service days</legend>
-                <label><input type="checkbox" name="contractDays" value="Monday"> Monday</label>
-                <label><input type="checkbox" name="contractDays" value="Tuesday"> Tuesday</label>
-                <label><input type="checkbox" name="contractDays" value="Wednesday"> Wednesday</label>
-                <label><input type="checkbox" name="contractDays" value="Thursday"> Thursday</label>
-                <label><input type="checkbox" name="contractDays" value="Friday"> Friday</label>
-                <label><input type="checkbox" name="contractDays" value="Saturday"> Saturday</label>
-                <label><input type="checkbox" name="contractDays" value="Sunday"> Sunday</label>
-              </fieldset>
-              <fieldset class="classic-checks full">
-                <legend>Hourly rates</legend>
-                <label><input type="checkbox" name="contractRates" value="Morning"> Morning / day rate</label>
-                <label><input type="text" id="contractDayRate" placeholder="$40" aria-label="Morning day rate amount"></label>
-                <label><input type="checkbox" name="contractRates" value="Evening"> Evening rate</label>
-                <label><input type="text" id="contractEveningRate" placeholder="$45" aria-label="Evening rate amount"></label>
-              </fieldset>
-              <fieldset class="classic-checks full">
-                <legend>Billing cycle</legend>
-                <label><input type="checkbox" name="contractBilling" value="Weekly"> Weekly</label>
-                <label><input type="checkbox" name="contractBilling" value="Biweekly"> Biweekly</label>
-              </fieldset>
-              <label>Client signature name<input class="signature-input" id="contractClientSigner" type="text" placeholder="Client full name"></label>
-              <label>Client date<input id="contractClientDate" type="date"></label>
-              <label>Agency representative<input class="signature-input" id="contractAgencySigner" type="text" placeholder="Agency representative"></label>
-              <label>Agency date<input id="contractAgencyDate" type="date"></label>
-              <fieldset class="contract-nudge-panel full">
-                <legend>Fine tune alignment</legend>
-                <label>Move field
-                  <select id="contractNudgeTarget">
-                    <option value="client-name">Client name</option>
-                    <option value="care-recipient">Care recipient</option>
-                    <option value="start-date">Start date</option>
-                    <option value="service-days">Service day checkmarks</option>
-                    <option value="rate-checks">Hourly rate checkmarks</option>
-                    <option value="rate-amounts">Hourly rate amounts</option>
-                    <option value="billing">Billing checkmarks</option>
-                    <option value="client-signature">Client signature name</option>
-                    <option value="client-date">Client date</option>
-                    <option value="agency-signature">Agency representative</option>
-                    <option value="agency-date">Agency date</option>
-                  </select>
-                </label>
-                <div class="nudge-grid" aria-label="Move selected contract text">
-                  <span></span>
-                  <button class="nudge-button" type="button" data-nudge-y="-1" aria-label="Move up">↑</button>
-                  <span></span>
-                  <button class="nudge-button" type="button" data-nudge-x="-1" aria-label="Move left">←</button>
-                  <button class="nudge-button" type="button" data-nudge-y="1" aria-label="Move down">↓</button>
-                  <button class="nudge-button" type="button" data-nudge-x="1" aria-label="Move right">→</button>
-                </div>
-                <div class="nudge-actions">
-                  <button class="secondary-button" type="button" id="resetContractNudge">Reset selected</button>
-                  <button class="secondary-button" type="button" id="resetAllContractNudges">Reset all</button>
-                </div>
-                <p class="form-note">Use this if typed text sits a little above, below, left, or right of the line.</p>
-              </fieldset>
+              <label>Client name<input id="contractClientName" maxlength="65" placeholder="Client full name" required></label>
+              <label>Care recipient<input id="contractCareRecipient" maxlength="65" placeholder="Same as client if blank"></label>
+              <label class="full">Client address<textarea id="contractAddress" rows="2" maxlength="110" placeholder="Street address, city, state and ZIP"></textarea></label>
+              <label>Client email<input id="contractClientEmail" type="email" maxlength="65" placeholder="client@example.com"></label>
+              <label>Prepared date<input id="contractPreparedDate" type="date" required></label>
+              <label>Prior service start<input id="contractStartDate" type="date"></label>
+              <label>Hourly rate ($)<input id="contractDayRate" type="number" min="0.01" max="500" step="0.01" placeholder="40.00" required></label>
+              <label>Billing cycle<select id="contractBillingCycle"><option>Biweekly</option><option>Weekly</option><option>Monthly</option></select></label>
+              <label>Invoice due (calendar days)<input id="contractDueDays" type="number" min="1" max="90" value="7" required></label>
+              <fieldset class="classic-checks full"><legend>Agreed non-medical services</legend><label><input type="checkbox" name="contractServices" value="Companionship &amp; supervision"> Companionship &amp; supervision</label><label><input type="checkbox" name="contractServices" value="Meal preparation"> Meal preparation</label><label><input type="checkbox" name="contractServices" value="Personal care assistance"> Personal care assistance</label><label><input type="checkbox" name="contractServices" value="Mobility &amp; walking assistance"> Mobility &amp; walking assistance</label><label><input type="checkbox" name="contractServices" value="Light housekeeping"> Light housekeeping</label><label><input type="checkbox" name="contractServices" value="Medication reminders only"> Medication reminders only</label><label><input type="checkbox" name="contractServices" value="Non-medical transportation / errands"> Non-medical transportation / errands</label><label><input type="checkbox" name="contractServices" value="Appointment / hospital travel assistance"> Appointment / hospital travel assistance</label></fieldset>
+              <fieldset class="classic-checks full"><legend>Service days</legend><label><input type="checkbox" name="contractDays" value="Monday"> Monday</label><label><input type="checkbox" name="contractDays" value="Tuesday"> Tuesday</label><label><input type="checkbox" name="contractDays" value="Wednesday"> Wednesday</label><label><input type="checkbox" name="contractDays" value="Thursday"> Thursday</label><label><input type="checkbox" name="contractDays" value="Friday"> Friday</label><label><input type="checkbox" name="contractDays" value="Saturday"> Saturday</label><label><input type="checkbox" name="contractDays" value="Sunday"> Sunday</label></fieldset>
+              <label>Client printed name<input id="contractClientSigner" maxlength="55" placeholder="Optional printed name"></label>
+              <label>Agency representative<input id="contractAgencySigner" maxlength="55" placeholder="Representative printed name"></label>
             </div>
-            <p class="form-note">The signature names appear in a signature style. Review the preview before downloading or emailing.</p>
-            <div class="form-actions">
-              <button class="secondary-button" type="submit">Update preview</button>
-              <button class="primary-button" type="button" id="printContract">Download PDF</button>
-              <button class="secondary-button" type="button" id="emailContract">Email client</button>
-            </div>
+            <p class="form-note">The agreement remains unsigned. Printed names do not sign the document; signature and date lines remain blank for the parties.</p>
+            <div class="form-actions"><button class="secondary-button" type="submit">Update preview</button><button class="primary-button" type="button" id="printContract">Download PDF</button><button class="secondary-button" type="button" id="saveDigitalContract">Save draft agreement</button></div>
+            <p id="digitalContractStatus" role="status" aria-live="polite"></p>
           </form>
-
-          <div class="contract-preview-wrap" aria-label="Contract preview">
-            <article class="contract-page" id="contractPreview">
-              <header class="contract-letterhead">
-                <img src="/logo.png" alt="Elite Bridge Staffing" class="contract-logo">
-                <div>
-                  <strong>Elite Bridge Staffing</strong>
-                  <span>Professional home care staffing and client support</span>
-                  <span>elitebridgestaffing.com</span>
-                </div>
-              </header>
-              <div class="contract-title-row">
-                <div>
-                  <p class="eyebrow">Service agreement</p>
-                  <h2>Non-Medical Home Care Services Agreement</h2>
-                </div>
-                <p class="contract-date">Prepared today</p>
-              </div>
-              <div class="contract-empty-state">Enter client information to generate the agreement preview.</div>
-            </article>
+          <div class="contract-preview-wrap" aria-label="Contract preview" style="padding:0;align-self:start;position:sticky;top:90px">
+            <iframe id="digitalContractPreview" title="Digital two-page service agreement preview" style="width:100%;height:85vh;min-height:600px;border:1px solid #d7e1da;border-radius:12px;background:white"></iframe>
           </div>
         </div>
+
       </section>
 
       <section data-view-panel="compliance" hidden><div class="page-head"><div><p class="eyebrow">Trust & safety</p><h1>Compliance center</h1><p>Monitor verification and background-check status without collecting sensitive identity information yourself.</p></div></div><div class="surface surface-pad"><div class="surface-head"><div><h2>Caregiver screening</h2><p>Background checks must be completed through an approved screening provider with caregiver consent.</p></div></div><div id="complianceList"></div></div></section>
@@ -535,6 +461,8 @@
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
   <script src="/contract-documents.js?v=20261022"></script>
+  <script src="/contract-pdf-lib.js"></script>
+  <script src="/digital-contract.js?v=20261022"></script>
   <script src="/dashboard.js?v=desktop-command-bar-20261011"></script>
 </body>
 </html>

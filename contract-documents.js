@@ -53,5 +53,6 @@
       form.elements.pdf.value = ''; message.textContent = 'Draft saved. Nothing has been sent.'; await refresh();
     } catch(e) { message.textContent = e.message; } finally { button.disabled = false; }
   });
+  document.addEventListener('contract-documents-updated', () => refresh().catch(e => { message.textContent = e.message; }));
   refresh().catch(e => { list.textContent = e.message; });
 })();
