@@ -25,11 +25,11 @@ permissions:
 
 concurrency:
   group: elite-bridge-android-builds
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 64 and 40') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 69 and 43') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -90,18 +90,18 @@ jobs:
         run: |
           npx eas-cli@latest build --platform android --profile production --non-interactive --wait --json > /tmp/caregiver-android-build.json
           ANDROID_BUNDLE_URL="$(node -e "const x=require('/tmp/caregiver-android-build.json');const b=Array.isArray(x)?x[0]:x;const u=b.artifacts?.buildUrl||b.artifacts?.applicationArchiveUrl;if(!u)process.exit(1);process.stdout.write(u)")"
-          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-care-64.aab
+          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-care-69.aab
 
       - name: Save caregiver Android bundle
         uses: actions/upload-artifact@v4
         with:
-          name: elite-care-64-aab
-          path: elite-care-64.aab
+          name: elite-care-69-aab
+          path: elite-care-69.aab
           if-no-files-found: error
           retention-days: 30
 
   employer:
-    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 64 and 40') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 69 and 43') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -148,13 +148,13 @@ jobs:
         run: |
           npx eas-cli@latest build --platform android --profile production --non-interactive --wait --json > /tmp/employer-android-build.json
           ANDROID_BUNDLE_URL="$(node -e "const x=require('/tmp/employer-android-build.json');const b=Array.isArray(x)?x[0]:x;const u=b.artifacts?.buildUrl||b.artifacts?.applicationArchiveUrl;if(!u)process.exit(1);process.stdout.write(u)")"
-          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-work-40.aab
+          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-work-43.aab
 
       - name: Save employer Android bundle
         uses: actions/upload-artifact@v4
         with:
-          name: elite-work-40-aab
-          path: elite-work-40.aab
+          name: elite-work-43-aab
+          path: elite-work-43.aab
           if-no-files-found: error
           retention-days: 30
 
@@ -173,7 +173,7 @@ jobs:
       - name: Download caregiver App Bundle
         uses: actions/download-artifact@v4
         with:
-          name: elite-care-64-aab
+          name: elite-care-69-aab
           path: .
       - name: Node setup
         uses: actions/setup-node@v5
@@ -197,7 +197,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: "1"
-        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-care-64.aab --non-interactive --wait
+        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-care-69.aab --non-interactive --wait
       - name: Clean up private credential
         if: always()
         run: rm -f /tmp/elite-play-key.json
@@ -217,7 +217,7 @@ jobs:
       - name: Download employer App Bundle
         uses: actions/download-artifact@v4
         with:
-          name: elite-work-40-aab
+          name: elite-work-43-aab
           path: .
       - name: Node setup
         uses: actions/setup-node@v5
@@ -241,7 +241,7 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           CI: "1"
-        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-work-40.aab --non-interactive --wait
+        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-work-43.aab --non-interactive --wait
       - name: Clean up private credential
         if: always()
         run: rm -f /tmp/elite-play-key.json
