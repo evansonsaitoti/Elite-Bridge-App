@@ -28,7 +28,7 @@ concurrency:
 
 jobs:
   caregiver:
-    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
+    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 64 and 40') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'caregiver' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -89,18 +89,18 @@ jobs:
         run: |
           npx eas-cli@latest build --platform android --profile production --non-interactive --wait --json > /tmp/caregiver-android-build.json
           ANDROID_BUNDLE_URL="$(node -e "const x=require('/tmp/caregiver-android-build.json');const b=Array.isArray(x)?x[0]:x;const u=b.artifacts?.buildUrl||b.artifacts?.applicationArchiveUrl;if(!u)process.exit(1);process.stdout.write(u)")"
-          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-care-63.aab
+          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-care-64.aab
 
       - name: Save caregiver Android bundle
         uses: actions/upload-artifact@v4
         with:
-          name: elite-care-63-aab
-          path: elite-care-63.aab
+          name: elite-care-64-aab
+          path: elite-care-64.aab
           if-no-files-found: error
           retention-days: 30
 
   employer:
-    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
+    if: ${{ (github.event_name == 'push' && (startsWith(github.event.head_commit.message, 'Release Android builds 64 and 40') || startsWith(github.event.head_commit.message, 'Release mobile builds 65 and 41') || startsWith(github.event.head_commit.message, 'Release mobile builds 66 and 42') || startsWith(github.event.head_commit.message, 'Release mobile builds 59 and 36') || startsWith(github.event.head_commit.message, 'Release Android builds 59 and 36'))) || github.event.inputs.app == 'both' || github.event.inputs.app == 'employer' }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     defaults:
@@ -147,12 +147,100 @@ jobs:
         run: |
           npx eas-cli@latest build --platform android --profile production --non-interactive --wait --json > /tmp/employer-android-build.json
           ANDROID_BUNDLE_URL="$(node -e "const x=require('/tmp/employer-android-build.json');const b=Array.isArray(x)?x[0]:x;const u=b.artifacts?.buildUrl||b.artifacts?.applicationArchiveUrl;if(!u)process.exit(1);process.stdout.write(u)")"
-          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-work-39.aab
+          curl --location --fail --retry 3 "$ANDROID_BUNDLE_URL" --output ../elite-work-40.aab
 
       - name: Save employer Android bundle
         uses: actions/upload-artifact@v4
         with:
-          name: elite-work-39-aab
-          path: elite-work-39.aab
+          name: elite-work-40-aab
+          path: elite-work-40.aab
           if-no-files-found: error
           retention-days: 30
+
+  play-caregiver:
+    name: Submit Elite Care to Google Play internal testing
+    needs: caregiver
+    if: ${{ needs.caregiver.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: elitebridge-mobile
+    steps:
+      - name: Checkout latest release
+        uses: actions/checkout@v5
+      - name: Download caregiver App Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: elite-care-64-aab
+          path: .
+      - name: Node setup
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install pnpm and project dependencies
+        run: |
+          npm install --global pnpm@9.12.0
+          pnpm install --no-frozen-lockfile
+      - name: Prepare optional Google Play credential
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > /tmp/elite-play-key.json
+            chmod 600 /tmp/elite-play-key.json
+            node -e "JSON.parse(require('fs').readFileSync('/tmp/elite-play-key.json','utf8'))"
+            node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('eas.json','utf8'));p.submit.production.android.serviceAccountKeyPath='/tmp/elite-play-key.json';fs.writeFileSync('eas.json',JSON.stringify(p,null,2)+'\n')"
+          fi
+      - name: Submit Elite Care internal testing release
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-care-64.aab --non-interactive --wait
+      - name: Clean up private credential
+        if: always()
+        run: rm -f /tmp/elite-play-key.json
+
+  play-employer:
+    name: Submit Elite Work to Google Play internal testing
+    needs: employer
+    if: ${{ needs.employer.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    defaults:
+      run:
+        working-directory: elitebridge-employer
+    steps:
+      - name: Checkout latest release
+        uses: actions/checkout@v5
+      - name: Download employer App Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: elite-work-40-aab
+          path: .
+      - name: Node setup
+        uses: actions/setup-node@v5
+        with:
+          node-version: 20
+      - name: Install pnpm and project dependencies
+        run: |
+          npm install --global pnpm@9.12.0
+          pnpm install --no-frozen-lockfile
+      - name: Prepare optional Google Play credential
+        env:
+          GOOGLE_PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          if [ -n "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" ]; then
+            printf '%s' "$GOOGLE_PLAY_SERVICE_ACCOUNT_JSON" > /tmp/elite-play-key.json
+            chmod 600 /tmp/elite-play-key.json
+            node -e "JSON.parse(require('fs').readFileSync('/tmp/elite-play-key.json','utf8'))"
+            node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('eas.json','utf8'));p.submit.production.android.serviceAccountKeyPath='/tmp/elite-play-key.json';fs.writeFileSync('eas.json',JSON.stringify(p,null,2)+'\n')"
+          fi
+      - name: Submit Elite Work internal testing release
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: "1"
+        run: npx eas-cli@latest submit --platform android --profile production --path ../elite-work-40.aab --non-interactive --wait
+      - name: Clean up private credential
+        if: always()
+        run: rm -f /tmp/elite-play-key.json
