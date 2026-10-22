@@ -57,6 +57,7 @@ beforeAll(async () => {
   for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms"]) {
     app.use(`/api/${route}`, (await import(`../src/routes/${route}.ts`)).default);
   }
+  app.use("/api/contract-documents", (await import("../src/routes/contractDocuments")).default);
   app.use((await import("../src/middleware/errorHandler")).errorHandler);
   server = app.listen(0, "127.0.0.1");
   await new Promise<void>(resolve => server.once("listening", resolve));
@@ -75,6 +76,21 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect(outbound.post.mock.calls.some(([, body]) => body.to[0] === "info@elitebridgestaffing.com" && body.subject.includes("signup"))).toBe(true);
     expect(outbound.post.mock.calls.some(([, body]) => body.to[0] === "employer@example.com" && body.subject.includes("Welcome"))).toBe(true);
     otherEmployer = await signup("employer", "other@example.com");
+  });
+  it("saves private contract drafts, preserves bytes, rejects other owners and never emails", async () => {
+    const pdfBase64 = Buffer.from("%PDF-1.4\n1 0 obj <<>> endobj\n%%EOF\n").toString("base64");
+    const payload = {clientName:"Test Client", title:"Agreement", category:"contract", pdfBase64};
+    const emailCount = outbound.post.mock.calls.length;
+    await request("/contract-documents/employer", undefined, "GET", undefined, 401);
+    const {document} = await request("/contract-documents/employer", employer, "POST", payload, 201);
+    expect(document.status).toBe("draft");
+    expect((await request("/contract-documents/employer/" + document.id, employer)).document.pdf_base64).toBe(pdfBase64);
+    expect((await request("/contract-documents/employer", otherEmployer)).documents).toEqual([]);
+    await request("/contract-documents/employer/" + document.id, otherEmployer, "GET", undefined, 404);
+    const duplicate = await request("/contract-documents/employer", employer, "POST", payload, 201);
+    expect(duplicate.document.id).toBe(document.id);
+    await request("/contract-documents/employer", employer, "POST", {...payload, pdfBase64:Buffer.from("not a pdf document at all").toString("base64")}, 400);
+    expect(outbound.post.mock.calls.length).toBe(emailCount);
   });
   it("persists profiles across independent login sessions", async () => {
     await request("/employers/me", employer, "PUT", { companyName: "Persisted test company" });

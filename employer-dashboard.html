@@ -423,6 +423,20 @@
           </div>
         </div>
 
+        <section class="surface surface-pad" aria-label="Saved contracts and insurance" style="margin-bottom:24px">
+          <div class="section-heading"><div><p class="eyebrow">Document register</p><h2>Saved contracts &amp; insurance</h2><p>Save original PDFs for review. Documents remain drafts and are not emailed.</p></div></div>
+          <form id="contractDocumentForm" class="contract-form">
+            <label>Client name<input name="clientName" required maxlength="255" placeholder="Barry Schwartz"></label>
+            <label>Document title<input name="title" required maxlength="255" placeholder="Service agreement"></label>
+            <label>Document type<select name="category"><option value="contract">Contract</option><option value="insurance">Insurance</option></select></label>
+            <label>PDF document (maximum 2 MB)<input name="pdf" type="file" accept="application/pdf,.pdf" required></label>
+            <button type="submit" class="primary-button">Save draft document</button>
+          </form>
+          <p id="contractDocumentMessage" role="status"></p>
+          <div id="contractDocumentList">Loading saved documents…</div>
+          <div id="contractDocumentPreview" hidden><h3 id="contractDocumentPreviewTitle"></h3><p>Original PDF · Draft · Not sent</p><iframe title="Saved document preview" id="contractDocumentFrame" style="width:100%;height:75vh;border:1px solid #ddd"></iframe></div>
+        </section>
+
         <div class="contract-builder">
           <form class="surface surface-pad contract-form" id="contractForm">
             <div class="section-heading">
@@ -674,6 +688,7 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
+  <script src="/contract-documents.js?v=20261022"></script>
   <script src="/dashboard.js?v=client-receipts-tab-20261018"></script>
   <script src="/care-workspace.js?v=care-workspace-intake-20261020"></script>
   <script src="/care-team-web.js?v=handoffs-chat-20261021"></script>
