@@ -20,7 +20,7 @@
     },
     "android": {
       "package": "com.elitebridgestaffing.caregiver",
-      "versionCode": 63,
+      "versionCode": 64,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"
