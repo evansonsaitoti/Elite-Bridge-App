@@ -1,4 +1,5 @@
 name: Elite Bridge Android Builds
+# Android store release trigger for the signed AABs on the internal Google Play testing track.
 
 on:
   push:
