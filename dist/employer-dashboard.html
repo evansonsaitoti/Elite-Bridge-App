@@ -273,20 +273,6 @@
           </div>
         </div>
 
-        <section class="surface surface-pad" aria-label="Saved contracts and insurance" style="margin-bottom:24px">
-          <div class="section-heading"><div><p class="eyebrow">Document register</p><h2>Saved contracts &amp; insurance</h2><p>Save original PDFs for review. Documents remain drafts and are not emailed.</p></div></div>
-          <form id="contractDocumentForm" class="contract-form" style="position:static;display:grid;gap:12px;margin-bottom:20px">
-            <label>Client name<input name="clientName" required maxlength="255" placeholder="Barry Schwartz"></label>
-            <label>Document title<input name="title" required maxlength="255" placeholder="Service agreement"></label>
-            <label>Document type<select name="category"><option value="contract">Contract</option><option value="insurance">Insurance</option></select></label>
-            <label>PDF document (maximum 2 MB)<input name="pdf" type="file" accept="application/pdf,.pdf" required></label>
-            <button type="submit" class="primary-button">Save draft document</button>
-          </form>
-          <p id="contractDocumentMessage" role="status"></p>
-          <div id="contractDocumentList">Loading saved documents…</div>
-          <div id="contractDocumentPreview" hidden><h3 id="contractDocumentPreviewTitle"></h3><p>Original PDF · Draft · Not sent</p><iframe title="Saved document preview" id="contractDocumentFrame" style="width:100%;height:75vh;border:1px solid #ddd"></iframe></div>
-        </section>
-
         <div class="contract-builder">
           <form class="surface surface-pad contract-form" id="contractForm" style="position:static">
             <div class="section-heading"><div><p class="eyebrow">Digital agreement</p><h2>Fill in the agreement</h2><p>Enter the details once. Both pages update automatically.</p></div></div>
@@ -309,10 +295,20 @@
             <div class="form-actions"><button class="secondary-button" type="submit">Update preview</button><button class="primary-button" type="button" id="printContract">Download PDF</button><button class="secondary-button" type="button" id="saveDigitalContract">Save draft agreement</button></div>
             <p id="digitalContractStatus" role="status" aria-live="polite"></p>
           </form>
-          <div class="contract-preview-wrap" aria-label="Contract preview" style="padding:0;align-self:start;position:sticky;top:90px">
-            <iframe id="digitalContractPreview" title="Digital two-page service agreement preview" style="width:100%;height:85vh;min-height:600px;border:1px solid #d7e1da;border-radius:12px;background:white"></iframe>
-          </div>
+          <section class="contract-preview-wrap" aria-label="Contract preview">
+            <div class="contract-preview-toolbar"><div><h2>Agreement preview</h2><p>Two pages · Original format</p></div><label>Zoom<select id="contractZoom"><option value="1">Fit width</option><option value="1.5">150%</option><option value="2">200%</option></select></label></div>
+            <div id="digitalContractPreview" class="digital-contract-pages" aria-label="Digital two-page service agreement preview" aria-busy="true"><p>Preparing your agreement…</p></div>
+            <p class="contract-preview-hint">Zoom in to read the details. Download PDF for the full document.</p>
+          </section>
         </div>
+
+        <section class="surface surface-pad" aria-label="Saved contracts and insurance" style="margin-bottom:24px">
+          <div class="section-heading"><div><p class="eyebrow">Document register</p><h2>Saved contracts &amp; insurance</h2></div></div>
+          <p id="contractDocumentMessage" role="status"></p>
+          <div id="contractDocumentList">Loading saved documents…</div>
+          <div id="contractDocumentPreview" hidden><h3 id="contractDocumentPreviewTitle"></h3><p>Original PDF · Draft · Not sent</p><iframe title="Saved document preview" id="contractDocumentFrame" style="width:100%;height:75vh;border:1px solid #ddd"></iframe></div>
+        </section>
+
 
       </section>
 
@@ -460,9 +456,10 @@
     <div class="toast" id="toast" role="status" hidden></div>
   </div>
   <script>document.getElementById('state').placeholder = 'State code';</script>
-  <script src="/contract-documents.js?v=20261022"></script>
+  <script src="/contract-documents.js?v=20261023"></script>
   <script src="/contract-pdf-lib.js"></script>
-  <script src="/digital-contract.js?v=20261022"></script>
+  <script src="/contract-assets/fontkit.min.js"></script>
+  <script src="/digital-contract.js?v=20261023"></script>
   <script src="/dashboard.js?v=desktop-command-bar-20261011"></script>
 </body>
 </html>

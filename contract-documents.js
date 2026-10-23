@@ -1,7 +1,6 @@
 (function () {
   'use strict';
-  const form = document.getElementById('contractDocumentForm');
-  if (!form) return;
+  if (!document.getElementById('contractDocumentList')) return;
   const base = 'https://elite-bridge-shared-api-evans.vercel.app/api/contract-documents/employer';
   const list = document.getElementById('contractDocumentList');
   const message = document.getElementById('contractDocumentMessage');
@@ -43,16 +42,6 @@
       list.append(row);
     }
   }
-  form.addEventListener('submit', async event => {
-    event.preventDefault(); const button = form.querySelector('button[type="submit"]'); button.disabled = true;
-    try {
-      const file = form.elements.pdf.files[0];
-      if (!file || file.size > 2000000) throw Error('Choose a PDF smaller than 2 MB.');
-      const pdfBase64 = await new Promise((resolve, reject) => { const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(',')[1]); reader.onerror = () => reject(Error('Unable to read PDF.')); reader.readAsDataURL(file); });
-      await api('', { method:'POST', body:JSON.stringify({clientName:form.elements.clientName.value,title:form.elements.title.value,category:form.elements.category.value,pdfBase64}) });
-      form.elements.pdf.value = ''; message.textContent = 'Draft saved. Nothing has been sent.'; await refresh();
-    } catch(e) { message.textContent = e.message; } finally { button.disabled = false; }
-  });
   document.addEventListener('contract-documents-updated', () => refresh().catch(e => { message.textContent = e.message; }));
   refresh().catch(e => { list.textContent = e.message; });
 })();
