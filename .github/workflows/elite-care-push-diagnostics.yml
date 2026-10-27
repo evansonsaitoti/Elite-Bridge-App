@@ -57,5 +57,17 @@ jobs:
               const entry = (await gql(`{ __type(name:"${name}") { name fields { name type { name kind ofType { name kind } } } } }`))?.__type;
               if (entry) console.log('INTROSPECT_TYPE:', name,entry.fields?.map(f=>f.name).join(','));
             }
+            const creds = await gql(`query {
+              app { byId(appId:"15715728-ffc5-4ea1-9da8-5158f1e539ef") {
+                iosAppCredentials { id pushKey { id keyIdentifier }
+                  iosAppBuildCredentialsList { id } }
+              } }
+            }`);
+            console.log('EXPO_IOS_APP_CREDENTIALS_SUMMARY:',JSON.stringify((creds?.app?.byId?.iosAppCredentials||[]).map(c=>({
+              configured:true,pushKeyAttached:!!c.pushKey,buildCredentialCount:c.iosAppBuildCredentialsList?.length||0
+            }))));
+            const input = (await gql('{ __type(name:"IosAppCredentialsFilter") { inputFields { name type { name kind ofType { name kind } } } } }'))?.__type;
+            console.log('CREDENTIAL_FILTER_FIELDS:',input?.inputFields?.map(f=>f.name).join(',')||'unavailable');
+
           })().catch(e=>{ console.error('DIAGNOSTIC_ERROR:', String(e.message).slice(0,200)); process.exitCode=1;});
           NODE
