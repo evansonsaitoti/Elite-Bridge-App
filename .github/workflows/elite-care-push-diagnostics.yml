@@ -77,6 +77,17 @@ jobs:
               iosAppCredentials { id pushKey { id } appleTeam { id } appleAppIdentifier { id } }
             } } }`);
             console.log('IOS_ASSOCIATION_IDS:',JSON.stringify((list?.app?.byId?.iosAppCredentials||[]).map(c=>({id:c.id,teamId:c.appleTeam?.id,identifierId:c.appleAppIdentifier?.id,pushAttached:!!c.pushKey}))));
+            const candidates=await gql(`query { app { byId(appId:"15715728-ffc5-4ea1-9da8-5158f1e539ef") {
+              iosAppCredentials { id appleAppIdentifier { bundleIdentifier }
+                appleTeam { id appleTeamIdentifier applePushKeys { id keyIdentifier } } pushKey { id keyIdentifier } }
+            } } }`);
+            console.log('PUSH_KEY_REUSE_CANDIDATES:',JSON.stringify((candidates?.app?.byId?.iosAppCredentials||[]).map(c=>({
+              bundle:c.appleAppIdentifier?.bundleIdentifier||'unknown',
+              team:c.appleTeam?.appleTeamIdentifier||'none',
+              availableOnTeam:c.appleTeam?.applePushKeys?.length||0,
+              alreadyAssigned:!!c.pushKey
+            }))));
+
 
 
           })().catch(e=>{ console.error('DIAGNOSTIC_ERROR:', String(e.message).slice(0,200)); process.exitCode=1;});
