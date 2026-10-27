@@ -16,6 +16,7 @@ export default function Notifications() {
     if(a.type==="team_message")router.push("/(staff)/chat");
     else if(a.type==="care_handoff")router.push("/(staff)/handoff");
     else if(a.type==="timesheet_review")router.push("/(staff)/timesheets");
+    else if(a.type==="shift_offer"||a.type==="new_shift_offer"||a.type==="shift_open")router.push("/(staff)/opportunities");
     else router.push("/(staff)/shifts");
   };
   const allRead=async()=>{try{await operationsApi("/notifications/read-all","POST");setAlerts(v=>v.map(a=>({...a,is_read:true})));setError("");}catch(e){setError(e instanceof Error?e.message:"Could not mark all read");}};
