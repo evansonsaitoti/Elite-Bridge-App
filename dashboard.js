@@ -932,9 +932,64 @@
   shiftDetailDialog?.addEventListener('click', (event) => { if (event.target === shiftDetailDialog) shiftDetailDialog.close(); });
 
   let employerManualTimesheets = [];
+  function timesheetEntries(staffName, month, startDate, endDate) {
+    return employerManualTimesheets.filter(entry => {
+      const day = String(entry.shift_date).slice(0, 10);
+      return entry.staff_name === staffName && (!month || day.slice(0, 7) === month) && (!startDate || day >= startDate) && (!endDate || day <= endDate);
+    });
+  }
+  function selectedTimesheetPeriod() {
+    const staffName = document.getElementById('timesheetShareStaff')?.value || '';
+    const startDate = document.getElementById('timesheetShareStart')?.value || '';
+    const endDate = document.getElementById('timesheetShareEnd')?.value || '';
+    if (!staffName || !startDate || !endDate || startDate > endDate) return null;
+    return { staffName, startDate, endDate, month: startDate.slice(0, 7), entries: timesheetEntries(staffName, null, startDate, endDate) };
+  }
+  function refreshTimesheetShareSummary() {
+    const summary = document.getElementById('timesheetShareSummary');
+    if (!summary) return;
+    const selection = selectedTimesheetPeriod();
+    const buttons = document.querySelectorAll('[data-timesheet-share-action]');
+    if (!selection) {
+      summary.textContent = 'Choose a caregiver and valid date range.';
+      buttons.forEach(button => { button.disabled = true; });
+      return;
+    }
+    const hours = selection.entries.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0) / 60;
+    summary.textContent = selection.entries.length
+      ? `${selection.staffName} · ${selection.entries.length} shift${selection.entries.length === 1 ? '' : 's'} · ${hours.toFixed(2)} hours · ${selection.startDate} through ${selection.endDate} · hours-only PDF`
+      : 'There are no recorded hours for this caregiver within the selected dates.';
+    buttons.forEach(button => { button.disabled = !selection.entries.length; });
+  }
+  function syncTimesheetSharePanel() {
+    const staff = document.getElementById('timesheetShareStaff');
+    const from = document.getElementById('timesheetShareStart');
+    const to = document.getElementById('timesheetShareEnd');
+    if (!staff || !from || !to) return;
+    const names = [...new Set(employerManualTimesheets.map(row => row.staff_name).filter(Boolean))].sort();
+    const previous = staff.value;
+    staff.replaceChildren(new Option('Select caregiver…', ''));
+    names.forEach(name => staff.add(new Option(name, name)));
+    if (previous && names.includes(previous)) staff.value = previous;
+    else if (names.length) staff.value = names[0];
+    if ((!from.value || !to.value) && staff.value) {
+      const dates = employerManualTimesheets.filter(row => row.staff_name === staff.value).map(row => String(row.shift_date).slice(0, 10)).sort();
+      const last = dates.at(-1);
+      if (last) {
+        const date = new Date(last + 'T12:00:00Z');
+        date.setUTCDate(date.getUTCDate() - 13);
+        from.value = date.toISOString().slice(0, 10);
+        to.value = last;
+      }
+    }
+    refreshTimesheetShareSummary();
+  }
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
-    if (employerView) employerManualTimesheets = sheets.filter(sheet => sheet.entry_source === 'manual_missed_clock_in');
+    if (employerView) {
+      employerManualTimesheets = sheets.filter(sheet => sheet.entry_source === 'manual_missed_clock_in');
+      syncTimesheetSharePanel();
+    }
     const summary = document.getElementById('timesheetSummary');
     const pending = sheets.filter(sheet => sheet.status === 'pending_approval');
     const approved = sheets.filter(sheet => sheet.status === 'approved');
@@ -945,7 +1000,7 @@
       const manual = sheet.entry_source === 'manual_missed_clock_in';
       const title = manual ? `${sheet.staff_name} · ${sheet.entry_type === 'hours_only' ? 'Hours worked' : 'Missed clock-in'}` : employerView ? `${sheet.first_name} ${sheet.last_name} · ${sheet.shift_title}` : applications.find(a => a.shift.id === sheet.shift_id)?.shift.title || 'Care shift';
       const details = manual
-        ? `${formatDateOnly(sheet.shift_date)} · ${String(sheet.start_time).slice(0, 5)} - ${String(sheet.end_time).slice(0, 5)} · ${Number(sheet.worked_minutes / 60).toFixed(2)} hours${sheet.entry_type === 'hours_only' ? '' : ` · ${money(sheet.hourly_rate)}/hr · ${money(sheet.total_amount)}`}`
+        ? `${formatDateOnly(sheet.shift_date)} · ${String(sheet.start_time).slice(0, 5)} - ${String(sheet.end_time).slice(0, 5)} · ${Number(sheet.worked_minutes / 60).toFixed(2)} hours`
         : `${dateTime(sheet.clock_in_at)} – ${dateTime(sheet.clock_out_at)} · ${(Number(sheet.worked_minutes) / 60).toFixed(2)} hours · ${money(sheet.total_amount)}`;
       const note = manual ? sheet.reason : sheet.notes;
       const exportAction = employerView && manual
@@ -979,7 +1034,7 @@
     };
     const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
     const totalMinutes = ordered.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0);
-    const hoursOnly = ordered.some(entry => entry.entry_type === 'hours_only');
+    const hoursOnly = true;
     const gross = ordered.reduce((sum, entry) => sum + Number(entry.total_amount || 0), 0);
     const rates = [...new Set(ordered.map(entry => Number(entry.hourly_rate || 0)))];
     const rateLabel = rates.length > 1 ? 'Varies' : moneyPrecise(rates[0] || 0);
@@ -1045,7 +1100,7 @@
     const firstLabel = dateLabel(firstDate), lastLabel = dateLabel(lastDate);
     const payPeriod = ordered.length < 2 || String(ordered[0]?.shift_date).slice(0, 10) === String(ordered.at(-1)?.shift_date).slice(0, 10) ? firstLabel : firstDate.getMonth() === lastDate.getMonth() && firstDate.getFullYear() === lastDate.getFullYear() ? `${new Intl.DateTimeFormat('en-US', { month: 'short' }).format(firstDate)} ${firstDate.getDate()}-${lastDate.getDate()}, ${firstDate.getFullYear()}` : `${firstLabel} - ${lastLabel}`;
     const totalMinutes = ordered.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0);
-    const hoursOnly = ordered.some(entry => entry.entry_type === 'hours_only');
+    const hoursOnly = true;
     const totalAmount = ordered.reduce((sum, entry) => sum + Number(entry.total_amount || 0), 0);
     const rates = [...new Set(ordered.map(entry => Number(entry.hourly_rate || 0)))];
     const rateLabel = rates.length === 1 ? moneyPrecise(rates[0]) : 'Varies';
@@ -1160,9 +1215,6 @@
     link.href = url; link.download = filename; link.rel = 'noopener';
     document.body.appendChild(link); link.click(); link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-  }
-  function timesheetEntries(staffName, month) {
-    return employerManualTimesheets.filter(entry => entry.staff_name === staffName && String(entry.shift_date).slice(0, 7) === month);
   }
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-export-timesheet]');
