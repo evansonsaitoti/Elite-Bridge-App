@@ -195,14 +195,15 @@
             <div id="timesheetEmailHistoryList" aria-live="polite"><p class="timesheet-export-hint">No email records loaded.</p></div>
           </div></div>
         <article class="surface surface-pad manual-entry-panel">
-          <div class="surface-head"><div><h2>Add a missed clock-in</h2><p>Create a manual timesheet from the staff member's reported hours.</p></div><span class="manual-entry-pill">Employer review required</span></div>
+          <div class="surface-head"><div><h2>Record hours worked</h2><p>Add a caregiver's reported shifts. Hours-only records are the default; use payroll rates only when specifically needed.</p></div><span class="manual-entry-pill">Employer review required</span></div>
           <form id="manualTimesheetForm" data-manual-entry class="manual-timesheet-form">
             <div class="field"><label for="manualStaffName">Staff member</label><input id="manualStaffName" name="staffName" type="text" maxlength="255" placeholder="Full name" required></div>
             <div class="field"><label for="manualStartDate">First shift date</label><input id="manualStartDate" name="startDate" type="date" required></div>
             <div class="field"><label for="manualEndDate">Last shift date</label><input id="manualEndDate" name="endDate" type="date" required></div>
             <div class="field"><label for="manualStartTime">Clock-in time</label><input id="manualStartTime" name="startTime" type="time" value="09:00" required></div>
             <div class="field"><label for="manualEndTime">Clock-out time</label><input id="manualEndTime" name="endTime" type="time" value="13:00" required></div>
-            <div class="field"><label for="manualHourlyRate">Pay rate ($/hour)</label><input id="manualHourlyRate" name="hourlyRate" type="number" min="0.01" max="500" step="0.01" placeholder="30.00" required></div>
+            <label class="manual-weekends-check manual-hours-only-check"><input id="manualHoursOnly" type="checkbox" name="hoursOnly" checked><span><strong>Hours only (no payment information)</strong><small>Save dates and hours without any rates or dollar amounts.</small></span></label>
+            <div class="field manual-rate-field" id="manualRateField" hidden><label for="manualHourlyRate">Pay rate ($/hour) — payroll entries only</label><input id="manualHourlyRate" name="hourlyRate" type="number" min="0.01" max="500" step="0.01" placeholder="30.00" disabled></div>
             <div class="field"><label for="manualBreakMinutes">Unpaid break (minutes per shift)</label><input id="manualBreakMinutes" name="unpaidBreakMinutes" type="number" min="0" max="1440" step="1" value="0"></div>
             <label class="manual-weekends-check"><input type="checkbox" name="includeWeekends" checked><span><strong>Include weekends</strong><small>Apply the same shift to every date in the range.</small></span></label>
             <div class="field manual-reason-field"><label for="manualReason">Reason / employer note</label><textarea id="manualReason" name="reason" maxlength="2000" placeholder="Staff forgot to clock in. Entered from the hours they reported." required></textarea></div>
