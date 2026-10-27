@@ -9,7 +9,7 @@
   }
   const token = storage.getItem("token");
   if (!user || !token) {
-    location.replace("/");
+    location.replace("/dashboard");
     return;
   }
   const employer = user.role === "employer";
@@ -31,8 +31,8 @@
         })[c],
     );
   document.getElementById("back").href = employer
-    ? "/employer-dashboard"
-    : "/caregiver-dashboard";
+    ? "/dashboard/employer"
+    : "/dashboard/caregiver";
   document.querySelectorAll("[data-employer]").forEach((e) => {
     e.hidden = !employer;
   });
@@ -52,7 +52,7 @@
       ...(body ? { body: JSON.stringify(body) } : {}),
     });
     if (response.status === 401) {
-      location.replace("/");
+      location.replace("/dashboard");
       throw new Error("Sign in again.");
     }
     if (!response.ok) {

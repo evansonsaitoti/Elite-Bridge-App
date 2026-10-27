@@ -649,7 +649,7 @@
         storage.setItem('user', JSON.stringify(data.user));
         showMessage(successMessage, 'Signed in. Opening your Elite Bridge app…');
         const role = data.user?.role;
-        const dashboard = role === 'caregiver' ? '/caregiver-dashboard' : role === 'employer' ? '/employer-dashboard' : '/marketplace';
+        const dashboard = role === 'caregiver' ? '/dashboard/caregiver' : role === 'employer' ? '/dashboard/employer' : '/dashboard/marketplace';
         window.setTimeout(() => window.location.replace(dashboard), 500);
       } catch (error) {
         const message = error instanceof TypeError ? 'We could not reach Elite Bridge right now. Please try again in a moment.' : error.message;
