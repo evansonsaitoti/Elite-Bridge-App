@@ -2,7 +2,7 @@
   const API_BASE = 'https://elite-bridge-shared-api-evans.vercel.app/api';
   const role = document.body.dataset.role;
   const expectedRole = role === 'employer' ? 'employer' : 'caregiver';
-  const otherDashboard = expectedRole === 'employer' ? '/caregiver-dashboard' : '/employer-dashboard';
+  const otherDashboard = expectedRole === 'employer' ? '/dashboard/caregiver' : '/dashboard/employer';
 
   function getSession() {
     const stores = [localStorage, sessionStorage];
@@ -22,7 +22,7 @@
 
   const session = getSession();
   if (!session.user || !session.token) {
-    window.location.replace('/');
+    window.location.replace('/dashboard');
     return;
   }
   if (session.user.role && session.user.role !== expectedRole) {
@@ -112,7 +112,7 @@
 
   document.querySelectorAll('[data-logout]').forEach((button) => button.addEventListener('click', () => {
     ['token', 'user'].forEach((key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); });
-    window.location.assign('/');
+    window.location.assign('/dashboard');
   }));
 
   async function api(path, options = {}) {
@@ -123,7 +123,7 @@
     const data = await response.json().catch(() => ({}));
     if (response.status === 401) {
       ['token', 'user'].forEach((key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); });
-      window.location.assign('/');
+      window.location.assign('/dashboard');
       throw new Error('Your session has ended.');
     }
     if (!response.ok) throw new Error(data.message || data.error || 'Something went wrong.');

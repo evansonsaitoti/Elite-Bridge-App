@@ -18,12 +18,12 @@
 
   const session = readSession();
   if (!session.user || !session.token) {
-    window.location.replace('/');
+    window.location.replace('/dashboard');
     return;
   }
 
   const role = session.user.role === 'employer' ? 'employer' : 'caregiver';
-  const dashboardUrl = role === 'employer' ? '/employer-dashboard' : '/caregiver-dashboard';
+  const dashboardUrl = role === 'employer' ? '/dashboard/employer' : '/dashboard/caregiver';
   const completionKey = `eliteBridgeOnboarding:${session.user.id}:${role}`;
   let step = 1;
 

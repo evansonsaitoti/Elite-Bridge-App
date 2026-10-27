@@ -591,7 +591,7 @@
                 <a class="store-badge" href="https://apps.apple.com/us/app/id6770962152" target="_blank" rel="noopener noreferrer"><img src="https://developer.apple.com/assets/elements/badges/download-on-the-app-store.svg" alt="Download on the App Store" width="165"></a>
                 <a class="store-badge" href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer"><img src="https://play.google.com/intl/en_us/badges/static/images/badges/en_badge_web_generic.png" alt="Get it on Google Play" width="184"></a>
             </div>
-            <a class="continue-web" href="/caregiver-dashboard.html">Continue in your browser →</a>
+            <a class="continue-web" href="/dashboard/caregiver">Continue in your browser →</a>
             <small>If the iPhone app listing is not available in your region, continue using the web dashboard.</small>
         </div>
         <div class="invite-banner" id="inviteBanner" role="status"></div>
@@ -604,7 +604,7 @@
                 <strong>Stay tuned for an invitation</strong>
                 <span>Once your employer adds you, open their link to create your account. You can finish the rest of your profile later.</span>
             </div>
-            <a class="invite-login" href="/">Have an account? Log in</a>
+            <a class="invite-login" href="/dashboard">Have an account? Log in</a>
             <p class="invite-employer-link">Hiring caregivers? <a href="/signup?role=employer">Create an employer account</a></p>
         </section>
 
@@ -671,7 +671,7 @@
         </form>
 
         <div class="signin-link">
-            Already have an account? <a href="/">Sign in here</a>
+            Already have an account? <a href="/dashboard">Sign in here</a>
         </div>
     </div>
     </main>
@@ -892,7 +892,7 @@
             role = document.querySelector('input[name="role"]:checked')?.value || '';
         }
 
-        window.location.href = role === 'employer' ? '/employer-dashboard.html' : '/caregiver-dashboard.html';
+        window.location.href = role === 'employer' ? '/dashboard/employer' : '/dashboard/caregiver';
     }
 
     document.addEventListener('click', (event) => {
