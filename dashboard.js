@@ -1084,10 +1084,11 @@
   function timesheetPdfBlob(staffName, month, entries, approval = {}) {
     const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
     const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
-    const logo = document.querySelector('img[src*="logo"]');
+    const logo = document.getElementById('invoicePdfBrandLogo') || document.querySelector('img[src*="logo"]');
     const canvas = document.createElement('canvas');
-    canvas.width = logo?.naturalWidth || 300;
-    canvas.height = logo?.naturalHeight || 94;
+    if (!logo?.complete || !logo.naturalWidth) throw new Error('The official Elite Bridge logo is not ready. Refresh and try again.');
+    canvas.width = logo.naturalWidth;
+    canvas.height = logo.naturalHeight;
     const context = canvas.getContext('2d');
     if (!context) throw new Error('Could not prepare the timesheet PDF.');
     context.fillStyle = '#ffffff'; context.fillRect(0, 0, canvas.width, canvas.height);
@@ -1114,7 +1115,7 @@
     const approvalDate = approvalDateValue ? formatDateOnly(approvalDateValue) : '';
     const reasons = [...new Set(ordered.map(entry => String(entry.reason || '').trim()).filter(Boolean))];
     const chunks = [];
-    for (let index = 0; index < ordered.length; index += 16) chunks.push(ordered.slice(index, index + 16));
+    for (let index = 0; index < ordered.length; index += 8) chunks.push(ordered.slice(index, index + 8));
     if (!chunks.length) chunks.push([]);
     const pages = chunks.map((pageEntries, pageIndex) => {
       const ops = [];
@@ -1130,54 +1131,68 @@
         const [r, g, b] = color.match(/.{2}/g).map(pair => parseInt(pair, 16) / 255);
         ops.push(`${r.toFixed(3)} ${g.toFixed(3)} ${b.toFixed(3)} RG ${width} w ${x1} ${792 - top} m ${x2} ${792 - top} l S`);
       };
-      ops.push('q 160 0 0 50 50 742 cm /Im1 Do Q');
-      text(372, 5, 10, 'ELITE BRIDGE STAFFING', true, '064024');
-      text(372, 22, 9, '(508) 251-9346', false, '607067');
-      text(372, 37, 9, 'info@elitebridgestaffing.com', false, '607067');
-      text(372, 52, 9, 'elitebridgestaffing.com', false, '607067');
-      line(50, 108, 562, '064024', 4);
-      text(50, 126, 22, pageIndex ? 'Staff timesheet (continued)' : 'Staff timesheet', true, '064024');
-      text(50, 154, 10, hoursOnly ? (fullyApproved ? 'Employer-approved hours record' : 'Hours-only record - Pending employer review') : (fullyApproved ? 'Employer-approved missed clock-in record' : 'Missed clock-in record - Prepared for employer review'), false, '607067');
-      rect(50, 176, 512, 49, 'F3F8EE');
-      line(50, 176, 562); line(50, 225, 562); line(220, 176, 220); line(391, 176, 391);
-      text(62, 184, 8, 'STAFF MEMBER', true, '607067'); text(62, 199, 12, staffName, true, '20352A');
-      text(232, 184, 8, 'PAY PERIOD', true, '607067'); text(232, 199, 12, payPeriod, true, '20352A');
-      text(403, 184, 8, 'ENTRY TYPE', true, '607067'); text(403, 199, 12, hoursOnly ? 'Hours only' : 'Missed clock-in', true, '20352A');
-      rect(50, 238, 512, 54, 'FFFFFF');
-      line(50, 238, 562); line(50, 292, 562); line(220, 238, 220); line(391, 238, 391);
-      text(62, 247, 8, hoursOnly ? 'SHIFTS' : 'HOURLY PAY RATE', true, '607067'); text(62, 264, 16, hoursOnly ? String(ordered.length) : rateLabel, false, '064024');
-      text(232, 247, 8, 'TOTAL HOURS', true, '607067'); text(232, 264, 16, `${(totalMinutes / 60).toFixed(2)} hrs`, false, '064024');
-      text(403, 247, 8, hoursOnly ? 'REVIEW STATUS' : 'GROSS WAGES', true, '607067'); text(403, 264, 16, hoursOnly ? (fullyApproved ? 'Approved' : 'Pending') : moneyPrecise(totalAmount), false, '064024');
-      const tableTop = 309, rowHeight = 17;
-      rect(50, tableTop, 512, 22, '064024');
-      text(58, tableTop + 6, 8, 'DATE', true, 'FFFFFF'); text(200, tableTop + 6, 8, 'TIME WORKED', true, 'FFFFFF'); text(350, tableTop + 6, 8, 'HOURS', true, 'FFFFFF'); if (!hoursOnly) { text(411, tableTop + 6, 8, 'RATE', true, 'FFFFFF'); text(478, tableTop + 6, 8, 'AMOUNT', true, 'FFFFFF'); }
+      // Match the approved client invoice: same wide logo, gold divider,
+      // two metadata panels, dark forest hours banner and restrained typography.
+      ops.push('q 244 0 0 61 43 706 cm /Im1 Do Q');
+      text(389, 27, 10, 'ELITE BRIDGE STAFFING LLC', true, '063D2C');
+      text(452, 44, 8, '144 Thissell Ave', false, '65776E');
+      text(451, 58, 8, 'Dracut, MA 01826', false, '65776E');
+      text(363, 73, 8, '(508) 251-9346 | elitebridgestaffing.com', false, '65776E');
+      line(43, 98, 569, 'BD8627', 1.3);
+      text(43, 105, 26, pageIndex ? 'TIMESHEET (CONTINUED)' : 'TIMESHEET', true, '063D2C');
+      rect(43, 151, 246, 112, 'F9FAF8');
+      rect(302, 151, 267, 112, 'F9FAF8');
+      line(43, 151, 289, 'DCE3DD', .8);
+      line(302, 151, 569, 'DCE3DD', .8);
+      text(56, 162, 8, 'STAFF MEMBER', true, 'BD8627');
+      text(56, 180, 12, staffName.length > 30 ? staffName.slice(0,30) : staffName, true, '063D2C');
+      text(56, 217, 9, 'Hours worked | Non-medical home care', false, '65776E');
+      text(315, 162, 8, 'SERVICE PERIOD', true, '65776E');
+      text(315, 183, 9, payPeriod, true, '1C3029');
+      text(315, 208, 8, 'REVIEW STATUS', true, '65776E');
+      text(315, 227, 9, fullyApproved ? 'Approved' : 'Pending employer review', true, '1C3029');
+      rect(43, 278, 526, 61, '063D2C');
+      line(295, 290, 295, 'B7CBC0', .8);
+      text(59, 290, 9, 'REPORTED SERVICE HOURS', true, 'B7CBC0');
+      text(59, 306, 21, String((totalMinutes / 60).toFixed(2)) + ' hours', true, 'FFFFFF');
+      text(313, 290, 9, 'SHIFTS RECORDED', true, 'B7CBC0');
+      text(313, 307, 19, String(ordered.length), true, 'FFFFFF');
+      text(43, 350, 12, 'DETAILED SERVICE HOURS', true, '063D2C');
+      text(408, 352, 8.2, 'DATES & TIMES WORKED', true, '65776E');
+      const tableTop = 375, rowHeight = 21;
+      rect(43, tableTop, 526, 26, '063D2C');
+      text(55, tableTop + 7, 8, 'DATE', true, 'FFFFFF');
+      text(202, tableTop + 7, 8, 'SERVICE TIME', true, 'FFFFFF');
+      text(503, tableTop + 7, 8, 'HOURS', true, 'FFFFFF');
       const shiftDateLabel = value => { const d = new Date(`${String(value || '').slice(0, 10)}T12:00:00`); return Number.isNaN(d.getTime()) ? String(value || '') : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(d); };
       const shiftTimeLabel = value => { const [hour, minute] = String(value || '').slice(0, 5).split(':').map(Number); if (!Number.isFinite(hour) || !Number.isFinite(minute)) return String(value || ''); return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`; };
       pageEntries.forEach((entry, row) => {
         const top = tableTop + 22 + row * rowHeight;
-        rect(50, top, 512, rowHeight, row % 2 ? 'F8FBF9' : 'FFFFFF');
-        line(50, top + rowHeight, 562, 'DCE6DF', .5);
-        text(57, top + 4, 8, shiftDateLabel(entry.shift_date));
-        text(199, top + 4, 8, `${shiftTimeLabel(entry.start_time)} - ${shiftTimeLabel(entry.end_time)}`);
-        text(350, top + 4, 8, (Number(entry.worked_minutes || 0) / 60).toFixed(2));
-        if (!hoursOnly) { text(407, top + 4, 8, moneyPrecise(entry.hourly_rate)); text(475, top + 4, 8, moneyPrecise(entry.total_amount)); }
+        rect(43, top, 526, rowHeight, row % 2 ? 'F2F5F2' : 'FFFFFF');
+        line(43, top + rowHeight, 569, 'DCE3DD', .5);
+        text(55, top + 4, 9, shiftDateLabel(entry.shift_date), true, '1C3029');
+        text(202, top + 4, 9, `${shiftTimeLabel(entry.start_time)} - ${shiftTimeLabel(entry.end_time)}`);
+        text(505, top + 4, 9, (Number(entry.worked_minutes || 0) / 60).toFixed(2), true, '1C3029');
       });
-      let cursor = tableTop + 22 + pageEntries.length * rowHeight;
+      let cursor = tableTop + 26 + pageEntries.length * rowHeight;
+      // Only the final page contains the two requested verification fields.
       if (pageIndex === chunks.length - 1) {
-        rect(50, cursor, 512, 20, 'F3F8EE');
-        text(199, cursor + 5, 9, 'TOTAL', true, '064024'); text(350, cursor + 5, 9, (totalMinutes / 60).toFixed(2), true, '064024'); if (!hoursOnly) text(475, cursor + 5, 9, moneyPrecise(totalAmount), true, '064024');
-        cursor += 30;
-        rect(50, cursor, 512, 45, 'F7FAF4');
-        text(62, cursor + 7, 8, 'TIME ENTRY NOTE', true, '607067');
-        text(62, cursor + 21, 8, hoursOnly ? (fullyApproved ? 'Hours approved by employer.' : 'Reported hours need employer review.') : (fullyApproved ? 'Approval recorded. Ready for payroll review.' : (reasons[0] || 'Hours were entered manually from reported hours.').slice(0, 86)), false, '607067');
-        if (reasons.length > 1) text(62, cursor + 32, 8, reasons[1].slice(0, 86), false, '607067');
-        cursor += 59;
-        text(50, cursor, 8, 'EMPLOYER APPROVAL', true, '064024');
-        text(50, cursor + 16, 8, 'Approved by', true, '607067'); text(360, cursor + 16, 8, 'Date', true, '607067');
-        text(50, cursor + 31, 10, approver || '____________________________________', false, '20352A');
-        text(360, cursor + 31, 10, approvalDate || '____________________', false, '20352A');
-      } else text(50, 741, 8, 'Continued on next page', false, '607067');
-      line(50, 770, 562); text(50, 777, 7, hoursOnly ? 'Confidential hours record - Prepared for employer review' : 'Confidential payroll record - Prepared for employer review', false, '607067'); text(516, 777, 7, `${pageIndex + 1} / ${chunks.length}`, false, '607067');
+        rect(43, cursor + 7, 526, 30, 'F2F5F2');
+        text(55, cursor + 14, 9, 'TOTAL RECORDED HOURS', true, '063D2C');
+        text(495, cursor + 13, 13, (totalMinutes / 60).toFixed(2), true, '063D2C');
+        cursor += 48;
+        text(43, cursor + 3, 10, 'TIMESHEET VERIFICATION', true, '063D2C');
+        line(43, cursor + 23, 569, 'BD8627', .8);
+        text(56, cursor + 30, 8, 'NAME OF PERSON APPROVING', true, '65776E');
+        text(370, cursor + 30, 8, 'DATE', true, '65776E');
+        text(56, cursor + 46, 10, approver || '______________________________', false, '1C3029');
+        text(370, cursor + 46, 10, approvalDate || '____________________', false, '1C3029');
+      } else {
+        text(43, 718, 8, 'Continued on next page', false, '65776E');
+      }
+      line(43, 742, 569, 'DCE3DD', .8);
+      text(43, 748, 8, 'ELITE BRIDGE STAFFING LLC  |  NON-MEDICAL HOME CARE', true, '65776E');
+      text(516, 748, 8, String(pageIndex + 1) + ' / ' + String(chunks.length), true, '65776E');
       return pdfAscii(ops.join('\n'));
     });
     const objects = [];
