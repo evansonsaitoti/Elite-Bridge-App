@@ -134,8 +134,8 @@ router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {
       ...row,
       entry_source: "manual_missed_clock_in",
       worked_hours: Number((Number(row.worked_minutes || 0) / 60).toFixed(2)),
-      hourly_rate: Number(row.hourly_rate),
-      total_amount: Number(row.total_amount),
+      hourly_rate: row.hourly_rate == null ? null : Number(row.hourly_rate),
+      total_amount: row.total_amount == null ? null : Number(row.total_amount),
     }));
     res.json({ manualTimesheets });
   } catch (error) { next(error); }
