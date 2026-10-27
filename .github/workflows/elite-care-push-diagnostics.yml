@@ -94,6 +94,12 @@ jobs:
               const t = (await gql(`{ __type(name:"${keyTypeName}") { fields { name type {name kind ofType{name kind}} } } }`))?.__type;
               console.log('ACCOUNT_KEY_LIST_TYPE:', keyTypeName,t?.fields?.map(f=>f.name)||[]);
             }
+            const allKeys = await gql(`query { app { byId(appId:"15715728-ffc5-4ea1-9da8-5158f1e539ef") { ownerAccount {
+              applePushKeysPaginated(first:50) { edges { node { id keyIdentifier } } }
+            } } } }`);
+            const accountKeys=allKeys?.app?.byId?.ownerAccount?.applePushKeysPaginated?.edges||[];
+            console.log('ACCOUNT_EXISTING_PUSH_KEYS:',accountKeys.length);
+
 
 
 
