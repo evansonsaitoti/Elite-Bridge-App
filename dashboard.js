@@ -1084,7 +1084,8 @@
   function timesheetPdfBlob(staffName, month, entries, approval = {}) {
     const moneyPrecise = value => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(Number(value || 0));
     const ordered = [...entries].sort((a, b) => String(a.shift_date).localeCompare(String(b.shift_date)));
-    const logo = document.getElementById('invoicePdfBrandLogo') || document.querySelector('img[src*="logo"]');
+    // The official invoice art is mandatory; never substitute an EB placeholder.
+    const logo = document.getElementById('invoicePdfBrandLogo');
     const canvas = document.createElement('canvas');
     if (!logo?.complete || !logo.naturalWidth) throw new Error('The official Elite Bridge logo is not ready. Refresh and try again.');
     canvas.width = logo.naturalWidth;
@@ -1152,7 +1153,7 @@
       text(315, 208, 8, 'REVIEW STATUS', true, '65776E');
       text(315, 227, 9, fullyApproved ? 'Approved' : 'Pending employer review', true, '1C3029');
       rect(43, 278, 526, 61, '063D2C');
-      line(295, 290, 295, 'B7CBC0', .8);
+      ops.push('0.718 0.796 0.753 RG 0.7 w 295 462 m 295 503 l S');
       text(59, 290, 9, 'REPORTED SERVICE HOURS', true, 'B7CBC0');
       text(59, 306, 21, String((totalMinutes / 60).toFixed(2)) + ' hours', true, 'FFFFFF');
       text(313, 290, 9, 'SHIFTS RECORDED', true, 'B7CBC0');
@@ -1167,7 +1168,7 @@
       const shiftDateLabel = value => { const d = new Date(`${String(value || '').slice(0, 10)}T12:00:00`); return Number.isNaN(d.getTime()) ? String(value || '') : new Intl.DateTimeFormat('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }).format(d); };
       const shiftTimeLabel = value => { const [hour, minute] = String(value || '').slice(0, 5).split(':').map(Number); if (!Number.isFinite(hour) || !Number.isFinite(minute)) return String(value || ''); return `${hour % 12 || 12}:${String(minute).padStart(2, '0')} ${hour >= 12 ? 'PM' : 'AM'}`; };
       pageEntries.forEach((entry, row) => {
-        const top = tableTop + 22 + row * rowHeight;
+        const top = tableTop + 26 + row * rowHeight;
         rect(43, top, 526, rowHeight, row % 2 ? 'F2F5F2' : 'FFFFFF');
         line(43, top + rowHeight, 569, 'DCE3DD', .5);
         text(55, top + 4, 9, shiftDateLabel(entry.shift_date), true, '1C3029');
