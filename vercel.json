@@ -52,6 +52,18 @@
       "dest": "/index.html"
     },
     {
+      "src": "/dashboard/employer/?",
+      "dest": "/employer-dashboard.html"
+    },
+    {
+      "src": "/dashboard/caregiver/?",
+      "dest": "/caregiver-dashboard.html"
+    },
+    {
+      "src": "/dashboard/marketplace/?",
+      "dest": "/marketplace.html"
+    },
+    {
       "src": "/dashboard/?",
       "dest": "/dashboard.html"
     },
