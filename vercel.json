@@ -52,8 +52,12 @@
       "dest": "/index.html"
     },
     {
+      "src": "/dashboard/?",
+      "dest": "/dashboard.html"
+    },
+    {
       "src": "/login/?",
-      "dest": "/index.html"
+      "dest": "/dashboard.html"
     },
     {
       "src": "/signup/?",
