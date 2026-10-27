@@ -589,6 +589,38 @@ body.mobile-more-open .mobile-more-tab .close-icon { display: block; }
 .manual-entry-actions .primary-button { flex: 0 0 auto; }
 .timesheet-dashboard { margin-bottom: 18px; }
 .timesheet-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 16px; }
+.timesheet-share-panel { margin: 0 0 20px; padding: 19px; border: 1px solid #c9decf; border-radius: 16px; background: linear-gradient(140deg, #edf7f1, #fff 70%); }
+.timesheet-share-panel .surface-head { margin-bottom: 13px; }
+.timesheet-share-panel h3, .timesheet-email-history-panel h3 { margin: 0; color: var(--forest-950); font-size: 17px; letter-spacing: -.02em; }
+.timesheet-share-panel .surface-head p, .timesheet-email-history-panel .surface-head p { margin: 5px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+.timesheet-share-fields { display: grid; grid-template-columns: minmax(170px, 1.4fr) repeat(2, minmax(140px, 1fr)); gap: 12px; }
+.timesheet-share-fields .field { margin: 0; }
+.timesheet-share-fields label { display: block; margin-bottom: 6px; font-size: 12px; }
+.timesheet-share-fields input, .timesheet-share-fields select { width: 100%; min-height: 44px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: #fff; }
+.timesheet-share-summary { margin: 12px 0; color: var(--forest-800); font-size: 12px; font-weight: 650; line-height: 1.5; }
+.timesheet-share-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.timesheet-share-actions button { min-height: 43px; padding: 10px 14px; }
+.timesheet-share-actions button:disabled { opacity: .45; cursor: not-allowed; }
+.timesheet-email-history-panel { margin-top: 17px; padding-top: 17px; border-top: 1px solid var(--line); }
+.timesheet-email-history-panel .surface-head { margin-bottom: 9px; }
+.timesheet-email-history-row { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 11px 1px; border-top: 1px solid #e4ede6; }
+.timesheet-email-history-row > div { min-width: 0; }
+.timesheet-email-history-row strong { display: block; color: var(--forest-950); font-size: 12px; }
+.timesheet-email-history-row small { display: block; margin-top: 4px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.timesheet-email-history-row .status { flex: 0 0 auto; font-size: 10px; }
+.manual-rate-field[hidden] { display: none !important; }
+@media (max-width: 740px) {
+  .timesheet-share-fields { grid-template-columns: 1fr 1fr; }
+  .timesheet-share-fields .field:first-child { grid-column: 1 / -1; }
+  .timesheet-share-panel { padding: 14px; }
+  .timesheet-email-history-row { align-items: flex-start; flex-direction: column; gap: 8px; }
+}
+@media (max-width: 420px) {
+  .timesheet-share-fields { grid-template-columns: 1fr; }
+  .timesheet-share-fields .field:first-child { grid-column: auto; }
+  .timesheet-share-actions button { flex: 1 1 100%; }
+}
+
 .timesheet-summary article { display: flex; flex-direction: column; gap: 7px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: linear-gradient(145deg, #fbfdfb, #f2f7f2); }
 .timesheet-summary span { color: var(--muted); font-size: 11px; font-weight: 700; }
 .timesheet-summary strong { color: var(--forest-950); font-size: 24px; letter-spacing: -.04em; }
