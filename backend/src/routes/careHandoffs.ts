@@ -73,7 +73,7 @@ async function access(req: AuthRequest, shiftId: number) {
       FROM shift_posts s
       WHERE s.id=${shiftId} AND (
         (${req.user.role}='employer' AND EXISTS (
-          SELECT 1 FROM employers e WHERE e.id=s.employer_id AND e.user_id=${req.user.id}
+          SELECT 1 FROM employers e WHERE e.id=s.employer_id AND EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user.id})
         ))
         OR
         (${req.user.role}='caregiver' AND EXISTS (
@@ -119,7 +119,7 @@ router.get("/shifts", async(req: AuthRequest,res,next) => {
         AND s.care_recipient_name IS NOT NULL AND trim(s.care_recipient_name)<>''
         AND trim(s.address)<>''
         AND (
-          (${req.user.role}='employer' AND e.user_id=${req.user.id})
+          (${req.user.role}='employer' AND EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user.id}))
           OR
           (${req.user.role}='caregiver' AND EXISTS (
             SELECT 1 FROM shift_applications sa
@@ -202,11 +202,10 @@ router.post("/shifts/:shiftId/items", async(req:AuthRequest,res,next)=>{
         AND LOWER(TRIM(s.zip_code))=LOWER(TRIM(${shift.zip_code}))
         AND c.user_id <> ${req.user!.id}
       LIMIT 35`));
-    const manager=rows(await db.execute(sql`SELECT user_id FROM employers
-      WHERE id=${shift.employer_id} LIMIT 1`))[0];
     const recipientIds=[...new Set([
       ...recipients.map(x=>Number(x.id)),
-      ...(manager?.user_id && Number(manager.user_id)!==req.user!.id?[Number(manager.user_id)]:[]),
+      ...rows(await db.execute(sql`SELECT user_id FROM employer_memberships
+        WHERE employer_id=${shift.employer_id} AND user_id<>${req.user!.id}`)).map(x=>Number(x.user_id)),
     ])];
     if (recipientIds.length) {
       // No PHI/notes in push previews; detailed entries are behind auth.

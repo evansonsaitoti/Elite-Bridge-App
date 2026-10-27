@@ -5,6 +5,7 @@ import { db } from "../db";
 import { ensureCoreTables } from "../db/bootstrap";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { employerForUser } from "../services/employerMemberships";
 
 /**
  * Non-clinical operations data only. Do not use this intake for diagnoses,
@@ -113,9 +114,7 @@ async function setup() {
 const rows = (r:any):any[] => r.rows || [];
 async function employerId(req:AuthRequest):Promise<number> {
   if (req.user?.role !== "employer") throw new AppError(403,"Employer access required.");
-  const row=rows(await db.execute(sql`SELECT id FROM employers WHERE user_id=${req.user.id} LIMIT 1`))[0];
-  if(!row) throw new AppError(404,"Complete your employer profile before saving intakes.");
-  return Number(row.id);
+  return (await employerForUser(req.user.id)).id;
 }
 function output(r:any) {
   return {

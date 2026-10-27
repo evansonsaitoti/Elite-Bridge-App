@@ -577,10 +577,26 @@
       const result = await api('/employers/me', { method: 'PUT', body: JSON.stringify({ companyLogo: logo }) });
       const preview = document.getElementById('organizationLogoPreview');
       if (preview) { preview.src = result.profile.companyLogo; preview.hidden = false; }
+      setOrganizationLogo(result.profile.companyLogo);
       if (status) status.textContent = 'Organization logo saved.';
     } catch (error) {
       if (status) status.textContent = error.message || 'Could not save the logo.';
     } finally { event.target.value = ''; }
+  });
+  document.getElementById('teamInviteForm')?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const email = document.getElementById('teamInviteEmail')?.value.trim();
+    const role = document.getElementById('teamInviteRole')?.value;
+    const status = document.getElementById('teamInviteStatus');
+    if (!email || !role) return;
+    try {
+      const result = await api('/employers/team/invitations', { method: 'POST', body: JSON.stringify({ email, role }) });
+      if (status) status.textContent = result.emailSent ? `Invitation sent to ${email}.` : `Invitation created. Share this link with ${email}: ${result.invitationUrl}`;
+      event.target.reset();
+      await loadOrganizationTeam();
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Could not send the team invitation.';
+    }
   });
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
   document.querySelectorAll('[data-location-filter]').forEach((button) => button.addEventListener('click', () => {
@@ -2320,9 +2336,93 @@
     else activateView('caregivers');
   });
 
+  function setOrganizationLogo(logo) {
+    document.querySelectorAll('[data-org-logo]').forEach((image) => {
+      image.src = logo || '/logo.png';
+      image.alt = logo ? (session.user.companyName || 'Organization') : 'Elite Bridge';
+    });
+  }
+
+  async function loadOrganizationTeam() {
+    const list = document.getElementById('organizationTeamList');
+    if (!list) return;
+    try {
+      const data = await api('/employers/team');
+      const canManage = ['owner', 'admin'].includes(data.yourRole);
+      const form = document.getElementById('teamInviteForm');
+      if (form) form.hidden = !canManage;
+      const adminOption = document.querySelector('[data-owner-only]');
+      if (adminOption) adminOption.hidden = data.yourRole !== 'owner';
+      list.replaceChildren();
+
+      const heading = document.createElement('h3');
+      heading.textContent = `Members · your role: ${data.yourRole}`;
+      list.append(heading);
+      for (const member of data.members || []) {
+        const row = document.createElement('div');
+        row.className = 'organization-team-row';
+        const details = document.createElement('div');
+        const name = document.createElement('strong');
+        name.textContent = [member.first_name, member.last_name].filter(Boolean).join(' ') || member.email;
+        const email = document.createElement('span');
+        email.textContent = member.email;
+        details.append(name, email);
+        row.append(details);
+        if (canManage && member.role !== 'owner') {
+          const canEdit = data.yourRole === 'owner' || member.role !== 'admin';
+          if (canEdit) {
+            const select = document.createElement('select');
+            select.setAttribute('aria-label', `Role for ${member.email}`);
+            for (const [value, label] of [['admin', 'Admin'], ['scheduler', 'Scheduler'], ['billing', 'Billing'], ['viewer', 'Viewer']]) {
+              if (value === 'admin' && data.yourRole !== 'owner') continue;
+              const option = document.createElement('option');
+              option.value = value; option.textContent = label; option.selected = member.role === value;
+              select.append(option);
+            }
+            select.addEventListener('change', async () => {
+              try {
+                await api(`/employers/team/${member.id}`, { method: 'PATCH', body: JSON.stringify({ role: select.value }) });
+                await loadOrganizationTeam();
+              } catch (error) { notify(error.message || 'Could not update this role.'); await loadOrganizationTeam(); }
+            });
+            row.append(select);
+          } else {
+            const roleLabel = document.createElement('span'); roleLabel.textContent = member.role; row.append(roleLabel);
+          }
+          const remove = document.createElement('button');
+          remove.type = 'button'; remove.className = 'secondary-button'; remove.textContent = 'Remove access';
+          remove.addEventListener('click', async () => {
+            if (!window.confirm(`Remove ${member.email} from this organization?`)) return;
+            try { await api(`/employers/team/${member.id}`, { method: 'DELETE' }); await loadOrganizationTeam(); }
+            catch (error) { notify(error.message || 'Could not remove organization access.'); }
+          });
+          row.append(remove);
+        } else {
+          const roleLabel = document.createElement('span'); roleLabel.textContent = member.role; row.append(roleLabel);
+        }
+        list.append(row);
+      }
+      if (canManage && data.invitations?.length) {
+        const pendingHeading = document.createElement('h3'); pendingHeading.textContent = 'Pending invitations'; list.append(pendingHeading);
+        for (const invitation of data.invitations) {
+          const row = document.createElement('div'); row.className = 'organization-team-row';
+          const text = document.createElement('span'); text.textContent = `${invitation.email} · ${invitation.role} · expires ${new Date(invitation.expires_at).toLocaleDateString()}`;
+          const cancel = document.createElement('button'); cancel.type = 'button'; cancel.className = 'secondary-button'; cancel.textContent = 'Cancel';
+          cancel.addEventListener('click', async () => {
+            try { await api(`/employers/team/invitations/${invitation.id}`, { method: 'DELETE' }); await loadOrganizationTeam(); }
+            catch (error) { notify(error.message || 'Could not cancel this invitation.'); }
+          });
+          row.append(text, cancel); list.append(row);
+        }
+      }
+    } catch (error) {
+      list.textContent = error.message || 'Organization access information could not be loaded.';
+    }
+  }
+
   async function loadEmployer() {
     const [shiftResult, activityResult, payrollResult, caregiverResult, conversationResult, profileResult, invitationResult, timesheetResult, manualTimesheetResult, applicationsResult, contractorPayrollResult, payrollAuditResult, clientInvoiceResult, receiptResult, expenseResult, clientResult] = await Promise.allSettled([
-      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api(`/employers/${session.user.id}`), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/client-invoices/employer/receipts'), api('/expenses/employer'), api('/clients/employer')
+      api('/bookings/employer/my'), api('/bookings/activities'), api('/payroll/employer/overview'), api('/bookings/employer/team'), api('/messages/conversations'), api('/employers/me'), api('/employers/invitations'), api('/bookings/employer/timesheets'), api('/manual-timesheets/employer'), api('/bookings/employer/applications'), api(`/payroll/1099/overview?year=${new Date().getFullYear()}`), api('/payroll/1099/audit'), api('/client-invoices/employer'), api('/client-invoices/employer/receipts'), api('/expenses/employer'), api('/clients/employer')
     ]);
     const shifts = shiftResult.status === 'fulfilled' ? shiftResult.value.shifts || [] : [];
     employerShifts = shifts;
@@ -2334,7 +2434,16 @@
       backgroundCheckDate: person.background_check_date,
     })) : [];
     const conversations = conversationResult.status === 'fulfilled' ? conversationResult.value.conversations || [] : [];
-    const profile = profileResult.status === 'fulfilled' ? profileResult.value : null;
+    const profile = profileResult.status === 'fulfilled' ? (profileResult.value.profile || profileResult.value) : null;
+    const canManageOrganization = ['owner', 'admin'].includes(profile?.organizationRole);
+    document.querySelectorAll('[data-org-role]').forEach((element) => {
+      element.textContent = profile?.organizationRole ? profile.organizationRole[0].toUpperCase() + profile.organizationRole.slice(1) : 'Organization member';
+    });
+    const logoControl = document.querySelector('label[for="organizationLogoUpload"]');
+    const profileSetupLink = document.querySelector('[data-view-panel="settings"] a[href="/onboarding"]');
+    if (logoControl) logoControl.hidden = !canManageOrganization;
+    if (profileSetupLink) profileSetupLink.hidden = !canManageOrganization;
+    await loadOrganizationTeam();
     const invitations = invitationResult.status === 'fulfilled' ? invitationResult.value.invitations || [] : [];
     employerInvoices = clientInvoiceResult.status === 'fulfilled' ? clientInvoiceResult.value.invoices || [] : [];
     renderClientInvoices();
@@ -2350,6 +2459,7 @@
       session.storage.setItem('user', JSON.stringify(session.user));
       document.querySelectorAll('[data-company-name]').forEach((element) => { element.textContent = profile.companyName; });
     }
+    setOrganizationLogo(profile?.companyLogo || '');
     const logoPreview = document.getElementById('organizationLogoPreview');
     if (logoPreview && profile?.companyLogo) { logoPreview.src = profile.companyLogo; logoPreview.hidden = false; }
     const timesheets = [

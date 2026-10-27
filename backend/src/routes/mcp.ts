@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import { createHash, randomBytes, randomUUID } from "crypto";
 import { db } from "../db/index.js";
 import { config } from "../config/env.js";
+import { getEmployerMembership } from "../services/employerMemberships.js";
 
 const router = Router();
 export const mcpDiscoveryRouter = Router();
@@ -32,6 +33,14 @@ const scopeDescriptions: Record<string, string> = {
   "offline_access": "Keep the Elite Bridge connector available after the first sign-in."
 };
 const allScopes = Object.keys(scopeDescriptions);
+
+function roleAllowsMcpScope(role: string, scope: string) {
+  if (scope === "offline_access" || scope.endsWith(":read")) return true;
+  if (role === "owner" || role === "admin") return true;
+  if (role === "scheduler") return ["shifts:write", "caregivers:write"].includes(scope);
+  if (role === "billing") return ["invoices:write", "timesheets:write", "expenses:write"].includes(scope);
+  return false;
+}
 
 async function ensureMcpTables() {
   if (tablesReady) return;
@@ -170,6 +179,11 @@ router.post("/oauth/approve", async (req, res) => {
     const userResult = await (db as any).$client.query("SELECT id, role, is_active FROM users WHERE id = $1 LIMIT 1", [Number(session.id)]);
     const user = userResult.rows[0];
     if (!user || user.is_active === false || !["employer", "admin"].includes(user.role)) return oauthError(res, 403, "access_denied", "This account cannot authorize the connection.");
+    const membership = user.role === "employer" ? await getEmployerMembership(Number(user.id)) : null;
+    if (user.role === "employer" && !membership) return oauthError(res, 403, "access_denied", "This account is not a member of an employer organization.");
+    const organizationRole = membership?.role || "owner";
+    const deniedScopes = (pending.scopes as string[]).filter((scope) => !roleAllowsMcpScope(organizationRole, scope));
+    if (deniedScopes.length) return oauthError(res, 403, "access_denied", `Your organization role (${organizationRole}) cannot grant: ${deniedScopes.join(", ")}.`);
     const code = randomToken();
     await (db as any).$client.query(
       "INSERT INTO mcp_oauth_codes (code_hash, client_id, user_id, redirect_uri, code_challenge, scopes, resource, state, expires_at) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,NOW() + INTERVAL '5 minutes')",

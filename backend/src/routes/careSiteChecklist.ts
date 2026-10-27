@@ -119,7 +119,7 @@ async function siteFor(req: AuthRequest, siteId: number) {
     WHERE s.id=${siteId} AND s.is_published=true
       AND (
         (${req.user!.role}='employer' AND EXISTS (
-          SELECT 1 FROM employers e WHERE e.id=s.employer_id AND e.user_id=${req.user!.id}
+          SELECT 1 FROM employers e WHERE e.id=s.employer_id AND EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user!.id})
         ))
         OR
         (${req.user!.role}='caregiver' AND EXISTS (
@@ -145,7 +145,7 @@ router.get("/sites",async(req:AuthRequest,res,next)=>{
       FROM care_site_checklists s WHERE s.is_published=true
         AND (
           (${req.user!.role}='employer' AND EXISTS (
-            SELECT 1 FROM employers e WHERE e.id=s.employer_id AND e.user_id=${req.user!.id}
+            SELECT 1 FROM employers e WHERE e.id=s.employer_id AND EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user!.id})
           ))
           OR
           (${req.user!.role}='caregiver' AND EXISTS (
@@ -275,8 +275,8 @@ router.post("/sites/:siteId/signoff",async(req:AuthRequest,res,next)=>{
       FROM employer_caregivers ec WHERE ec.employer_id=${site.employer_id}
         AND ec.status='active' AND ec.caregiver_user_id<>${req.user!.id}
       UNION
-      SELECT e.user_id AS id FROM employers e WHERE e.id=${site.employer_id}
-        AND e.user_id<>${req.user!.id} LIMIT 100`));
+      SELECT m.user_id AS id FROM employer_memberships m WHERE m.employer_id=${site.employer_id}
+        AND m.user_id<>${req.user!.id} LIMIT 100`));
     const ids=team.map(x=>Number(x.id)).filter(Number.isInteger);
     if(ids.length){
       try{

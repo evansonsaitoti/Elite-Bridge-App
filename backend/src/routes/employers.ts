@@ -11,6 +11,7 @@ import { AppError } from "../middleware/errorHandler.js";
 import { config } from "../config/env.js";
 import { sendEmail, escapeEmailHtml } from "../services/email.js";
 import { sendSms, smsReady } from "../services/sms.js";
+import { getEmployerMembership, employerForUser, requireOrganizationRole } from "../services/employerMemberships.js";
 
 const router = Router();
 
@@ -48,6 +49,10 @@ function buildCaregiverInviteUrl(token: string) {
   return `${webAppUrl()}/signup?role=caregiver&invite=${encodeURIComponent(token)}`;
 }
 
+function buildTeamInviteUrl(token: string) {
+  return `${webAppUrl()}/signup?role=employer&teamInvite=${encodeURIComponent(token)}`;
+}
+
 // Apple App Store Connect ID from elitebridge-mobile/eas.json (iOS caregiver app).
 // A direct Apple listing may not be publicly released in every country yet.
 const CAREGIVER_IOS_STORE_URL = "https://apps.apple.com/us/app/id6770962152";
@@ -65,12 +70,6 @@ const backgroundCheckSchema = z.object({
   caregiverUserId: z.number().int().positive(),
   package: z.string().trim().min(1).default("basic"),
 });
-
-async function employerForUser(userId: number) {
-  const result = await db.select().from(employers).where(eq(employers.userId, userId)).limit(1);
-  if (!result[0]) throw new AppError(404, "Employer profile not found");
-  return result[0];
-}
 
 router.get("/invitations/:token", async (req, res, next) => {
   try {
@@ -97,6 +96,143 @@ router.get("/invitations/:token", async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+});
+
+router.get("/team-invitations/:token", async (req, res, next) => {
+  try {
+    await ensureCoreTables();
+    const result = await (db as any).$client.query(
+      "SELECT i.email, i.role, i.expires_at, e.company_name FROM employer_team_invitations i JOIN employers e ON e.id=i.employer_id WHERE i.token_hash=$1 AND i.status='pending' AND i.expires_at>NOW() LIMIT 1",
+      [hashToken(req.params.token)]
+    );
+    const invitation = result.rows[0];
+    if (!invitation) throw new AppError(404, "Organization invitation not found or expired.");
+    res.json({ invitation: { email: invitation.email, role: invitation.role, expiresAt: invitation.expires_at, companyName: invitation.company_name } });
+  } catch (error) { next(error); }
+});
+
+const teamInvitationSchema = z.object({
+  email: z.string().trim().email().transform((value) => value.toLowerCase()),
+  role: z.enum(["admin", "scheduler", "billing", "viewer"]),
+});
+
+router.get("/team", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    const membership = await getEmployerMembership(req.user!.id);
+    if (!membership) throw new AppError(403, "You do not belong to an employer organization.");
+    const canManage = ["owner", "admin"].includes(membership.role);
+    const result = canManage
+      ? await (db as any).$client.query(
+          "SELECT m.id, m.role, m.created_at, u.id AS user_id, u.email, u.first_name, u.last_name FROM employer_memberships m JOIN users u ON u.id=m.user_id WHERE m.employer_id=$1 ORDER BY CASE m.role WHEN 'owner' THEN 0 WHEN 'admin' THEN 1 ELSE 2 END, u.first_name",
+          [membership.employer.id]
+        )
+      : await (db as any).$client.query(
+          "SELECT m.id, m.role, m.created_at, u.id AS user_id, u.email, u.first_name, u.last_name FROM employer_memberships m JOIN users u ON u.id=m.user_id WHERE m.employer_id=$1 AND m.user_id=$2",
+          [membership.employer.id, req.user!.id]
+        );
+    const pending = canManage
+      ? await (db as any).$client.query(
+          "SELECT id, email, role, expires_at, created_at FROM employer_team_invitations WHERE employer_id=$1 AND status='pending' AND expires_at>NOW() ORDER BY created_at DESC",
+          [membership.employer.id]
+        )
+      : { rows: [] };
+    res.json({ members: result.rows, invitations: pending.rows, yourRole: membership.role });
+  } catch (error) { next(error); }
+});
+
+router.post("/team/invitations", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    const membership = await requireOrganizationRole(req.user!.id, "owner", "admin");
+    const data = teamInvitationSchema.parse(req.body);
+    const existingUser = await db.select({ id: users.id }).from(users).where(eq(users.email, data.email)).limit(1);
+    if (existingUser[0]) {
+      const account = (await db.select({ role: users.role }).from(users).where(eq(users.id, existingUser[0].id)).limit(1))[0];
+      if (account?.role !== "employer") throw new AppError(409, "This email is already registered as a caregiver account.");
+      const existingMembership = await getEmployerMembership(existingUser[0].id);
+      if (existingMembership) throw new AppError(409, existingMembership.employer.id === membership.employer.id ? "This user already belongs to your organization." : "This user already belongs to another organization.");
+    }
+    if (membership.role === "admin" && data.role === "admin") throw new AppError(403, "Only the owner can assign the admin role.");
+    await (db as any).$client.query(
+      "UPDATE employer_team_invitations SET status='revoked' WHERE employer_id=$1 AND email=$2 AND status='pending'",
+      [membership.employer.id, data.email]
+    );
+    const token = randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+    const inserted = await (db as any).$client.query(
+      "INSERT INTO employer_team_invitations (employer_id,email,role,token_hash,invited_by,expires_at) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id",
+      [membership.employer.id, data.email, data.role, hashToken(token), req.user!.id, expiresAt]
+    );
+    const invitationUrl = existingUser[0]
+      ? `${webAppUrl()}/dashboard?teamInvite=${encodeURIComponent(token)}`
+      : buildTeamInviteUrl(token);
+    const safeName = escapeEmailHtml(membership.employer.companyName);
+    const safeUrl = escapeEmailHtml(invitationUrl);
+    const emailSent = await sendEmail({
+      to: data.email,
+      subject: `Join ${membership.employer.companyName} on Elite Bridge`,
+      text: `${membership.employer.companyName} invited you to join its Elite Bridge organization as ${data.role}. Accept within 7 days: ${invitationUrl}`,
+      html: `<p><strong>${safeName}</strong> invited you to join its Elite Bridge workspace as <strong>${data.role}</strong>.</p><p><a href="${safeUrl}">Accept your organization invitation</a></p><p>This invitation expires in 7 days. If you already have an account, sign in and accept the invitation from the invite page.</p>`,
+    });
+    res.status(201).json({ invitation: { id: inserted.rows[0].id, email: data.email, role: data.role, expiresAt }, invitationUrl, emailSent });
+  } catch (error) { next(error); }
+});
+
+router.delete("/team/invitations/:invitationId", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    const membership = await requireOrganizationRole(req.user!.id, "owner", "admin");
+    const id = z.coerce.number().int().positive().parse(req.params.invitationId);
+    const result = await (db as any).$client.query(
+      "UPDATE employer_team_invitations SET status='revoked' WHERE id=$1 AND employer_id=$2 AND status='pending' RETURNING id",
+      [id, membership.employer.id]
+    );
+    if (!result.rowCount) throw new AppError(404, "Pending invitation not found.");
+    res.json({ message: "Organization invitation cancelled." });
+  } catch (error) { next(error); }
+});
+
+router.patch("/team/:membershipId", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    const membership = await requireOrganizationRole(req.user!.id, "owner", "admin");
+    const data = z.object({ role: z.enum(["admin", "scheduler", "billing", "viewer"]) }).parse(req.body);
+    const id = z.coerce.number().int().positive().parse(req.params.membershipId);
+    const target = await (db as any).$client.query("SELECT id, role, user_id FROM employer_memberships WHERE id=$1 AND employer_id=$2 LIMIT 1", [id, membership.employer.id]);
+    if (!target.rows[0]) throw new AppError(404, "Organization member not found.");
+    if (target.rows[0].role === "owner") throw new AppError(403, "The organization owner role cannot be changed here.");
+    if (membership.role === "admin" && target.rows[0].role === "admin") throw new AppError(403, "Only the owner can change an admin's access.");
+    await (db as any).$client.query("UPDATE employer_memberships SET role=$1, updated_at=NOW() WHERE id=$2", [data.role, id]);
+    res.json({ message: "Organization role updated.", role: data.role });
+  } catch (error) { next(error); }
+});
+
+router.delete("/team/:membershipId", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    const membership = await requireOrganizationRole(req.user!.id, "owner", "admin");
+    const id = z.coerce.number().int().positive().parse(req.params.membershipId);
+    const target = await (db as any).$client.query("SELECT id, role FROM employer_memberships WHERE id=$1 AND employer_id=$2 LIMIT 1", [id, membership.employer.id]);
+    if (!target.rows[0]) throw new AppError(404, "Organization member not found.");
+    if (target.rows[0].role === "owner") throw new AppError(403, "The organization owner cannot be removed.");
+    if (membership.role === "admin" && target.rows[0].role === "admin") throw new AppError(403, "Only the owner can remove an admin.");
+    await (db as any).$client.query("DELETE FROM employer_memberships WHERE id=$1", [id]);
+    res.json({ message: "Organization access removed." });
+  } catch (error) { next(error); }
+});
+
+router.post("/team-invitations/accept", authMiddleware, requireRole("employer"), async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    const { token } = z.object({ token: z.string().min(20) }).parse(req.body);
+    const matches = await (db as any).$client.query(
+      "SELECT * FROM employer_team_invitations WHERE token_hash=$1 AND status='pending' AND expires_at>NOW() LIMIT 1",
+      [hashToken(token)]
+    );
+    const invite = matches.rows[0];
+    if (!invite || invite.email.toLowerCase() !== req.user!.email.toLowerCase()) throw new AppError(403, "This invitation is invalid, expired, or addressed to another account.");
+    if (await getEmployerMembership(req.user!.id)) throw new AppError(409, "This account already belongs to an employer organization.");
+    await (db as any).$client.query("INSERT INTO employer_memberships (employer_id,user_id,role) VALUES ($1,$2,$3)", [invite.employer_id, req.user!.id, invite.role]);
+    await (db as any).$client.query("UPDATE employer_team_invitations SET status='accepted', accepted_at=NOW() WHERE id=$1", [invite.id]);
+    res.json({ message: "You joined the organization.", role: invite.role });
+  } catch (error) { next(error); }
 });
 
 router.get("/invitations", authMiddleware, requireRole("employer", "admin"), async (req: AuthRequest, res, next) => {
@@ -263,9 +399,10 @@ function mapEmployerProfile(employer: any, user: any) {
 router.get("/me", authMiddleware, requireRole("employer", "admin"), async (req: AuthRequest, res, next) => {
   try {
     const employer = await employerForUser(req.user!.id);
+    const membership = await getEmployerMembership(req.user!.id);
     const user = (await db.select().from(users).where(eq(users.id, req.user!.id)).limit(1))[0];
     if (!user) throw new AppError(404, "Employer account not found");
-    res.json({ profile: mapEmployerProfile(employer, user) });
+    res.json({ profile: { ...mapEmployerProfile(employer, user), organizationRole: membership?.role || "owner" } });
   } catch (error) { next(error); }
 });
 
@@ -286,10 +423,12 @@ router.put("/me", authMiddleware, requireRole("employer", "admin"), async (req: 
     if (data.address !== undefined || data.city !== undefined || data.state !== undefined || data.zipCode !== undefined) {
       employerData.billingAddress = { address: data.address ?? "", city: data.city ?? "", state: data.state ?? "", zipCode: data.zipCode ?? "" };
     }
-    await db.update(employers).set(employerData).where(eq(employers.userId, req.user!.id));
     const employer = await employerForUser(req.user!.id);
+    await db.update(employers).set(employerData).where(eq(employers.id, employer.id));
+    const updatedEmployer = await employerForUser(req.user!.id);
+    const membership = await getEmployerMembership(req.user!.id);
     const user = (await db.select().from(users).where(eq(users.id, req.user!.id)).limit(1))[0];
-    res.json({ profile: mapEmployerProfile(employer, user) });
+    res.json({ profile: { ...mapEmployerProfile(updatedEmployer, user), organizationRole: membership?.role || "owner" } });
   } catch (error) { next(error); }
 });
 

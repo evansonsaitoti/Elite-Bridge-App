@@ -6,6 +6,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { employerForUser } from "../services/employerMemberships";
 import { sendEmail, escapeEmailHtml } from "../services/email.js";
 
 const router = Router();
@@ -104,10 +105,7 @@ function shiftHours(start: string, end: string) {
 }
 async function getEmployer(req: AuthRequest) {
   if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required.");
-  const matches = await db.select().from(employers).where(eq(employers.userId, req.user.id)).limit(1);
-  if (matches.length) return matches[0];
-  const created = await db.insert(employers).values({ userId: req.user.id, companyName: req.user.email }).returning();
-  return created[0];
+  return employerForUser(req.user.id);
 }
 
 router.get("/employer", authMiddleware, async (req: AuthRequest, res, next) => {

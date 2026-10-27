@@ -30,6 +30,7 @@ const registerSchema = z.object({
   phone: z.string().optional(),
   companyName: z.string().optional(),
   inviteToken: z.string().min(20).optional(),
+  organizationInviteToken: z.string().min(20).optional(),
 });
 
 const loginSchema = z.object({
@@ -53,6 +54,22 @@ router.post("/register", async (req, res, next) => {
     await ensureCoreTables();
     const data = registerSchema.parse(req.body);
     let invitation: typeof caregiverInvitations.$inferSelect | undefined;
+    let organizationInvitation: any;
+
+    if (data.organizationInviteToken) {
+      if (data.role !== "employer" || data.inviteToken) {
+        throw new AppError(400, "Organization invitations are for employer accounts only.");
+      }
+      const matches = await (db as any).$client.query(
+        "SELECT i.*, e.company_name FROM employer_team_invitations i JOIN employers e ON e.id=i.employer_id WHERE i.token_hash=$1 AND i.status='pending' AND i.expires_at>NOW() LIMIT 1",
+        [hashToken(data.organizationInviteToken)]
+      );
+      organizationInvitation = matches.rows[0];
+      if (!organizationInvitation) throw new AppError(400, "This organization invitation is invalid or has expired.");
+      if (organizationInvitation.email.toLowerCase() !== data.email) {
+        throw new AppError(400, "Use the email address that received this organization invitation.");
+      }
+    }
 
     if (data.role === "caregiver" && !data.inviteToken) {
       throw new AppError(403, "Caregiver accounts require an invitation from an employer. Ask your employer to send you a secure invitation link.");
@@ -105,12 +122,25 @@ router.post("/register", async (req, res, next) => {
 
     const user = newUser[0];
 
-    if (user.role === "employer") {
-      await db.insert(employers).values({
+    if (user.role === "employer" && organizationInvitation) {
+      await (db as any).$client.query(
+        "INSERT INTO employer_memberships (employer_id,user_id,role) VALUES ($1,$2,$3)",
+        [organizationInvitation.employer_id, user.id, organizationInvitation.role]
+      );
+      await (db as any).$client.query(
+        "UPDATE employer_team_invitations SET status='accepted',accepted_at=NOW() WHERE id=$1",
+        [organizationInvitation.id]
+      );
+    } else if (user.role === "employer") {
+      const employer = (await db.insert(employers).values({
         verificationStatus: "pending",
         userId: user.id,
         companyName: data.companyName || `${user.firstName} ${user.lastName}`,
-      });
+      }).returning())[0];
+      await (db as any).$client.query(
+        "INSERT INTO employer_memberships (employer_id,user_id,role) VALUES ($1,$2,'owner') ON CONFLICT (user_id) DO NOTHING",
+        [employer.id, user.id]
+      );
     } else {
       await db.insert(caregivers).values({ userId: user.id, hourlyRate: "0", specialties: [], certifications: [] });
     }
