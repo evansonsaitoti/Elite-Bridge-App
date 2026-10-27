@@ -67,8 +67,9 @@ export function addEliteBridgeEmailSignature(message: EmailMessage): EmailMessag
 
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
   const signed = addEliteBridgeEmailSignature(message);
-  // Prefer the verified domain; preserve any explicit from address.
-  const from = signed.from || config.RESEND_FROM || DEFAULT_FROM;
+  // Organization-wide sender policy: all Elite Bridge app mail uses the verified business mailbox.
+  // Callers cannot override the From header with a personal address.
+  const from = DEFAULT_FROM;
   if (config.RESEND_API_KEY) {
     const response = await axios.post("https://api.resend.com/emails", {
       from,
@@ -87,7 +88,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
     });
     return Boolean(response.data?.id);
   }
-  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS || (!signed.from && !config.SMTP_FROM)) {
+  if (!config.SMTP_HOST || !config.SMTP_PORT || !config.SMTP_USER || !config.SMTP_PASS) {
     console.warn("Email not sent: configure Resend or SMTP");
     return false;
   }
@@ -102,7 +103,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
   });
   const result = await transporter.sendMail({
     ...signed,
-    from: signed.from || config.SMTP_FROM,
+    from,
   });
   return result.accepted.some((recipient: unknown) => String(recipient).toLowerCase() === signed.to.toLowerCase());
 }
