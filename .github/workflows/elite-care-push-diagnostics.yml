@@ -40,13 +40,22 @@ jobs:
             console.log('EXPO_API_ACCESS:', response.status);
             console.log('PROJECT_MATCH:', body.data?.app?.byId?.id === '15715728-ffc5-4ea1-9da8-5158f1e539ef');
             console.log('PROJECT_OWNER:', body.data?.app?.byId?.ownerAccount?.name || 'unavailable');
-            const introspection = `{ __type(name: "App") { fields { name } } }`;
-            const second = await fetch('https://api.expo.dev/graphql', {
-              method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer ' + token},
-              body:JSON.stringify({query:introspection})
-            });
-            const detail = await second.json();
-            const fields=detail.data?.__type?.fields?.map(f=>f.name) || [];
-            console.log('CREDENTIAL_RELATED_FIELDS:', fields.filter(f=>/credential|push|key|build/i.test(f)).join(',') || 'none');
+            const gql = async (query) => {
+              const r = await fetch('https://api.expo.dev/graphql', {
+                method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer ' + token},
+                body:JSON.stringify({query})
+              });
+              const j = await r.json();
+              if (j.errors) console.log('INTROSPECTION_ERRORS:', j.errors.map(e => e.message.slice(0,100)));
+              return j.data;
+            };
+            const t = (await gql('{ __type(name:"App") { fields { name type { name kind ofType { name kind ofType { name kind } } } args { name type { name kind ofType { name } } } } } }'))?.__type;
+            const field = t?.fields?.find(f => f.name === 'iosAppCredentials');
+            console.log('IOS_APP_CREDENTIAL_FIELD:', JSON.stringify(field));
+            const names = ['IosAppCredentials','IosPushKey','ApplePushKey','IosAppBuildCredentials','IosAppCredentialsQuery','IosAppCredentialsMutation'];
+            for (const name of names) {
+              const entry = (await gql(`{ __type(name:"${name}") { name fields { name type { name kind ofType { name kind } } } } }`))?.__type;
+              if (entry) console.log('INTROSPECT_TYPE:', name,entry.fields?.map(f=>f.name).join(','));
+            }
           })().catch(e=>{ console.error('DIAGNOSTIC_ERROR:', String(e.message).slice(0,200)); process.exitCode=1;});
           NODE
