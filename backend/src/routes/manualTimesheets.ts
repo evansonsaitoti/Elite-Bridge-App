@@ -27,8 +27,13 @@ const entrySchema = z.object({
 const emailTimesheetSchema = z.object({
   staffName: z.string().trim().min(1).max(255),
   month: z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/),
+  startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+  endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   recipient: z.string().trim().email().max(254).transform((value) => value.toLowerCase()),
+  message: z.string().trim().max(1200).optional(),
   pdfBase64: z.string().min(100).max(3_200_000).regex(/^[A-Za-z0-9+/]+={0,2}$/),
+}).refine((data) => Boolean(data.startDate) === Boolean(data.endDate), {
+  message: "Select both the first and last date when emailing a custom period.",
 });
 
 const reviewSchema = z.object({
@@ -76,6 +81,21 @@ async function ensureManualTimesheets() {
       actor_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
       action VARCHAR(50) NOT NULL,
       note TEXT,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS manual_timesheet_email_history (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      sender_user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+      staff_name VARCHAR(255) NOT NULL,
+      recipient VARCHAR(254) NOT NULL,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      entry_count INTEGER NOT NULL,
+      hours NUMERIC(12,2) NOT NULL,
+      status VARCHAR(40) NOT NULL DEFAULT 'accepted_for_delivery',
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -178,43 +198,83 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
   }
 });
 
+router.get("/employer/email-history", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureManualTimesheets();
+    const employer = await getEmployer(req);
+    const result = await db.execute(sql`
+      SELECT id, staff_name, recipient, start_date, end_date, entry_count, hours, status, created_at
+      FROM manual_timesheet_email_history
+      WHERE employer_id = ${employer.id}
+      ORDER BY created_at DESC, id DESC
+      LIMIT 30
+    `);
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ emails: (result as any).rows });
+  } catch (error) { next(error); }
+});
+
 router.post("/employer/email", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureManualTimesheets();
     const employer = await getEmployer(req);
     const data = emailTimesheetSchema.parse(req.body);
+    const first = data.startDate || `${data.month}-01`;
+    const monthStart = asEmployerDate(`${data.month}-01`);
+    const last = data.endDate || new Date(Date.UTC(monthStart.getUTCFullYear(), monthStart.getUTCMonth() + 1, 0)).toISOString().slice(0, 10);
+    const start = asEmployerDate(first);
+    const end = asEmployerDate(last);
+    const rangeDays = Math.floor((end.getTime() - start.getTime()) / 86400000) + 1;
+    if (rangeDays < 1 || rangeDays > 93) throw new AppError(400, "Choose a date range of 1 to 93 days.");
+
     const match = (await db.execute(sql`
-      SELECT COUNT(*)::int AS entry_count
+      SELECT COUNT(*)::int AS entry_count,
+             COALESCE(SUM(worked_minutes), 0)::int AS total_minutes
       FROM manual_timesheet_entries
       WHERE employer_id = ${employer.id} AND staff_name = ${data.staffName}
-        AND to_char(shift_date, 'YYYY-MM') = ${data.month}
+        AND shift_date BETWEEN ${first}::date AND ${last}::date
     `) as any).rows[0];
-    if (!Number(match?.entry_count || 0)) throw new AppError(404, "No timesheet entries were found for this staff member and month.");
+    if (!Number(match?.entry_count || 0)) throw new AppError(404, "No timesheet entries were found for this caregiver and date range.");
 
     const pdf = Buffer.from(data.pdfBase64, "base64");
     if (pdf.length > 2_400_000 || !pdf.subarray(0, 5).equals(Buffer.from("%PDF-")) || !pdf.includes(Buffer.from("%%EOF"))) {
       throw new AppError(400, "The timesheet PDF could not be verified. Download it again and retry.");
     }
+
     const filenameBase = data.staffName.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9_-]+/gi, "_").replace(/^_+|_+$/g, "").slice(0, 80) || "staff";
-    const filename = `${filenameBase}_Timesheet_${data.month}.pdf`;
+    const period = first === last ? first : `${first}_to_${last}`;
+    const filename = `${filenameBase}_Hours_${period}.pdf`;
+    const description = first === last ? first : `${first} to ${last}`;
+    const optionalNote = data.message ? `\n\nMessage from the sender:\n${data.message}` : "";
+    const safeNote = data.message ? `<p><strong>Message:</strong> ${escapeEmailHtml(data.message)}</p>` : "";
     const sent = await sendEmail({
       from: "Elite Bridge Staffing <info@elitebridgestaffing.com>",
       to: data.recipient,
-      subject: `Elite Bridge timesheet - ${data.staffName} - ${data.month}`,
-      text: `Attached is the requested confidential staff timesheet for ${data.staffName} (${data.month}). Please handle this payroll record securely.`,
-      html: `<p>Attached is the requested confidential staff timesheet for <strong>${escapeEmailHtml(data.staffName)}</strong> (${escapeEmailHtml(data.month)}).</p><p>Please handle this payroll record securely.</p>`,
+      subject: `Elite Bridge Staffing - ${data.staffName} hours - ${description}`,
+      text: `Attached is the requested timesheet for ${data.staffName} (${description}): ${Number(match.total_minutes) / 60} recorded hours. Please handle this staff record confidentially.${optionalNote}`,
+      html: `<p>Attached is the requested timesheet for <strong>${escapeEmailHtml(data.staffName)}</strong> (${escapeEmailHtml(description)}), covering <strong>${Number(match.total_minutes) / 60} recorded hours</strong>.</p><p>Please handle this staff record confidentially.</p>${safeNote}`,
       attachments: [{ filename, content: pdf, contentType: "application/pdf" }],
     });
     if (!sent) throw new AppError(503, "Email delivery is not configured on the Elite Bridge server.");
-    res.json({ sent: true });
+    const logged = await db.execute(sql`
+      INSERT INTO manual_timesheet_email_history
+        (employer_id, sender_user_id, staff_name, recipient, start_date, end_date, entry_count, hours, status)
+      VALUES
+        (${employer.id}, ${req.user!.id}, ${data.staffName}, ${data.recipient},
+         ${first}::date, ${last}::date, ${Number(match.entry_count)},
+         ${Number(match.total_minutes) / 60}, 'accepted_for_delivery')
+      RETURNING id
+    `);
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ accepted: true, sent: true, historyId: (logged as any).rows[0]?.id });
   } catch (error: any) {
     if (error instanceof AppError) return next(error);
-    console.error("Manual timesheet email delivery failed", {
+    console.error("Manual timesheet email submission failed", {
       providerStatus: error?.response?.status,
       providerCode: error?.code,
       errorName: error?.name,
     });
-    next(new AppError(502, "Email delivery failed. Check that info@elitebridgestaffing.com is verified for outbound email and that the recipient address is valid."));
+    next(new AppError(502, "The request could not be completed. Check the email recipient and sender configuration before retrying; email acceptance may need verification."));
   }
 });
 
