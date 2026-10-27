@@ -6,6 +6,7 @@ import { db } from "../db";
 import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { employerForUser } from "../services/employerMemberships";
 
 const router = Router();
 const askSchema = z.object({ command: z.string().trim().min(2).max(500) });
@@ -13,11 +14,8 @@ const askSchema = z.object({ command: z.string().trim().min(2).max(500) });
 type AskRoute = "/coverage" | "/compliance" | "/schedule" | "/applications" | "/operations" | undefined;
 
 async function getEmployer(req: AuthRequest) {
-  if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required");
-  const existing = await db.select().from(employers).where(eq(employers.userId, req.user.id)).limit(1);
-  if (existing[0]) return existing[0];
-  const created = await db.insert(employers).values({ userId: req.user.id, companyName: req.user.email }).returning();
-  return created[0];
+  if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required.");
+  return employerForUser(req.user.id);
 }
 
 router.post("/ask", authMiddleware, async (req: AuthRequest, res, next) => {

@@ -33,6 +33,7 @@ import careHandoffsRoutes from "./routes/careHandoffs";
 import careSiteChecklistRoutes from "./routes/careSiteChecklist";
 import smsRoutes from "./routes/sms";
 import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
+import { organizationAuthorization } from "./middleware/organizationAuthorization";
 
 const app = express();
 const httpServer = createServer(app);
@@ -50,6 +51,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
 app.use(morgan("combined"));
 app.use(requestLogger);
+app.use("/api", organizationAuthorization);
 
 // Health check endpoint
 app.get("/health", async (req, res) => {

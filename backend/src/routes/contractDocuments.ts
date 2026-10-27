@@ -7,6 +7,7 @@ import { ensureCoreTables } from "../db/bootstrap";
 import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { employerForUser } from "../services/employerMemberships";
 
 const router = Router();
 let ready = false;
@@ -19,8 +20,7 @@ const uploadSchema = z.object({
 async function owner(req: AuthRequest) {
   if (!req.user || req.user.role !== "employer") throw new AppError(403, "Employer access required.");
   await ensureCoreTables();
-  const [employer] = await db.select().from(employers).where(eq(employers.userId, req.user.id)).limit(1);
-  if (!employer) throw new AppError(403, "Set up your employer profile first.");
+  const employer = await employerForUser(req.user.id);
   if (!ready) {
     await db.execute(sql`CREATE TABLE IF NOT EXISTS contract_documents (
       id SERIAL PRIMARY KEY,

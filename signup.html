@@ -699,9 +699,10 @@
     const params = new URLSearchParams(window.location.search);
     const requestedRole = params.get('role');
     const inviteToken = params.get('invite');
+    const teamInviteToken = params.get('teamInvite');
     const installSection = document.getElementById('signupAppOptions');
     // An employer invitation is an action-first registration page, not a marketing landing page.
-    document.body.classList.toggle('invite-flow', Boolean(inviteToken));
+    document.body.classList.toggle('invite-flow', Boolean(inviteToken || teamInviteToken));
     if (inviteToken) {
         document.getElementById('signupPageTitle').textContent = 'Join Elite Care';
         document.getElementById('signupPageSubtitle').textContent = 'Complete your caregiver account';
@@ -711,6 +712,16 @@
     if (requestedRole === 'caregiver' || requestedRole === 'employer') {
         document.getElementById(requestedRole).checked = true;
         updateCompanySection();
+    }
+    if (teamInviteToken) {
+        document.getElementById('employer').checked = true;
+        document.getElementById('caregiver').disabled = true;
+        document.getElementById('signupPageTitle').textContent = 'Join your organization';
+        document.getElementById('signupPageSubtitle').textContent = 'Create your Elite Bridge team account';
+        const button = document.getElementById('submitBtn');
+        if (button) button.textContent = 'Join organization';
+        updateCompanySection();
+        loadTeamInvitation();
     }
 
     if (inviteToken) {
@@ -771,7 +782,7 @@
         document.getElementById('heroTagTwo').textContent = hero.tags[1];
         document.getElementById('heroTagThree').textContent = hero.tags[2];
 
-        if (role === 'employer') {
+        if (role === 'employer' && !teamInviteToken) {
             companySection.classList.add('active');
             companyInput.required = true;
         } else {
@@ -782,6 +793,31 @@
 
         document.getElementById('signupForm').style.display = invitationRequired ? 'none' : 'block';
         document.getElementById('inviteRequired').classList.toggle('active', invitationRequired);
+    }
+
+    async function loadTeamInvitation() {
+        const errorDiv = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+        try {
+            const response = await fetch(`${API_BASE}/employers/team-invitations/${encodeURIComponent(teamInviteToken)}`);
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || data.error || 'This organization invitation is invalid or expired.');
+            const invitation = data.invitation;
+            document.getElementById('email').value = invitation.email || '';
+            document.getElementById('email').readOnly = true;
+            const banner = document.getElementById('inviteBanner');
+            banner.replaceChildren();
+            const heading = document.createElement('strong');
+            heading.textContent = 'Invitation from ' + invitation.companyName;
+            const summary = document.createElement('span');
+            summary.textContent = 'Your web workspace role will be ' + invitation.role + '. Create your account to accept.';
+            banner.append(heading, summary);
+            banner.classList.add('active');
+        } catch (error) {
+            errorDiv.textContent = error.message || 'This invitation could not be opened.';
+            errorDiv.style.display = 'block';
+            submitBtn.disabled = true;
+        }
     }
 
     updateCompanySection();
@@ -839,6 +875,7 @@
                     role,
                     companyName: role === 'employer' ? companyName : undefined,
                     inviteToken: inviteToken || undefined,
+                    organizationInviteToken: teamInviteToken || undefined,
                 }),
             });
 
@@ -854,7 +891,7 @@
 
             successDiv.textContent = role === 'caregiver'
                 ? 'Caregiver account created successfully. You can install Elite Care and sign in, or continue on the web.'
-                : 'Employer account created successfully. Opening your workspace…';
+                : teamInviteToken ? 'You joined the organization. Opening your workspace…' : 'Employer account created successfully. Opening your workspace…';
             successDiv.style.display = 'block';
             if (role === 'caregiver') {
                 installSection.hidden = false;
@@ -870,6 +907,12 @@
             errorDiv.textContent = error.message || 'An error occurred. Please try again.';
             if (/already exists/i.test(errorDiv.textContent)) {
                 errorDiv.textContent += ' You may already have an account. Use the Log in link to continue.';
+                if (teamInviteToken) {
+                    const loginLink = document.createElement('a');
+                    loginLink.href = '/dashboard?teamInvite=' + encodeURIComponent(teamInviteToken);
+                    loginLink.textContent = ' Sign in and accept the invitation.';
+                    errorDiv.append(loginLink);
+                }
             }
             errorDiv.style.display = 'block';
             submitBtn.style.display = 'block';

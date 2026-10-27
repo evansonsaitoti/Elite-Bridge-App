@@ -647,6 +647,16 @@
         const storage = document.getElementById('remember').checked ? localStorage : sessionStorage;
         storage.setItem('token', data.token);
         storage.setItem('user', JSON.stringify(data.user));
+        const teamInvite = new URLSearchParams(window.location.search).get('teamInvite');
+        if (teamInvite && data.user?.role === 'employer') {
+          const inviteResponse = await fetch(`${API_BASE}/employers/team-invitations/accept`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${data.token}` },
+            body: JSON.stringify({ token: teamInvite })
+          });
+          const inviteData = await inviteResponse.json().catch(() => ({}));
+          if (!inviteResponse.ok) throw new Error(inviteData.message || 'Could not accept this organization invitation.');
+        }
         showMessage(successMessage, 'Signed in. Opening your Elite Bridge app…');
         const role = data.user?.role;
         const dashboard = role === 'caregiver' ? '/dashboard/caregiver' : role === 'employer' ? '/dashboard/employer' : '/dashboard/marketplace';

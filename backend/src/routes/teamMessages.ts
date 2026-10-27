@@ -27,7 +27,7 @@ async function canCommunicate(req:AuthRequest,peerId:number) {
       (${req.user!.role}='employer' AND p.role='caregiver' AND EXISTS(
         SELECT 1 FROM employers e
         JOIN employer_caregivers ec ON ec.employer_id=e.id AND ec.status='active'
-        WHERE e.user_id=${req.user!.id} AND ec.caregiver_user_id=p.id
+        WHERE EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user!.id}) AND ec.caregiver_user_id=p.id
       ))
       OR
       (${req.user!.role}='caregiver' AND p.role='employer' AND EXISTS(
@@ -56,7 +56,7 @@ router.get("/contacts",async(req:AuthRequest,res,next)=>{
         FROM employers e
         JOIN employer_caregivers ec ON ec.employer_id=e.id AND ec.status='active'
         JOIN users u ON u.id=ec.caregiver_user_id AND u.role='caregiver' AND u.is_active=true
-        WHERE e.user_id=${req.user!.id}
+        WHERE EXISTS (SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=${req.user!.id})
         ORDER BY u.first_name,u.last_name LIMIT 100`)
       : await db.execute(sql`SELECT DISTINCT u.id,u.first_name,u.last_name,u.role,
           e.company_name

@@ -95,6 +95,45 @@ export async function ensureCoreTables() {
   `);
 
   await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS employer_memberships (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+      role VARCHAR(20) NOT NULL CHECK (role IN ('owner','admin','scheduler','billing','viewer')),
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE (employer_id, user_id)
+    )
+  `);
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS employer_memberships_one_owner
+    ON employer_memberships(employer_id) WHERE role = 'owner'
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS employer_team_invitations (
+      id SERIAL PRIMARY KEY,
+      employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,
+      email VARCHAR(255) NOT NULL,
+      role VARCHAR(20) NOT NULL CHECK (role IN ('admin','scheduler','billing','viewer')),
+      token_hash VARCHAR(64) NOT NULL UNIQUE,
+      invited_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','accepted','revoked')),
+      expires_at TIMESTAMP NOT NULL,
+      accepted_at TIMESTAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  await db.execute(sql`
+    CREATE UNIQUE INDEX IF NOT EXISTS employer_team_invitations_pending_email
+    ON employer_team_invitations(employer_id, email) WHERE status = 'pending'
+  `);
+  await db.execute(sql`
+    INSERT INTO employer_memberships (employer_id, user_id, role)
+    SELECT e.id, e.user_id, 'owner' FROM employers e
+    ON CONFLICT (user_id) DO NOTHING
+  `);
+
+  await db.execute(sql`
     CREATE TABLE IF NOT EXISTS caregiver_invitations (
       id SERIAL PRIMARY KEY,
       employer_id INTEGER NOT NULL REFERENCES employers(id) ON DELETE CASCADE,

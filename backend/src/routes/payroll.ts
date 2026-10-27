@@ -9,6 +9,7 @@ import { z } from "zod";
 import { ensureShiftPostsTable } from "./bookings";
 import { ensureOperations } from "../db/operations";
 import { csvCell, payrollCsv } from "../services/payroll-export";
+import { employerForUser, requireOrganizationRole } from "../services/employerMemberships";
 
 const router = Router();
 router.use(authMiddleware, requireRole("employer"));
@@ -89,15 +90,11 @@ async function auditPayrollAction(employerId: number, userId: number, action: st
 }
 
 async function currentEmployer(req: AuthRequest) {
-  const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
-  if (!employer) throw new AppError(404, "Employer not found");
-  return employer;
+  return employerForUser(req.user!.id);
 }
 
-function requirePayrollOwner(req: AuthRequest, employer: { userId: number }) {
-  if (req.user!.id !== employer.userId && req.user!.role !== "admin") {
-    throw new AppError(403, "Only the employer account owner can manage payroll payouts");
-  }
+async function requirePayrollOwner(req: AuthRequest) {
+  await requireOrganizationRole(req.user!.id, "owner", "admin", "billing");
 }
 
 function parsePayrollRange(query: unknown) {
@@ -144,9 +141,7 @@ function payoutExportCsv(rows: any[], format: z.infer<typeof payoutExportFormatS
 // Get payroll overview for employer
 router.get("/employer/overview", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
-    const employerList = await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1);
-    if (employerList.length === 0) throw new AppError(404, "Employer not found");
-    const employer = employerList[0];
+    const employer = await currentEmployer(req);
 
     const result = await db.execute(sql`
       SELECT 
@@ -183,7 +178,7 @@ router.post("/generate-invoice", authMiddleware, async (req: AuthRequest, res, n
     const bookingList = await db.select().from(bookings).where(eq(bookings.id, bookingId)).limit(1);
     if (bookingList.length === 0) throw new AppError(404, "Booking not found");
     const booking = bookingList[0];
-    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    const employer = await currentEmployer(req);
     if (!employer || employer.id !== booking.employerId) throw new AppError(404, "Booking not found");
     if (booking.status !== "completed") throw new AppError(409, "Only completed bookings can be invoiced");
 
@@ -215,7 +210,7 @@ router.post("/generate-invoice", authMiddleware, async (req: AuthRequest, res, n
 router.post("/:paymentId/process", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const paymentId = z.coerce.number().int().positive().parse(req.params.paymentId);
-    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    const employer = await currentEmployer(req);
     if (!employer) throw new AppError(404, "Employer not found");
     const payment = (await db.select().from(payments).where(and(eq(payments.id, paymentId), eq(payments.employerId, employer.id))).limit(1))[0];
     if (!payment) throw new AppError(404, "Payment not found");
@@ -230,9 +225,9 @@ router.get("/export", async (req: AuthRequest, res, next) => {
     const start = Date.parse(range.from), end = Date.parse(range.to) + 86400000;
     if (end <= start || end-start > 93*86400000) throw new AppError(400, "Choose a period of 1 to 93 days");
     await ensureShiftPostsTable(); await ensureOperations();
-    const employer = (await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1))[0];
+    const employer = await currentEmployer(req);
     if (!employer) throw new AppError(404, "Employer not found");
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const records = await db.transaction(async tx => {
       const result = (await tx.execute(sql`SELECT st.id,st.caregiver_id,u.first_name,u.last_name,u.email,
         to_char(st.clock_in_at, 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS clock_in_utc,
@@ -317,7 +312,7 @@ router.get("/1099/audit", async (req: AuthRequest, res, next) => {
   try {
     await ensureOperations();
     const employer = await currentEmployer(req);
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const events = (await db.execute(sql`
       SELECT oa.id, oa.action, oa.record_id, oa.detail, oa.created_at,
         u.first_name, u.last_name, u.email
@@ -340,7 +335,7 @@ router.patch("/1099/contractors/:caregiverId", async (req: AuthRequest, res, nex
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const caregiverId = z.coerce.number().int().positive().parse(req.params.caregiverId);
     const data = z.object({
       w9Status: z.enum(["not_collected", "requested", "received", "blocked"]).optional(),
@@ -378,7 +373,7 @@ router.post("/1099/runs", async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable(); await ensureOperations(); await ensure1099Payroll();
     const employer = await currentEmployer(req);
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const data = z.object({ from: payrollDateSchema, to: payrollDateSchema, memo: z.string().trim().max(1000).optional() }).parse(req.body);
     const { start, end } = parsePayrollRange({ from: data.from, to: data.to });
     const run = await db.transaction(async tx => {
@@ -433,7 +428,7 @@ router.post("/1099/runs/:runId/mark-paid", async (req: AuthRequest, res, next) =
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
     const data = z.object({
       confirmation: z.literal(PAID_CONFIRMATION),
@@ -461,7 +456,7 @@ router.get("/1099/runs/:runId/export", async (req: AuthRequest, res, next) => {
   try {
     await ensure1099Payroll(); await ensureOperations();
     const employer = await currentEmployer(req);
-    requirePayrollOwner(req, employer);
+    await requirePayrollOwner(req);
     const runId = z.coerce.number().int().positive().parse(req.params.runId);
     const format = payoutExportFormatSchema.parse(req.query.format);
     const rows = (await db.execute(sql`

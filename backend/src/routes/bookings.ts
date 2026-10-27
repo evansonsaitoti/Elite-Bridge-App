@@ -11,6 +11,7 @@ import { shiftSchedule } from "../services/shift-schedule";
 import { ensureOperations } from "../db/operations";
 import { checkGeofence } from "../services/geofence";
 import { sendShiftSms } from "../services/sms";
+import { employerForUser } from "../services/employerMemberships";
 
 const router = Router();
 type ShiftTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
@@ -322,10 +323,7 @@ function requireRole(req: AuthRequest, role: "caregiver" | "employer") {
 
 async function getOrCreateEmployer(req: AuthRequest) {
   requireRole(req, "employer");
-  const employerList = await db.select().from(employers).where(eq(employers.userId, req.user!.id)).limit(1);
-  if (employerList.length > 0) return employerList[0];
-  const created = await db.insert(employers).values({ userId: req.user!.id, companyName: req.user!.email }).returning();
-  return created[0];
+  return employerForUser(req.user!.id);
 }
 
 async function getOrCreateCaregiver(req: AuthRequest) {

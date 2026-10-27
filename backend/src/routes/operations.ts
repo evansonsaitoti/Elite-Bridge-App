@@ -10,6 +10,7 @@ import {
   sendOperationsAlert,
   sendTransactionalEmail,
 } from "../services/notifications";
+import { employerForUser } from "../services/employerMemberships";
 
 const router = Router();
 const rows = (r: any): any[] => r.rows;
@@ -27,14 +28,7 @@ router.use(async (_req, _res, next) => {
 async function employerId(req: AuthRequest) {
   if (req.user?.role !== "employer")
     throw new AppError(403, "Employer access required");
-  const employer = rows(
-    await db.execute(
-      sql`SELECT id FROM employers WHERE user_id = ${req.user.id}`,
-    ),
-  )[0];
-  if (!employer)
-    throw new AppError(404, "Complete your employer profile first");
-  return employer.id as number;
+  return (await employerForUser(req.user.id)).id;
 }
 async function shiftAccess(req: AuthRequest, shiftId: number) {
   const shift = rows(
@@ -43,7 +37,7 @@ async function shiftAccess(req: AuthRequest, shiftId: number) {
     ),
   )[0];
   if (!shift) throw new AppError(404, "Shift not found");
-  if (req.user?.role === "employer" && shift.employer_user_id === req.user.id)
+  if (req.user?.role === "employer" && (await employerForUser(req.user.id)).id === Number(shift.employer_id))
     return shift;
   if (
     req.user?.role === "caregiver" &&
