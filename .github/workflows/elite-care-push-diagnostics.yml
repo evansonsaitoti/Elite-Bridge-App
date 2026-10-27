@@ -68,6 +68,16 @@ jobs:
             }))));
             const input = (await gql('{ __type(name:"IosAppCredentialsFilter") { inputFields { name type { name kind ofType { name kind } } } } }'))?.__type;
             console.log('CREDENTIAL_FILTER_FIELDS:',input?.inputFields?.map(f=>f.name).join(',')||'unavailable');
+            for (const n of ['IosAppCredentialsMutation','Account','AppleTeam','AppleAppIdentifier']) {
+              const d = (await gql(`{ __type(name:"${n}") { fields { name args { name type { name kind ofType { name kind } } } type { name kind ofType { name kind } } } } }`))?.__type;
+              if (n === 'IosAppCredentialsMutation') console.log('SET_PUSH_KEY_ARGS:',JSON.stringify(d?.fields?.find(f=>f.name==='setPushKey')||null));
+              else console.log('CREDENTIAL_TYPE_FIELDS:',n,d?.fields?.filter(f=>/push|key|apple|bundle|account/i.test(f.name)).map(f=>({name:f.name,type:f.type}))||[]);
+            }
+            const list = await gql(`query { app { byId(appId:"15715728-ffc5-4ea1-9da8-5158f1e539ef") {
+              iosAppCredentials { id pushKey { id } appleTeam { id } appleAppIdentifier { id } }
+            } } }`);
+            console.log('IOS_ASSOCIATION_IDS:',JSON.stringify((list?.app?.byId?.iosAppCredentials||[]).map(c=>({id:c.id,teamId:c.appleTeam?.id,identifierId:c.appleAppIdentifier?.id,pushAttached:!!c.pushKey}))));
+
 
           })().catch(e=>{ console.error('DIAGNOSTIC_ERROR:', String(e.message).slice(0,200)); process.exitCode=1;});
           NODE
