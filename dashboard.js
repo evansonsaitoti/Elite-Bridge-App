@@ -1066,7 +1066,7 @@
     const footerLabel = hoursOnly ? 'Confidential hours record · Prepared for employer review' : 'Confidential payroll record · Prepared for employer review';
     return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${safe(reportTitle)}</title><style>
       :root{--green:#064024;--lime:#8dc240;--ink:#1e2a24;--muted:#607067;--line:#dce6df;--pale:#f3f8ee}*{box-sizing:border-box}body{margin:0;background:#eef2ef;color:var(--ink);font:14px/1.45 Arial,Helvetica,sans-serif}.toolbar{position:sticky;top:0;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;padding:14px max(18px,calc((100vw - 840px)/2));background:#fff;border-bottom:1px solid var(--line);z-index:2}.toolbar button{min-height:44px;border:0;border-radius:9px;padding:11px 16px;color:#fff;background:var(--green);font-weight:700;cursor:pointer}.toolbar button.secondary{color:var(--green);background:var(--pale);border:1px solid var(--line)}main{width:min(840px,calc(100% - 32px));margin:24px auto 50px;padding:42px 48px;background:#fff;box-shadow:0 12px 38px rgba(20,52,39,.1)}.brand{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:start;gap:24px;padding:22px 0 24px;border-top:7px solid var(--green)}.brand img{display:block;width:min(210px,100%);height:auto;object-fit:contain}.contact{text-align:right;color:var(--muted);font-size:11px;line-height:1.7}.contact strong{color:var(--green);font-size:12px}.rule{border:0;border-top:1px solid var(--line);margin:0 0 30px}h1{margin:0;color:var(--green);font-size:30px;letter-spacing:-.04em}.subtitle{margin:5px 0 22px;color:var(--muted)}.meta,.metrics{display:grid;grid-template-columns:repeat(3,1fr);overflow:hidden;border:1px solid var(--line);border-radius:10px;background:var(--pale)}.meta>div,.metrics>div{padding:13px 15px;border-right:1px solid var(--line)}.meta>div:last-child,.metrics>div:last-child{border:0}.label{display:block;margin-bottom:4px;color:var(--muted);font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}.value{color:var(--ink);font-size:15px;font-weight:700}.metrics{margin-top:14px;background:#fff}.metrics>div{padding:14px 15px}.metric{color:var(--green);font-size:21px;font-weight:700;letter-spacing:-.03em}table{width:100%;margin-top:20px;border-collapse:collapse;font-size:11px}th{padding:10px;background:var(--green);color:#fff;text-align:left;font-size:9px;letter-spacing:.05em}td{padding:10px;border:1px solid var(--line)}tbody tr:nth-child(even){background:#f8fbf9}.num{text-align:right;white-space:nowrap}.total{background:var(--pale)!important;color:var(--green);font-weight:700}.note{margin-top:16px;padding:14px 16px;border:1px solid var(--line);border-left:4px solid var(--lime);border-radius:6px;background:#f7faf4;color:var(--muted);font-size:11px}.approval{margin-top:20px}.approval-title{margin:0 0 13px;color:var(--green);font-size:10px;font-weight:700;letter-spacing:.06em}.approval-grid{display:grid;grid-template-columns:1.7fr 1fr;gap:22px}.approval label{display:block;color:var(--muted);font-size:10px;font-weight:700}.approval input{width:100%;min-height:38px;border:0;border-bottom:1px solid #aebfb4;background:#fff;color:var(--ink);font:13px Arial;margin-top:4px;padding:6px 4px}.approval input[type=date]{font:13px Arial;min-width:0}.footer{display:flex;justify-content:space-between;margin-top:34px;padding-top:10px;border-top:1px solid var(--line);color:var(--muted);font-size:9px}@page{size:letter;margin:.42in}@media(max-width:620px){main{padding:22px 16px}.toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px 12px}.toolbar button{padding:9px 7px;font-size:12px}.toolbar #printTimesheet{grid-column:span 2}.brand{grid-template-columns:minmax(0,1fr) minmax(126px,.9fr);gap:12px;padding-top:16px}.brand img{width:100%;max-width:180px}.contact{text-align:right;font-size:9px;line-height:1.6}.contact strong{font-size:10px}.meta,.metrics{grid-template-columns:1fr}.meta>div,.metrics>div{border-right:0;border-bottom:1px solid var(--line)}table{font-size:9px}td,th{padding:7px 5px}.value{font-size:13px}}@media print{body{background:#fff}main{width:auto;margin:0;padding:0;box-shadow:none}.toolbar{display:none}.brand{padding-top:14px}.subtitle{margin-bottom:16px}.meta>div,.metrics>div{padding:10px}.metrics{margin-top:10px}table{margin-top:15px}.note{margin-top:12px}.approval{margin-top:15px}.footer{margin-top:25px}}
-    </style></head><body data-timesheet-staff="${safe(staffName)}" data-timesheet-month="${safe(month)}"><div class="toolbar"><button id="downloadTimesheet" type="button">Download PDF</button><button id="emailTimesheet" class="secondary" type="button">Email PDF</button><button id="printTimesheet" class="secondary" type="button">Print / save PDF</button><button id="closeTimesheet" class="secondary" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">${hoursOnly ? 'Service period' : 'Pay period'}</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">${hoursOnly ? 'Hours only' : 'Missed clock-in'}</span></div></section>${metricsHtml}${tableHtml}<aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${hoursOnly ? (fullyApproved ? 'Reported hours approved.' : 'Please review and approve the reported hours.') : (fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.')}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="date" value="${safe(approvalDateValue)}"></label></div></section><footer class="footer"><span>${footerLabel}</span><span>Elite Bridge Staffing</span></footer></main><script>(function(){const send=action=>{if(window.parent===window){alert('Open this timesheet from the employer dashboard to download or email the PDF.');return}window.parent.postMessage({type:'elitebridge-timesheet-action',action,staffName:document.body.dataset.timesheetStaff,month:document.body.dataset.timesheetMonth,approvedByName:document.querySelector('[aria-label="Approved by"]').value.trim(),approvalDate:document.querySelector('[aria-label="Approval date"]').value},'*')};document.getElementById('downloadTimesheet').addEventListener('click',()=>send('download'));document.getElementById('emailTimesheet').addEventListener('click',()=>send('email'));document.getElementById('printTimesheet').addEventListener('click',()=>window.print());document.getElementById('closeTimesheet').addEventListener('click',()=>send('close'))})();</script></body></html>`;
+    </style></head><body data-timesheet-staff="${safe(staffName)}" data-timesheet-month="${safe(month)}" data-timesheet-first="${safe(String(ordered[0]?.shift_date || '').slice(0, 10))}" data-timesheet-last="${safe(String(ordered.at(-1)?.shift_date || '').slice(0, 10))}"><div class="toolbar"><button id="downloadTimesheet" type="button">Download PDF</button><button id="emailTimesheet" class="secondary" type="button">Email PDF</button><button id="printTimesheet" class="secondary" type="button">Print / save PDF</button><button id="closeTimesheet" class="secondary" type="button">Close</button></div><main><header class="brand"><img src="/logo.png" alt="Elite Bridge Staffing logo"><div class="contact"><strong>ELITE BRIDGE STAFFING</strong><br>(508) 251-9346<br>info@elitebridgestaffing.com<br>elitebridgestaffing.com</div></header><hr class="rule"><h1>Staff timesheet</h1><p class="subtitle">${approvalLabel}</p><section class="meta"><div><span class="label">Staff member</span><span class="value">${safe(staffName)}</span></div><div><span class="label">${hoursOnly ? 'Service period' : 'Pay period'}</span><span class="value">${safe(payPeriod)}</span></div><div><span class="label">Entry type</span><span class="value">${hoursOnly ? 'Hours only' : 'Missed clock-in'}</span></div></section>${metricsHtml}${tableHtml}<aside class="note"><strong>Time entry note</strong><br>${reasons.map(safe).join('<br>') || 'Hours were entered manually from the reported schedule.'}<br>${hoursOnly ? (fullyApproved ? 'Reported hours approved.' : 'Please review and approve the reported hours.') : (fullyApproved ? 'Approval recorded. This entry is ready for payroll review.' : 'Please review and approve before including in payroll.')}</aside><section class="approval"><p class="approval-title">EMPLOYER APPROVAL</p><div class="approval-grid"><label>Approved by<input aria-label="Approved by" type="text" value="${safe(approvalNames)}"></label><label>Date<input aria-label="Approval date" type="date" value="${safe(approvalDateValue)}"></label></div></section><footer class="footer"><span>${footerLabel}</span><span>Elite Bridge Staffing</span></footer></main><script>(function(){const send=action=>{if(window.parent===window){alert('Open this timesheet from the employer dashboard to download or email the PDF.');return}window.parent.postMessage({type:'elitebridge-timesheet-action',action,staffName:document.body.dataset.timesheetStaff,month:document.body.dataset.timesheetMonth,startDate:document.body.dataset.timesheetFirst,endDate:document.body.dataset.timesheetLast,approvedByName:document.querySelector('[aria-label="Approved by"]').value.trim(),approvalDate:document.querySelector('[aria-label="Approval date"]').value},'*')};document.getElementById('downloadTimesheet').addEventListener('click',()=>send('download'));document.getElementById('emailTimesheet').addEventListener('click',()=>send('email'));document.getElementById('printTimesheet').addEventListener('click',()=>window.print());document.getElementById('closeTimesheet').addEventListener('click',()=>send('close'))})();</script></body></html>`;
   }
 
   function pdfSafeText(value) {
@@ -1216,6 +1216,96 @@
     document.body.appendChild(link); link.click(); link.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
   }
+  function openTimesheetEmailDialog(staffName, startDate, endDate, approval = {}) {
+    const entries = timesheetEntries(staffName, null, startDate, endDate);
+    if (!entries.length) { notify('No timesheet entries match this caregiver and date range.'); return; }
+    const form = document.getElementById('timesheetEmailForm');
+    if (!form) return;
+    form.reset();
+    form.elements.staffName.value = staffName;
+    form.elements.month.value = startDate.slice(0, 7);
+    form.elements.startDate.value = startDate;
+    form.elements.endDate.value = endDate;
+    form.elements.approvedByName.value = approval.approvedByName || '';
+    form.elements.approvalDate.value = approval.approvalDate || '';
+    const error = document.getElementById('timesheetEmailError');
+    if (error) { error.hidden = true; error.textContent = ''; }
+    const hours = entries.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0) / 60;
+    document.getElementById('timesheetEmailSummary').textContent =
+      `${staffName} · ${startDate} to ${endDate} · ${entries.length} shifts · ${hours.toFixed(2)} hours. Send an hours-only PDF to an authorized recipient.`;
+    document.getElementById('timesheetEmailDialog').showModal();
+    document.getElementById('timesheetRecipientEmail').focus();
+  }
+  async function loadTimesheetEmailHistory() {
+    const list = document.getElementById('timesheetEmailHistoryList');
+    if (!list) return;
+    try {
+      const response = await api('/manual-timesheets/employer/email-history');
+      const rows = response.emails || [];
+      if (!rows.length) {
+        list.innerHTML = '<p class="timesheet-export-hint">No timesheet emails submitted yet.</p>';
+        return;
+      }
+      list.innerHTML = rows.map(row =>
+        `<div class="timesheet-email-history-row"><div><strong>${escapeHtml(row.staff_name)}</strong><small>${escapeHtml(String(row.start_date).slice(0,10))} to ${escapeHtml(String(row.end_date).slice(0,10))} · ${Number(row.hours).toFixed(2)} hrs · ${escapeHtml(row.recipient)}</small></div><span class="status status-approved" title="Accepted for sending; delivery is not confirmed">Submitted ${escapeHtml(dateTime(row.created_at))}</span></div>`
+      ).join('');
+    } catch (_error) {
+      list.textContent = 'Timesheet email history is temporarily unavailable.';
+    }
+  }
+  document.addEventListener('change', event => {
+    if (event.target?.id === 'timesheetShareStaff') {
+      const name = event.target.value;
+      const dates = employerManualTimesheets.filter(row => row.staff_name === name).map(row => String(row.shift_date).slice(0, 10)).sort();
+      if (dates.length) {
+        const date = new Date(dates.at(-1) + 'T12:00:00Z');
+        date.setUTCDate(date.getUTCDate() - 13);
+        document.getElementById('timesheetShareStart').value = date.toISOString().slice(0, 10);
+        document.getElementById('timesheetShareEnd').value = dates.at(-1);
+      }
+    }
+    if (['timesheetShareStaff', 'timesheetShareStart', 'timesheetShareEnd'].includes(event.target?.id)) refreshTimesheetShareSummary();
+  });
+  document.addEventListener('input', event => {
+    if (['timesheetShareStart', 'timesheetShareEnd'].includes(event.target?.id)) refreshTimesheetShareSummary();
+  });
+  document.addEventListener('click', event => {
+    const button = event.target.closest('[data-timesheet-share-action]');
+    if (!button) return;
+    const selection = selectedTimesheetPeriod();
+    if (!selection || !selection.entries.length) { notify('Choose a caregiver and dates with recorded hours.'); return; }
+    const action = button.dataset.timesheetShareAction;
+    if (action === 'email') {
+      openTimesheetEmailDialog(selection.staffName, selection.startDate, selection.endDate);
+      return;
+    }
+    if (action === 'download') {
+      try {
+        downloadTimesheetPdf(timesheetPdfBlob(selection.staffName, selection.month, selection.entries),
+          timesheetFilename(selection.staffName, selection.month).replace('.pdf', `_${selection.startDate}_to_${selection.endDate}.pdf`));
+        notify('Hours-only timesheet downloaded.');
+      } catch (error) { notify(error.message || 'Could not create the PDF.'); }
+      return;
+    }
+    const preview = document.getElementById('timesheetPreviewDialog');
+    const frame = document.getElementById('timesheetPreviewFrame');
+    if (!preview || !frame) return;
+    frame.srcdoc = timesheetPrintDocument(selection.staffName, selection.month, selection.entries);
+    preview.showModal();
+  });
+  document.getElementById('timesheetReviewBeforeSend')?.addEventListener('click', () => {
+    const form = document.getElementById('timesheetEmailForm');
+    const name = form.elements.staffName.value;
+    const first = form.elements.startDate.value;
+    const last = form.elements.endDate.value;
+    const entries = timesheetEntries(name, null, first, last);
+    if (!entries.length) { notify('No timesheet records available.'); return; }
+    try {
+      downloadTimesheetPdf(timesheetPdfBlob(name, first.slice(0,7), entries),
+        timesheetFilename(name, first.slice(0,7)).replace('.pdf', `_${first}_to_${last}.pdf`));
+    } catch (error) { notify(error.message || 'PDF review failed.'); }
+  });
+
   document.addEventListener('click', event => {
     const button = event.target.closest('[data-export-timesheet]');
     if (!button || button.disabled) return;
@@ -1225,18 +1315,8 @@
     const entries = timesheetEntries(staffName, month);
     if (!entries.length) { notify('No timesheet entries were found for this staff member and month.'); return; }
     if (button.dataset.timesheetAction === 'email') {
-      const form = document.getElementById('timesheetEmailForm');
-      form.elements.staffName.value = staffName;
-      form.elements.month.value = month;
-      form.elements.recipient.value = '';
-      form.elements.confirmSensitiveEmail.checked = false;
-      const emailError = document.getElementById('timesheetEmailError');
-      if (emailError) { emailError.hidden = true; emailError.textContent = ''; }
-      document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment.`;
-      document.getElementById('timesheetEmailDialog').showModal();
-      form.elements.approvedByName.value = '';
-      form.elements.approvalDate.value = '';
-      document.getElementById('timesheetRecipientEmail').focus();
+      const ordered = [...entries].sort((a,b) => String(a.shift_date).localeCompare(String(b.shift_date)));
+      openTimesheetEmailDialog(staffName, String(ordered[0].shift_date).slice(0,10), String(ordered.at(-1).shift_date).slice(0,10));
       return;
     }
     if (button.dataset.timesheetAction === 'download') {
@@ -1267,17 +1347,10 @@
     }
     if (message.action === 'email') {
       document.getElementById('timesheetPreviewDialog')?.close();
-      const form = document.getElementById('timesheetEmailForm');
-      form.elements.staffName.value = staffName;
-      form.elements.month.value = month;
-      form.elements.recipient.value = '';
-      form.elements.confirmSensitiveEmail.checked = false;
-      const emailError = document.getElementById('timesheetEmailError');
-      if (emailError) { emailError.hidden = true; emailError.textContent = ''; }
-      form.elements.approvedByName.value = approval.approvedByName;
-      form.elements.approvalDate.value = approval.approvalDate;
-      document.getElementById('timesheetEmailSummary').textContent = `This sends ${staffName}’s ${month} timesheet as a confidential PDF attachment from info@elitebridgestaffing.com.`;
-      document.getElementById('timesheetEmailDialog').showModal();
+      const first = String(message.startDate || '').slice(0, 10);
+      const last = String(message.endDate || '').slice(0, 10);
+      if (!first || !last) { notify('Select a service period before sending.'); return; }
+      openTimesheetEmailDialog(staffName, first, last, approval);
     }
   });
   const timesheetEmailDialog = document.getElementById('timesheetEmailDialog');
@@ -1293,24 +1366,37 @@
     const data = new FormData(form);
     const staffName = String(data.get('staffName') || '');
     const month = String(data.get('month') || '');
-    const entries = timesheetEntries(staffName, month);
-    if (!entries.length) { notify('No timesheet entries were found for this staff member and month.'); return; }
+    const startDate = String(data.get('startDate') || '');
+    const endDate = String(data.get('endDate') || '');
+    const recipient = String(data.get('recipient') || '').trim();
+    const entries = timesheetEntries(staffName, null, startDate, endDate);
+    if (!entries.length) { notify('No recorded hours within the selected date range.'); return; }
+    if (!data.get('confirmSensitiveEmail')) { notify('Confirm that the recipient is authorized.'); return; }
+    const hours = entries.reduce((sum, entry) => sum + Number(entry.worked_minutes || 0), 0) / 60;
+    if (!window.confirm(`Send ${staffName}'s hours-only PDF (${hours.toFixed(2)} hrs, ${startDate}–${endDate}) to ${recipient}? Please verify the email address.`)) return;
     const button = form.querySelector('button[type="submit"]');
     savingTime = true; button.disabled = true;
     try {
       const blob = timesheetPdfBlob(staffName, month, entries, { approvedByName: String(data.get('approvedByName') || '').trim(), approvalDate: String(data.get('approvalDate') || '') });
       const bytes = new Uint8Array(await blob.arrayBuffer());
-      let binary = ''; for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
-      await api('/manual-timesheets/employer/email', { method: 'POST', body: JSON.stringify({ staffName, month, recipient: String(data.get('recipient') || '').trim(), pdfBase64: btoa(binary), testOnly: data.get('testOnly') === 'true' }) });
+      let binary = '';
+      for (let offset = 0; offset < bytes.length; offset += 0x8000) binary += String.fromCharCode(...bytes.subarray(offset, offset + 0x8000));
+      await api('/manual-timesheets/employer/email', { method: 'POST',
+        body: JSON.stringify({ staffName, month, startDate, endDate, recipient,
+          message: String(data.get('message') || '').trim(), pdfBase64: btoa(binary) })
+      });
       timesheetEmailDialog.close(); form.reset();
-      notify('Timesheet PDF emailed successfully.');
+      notify('Timesheet accepted for email delivery. Check the email history for the submission record.');
+      await loadTimesheetEmailHistory();
     } catch (error) {
-      const message = error.message || 'Could not send the timesheet PDF.';
+      const message = error.message || 'Could not submit timesheet email.';
       const emailError = document.getElementById('timesheetEmailError');
       if (emailError) { emailError.textContent = message; emailError.hidden = false; }
       notify(message);
+    } finally {
+      savingTime = false;
+      button.disabled = false;
     }
-    finally { savingTime = false; button.disabled = false; }
   });
 
   let employerInvoices = [];
@@ -2541,7 +2627,10 @@
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
     renderActivities(document.getElementById('activityList'), activities);
-    if (timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled') renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
+    if (timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled') {
+      renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
+      void loadTimesheetEmailHistory();
+    }
     else renderEmpty(document.getElementById('timesheetList'), 'Timesheets could not be loaded', 'Refresh to try again.');
     renderConversations(document.getElementById('conversationList'), conversations);
     const caregiverList = document.getElementById('caregiverList');
