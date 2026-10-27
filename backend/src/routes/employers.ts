@@ -16,6 +16,7 @@ const router = Router();
 
 const updateProfileSchema = z.object({
   companyName: z.string().min(2).optional(),
+  companyLogo: z.string().max(350_000).regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/).nullable().optional(),
   companyDescription: z.string().optional(),
   address: z.string().optional(),
   city: z.string().optional(),
@@ -244,6 +245,7 @@ function mapEmployerProfile(employer: any, user: any) {
     id: employer.id,
     userId: employer.userId,
     companyName: employer.companyName,
+    companyLogo: employer.companyLogo ?? "",
     companyDescription: employer.companyDescription ?? "",
     website: employer.website ?? "",
     industry: employer.industry ?? "",
@@ -275,6 +277,7 @@ router.put("/me", authMiddleware, requireRole("employer", "admin"), async (req: 
     }
     const employerData: any = { updatedAt: new Date() };
     if (data.companyName !== undefined) employerData.companyName = data.companyName;
+    if (data.companyLogo !== undefined) employerData.companyLogo = data.companyLogo;
     if (data.companyDescription !== undefined) employerData.companyDescription = data.companyDescription;
     if (data.website !== undefined) employerData.website = data.website;
     if (data.industry !== undefined) employerData.industry = data.industry;

@@ -558,6 +558,30 @@
       window.prompt('Copy the Elite Bridge MCP endpoint:', endpoint);
     }
   }));
+  document.getElementById('organizationLogoUpload')?.addEventListener('change', async (event) => {
+    const file = event.target.files?.[0];
+    const status = document.getElementById('organizationLogoStatus');
+    if (!file) return;
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 256 * 1024) {
+      if (status) status.textContent = 'Choose a PNG, JPEG, or WebP image under 256 KB.';
+      event.target.value = '';
+      return;
+    }
+    try {
+      const logo = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('Could not read the selected image.'));
+        reader.readAsDataURL(file);
+      });
+      const result = await api('/employers/me', { method: 'PUT', body: JSON.stringify({ companyLogo: logo }) });
+      const preview = document.getElementById('organizationLogoPreview');
+      if (preview) { preview.src = result.profile.companyLogo; preview.hidden = false; }
+      if (status) status.textContent = 'Organization logo saved.';
+    } catch (error) {
+      if (status) status.textContent = error.message || 'Could not save the logo.';
+    } finally { event.target.value = ''; }
+  });
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
   document.querySelectorAll('[data-location-filter]').forEach((button) => button.addEventListener('click', () => {
     const location = button.dataset.locationFilter || 'all';
@@ -2326,6 +2350,8 @@
       session.storage.setItem('user', JSON.stringify(session.user));
       document.querySelectorAll('[data-company-name]').forEach((element) => { element.textContent = profile.companyName; });
     }
+    const logoPreview = document.getElementById('organizationLogoPreview');
+    if (logoPreview && profile?.companyLogo) { logoPreview.src = profile.companyLogo; logoPreview.hidden = false; }
     const timesheets = [
       ...(timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : []),
       ...(manualTimesheetResult.status === 'fulfilled' ? manualTimesheetResult.value.manualTimesheets || [] : []),
