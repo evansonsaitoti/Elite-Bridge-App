@@ -2328,11 +2328,21 @@
     } catch (error) { notify(error.message); }
     finally { savingTime = false; form.querySelectorAll('button').forEach(b => { b.disabled = false; }); }
   });
+  function syncManualHoursMode() {
+    const checked = Boolean(document.getElementById('manualHoursOnly')?.checked);
+    const field = document.getElementById('manualRateField');
+    const rate = document.getElementById('manualHourlyRate');
+    if (field) field.hidden = checked;
+    if (rate) { rate.disabled = checked; rate.required = !checked; }
+  }
+  document.getElementById('manualHoursOnly')?.addEventListener('change', syncManualHoursMode);
+  syncManualHoursMode();
   document.addEventListener('submit', async event => {
     const form = event.target;
     if (!form.matches('[data-manual-entry]') || savingTime) return;
     event.preventDefault();
     const data = new FormData(form);
+    const hoursOnly = data.get('hoursOnly') === 'on';
     const button = form.querySelector('button[type="submit"]');
     savingTime = true;
     if (button) button.disabled = true;
@@ -2345,14 +2355,16 @@
           endDate: String(data.get('endDate') || ''),
           startTime: String(data.get('startTime') || ''),
           endTime: String(data.get('endTime') || ''),
-          hourlyRate: Number(data.get('hourlyRate')),
+          hoursOnly,
+          ...(hoursOnly ? {} : { hourlyRate: Number(data.get('hourlyRate')) }),
           unpaidBreakMinutes: Number(data.get('unpaidBreakMinutes') || 0),
           includeWeekends: data.get('includeWeekends') === 'on',
           reason: String(data.get('reason') || ''),
         }),
       });
-      notify(`Saved ${result.count} missed-clock-in ${result.count === 1 ? 'entry' : 'entries'} for review (${Number(result.worked_hours).toFixed(2)} hrs, ${money(result.total_amount)}).`);
+      notify(hoursOnly ? `Saved ${result.count} hours-only ${result.count === 1 ? 'entry' : 'entries'} for review (${Number(result.worked_hours).toFixed(2)} hrs).` : `Saved ${result.count} entries for review (${Number(result.worked_hours).toFixed(2)} hrs).`);
       form.reset();
+      syncManualHoursMode();
       const today = todayInputValue();
       form.elements.startDate.value = today;
       form.elements.endDate.value = today;
