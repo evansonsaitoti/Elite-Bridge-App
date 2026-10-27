@@ -18,10 +18,13 @@ const entrySchema = z.object({
   endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   startTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
   endTime: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
-  hourlyRate: z.coerce.number().positive().max(500),
+  hoursOnly: z.boolean().default(false),
+  hourlyRate: z.coerce.number().positive().max(500).optional(),
   unpaidBreakMinutes: z.coerce.number().int().min(0).max(1440).default(0),
   includeWeekends: z.boolean().default(true),
   reason: z.string().trim().min(3).max(2000),
+}).refine((data) => data.hoursOnly || data.hourlyRate != null, {
+  message: "An hourly rate is required for payroll-related entries.", path: ["hourlyRate"],
 });
 
 const emailTimesheetSchema = z.object({
@@ -156,8 +159,8 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
     if (shiftMinutes <= 0) shiftMinutes += 1440;
     const workedMinutes = shiftMinutes - data.unpaidBreakMinutes;
     if (workedMinutes <= 0) throw new AppError(400, "The unpaid break must be shorter than the shift.");
-    const hourlyRate = data.hourlyRate.toFixed(2);
-    const totalAmount = Number(((workedMinutes / 60) * data.hourlyRate).toFixed(2));
+    const hourlyRate = data.hoursOnly ? null : data.hourlyRate!.toFixed(2);
+    const totalAmount = data.hoursOnly ? null : Number(((workedMinutes / 60) * data.hourlyRate!).toFixed(2));
 
     const dates: string[] = [];
     for (let offset = 0; offset < dayCount; offset++) {
@@ -177,7 +180,7 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
              total_amount, reason, entry_type, status, created_by)
           VALUES
             (${employer.id}, ${data.staffName}, ${shiftDate}::date, ${data.startTime}::time, ${data.endTime}::time,
-             ${workedMinutes}, ${hourlyRate}, ${totalAmount}, ${data.reason}, 'missed_clock_in',
+             ${workedMinutes}, ${hourlyRate}, ${totalAmount}, ${data.reason}, ${data.hoursOnly ? 'hours_only' : 'missed_clock_in'},
              'pending_approval', ${req.user!.id})
           RETURNING id, staff_name, shift_date, start_time, end_time, worked_minutes, hourly_rate,
                     total_amount, reason, entry_type, status, agency_note, approved_by_name, approval_date, approved_at, created_at
@@ -190,7 +193,7 @@ router.post("/employer", authMiddleware, async (req: AuthRequest, res, next) => 
       manualTimesheets: entries,
       count: entries.length,
       worked_hours: Number((workedMinutes * entries.length / 60).toFixed(2)),
-      total_amount: Number((totalAmount * entries.length).toFixed(2)),
+      total_amount: data.hoursOnly ? null : Number((totalAmount! * entries.length).toFixed(2)),
     });
   } catch (error: any) {
     if (error?.code === "23505") return next(new AppError(409, "A missed-clock-in entry already exists for this staff member on one of those dates."));
