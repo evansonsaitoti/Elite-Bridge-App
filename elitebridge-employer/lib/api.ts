@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getEmployerToken, setEmployerToken, removeEmployerToken } from "./secure-session";
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -236,7 +237,7 @@ export function operationsApi(path: string, method = 'GET', body?: unknown) {
 
 async function request<T>(path: string, init: RequestInit = {}, authenticated = true): Promise<T> {
   if (!API_URL) throw new Error("The secure Elite Bridge service is unavailable in this build.");
-  const token = authenticated ? await AsyncStorage.getItem(TOKEN_KEY) : null;
+  const token = authenticated ? await getEmployerToken(TOKEN_KEY) : null;
   const response = await fetch(`${API_URL}${path}`, {
     ...init,
     headers: {
@@ -261,7 +262,7 @@ function assertEmployer(user: { role: string }): asserts user is EmployerUser {
 }
 
 async function saveSession(token: string, user: EmployerUser) {
-  await AsyncStorage.multiSet([[TOKEN_KEY, token], [USER_KEY, JSON.stringify(user)]]);
+  await Promise.all([setEmployerToken(token, TOKEN_KEY), AsyncStorage.setItem(USER_KEY, JSON.stringify(user))]);
 }
 
 export async function registerEmployer(input: {
@@ -294,7 +295,7 @@ export async function signInEmployer(email: string, password: string): Promise<E
 
 export async function getStoredEmployer(): Promise<EmployerUser | null> {
   const [token, rawUser] = await Promise.all([
-    AsyncStorage.getItem(TOKEN_KEY),
+    getEmployerToken(TOKEN_KEY),
     AsyncStorage.getItem(USER_KEY),
   ]);
   if (!token || !rawUser) return null;
@@ -309,7 +310,7 @@ export async function getStoredEmployer(): Promise<EmployerUser | null> {
 }
 
 export async function signOutEmployer() {
-  await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
+  await Promise.all([removeEmployerToken(TOKEN_KEY), AsyncStorage.removeItem(USER_KEY)]);
 }
 
 export async function registerEmployerDevice(token: string, platform: "ios" | "android") {
