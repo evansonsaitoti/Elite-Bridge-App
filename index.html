@@ -271,14 +271,103 @@ footer{padding:0 0 25px;border-top:0;background:#062e23;color:#fff}
 
 h1,h2,h3{font-family:"Sora","Lato",sans-serif}.footer-logo img{width:190px;height:auto;background:transparent}
 .footer-brand{display:flex;flex-direction:column;align-items:center;text-align:center}.footer-logo{display:block;width:max-content;max-width:100%;margin:0 auto}.footer-logo img{display:block;max-width:100%;height:auto;object-fit:contain}
+
+/* Clipboard-inspired people-first hero and closing image, built for Elite Bridge */
+.hero{padding:62px 0 68px;background:linear-gradient(135deg,#062e23,#0b503a);color:#fff}
+.hero-grid{grid-template-columns:.88fr 1.12fr;align-items:center;gap:52px}
+.hero-grid>div:first-child{text-align:left}
+.hero .eyebrow{justify-content:flex-start;color:#f0cf86}
+.hero h1{max-width:620px;margin:0 0 18px;color:#fff;font-size:clamp(43px,5vw,66px);line-height:1.02;letter-spacing:-.06em}
+.hero .hero-copy{max-width:540px;margin:0 0 24px;color:rgba(255,255,255,.82);font-size:15px;line-height:1.72}
+.hero .actions{justify-content:flex-start}
+.hero .checks{justify-content:flex-start;gap:10px 16px}
+.hero-capabilities{justify-content:flex-start;gap:8px}
+.hero-capabilities a{border-color:rgba(255,255,255,.23);background:rgba(255,255,255,.07)}
+.hero-preview{position:relative;width:100%;min-height:525px;margin:0;padding:0 0 58px;display:block;overflow:visible}
+.hero-image-frame{position:absolute;inset:0 0 58px;overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:25px;background:#e9eee9;box-shadow:0 26px 65px rgba(0,0,0,.22)}
+.hero-slide-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;transition:opacity .18s ease}
+.hero-image-shade{position:absolute;inset:38% 0 0;background:linear-gradient(180deg,transparent,rgba(5,31,22,.28))}
+.hero-image-caption{position:absolute;top:17px;left:17px;display:flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.8);border-radius:13px;background:rgba(255,255,255,.95);box-shadow:0 8px 25px rgba(0,0,0,.12);color:#173b2b}
+.hero-caption-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#073c2d;color:#f0cf86;font-size:9px;font-weight:950}
+.hero-image-caption b{display:block;font-size:10px}
+.hero-image-caption small{display:block;margin-top:3px;color:#708077;font-size:8px}
+.hero-preview .dash-window{position:absolute;left:-20px;bottom:77px;width:88%;max-width:610px;transform:none;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
+.hero-preview .float{position:absolute;right:14px;bottom:77px;z-index:4;max-width:190px;padding:10px 12px;border-radius:11px;font-size:9px}
+.hero-preview .float small{font-size:8px}
+.caregiver-preview{display:none;position:absolute;left:-15px;bottom:78px;z-index:3;width:min(300px,76%);padding:15px;border:1px solid #fff;border-radius:17px;background:#fff;box-shadow:0 20px 48px rgba(0,0,0,.25);color:#183c2c}
+.caregiver-preview-top{display:flex;align-items:center;gap:9px;padding-bottom:12px;border-bottom:1px solid #e7eee9}
+.caregiver-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#073c2d;color:#f0cf86;font-size:9px;font-weight:950}
+.caregiver-preview-top b{display:block;font-size:11px}
+.caregiver-preview-top small{display:block;margin-top:3px;color:#839188;font-size:7px;font-weight:800}
+.caregiver-online{margin-left:auto;color:#4c9b62;font-size:10px}
+.caregiver-shift{display:grid;gap:6px;padding:14px 0 11px}
+.caregiver-shift>small{color:#917132;font-size:7px;font-weight:900;letter-spacing:.11em}
+.caregiver-shift>b{color:#173b2b;font-size:14px}
+.caregiver-shift>span{color:#75837a;font-size:9px}
+.caregiver-shift>div{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:10px;border-top:1px solid #edf1ee;color:#417a50;font-size:8px;font-weight:800}
+.caregiver-shift a{color:#07513a}
+.caregiver-update{padding:9px;border-radius:9px;background:#eef5ef;color:#617267;font-size:8px}
+.caregiver-update span{margin-right:4px;color:#3b8b51;font-weight:900}
+.hero-preview[data-slide="caregiver"] .dash-window,.hero-preview[data-slide="caregiver"] .float{display:none}
+.hero-preview[data-slide="caregiver"] .caregiver-preview{display:block}
+.hero-slider-controls{position:absolute;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:flex-end;gap:11px;height:44px;color:#fff}
+.hero-slider-controls>button{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;transition:background .18s,border-color .18s}
+.hero-slider-controls>button:hover{border-color:#d6a249;background:rgba(255,255,255,.1)}
+.hero-slider-dots{display:flex;align-items:center;gap:7px}
+.hero-slider-dots button{width:7px;height:7px;padding:0;border:0;border-radius:10px;background:rgba(255,255,255,.38);cursor:pointer;transition:width .2s,background .2s}
+.hero-slider-dots button[aria-current="true"]{width:22px;background:#e0b454}
+.hero-slider-controls>span{color:rgba(255,255,255,.72);font-size:8px;font-weight:800;letter-spacing:.08em}
+.cta{padding:55px 0 0;background:#f3f7f4}
+.cta .wrap{width:min(1240px,calc(100% - 44px))}
+.cta-panel{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:32px;min-height:370px;padding:48px;border-radius:25px;background:#073c2d}
+.cta-photo,.cta-photo-shade{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
+.cta-photo{object-fit:cover;object-position:center 45%}
+.cta-photo-shade{background:linear-gradient(90deg,#062e23 0%,rgba(6,46,35,.96) 36%,rgba(6,46,35,.74) 58%,rgba(6,46,35,.12) 100%)}
+.cta-copy{max-width:570px}
+.cta-copy .eyebrow{color:#f0cf86;font-size:9px}
+.cta-panel h2{max-width:540px;color:#fff;font-size:clamp(30px,4vw,45px);line-height:1.07;letter-spacing:-.05em}
+.cta-panel p{color:rgba(255,255,255,.8);font-size:13px;line-height:1.7}
+.cta-actions{display:flex;flex-shrink:0;flex-wrap:wrap;gap:9px;justify-content:flex-end}
+.cta-panel .btn.outline{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.08);color:#fff}
+.cta-panel .btn.outline:hover{background:rgba(255,255,255,.17)}
+.footer-logo img{filter:brightness(0) invert(1)}
+@media(max-width:950px){.hero-grid{grid-template-columns:1fr;gap:28px}.hero-grid>div:first-child{text-align:center}.hero .eyebrow{justify-content:center}.hero .hero-copy{margin-left:auto;margin-right:auto}.hero .actions,.hero .checks,.hero-capabilities{justify-content:center}.hero-preview{width:min(760px,100%);min-height:500px;margin:0 auto}.cta-panel{min-height:340px;padding:36px}}
+@media(max-width:680px){.hero{padding:40px 0 48px}.hero-grid{gap:22px}.hero h1{font-size:clamp(39px,10vw,52px)}.hero .hero-copy{font-size:13px}.hero .checks{gap:8px 12px;font-size:9px}.hero-preview{min-height:360px;padding-bottom:48px}.hero-image-frame{inset:0 0 48px;border-radius:18px}.hero-preview .dash-window{left:-3px;bottom:64px;width:96%;max-width:none}.hero-preview .float{right:4px;bottom:62px;max-width:135px;padding:7px 8px;font-size:7px}.hero-preview .float small{font-size:6px}.caregiver-preview{left:6px;bottom:62px;width:min(265px,82%);padding:12px}.hero-slider-controls{height:39px}.hero-slider-controls>button{width:30px;height:30px}.hero-image-caption{top:10px;left:10px;padding:8px 9px}.cta{padding-top:38px}.cta-panel{display:block;min-height:440px;padding:27px 21px;border-radius:18px;background:#073c2d}.cta-photo{object-position:61% center}.cta-photo-shade{background:linear-gradient(180deg,rgba(6,46,35,.97) 0%,rgba(6,46,35,.86) 45%,rgba(6,46,35,.24) 100%)}.cta-copy{max-width:100%}.cta-panel h2{font-size:32px}.cta-actions{justify-content:flex-start;margin-top:17px}.cta-actions .btn{flex:1}.footer-logo img{width:min(100%,300px)}}
+@media(prefers-reduced-motion:reduce){.hero-slide-image,.hero-slider-controls button,.hero-slider-dots button{transition:none}}
+
 </style>
 </head>
 <body>
 <div class="announcement">One connected workspace for care teams <strong>— from staffing needs to shift follow-through.</strong><a href="#platform">Explore the platform →</a></div>
 <header><div class="wrap nav"><a class="logo" href="/" aria-label="Elite Bridge Staffing home"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/elite-bridge-logo-brand.webp" alt="Elite Bridge Staffing"></a><nav class="nav-links" aria-label="Main navigation"><a href="#platform">Platform</a><a href="#ai-agent">AI Agent</a><a href="#organization-controls">Organization tools</a><a href="#how">How it works</a><a href="#packages">Packages</a><a href="#industries">Care settings</a><a href="#apps">Mobile apps</a></nav><div class="nav-actions"><a class="signin" href="/dashboard">Sign in</a><a class="btn" href="#packages">Explore packages →</a></div></div></header>
 <main>
-<section class="hero"><div class="wrap hero-grid"><div><p class="eyebrow">Care staffing software</p><h1>Keep every care shift <em>moving.</em></h1><p class="hero-copy">Coordinate shifts, caregiver applications, attendance, timesheets and team access from one employer web dashboard, with mobile tools for caregivers.</p><div class="actions"><a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a software demo →</a><a class="btn outline" href="#packages">Explore packages</a></div><div class="checks"><span>One web dashboard for employers</span><span>Mobile tools for caregivers</span><span>Built for non-medical care teams</span></div><nav class="hero-capabilities" aria-label="Elite Bridge capabilities"><a href="#platform">Staffing</a><a href="#how">How it works</a><a href="#organization-controls">Organization tools</a><a href="#apps">Mobile apps</a></nav></div>
-<div class="preview hero-preview" aria-label="Preview of the Elite Bridge employer web dashboard"><div class="dash-window"><div class="dash-top"><div class="dash-brand"><span class="mark">EB</span> Elite Bridge Staffing</div><small>Employer workspace</small></div><div class="workspace-preview"><aside class="workspace-nav"><b>WORKSPACE</b><span class="selected">⌂ &nbsp; Overview</span><span>◷ &nbsp; Attendance</span><b>CARE OPERATIONS</b><span>▣ &nbsp; Shifts</span><span>♧ &nbsp; Clients</span><span>♙ &nbsp; Caregivers</span><span>▤ &nbsp; Timesheets</span><b>BUSINESS ADMINISTRATION</b><span>▣ &nbsp; Payroll</span><span>▤ &nbsp; Invoices</span></aside><div class="workspace-main"><div class="workspace-title"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div><span>● &nbsp; Web dashboard</span></div><div class="action-tiles"><div>▣<b>Post a shift</b><small>Create a care opportunity</small></div><div>♧<b>Client record</b><small>Prepare care details</small></div><div>▤<b>Timesheets</b><small>Review and approve hours</small></div></div><div class="workflow-preview"><div class="workspace-title"><div><h2>Today’s workflow</h2><p>One place to see what needs action before care starts.</p></div><span class="schedule-btn">Open scheduling</span></div><div class="workflow-rows"><span><i>1</i><b>Fill open shifts</b><small>Review coverage needs</small></span><span><i>2</i><b>Check attendance</b><small>Follow today’s activity</small></span><span><i>3</i><b>Confirm caregiver network</b><small>Manage your team</small></span><span><i>4</i><b>Review payouts</b><small>Keep payroll organized</small></span></div></div></div></div></div><a class="float" href="/dashboard">Explore the web dashboard <small>Sign in or create an organization</small></a></div></div></section>
+<section class="hero"><div class="wrap hero-grid">
+<div class="hero-copy-column" id="hero-slide-content">
+<p class="eyebrow" data-hero-eyebrow>Care staffing software</p>
+<h1 data-hero-title>Keep every care shift <em>moving.</em></h1>
+<p class="hero-copy" data-hero-copy>Coordinate shifts, caregiver applications, attendance, timesheets and team access from one employer web dashboard, with mobile tools for caregivers.</p>
+<div class="actions"><a class="btn gold" data-hero-primary href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a software demo →</a><a class="btn outline" data-hero-secondary href="#packages">Explore packages</a></div>
+<div class="checks"><span>One web dashboard for employers</span><span>Mobile tools for caregivers</span><span>Built for non-medical care teams</span></div>
+<nav class="hero-capabilities" aria-label="Elite Bridge capabilities"><a href="#platform">Staffing</a><a href="#how">How it works</a><a href="#organization-controls">Organization tools</a><a href="#apps">Mobile apps</a></nav>
+</div>
+<div class="preview hero-preview" data-hero-preview data-slide="employer" role="region" aria-label="Elite Bridge homepage slider">
+<div class="hero-image-frame"><img class="hero-slide-image" data-hero-image src="/elite-bridge-hero.webp" alt="Caregiver and older adult reviewing a schedule together"><div class="hero-image-shade" aria-hidden="true"></div>
+<div class="hero-image-caption"><span class="hero-caption-mark">EB</span><div><b data-hero-caption>For care organizations</b><small data-hero-caption-note>Plan staffing and keep care moving</small></div></div>
+</div>
+<div class="dash-window"><div class="dash-top"><div class="dash-brand"><span class="mark">EB</span> Elite Bridge Staffing</div><small>Employer workspace</small></div><div class="workspace-preview"><aside class="workspace-nav"><b>WORKSPACE</b><span class="selected">⌂ &nbsp; Overview</span><span>◷ &nbsp; Attendance</span><b>CARE OPERATIONS</b><span>▣ &nbsp; Shifts</span><span>♧ &nbsp; Clients</span><span>♙ &nbsp; Caregivers</span><span>▤ &nbsp; Timesheets</span><b>BUSINESS ADMINISTRATION</b><span>▣ &nbsp; Payroll</span><span>▤ &nbsp; Invoices</span></aside><div class="workspace-main"><div class="workspace-title"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div><span>● &nbsp; Web dashboard</span></div><div class="action-tiles"><div>▣<b>Post a shift</b><small>Create a care opportunity</small></div><div>♧<b>Client record</b><small>Prepare care details</small></div><div>▤<b>Timesheets</b><small>Review and approve hours</small></div></div><div class="workflow-preview"><div class="workspace-title"><div><h2>Today’s workflow</h2><p>One place to see what needs action before care starts.</p></div><span class="schedule-btn">Open scheduling</span></div><div class="workflow-rows"><span><i>1</i><b>Fill open shifts</b><small>Review coverage needs</small></span><span><i>2</i><b>Check attendance</b><small>Follow today’s activity</small></span><span><i>3</i><b>Confirm caregiver network</b><small>Manage your team</small></span><span><i>4</i><b>Review payouts</b><small>Keep payroll organized</small></span></div></div></div></div></div>
+<div class="caregiver-preview" aria-label="Illustrative Elite Care mobile app preview">
+<div class="caregiver-preview-top"><span class="caregiver-mark">EC</span><div><b>Elite Care</b><small>CAREGIVER APP · SAMPLE PREVIEW</small></div><span class="caregiver-online">●</span></div>
+<div class="caregiver-shift"><small>UPCOMING SHIFT</small><b>Home care visit</b><span>Friday · 7:00 AM–3:00 PM</span><div><span>✓ Confirmed</span><a href="#apps">View details →</a></div></div>
+<div class="caregiver-update"><span>✓</span> Schedule update · just now</div>
+</div>
+<div class="hero-slider-controls" aria-label="Homepage slider controls">
+<button type="button" data-hero-prev aria-label="Previous homepage slide">‹</button>
+<div class="hero-slider-dots"><button type="button" data-hero-dot="0" aria-label="Show employer slide" aria-current="true"></button><button type="button" data-hero-dot="1" aria-label="Show caregiver slide" aria-current="false"></button></div>
+<span data-hero-count>01 / 02</span>
+<button type="button" data-hero-next aria-label="Next homepage slide">›</button>
+</div>
+<a class="float" href="/dashboard">Explore the web dashboard <small>Sign in or create an organization</small></a>
+</div></div></section>
 <section class="proof"><div class="wrap proof-row"><div class="proof-item"><span class="proof-icon">↗</span><span><b>Coordinate open shifts</b><small>Post needs and review applications</small></span></div><div class="proof-item"><span class="proof-icon">◷</span><span><b>Keep schedules visible</b><small>Organize coverage and confirmations</small></span></div><div class="proof-item"><span class="proof-icon">▤</span><span><b>Close the loop on hours</b><small>Manage attendance and timesheets</small></span></div></div></section>
 <section class="content" id="platform"><div class="wrap"><div class="section-head"><p class="eyebrow">A practical staffing workspace</p><h2>Less scattered coordination. More time focused on care.</h2><p>Elite Bridge brings daily staffing workflows together, so employers and caregivers can see what needs attention and act from the same connected platform.</p></div><div class="features">
 <article class="feature"><span class="icon">＋</span><h3>Post and fill shifts</h3><p>Create staffing opportunities, review caregiver applications and keep shift details easy to find.</p></article>
@@ -338,12 +427,49 @@ h1,h2,h3{font-family:"Sora","Lato",sans-serif}.footer-logo img{width:190px;heigh
 <article class="package"><span class="tag">For agencies and facilities</span><h3>Organization</h3><p class="desc">A tailored setup for care organizations with broader coordination needs.</p><p class="fit"><strong>Best for:</strong> agencies and facilities that need a workflow fit discussion.</p><div class="quote">Pricing tailored to your team</div><ul><li>Team Operations features</li><li>Workflow setup discussion</li><li>Organization onboarding support</li><li>Package fit review with our team</li></ul><a class="btn outline" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20Organization%20package">Discuss your organization</a></article>
 </div><p class="note">Package details and pricing are confirmed with Elite Bridge before purchase. Availability may depend on your organization’s size and setup.</p></div></section>
 <section class="content" id="faq"><div class="wrap"><div class="section-head"><p class="eyebrow">Questions</p><h2>Good to know before you choose.</h2></div><div class="faqs"><article class="faq"><h3>Is Elite Bridge a medical provider?</h3><p>Elite Bridge Staffing focuses on non-medical care and staffing coordination. Its software supports staffing workflows; it does not provide medical care or medical advice.</p></article><article class="faq"><h3>Can I use the same account on web and mobile?</h3><p>Yes. The web portal and mobile app are designed to work with the same Elite Bridge account.</p></article><article class="faq"><h3>What happens in a software demo?</h3><p>We’ll walk through the relevant workflows, learn about your team and answer questions about package fit. There’s no online purchase required.</p></article><article class="faq"><h3>Do you publish fixed software prices?</h3><p>Package pricing is discussed based on your team and setup. Contact us and we’ll walk through the available options.</p></article><article class="faq"><h3>How do I open my existing workspace?</h3><p>Choose “Sign in” above or go directly to the dashboard login.</p></article></div></div></section>
-<section class="cta"><div class="wrap"><div class="cta-panel"><div><h2>See how Elite Bridge could fit your team.</h2><p>Book a short software walkthrough or ask us to recommend a package for your staffing workflow.</p></div><div class="cta-actions"><a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a demo</a><a class="btn outline" href="/dashboard">Sign in</a></div></div></div></section>
+<section class="cta"><div class="wrap"><div class="cta-panel"><img class="cta-photo" src="/elite-bridge-closing.webp" alt="A care coordinator and caregivers connect with an older adult while reviewing a schedule" loading="lazy"><div class="cta-photo-shade" aria-hidden="true"></div><div class="cta-copy"><p class="eyebrow">Care works better together</p><h2>Bring your staffing team into one connected workspace.</h2><p>See how Elite Bridge can support your schedules, caregiver coordination and day-to-day follow-through.</p></div><div class="cta-actions"><a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a demo</a><a class="btn outline" href="/dashboard">Sign in</a></div></div></div></section>
 </main>
 <footer><div class="wrap"><div class="footer-links-area">
 <section class="footer-group"><details class="footer-accordion"><summary>Platform</summary><ul><li><a href="#platform">Staffing platform</a></li><li><a href="#organization-controls">Organization controls</a></li><li><a href="#packages">Packages</a></li><li><a href="#apps">Mobile apps</a></li></ul></details></section>
 <section class="footer-group"><details class="footer-accordion"><summary>Company</summary><ul><li><a href="https://elitebridgestaffing.com/">About Elite Bridge</a></li><li><a href="https://elitebridgestaffing.com/careers/">Caregiver careers</a></li><li><a href="mailto:info@elitebridgestaffing.com">Contact our team</a></li><li><a href="/dashboard">Organization sign in</a></li></ul></details></section>
 <section class="footer-group"><details class="footer-accordion"><summary>Resources</summary><ul><li><a href="#how">How the platform works</a></li><li><a href="#faq">Frequently asked questions</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></details></section>
 <section class="footer-group"><details class="footer-accordion"><summary>Get started</summary><ul><li><a href="#packages">Explore software packages</a></li><li><a href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo">Book a software demo</a></li><li><a href="/dashboard">Sign in to the web dashboard</a></li><li><a href="#apps">Download an app</a></li></ul></details></section>
-</div><div class="footer-brand"><a class="logo footer-logo" href="/" aria-label="Elite Bridge Staffing home"><img src="/logo-white.png" alt="Elite Bridge Staffing"></a><p class="footer-tagline">Care staffing software that helps organizations and caregivers stay connected.</p><div class="footer-socials" aria-label="Contact Elite Bridge"><a class="footer-social" href="mailto:info@elitebridgestaffing.com" aria-label="Email Elite Bridge">✉</a><a class="footer-social" href="tel:+15082519346" aria-label="Call Elite Bridge at 508-251-9346">☎</a><a class="footer-social" href="https://elitebridgestaffing.com/" aria-label="Visit Elite Bridge main website">↗</a></div><div class="footer-stores" aria-label="Download Elite Bridge apps"><div class="footer-store-group"><span>Elite Care · caregiver app</span><nav aria-label="Elite Care app downloads"><a href="https://apps.apple.com/us/app/elite-care/id6770962152" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Care from the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a><a href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Care from Google Play"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/google-play.svg" alt="Get it on Google Play"></a></nav></div><div class="footer-store-group"><span>Elite Work · employer app</span><nav aria-label="Elite Work app download"><a href="https://apps.apple.com/us/app/elite-work/id6798899931" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Work from the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a></nav></div></div><div class="footer-trust" aria-label="Platform capabilities"><span>Organization role controls</span><span>Custom organization branding</span><span>Permission-based AI connections</span></div><ul class="footer-legal"><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li><li><a href="mailto:info@elitebridgestaffing.com">Contact</a></li></ul><div class="footer-contact"><a href="mailto:info@elitebridgestaffing.com">info@elitebridgestaffing.com</a><a href="tel:+15082519346">(508) 251-9346</a><a href="/dashboard">Web dashboard sign in</a></div><p class="copyright">© 2026 Elite Bridge Staffing. Non-medical staffing coordination and software services.</p></div></div></footer>
-</body></html>
+</div><div class="footer-brand"><a class="logo footer-logo" href="/" aria-label="Elite Bridge Staffing home"><img src="/elite-bridge-logo-transparent.webp" alt="Elite Bridge Staffing"></a><p class="footer-tagline">Care staffing software that helps organizations and caregivers stay connected.</p><div class="footer-socials" aria-label="Contact Elite Bridge"><a class="footer-social" href="mailto:info@elitebridgestaffing.com" aria-label="Email Elite Bridge">✉</a><a class="footer-social" href="tel:+15082519346" aria-label="Call Elite Bridge at 508-251-9346">☎</a><a class="footer-social" href="https://elitebridgestaffing.com/" aria-label="Visit Elite Bridge main website">↗</a></div><div class="footer-stores" aria-label="Download Elite Bridge apps"><div class="footer-store-group"><span>Elite Care · caregiver app</span><nav aria-label="Elite Care app downloads"><a href="https://apps.apple.com/us/app/elite-care/id6770962152" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Care from the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a><a href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Care from Google Play"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/google-play.svg" alt="Get it on Google Play"></a></nav></div><div class="footer-store-group"><span>Elite Work · employer app</span><nav aria-label="Elite Work app download"><a href="https://apps.apple.com/us/app/elite-work/id6798899931" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Work from the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a></nav></div></div><div class="footer-trust" aria-label="Platform capabilities"><span>Organization role controls</span><span>Custom organization branding</span><span>Permission-based AI connections</span></div><ul class="footer-legal"><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li><li><a href="mailto:info@elitebridgestaffing.com">Contact</a></li></ul><div class="footer-contact"><a href="mailto:info@elitebridgestaffing.com">info@elitebridgestaffing.com</a><a href="tel:+15082519346">(508) 251-9346</a><a href="/dashboard">Web dashboard sign in</a></div><p class="copyright">© 2026 Elite Bridge Staffing. Non-medical staffing coordination and software services.</p></div></div></footer>
+<script>
+(() => {
+  const preview=document.querySelector("[data-hero-preview]");
+  if(!preview)return;
+  const slides=[
+    {type:"employer",eyebrow:"Care staffing software",title:"Keep every care shift <em>moving.</em>",copy:"Coordinate shifts, caregiver applications, attendance, timesheets and team access from one employer web dashboard, with mobile tools for caregivers.",primary:"Book a software demo →",primaryHref:"mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A",secondary:"Explore packages",secondaryHref:"#packages",image:"/elite-bridge-hero.webp",alt:"Caregiver and older adult reviewing a schedule together",caption:"For care organizations",note:"Plan staffing and keep care moving"},
+    {type:"caregiver",eyebrow:"For caregivers",title:"Find your next shift. <em>Stay connected.</em>",copy:"Explore eligible work opportunities, check shift details and keep schedules and work updates together in the Elite Care app.",primary:"Explore Elite Care →",primaryHref:"#apps",secondary:"See employer tools",secondaryHref:"#platform",image:"/elite-bridge-caregiver-slide.webp",alt:"Caregiver checking a shift update beside an older adult at home",caption:"For caregivers",note:"Opportunities, schedules and updates"}
+  ];
+  const image=preview.querySelector("[data-hero-image]");
+  const eyebrow=document.querySelector("[data-hero-eyebrow]");
+  const title=document.querySelector("[data-hero-title]");
+  const copy=document.querySelector("[data-hero-copy]");
+  const primary=document.querySelector("[data-hero-primary]");
+  const secondary=document.querySelector("[data-hero-secondary]");
+  const caption=document.querySelector("[data-hero-caption]");
+  const captionNote=document.querySelector("[data-hero-caption-note]");
+  const counter=preview.querySelector("[data-hero-count]");
+  const dots=[...preview.querySelectorAll("[data-hero-dot]")];
+  let active=0;
+  const show=(index)=>{
+    active=(index+slides.length)%slides.length;
+    const slide=slides[active];
+    preview.dataset.slide=slide.type;
+    eyebrow.textContent=slide.eyebrow;
+    title.innerHTML=slide.title;
+    copy.textContent=slide.copy;
+    primary.textContent=slide.primary;primary.href=slide.primaryHref;
+    secondary.textContent=slide.secondary;secondary.href=slide.secondaryHref;
+    image.src=slide.image;image.alt=slide.alt;
+    caption.textContent=slide.caption;captionNote.textContent=slide.note;
+    counter.textContent=(active+1).toString().padStart(2,"0")+" / "+slides.length.toString().padStart(2,"0");
+    dots.forEach((dot,i)=>dot.setAttribute("aria-current",String(i===active)));
+  };
+  preview.querySelector("[data-hero-prev]").addEventListener("click",()=>show(active-1));
+  preview.querySelector("[data-hero-next]").addEventListener("click",()=>show(active+1));
+  dots.forEach((dot)=>dot.addEventListener("click",()=>show(Number(dot.dataset.heroDot))));
+})();
+</script></body></html>
