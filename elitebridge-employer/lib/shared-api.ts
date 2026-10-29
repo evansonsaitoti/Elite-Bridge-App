@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getEmployerToken, setEmployerToken, removeEmployerToken } from "./secure-session";
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -106,7 +107,7 @@ export const sharedApiConfigured = Boolean(API_BASE_URL);
 
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
   if (!API_BASE_URL) throw new Error("Shared API is not configured");
-  const token = includeAuth ? await AsyncStorage.getItem(TOKEN_KEY) : null;
+  const token = includeAuth ? await getEmployerToken(TOKEN_KEY) : null;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -137,12 +138,12 @@ export async function ensureEmployerBackendSession(email: string, password: stri
   if (result.user.role !== "employer") {
     throw new Error("This account is not an employer account. Caregivers should use the Elite Bridge caregiver app.");
   }
-  await AsyncStorage.setItem(TOKEN_KEY, result.token);
+  await setEmployerToken(result.token, TOKEN_KEY);
   return result.user;
 }
 
 export async function clearEmployerBackendSession() {
-  await AsyncStorage.removeItem(TOKEN_KEY);
+  await removeEmployerToken(TOKEN_KEY);
 }
 
 export async function deleteEmployerBackendAccount(): Promise<"deleted" | "local-only"> {
