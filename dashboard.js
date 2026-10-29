@@ -49,6 +49,32 @@
   const shiftDetailDialog = document.getElementById('shiftDetailDialog');
   const helpButton = document.getElementById('helpButton');
   const helpMenu = document.getElementById('helpMenu');
+  const aiAgentForm = document.getElementById('aiAgentForm');
+  const aiAgentQuestion = document.getElementById('aiAgentQuestion');
+  const aiAgentResponse = document.getElementById('aiAgentResponse');
+  const aiAgentSubmit = document.getElementById('aiAgentSubmit');
+  document.querySelectorAll('[data-agent-prompt]').forEach((button) => button.addEventListener('click', () => {
+    if (!aiAgentQuestion) return;
+    aiAgentQuestion.value = button.dataset.agentPrompt || '';
+    aiAgentQuestion.focus();
+  }));
+  aiAgentForm?.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const command = aiAgentQuestion?.value.trim();
+    if (!command || !aiAgentResponse || !aiAgentSubmit) return;
+    aiAgentSubmit.disabled = true;
+    aiAgentResponse.hidden = false;
+    aiAgentResponse.textContent = 'Reviewing your organization’s staffing totals…';
+    try {
+      const data = await api('/ai/chat', { method: 'POST', body: JSON.stringify({ command }) });
+      aiAgentResponse.textContent = data.answer || 'No response was returned.';
+    } catch (error) {
+      aiAgentResponse.textContent = error.message || 'The AI Agent could not respond right now.';
+    } finally {
+      aiAgentSubmit.disabled = false;
+    }
+  });
+
   let toastTimer;
 
   function notify(message) {

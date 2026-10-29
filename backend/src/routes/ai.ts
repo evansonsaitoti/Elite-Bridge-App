@@ -134,4 +134,90 @@ router.post("/ask", authMiddleware, async (req: AuthRequest, res, next) => {
   }
 });
 
+
+
+// Employer dashboard AI Agent. Only organization-level counts are sent to the model.
+const agentChatSchema = z.object({ command: z.string().trim().min(3).max(350) });
+const agentRequestTimes = new Map<number, number[]>();
+
+router.post("/chat", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    const { command } = agentChatSchema.parse(req.body);
+    const employer = await getEmployer(req);
+    const now = Date.now();
+    const recent = (agentRequestTimes.get(req.user!.id) || []).filter((time) => now - time < 60_000);
+    if (recent.length >= 10) return res.status(429).json({ message: "Please wait a moment before asking another question." });
+    recent.push(now);
+    agentRequestTimes.set(req.user!.id, recent);
+    if (agentRequestTimes.size > 5000) agentRequestTimes.clear();
+
+    const [shiftResult, applicationResult, calloutResult, bookingResult] = await Promise.all([
+      db.execute(sql`
+        SELECT COUNT(*) FILTER (WHERE status = 'open')::int AS open_shifts,
+               COUNT(*) FILTER (WHERE status = 'open' AND urgency = 'urgent')::int AS urgent_open_shifts
+        FROM shift_posts
+        WHERE employer_id = ${employer.id} AND start_time >= CURRENT_TIMESTAMP
+      `),
+      db.execute(sql`
+        SELECT COUNT(*)::int AS pending_applications
+        FROM shift_applications sa
+        JOIN shift_posts sp ON sp.id = sa.shift_id
+        WHERE sp.employer_id = ${employer.id} AND sa.status = 'pending'
+      `),
+      db.execute(sql`
+        SELECT COUNT(*)::int AS open_callouts
+        FROM shift_callouts sc
+        JOIN shift_posts sp ON sp.id = sc.shift_id
+        WHERE sp.employer_id = ${employer.id} AND sc.status = 'open'
+      `),
+      db.execute(sql`
+        SELECT COUNT(*)::int AS upcoming_assignments
+        FROM bookings
+        WHERE employer_id = ${employer.id} AND end_time >= CURRENT_TIMESTAMP
+          AND start_time < CURRENT_TIMESTAMP + INTERVAL '7 days'
+      `)
+    ]);
+
+    const metrics = {
+      openShifts: Number((shiftResult as any).rows[0]?.open_shifts || 0),
+      urgentOpenShifts: Number((shiftResult as any).rows[0]?.urgent_open_shifts || 0),
+      pendingApplications: Number((applicationResult as any).rows[0]?.pending_applications || 0),
+      openCallouts: Number((calloutResult as any).rows[0]?.open_callouts || 0),
+      upcomingAssignmentsNextSevenDays: Number((bookingResult as any).rows[0]?.upcoming_assignments || 0),
+    };
+
+    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+    if (!gatewayToken) return res.status(503).json({ message: "The AI connection is not configured for this deployment." });
+
+    const modelResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${gatewayToken}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "openai/gpt-4.1-mini",
+        max_tokens: 500,
+        temperature: 0.3,
+        providerOptions: { gateway: { zeroDataRetention: true, disallowPromptTraining: true } },
+        messages: [
+          {
+            role: "system",
+            content: "You are Elite Bridge's read-only staffing operations assistant. Use the organization's aggregate counts below and general non-medical staffing workflow knowledge. Do not invent names, schedules, assignments, or facts. If asked for a person-specific detail, explain that you only receive totals and direct the user to the relevant dashboard page. Give brief, practical recommendations. Never make medical, legal, hiring, payroll, or compliance decisions. You cannot perform actions; say so clearly. Current organization-level counts: " + JSON.stringify(metrics)
+          },
+          { role: "user", content: command }
+        ]
+      })
+    });
+    if (!modelResponse.ok) {
+      console.error("AI Gateway request failed:", modelResponse.status);
+      return res.status(503).json({ message: "The AI Agent is temporarily unavailable. Please try again shortly." });
+    }
+    const payload = await modelResponse.json() as { choices?: Array<{ message?: { content?: string | null } }> };
+    const answer = payload.choices?.[0]?.message?.content?.trim();
+    if (!answer) return res.status(503).json({ message: "The AI Agent returned an empty reply. Please try again." });
+
+    res.json({ answer, metrics, generatedAt: new Date().toISOString(), readOnly: true });
+  } catch (error) {
+    next(error);
+  }
+});
+
 export default router;
