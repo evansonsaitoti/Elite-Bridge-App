@@ -196,7 +196,7 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res, next) => {
         model: "openai/gpt-4.1-mini",
         max_tokens: 500,
         temperature: 0.3,
-        providerOptions: { gateway: { zeroDataRetention: true, disallowPromptTraining: true } },
+        providerOptions: { gateway: { disallowPromptTraining: true } },
         messages: [
           {
             role: "system",
