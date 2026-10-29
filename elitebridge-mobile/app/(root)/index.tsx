@@ -9,27 +9,27 @@ const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 const slides = [
   {
-    eyebrow: "CARE THAT FITS YOUR LIFE",
-    title: "Meaningful work. Better-fit shifts.",
-    body: "Build your profile once and see care opportunities matched to your skills, availability and preferences.",
+    eyebrow: "HEALTHCARE WORK THAT FITS",
+    title: "Find work that fits your schedule.",
+    body: "Review opportunities shared by healthcare organizations based on your role, skills and availability.",
     image: require("../../assets/images/caregiver-welcome-meaningful.png"),
   },
   {
-    eyebrow: "MATCHED SHIFT OFFERS",
-    title: "Know the details before you accept.",
-    body: "Review schedule, location, pay and care responsibilities together, then claim or apply with confidence.",
+    eyebrow: "SHIFT DETAILS IN ONE PLACE",
+    title: "Know the details before you respond.",
+    body: "Review schedule, location, pay and role responsibilities together, then claim or apply when eligible.",
     image: require("../../assets/images/caregiver-welcome-support.png"),
   },
   {
     eyebrow: "YOUR WORKDAY, ONE PLACE",
-    title: "From availability to clock-out.",
-    body: "Manage assigned visits, timekeeping, call-outs and earnings from your dedicated caregiver workspace.",
+    title: "From schedule to time entry.",
+    body: "Manage assigned shifts, timekeeping, work messages and earnings from your Elite Care account.",
     image: require("../../assets/images/caregiver-welcome-ready.png"),
   },
   {
-    eyebrow: "CARE WITH PURPOSE",
-    title: "Personal support that changes a day.",
-    body: "Find opportunities in companionship, personal care, respite and meal support with trusted care organizations.",
+    eyebrow: "MEDICAL AND NON-MEDICAL CARE",
+    title: "Stay connected to your care team.",
+    body: "Find eligible opportunities shared by organizations using Elite Bridge. Available roles and requirements vary by organization.",
     image: require("../../assets/images/caregiver-welcome-team.png"),
   },
 ];
@@ -69,7 +69,7 @@ export default function CaregiverWelcomeScreen() {
             <View style={styles.mark}>
               <Image source={require("../../assets/images/elitebridge-logo.png")} style={styles.markLogo} resizeMode="contain" />
             </View>
-            <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.product}>CAREGIVER</Text></View>
+            <View><Text style={styles.brand}>ELITE BRIDGE</Text><Text style={styles.product}>HEALTHCARE TEAM</Text></View>
           </View>
           <View style={styles.heroCopy}>
             <Text style={styles.eyebrow}>{slide.eyebrow}</Text>
@@ -79,7 +79,7 @@ export default function CaregiverWelcomeScreen() {
               {slides.map((_, index) => <TouchableOpacity key={index} accessibilityLabel={`Show caregiver feature ${index + 1}`} onPress={() => setActiveSlide(index)} style={[styles.dot, index === activeSlide && styles.dotActive]} />)}
             </View>
             <View style={styles.services}>
-              {["Personal care", "Companionship", "Respite", "Meal support"].map((service) => <View key={service} style={styles.servicePill}><Text style={styles.serviceText}>{service}</Text></View>)}
+              {["Medical roles", "Non-medical roles", "Home-based care", "Facility teams"].map((service) => <View key={service} style={styles.servicePill}><Text style={styles.serviceText}>{service}</Text></View>)}
             </View>
           </View>
         </SafeAreaView>
@@ -87,7 +87,7 @@ export default function CaregiverWelcomeScreen() {
 
       <View style={styles.actionSheet}>
         <Text style={styles.sheetTitle}>Join your team</Text>
-        <Text style={styles.sheetBody}>To use Elite Care, your employer must invite you first. They’ll send a secure link by email or text. Open that invitation to set up your caregiver account.</Text>
+        <Text style={styles.sheetBody}>To use Elite Care, your organization must invite you first. They’ll send a secure link by email or text. Open it to set up your healthcare team account.</Text>
         <View style={styles.actionRow}>
           <TouchableOpacity style={[styles.primary, styles.primaryFull]} onPress={() => router.push("/(auth)/login")}>
             <Text style={styles.primaryText}>Have an account? Log in</Text>
