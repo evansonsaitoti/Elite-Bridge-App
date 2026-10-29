@@ -2,38 +2,43 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-const NATIVE_TOKEN_KEY = "elite-bridge-employer-token-secure-v1";
-
-export async function getEmployerToken(legacyKey: string): Promise<string | null> {
-  if (Platform.OS === "web") return AsyncStorage.getItem(legacyKey);
-
-  const stored = await SecureStore.getItemAsync(NATIVE_TOKEN_KEY);
-  if (stored) return stored;
-
-  // Migrate existing sessions once, then remove the plaintext copy.
-  const legacy = await AsyncStorage.getItem(legacyKey);
-  if (!legacy) return null;
-  await SecureStore.setItemAsync(NATIVE_TOKEN_KEY, legacy);
-  await AsyncStorage.removeItem(legacyKey);
-  return legacy;
+const queues = new Map<string, Promise<unknown>>();
+function serial<T>(key: string, action: () => Promise<T>): Promise<T> {
+  const previous = queues.get(key) ?? Promise.resolve();
+  const next = previous.catch(() => undefined).then(action);
+  queues.set(key, next);
+  void next.finally(() => { if (queues.get(key) === next) queues.delete(key); }).catch(() => undefined);
+  return next;
 }
 
-export async function setEmployerToken(token: string, legacyKey: string): Promise<void> {
-  if (Platform.OS === "web") {
-    await AsyncStorage.setItem(legacyKey, token);
-    return;
-  }
-  await SecureStore.setItemAsync(NATIVE_TOKEN_KEY, token);
-  await AsyncStorage.removeItem(legacyKey);
+export function getToken(key: string): Promise<string | null> {
+  return serial(key, async () => {
+    if (Platform.OS === "web") return AsyncStorage.getItem(key);
+    const secureKey = `${key}-secure`;
+    const stored = await SecureStore.getItemAsync(secureKey);
+    if (stored) {
+      await AsyncStorage.removeItem(key);
+      return stored;
+    }
+    const legacy = await AsyncStorage.getItem(key);
+    if (!legacy) return null;
+    await SecureStore.setItemAsync(secureKey, legacy);
+    await AsyncStorage.removeItem(key);
+    return legacy;
+  });
 }
 
-export async function removeEmployerToken(legacyKey: string): Promise<void> {
-  if (Platform.OS === "web") {
-    await AsyncStorage.removeItem(legacyKey);
-    return;
-  }
-  await Promise.all([
-    SecureStore.deleteItemAsync(NATIVE_TOKEN_KEY),
-    AsyncStorage.removeItem(legacyKey),
-  ]);
+export function setToken(token: string, key: string): Promise<void> {
+  return serial(key, async () => {
+    if (Platform.OS === "web") return AsyncStorage.setItem(key, token);
+    await SecureStore.setItemAsync(`${key}-secure`, token);
+    await AsyncStorage.removeItem(key);
+  });
+}
+
+export function removeToken(key: string): Promise<void> {
+  return serial(key, async () => {
+    if (Platform.OS !== "web") await SecureStore.deleteItemAsync(`${key}-secure`);
+    await AsyncStorage.removeItem(key);
+  });
 }

@@ -97,7 +97,7 @@ export async function sendPushToUsers(userIds: number[], message: PushMessage): 
     `);
     await deliverPush((result as any).rows.map((row: any) => row.expo_push_token), message);
   } catch (error) {
-    console.error("Push recipient lookup failed", error);
+    console.error("Push recipient lookup failed");
   }
 }
 
@@ -111,7 +111,7 @@ export async function sendPushToRole(role: "caregiver" | "employer", message: Pu
     `);
     await deliverPush((result as any).rows.map((row: any) => row.expo_push_token), message);
   } catch (error) {
-    console.error("Push recipient lookup failed", error);
+    console.error("Push recipient lookup failed");
   }
 }
 
@@ -127,18 +127,23 @@ async function deliverPush(tokens: string[], message: PushMessage): Promise<void
       const response = await axios.post("https://exp.host/--/api/v2/push/send", batch.map((to) => ({
         to,
         sound: "default",
+        channelId: "marketplace",
+        priority: "high",
         title: message.title,
         body: message.body,
         data: message.data || {},
       })), { headers, timeout: 15_000 });
 
       const tickets = Array.isArray(response.data?.data) ? response.data.data : [response.data?.data];
+      for (const ticket of tickets) {
+        if (ticket?.status === "error") console.warn("Expo push ticket rejected", String(ticket.details?.error || "unknown"));
+      }
       const invalid = batch.filter((_, itemIndex) => tickets[itemIndex]?.details?.error === "DeviceNotRegistered");
       if (invalid.length) {
         await db.execute(sql`DELETE FROM push_tokens WHERE expo_push_token IN (${sql.join(invalid.map((token) => sql`${token}`), sql`, `)})`);
       }
     } catch (error) {
-      console.error("Expo push delivery failed", error);
+      console.error("Expo push request failed; check provider configuration");
     }
   }
 }

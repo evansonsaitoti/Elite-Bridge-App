@@ -6,12 +6,34 @@ import { db } from "../db";
 import { ensureCoreTables } from "../db/bootstrap";
 import { AuthRequest, authMiddleware } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
+import { ensureNotificationPreferences } from "../services/shift-email";
 
 const router = Router();
 const deviceSchema = z.object({
   token: z.string().regex(/^(ExponentPushToken|ExpoPushToken)\[[^\]]+\]$/),
   platform: z.enum(["ios", "android"]),
   app: z.enum(["caregiver", "employer"]),
+});
+
+router.get("/preferences", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    await ensureNotificationPreferences();
+    const rows = (await db.execute(sql`SELECT email_shift_alerts FROM notification_preferences WHERE user_id=${req.user!.id}`) as any).rows;
+    res.json({ emailShiftAlerts: rows[0]?.email_shift_alerts ?? true });
+  } catch (error) { next(error); }
+});
+
+router.put("/preferences", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureCoreTables();
+    await ensureNotificationPreferences();
+    const { emailShiftAlerts } = z.object({ emailShiftAlerts: z.boolean() }).parse(req.body);
+    await db.execute(sql`INSERT INTO notification_preferences(user_id, email_shift_alerts)
+      VALUES (${req.user!.id}, ${emailShiftAlerts})
+      ON CONFLICT(user_id) DO UPDATE SET email_shift_alerts=EXCLUDED.email_shift_alerts`);
+    res.json({ emailShiftAlerts });
+  } catch (error) { next(error); }
 });
 
 router.get("/", authMiddleware, async (req: AuthRequest, res, next) => {

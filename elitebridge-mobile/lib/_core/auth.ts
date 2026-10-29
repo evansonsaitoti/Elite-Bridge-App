@@ -17,17 +17,17 @@ export async function getSessionToken(): Promise<string | null> {
   try {
     // Web platform uses cookie-based auth, no manual token management needed
     if (Platform.OS === "web") {
-      
+
       return null;
     }
 
     // Use SecureStore for native
-    
+
     const token = await SecureStore.getItemAsync(SESSION_TOKEN_KEY);
-    
+
     return token;
   } catch (error) {
-    
+
     return null;
   }
 }
@@ -36,16 +36,16 @@ export async function setSessionToken(token: string): Promise<void> {
   try {
     // Web platform uses cookie-based auth, no manual token management needed
     if (Platform.OS === "web") {
-      
+
       return;
     }
 
     // Use SecureStore for native
-    
+
     await SecureStore.setItemAsync(SESSION_TOKEN_KEY, token);
-    
+
   } catch (error) {
-    
+
     throw error;
   }
 }
@@ -54,22 +54,22 @@ export async function removeSessionToken(): Promise<void> {
   try {
     // Web platform uses cookie-based auth, logout is handled by server clearing cookie
     if (Platform.OS === "web") {
-      
+
       return;
     }
 
     // Use SecureStore for native
-    
+
     await SecureStore.deleteItemAsync(SESSION_TOKEN_KEY);
-    
+
   } catch (error) {
-    
+
   }
 }
 
 export async function getUserInfo(): Promise<User | null> {
   try {
-    
+
 
     let info: string | null = null;
     if (Platform.OS === "web") {
@@ -81,7 +81,7 @@ export async function getUserInfo(): Promise<User | null> {
     }
 
     if (!info) {
-      
+
       return null;
     }
     const user = JSON.parse(info);
@@ -89,30 +89,30 @@ export async function getUserInfo(): Promise<User | null> {
     if (!user.role) {
       user.role = "caregiver";
     }
-    
+
     return user;
   } catch (error) {
-    
+
     return null;
   }
 }
 
 export async function setUserInfo(user: User): Promise<void> {
   try {
-    
+
 
     if (Platform.OS === "web") {
       // Use localStorage for web
       window.localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
-      
+
       return;
     }
 
     // Use SecureStore for native
     await SecureStore.setItemAsync(USER_INFO_KEY, JSON.stringify(user));
-    
+
   } catch (error) {
-    
+
   }
 }
 
@@ -127,6 +127,6 @@ export async function clearUserInfo(): Promise<void> {
     // Use SecureStore for native
     await SecureStore.deleteItemAsync(USER_INFO_KEY);
   } catch (error) {
-    
+
   }
 }

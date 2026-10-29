@@ -6,7 +6,7 @@ import { Alert, Image, Linking, ScrollView, Switch, Text, TextInput, TouchableOp
 
 import { ScreenContainer } from "@/components/screen-container";
 import { useColors } from "@/hooks/use-colors";
-import { clearCaregiverBackendSession, deleteCaregiverBackendAccount, fetchCaregiverPersonalDetails, saveCaregiverPersonalDetails, fetchCaregiverProfilePhoto, uploadCaregiverProfilePhoto, sharedApiConfigured } from "@/lib/shared-api";
+import { operationsApi, clearCaregiverBackendSession, deleteCaregiverBackendAccount, fetchCaregiverPersonalDetails, saveCaregiverPersonalDetails, fetchCaregiverProfilePhoto, uploadCaregiverProfilePhoto, sharedApiConfigured } from "@/lib/shared-api";
 import { disableCaregiverPushNotifications, enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 type LocalSession = { email?: string; name?: string };
@@ -34,6 +34,8 @@ export default function StaffProfile() {
     address: "",
     emergencyContact: "",
   });
+  const [emailAlerts, setEmailAlerts] = useState<boolean | null>(null);
+  const [savingEmailAlerts, setSavingEmailAlerts] = useState(false);
   const [settings, setSettings] = useState({ pushAlerts: true });
 
   useEffect(() => {
@@ -61,6 +63,7 @@ export default function StaffProfile() {
 
   useEffect(() => {
     if (!sharedApiConfigured) return;
+    operationsApi("/notifications/preferences").then(value => setEmailAlerts(value.emailShiftAlerts)).catch(() => setEmailAlerts(null));
     fetchCaregiverProfilePhoto().then(setPhoto).catch(() => {});
   }, []);
 
@@ -208,7 +211,7 @@ export default function StaffProfile() {
         if (value) {
           const enabled = await enableCaregiverPushNotifications();
           if (!enabled) {
-            Alert.alert("Notifications are off", "Enable notifications in iOS settings to receive shift and care-team updates.");
+            Alert.alert("Notifications are off", "Enable notifications in your device settings to receive shift and care-team updates.");
             return;
           }
         } else {
@@ -344,6 +347,19 @@ export default function StaffProfile() {
     <ScrollView style={{ flex: 1, backgroundColor: colors.background }} contentContainerStyle={{ padding: 18, paddingBottom: 128 }}>
       <Text style={{ color: "#C58A24", fontSize: 10, fontWeight: "900", letterSpacing: 1.4 }}>ELITE BRIDGE CAREGIVER</Text>
         <Text style={{ fontSize: 30, fontWeight: "900", color: colors.foreground, marginTop: 5 }}>My Profile</Text>
+        <View style={{ padding: 16 }}>
+          <Text style={{ fontWeight: "800", color: colors.foreground }}>Shift email notifications</Text>
+          <Text style={{ color: colors.muted }}>{emailAlerts === null ? "Unable to load email preferences. Reopen this screen to retry." : "Receive available-shift alerts at your account email."}</Text>
+          <Switch accessibilityLabel="Shift email notifications" disabled={emailAlerts === null || savingEmailAlerts}
+            value={emailAlerts === true} onValueChange={async value => {
+              setSavingEmailAlerts(true);
+              try {
+                const saved = await operationsApi("/notifications/preferences", "PUT", { emailShiftAlerts: value });
+                setEmailAlerts(saved.emailShiftAlerts);
+              } catch { Alert.alert("Could not save", "Your email preference was not changed. Please try again."); }
+              finally { setSavingEmailAlerts(false); }
+            }} />
+        </View>
         <TouchableOpacity accessibilityRole="button" onPress={() => router.push("/(staff)/operations")} style={{ padding: 16, backgroundColor: "#07533c", borderRadius: 12, marginVertical: 12 }}><Text style={{ color: "#fff", fontWeight: "800" }}>Incident reports & SMS alerts</Text></TouchableOpacity>
         <Text style={{ fontSize: 14, color: colors.muted, lineHeight: 20, marginTop: 6, marginBottom: 18 }}>Manage your caregiver profile, requests, settings and agency connection.</Text>
 

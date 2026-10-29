@@ -14,16 +14,16 @@ export function useAuth(options?: UseAuthOptions) {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchUser = useCallback(async () => {
-    
+
     try {
       setLoading(true);
       setError(null);
 
       // Web platform: use cookie-based auth, fetch user from API
       if (Platform.OS === "web") {
-        
+
         const apiUser = await Api.getMe();
-        
+
 
         if (apiUser) {
           const userInfo: Auth.User = {
@@ -37,15 +37,15 @@ export function useAuth(options?: UseAuthOptions) {
           setUser(userInfo);
           // Cache user info in localStorage for faster subsequent loads
           await Auth.setUserInfo(userInfo);
-          
+
         } else {
-          
+
           const cachedUser = await Auth.getUserInfo();
           if (cachedUser) {
-            
+
             setUser(cachedUser);
           } else {
-            
+
             setUser(null);
           }
         }
@@ -53,33 +53,33 @@ export function useAuth(options?: UseAuthOptions) {
       }
 
       // Native platform: use token-based auth
-      
+
       const sessionToken = await Auth.getSessionToken();
-      
+
       if (!sessionToken) {
-        
+
         setUser(null);
         return;
       }
 
       // Use cached user info for native (token validates the session)
       const cachedUser = await Auth.getUserInfo();
-      
+
       if (cachedUser) {
-        
+
         setUser(cachedUser);
       } else {
-        
+
         setUser(null);
       }
     } catch (err) {
       const error = err instanceof Error ? err : new Error("Failed to fetch user");
-      
+
       setError(error);
       setUser(null);
     } finally {
       setLoading(false);
-      
+
     }
   }, []);
 
@@ -87,7 +87,7 @@ export function useAuth(options?: UseAuthOptions) {
     try {
       await Api.logout();
     } catch (err) {
-      
+
       // Continue with logout even if API call fails
     } finally {
       await Auth.removeSessionToken();
@@ -100,18 +100,18 @@ export function useAuth(options?: UseAuthOptions) {
   const isAuthenticated = useMemo(() => Boolean(user), [user]);
 
   useEffect(() => {
-    
+
     if (autoFetch) {
       if (Platform.OS === "web") {
         // Web: fetch user from API directly (user will login manually if needed)
-        
+
         fetchUser();
       } else {
         // Native: check for cached user info first for faster initial load
         Auth.getUserInfo().then((cachedUser) => {
-          
+
           if (cachedUser) {
-            
+
             setUser(cachedUser);
             setLoading(false);
           } else {
@@ -121,14 +121,10 @@ export function useAuth(options?: UseAuthOptions) {
         });
       }
     } else {
-      
+
       setLoading(false);
     }
   }, [autoFetch, fetchUser]);
-
-  useEffect(() => {
-    
-  }, [user, loading, isAuthenticated, error]);
 
   return {
     user,

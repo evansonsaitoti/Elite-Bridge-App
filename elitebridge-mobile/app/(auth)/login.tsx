@@ -5,7 +5,6 @@ import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, S
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
-import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
 
 export default function LoginScreen() {
   const router = useRouter();
@@ -36,7 +35,6 @@ export default function LoginScreen() {
         signedInAt: new Date().toISOString(),
       }));
       router.replace("/(staff)/home");
-      void enableCaregiverPushNotifications().catch(() => false);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not sign you in.");
     } finally {

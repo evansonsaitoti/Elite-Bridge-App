@@ -1,7 +1,9 @@
+import * as Notifications from "expo-notifications";
+import { caregiverNotificationRoute } from "@/lib/notification-route";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Slot, usePathname, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, Pressable, Text, View } from "react-native";
+import { useEffect, useRef, useState } from "react";
+import { ActivityIndicator, AppState, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { IconSymbol } from "@/components/ui/icon-symbol";
@@ -22,6 +24,7 @@ export default function StaffLayout() {
   const pathname = usePathname();
   const router = useRouter();
   const [ready, setReady] = useState(false);
+  const lastResponse = useRef<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -46,6 +49,42 @@ export default function StaffLayout() {
       .catch(() => router.replace("/(root)"));
     return () => { mounted = false; };
   }, [router]);
+
+  useEffect(() => {
+    if (!ready) return;
+    const retry = async () => {
+      try {
+        const value = await AsyncStorage.getItem("elitebridge-caregiver-settings-v1");
+        if (!value || JSON.parse(value)?.pushAlerts !== false) await enableCaregiverPushNotifications(false);
+      } catch { /* Retry on the next foreground event; Profile can show registration errors. */ }
+    };
+    const subscription = AppState.addEventListener("change", state => {
+      if (state === "active") void retry();
+    });
+    return () => subscription.remove();
+  }, [ready]);
+
+  useEffect(() => {
+    if (!ready) return;
+    let mounted = true;
+    const open = (response: Notifications.NotificationResponse | null) => {
+      if (!mounted || !response) return;
+      const id = response.notification.request.identifier;
+      if (lastResponse.current === id) return;
+      lastResponse.current = id;
+      router.push(caregiverNotificationRoute(response.notification.request.content.data?.type));
+      void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
+    };
+    let liveResponseReceived = false;
+    const listener = Notifications.addNotificationResponseReceivedListener(response => {
+      liveResponseReceived = true;
+      open(response);
+    });
+    void Notifications.getLastNotificationResponseAsync().then(response => {
+      if (!liveResponseReceived) open(response);
+    }).catch(() => undefined);
+    return () => { mounted = false; listener.remove(); };
+  }, [ready, router]);
 
   if (!ready) return <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.background }}><ActivityIndicator size="large" color={colors.primary} /></View>;
 
