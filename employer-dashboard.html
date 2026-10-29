@@ -78,21 +78,20 @@
       </section>
 
       <section data-view-panel="ai-agent" class="agent-page" hidden>
-  <div class="page-head agent-page-head"><div><p class="eyebrow">ELITE BRIDGE · AI AGENT</p><h1>Staffing help, in a simple chat.</h1><p>Ask a quick question and get a clear view of what may need your attention.</p></div></div>
+  <div class="page-head agent-page-head"><div><p class="eyebrow">ELITE BRIDGE</p><h1>AI Agent</h1><p>Ask a staffing question.</p></div></div>
   <div class="agent-layout">
     <article class="agent-chat surface" aria-label="Chat with Elite Bridge AI Agent">
-      <header class="agent-chat-header"><div class="agent-identity"><span class="agent-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.8v3.1M12 18.1v3.1M2.8 12h3.1M18.1 12h3.1M5.5 5.5l2.2 2.2m8.6 8.6 2.2 2.2m0-13-2.2 2.2m-8.6 8.6-2.2 2.2"></path><circle cx="12" cy="12" r="4"></circle></svg></span><span><strong>Elite Bridge AI</strong><small><i></i> Ready to help</small></span></div><button class="agent-new-chat" type="button" data-agent-new-chat><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> New chat</button></header>
+      <header class="agent-chat-header"><div class="agent-identity"><span class="agent-mark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"></path></svg></span><span><strong>Elite Bridge AI</strong><small><i></i> Ready</small></span></div><button class="agent-new-chat" type="button" data-agent-new-chat><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg> New chat</button></header>
       <div id="aiAgentConversation" class="agent-conversation" aria-live="polite">
         <div id="aiAgentWelcome" class="agent-welcome">
-          <div class="agent-example-label"><span>✦</span> YOUR ON-SHIFT TEAMMATE</div>
-          <div class="agent-sample-chat" aria-label="Example questions"><button type="button" class="agent-sample-user" data-agent-prompt="Which coverage issues should I review first?">Which coverage issues should I review first?</button><div class="agent-sample-reply"><span class="agent-reply-avatar" aria-hidden="true">✦</span><p>I can help you review open shifts, call-outs, and pending applications.</p></div></div>
-        </div>
-        <div id="aiAgentResponse" class="agent-transcript" role="status" hidden></div>
+          <div class="agent-example-label">Your staffing assistant</div>
+          <div class="agent-sample-chat" aria-label="Example conversation"><button type="button" class="agent-sample-user" data-agent-prompt="Who needs coverage today?">Who needs coverage today?</button><div class="agent-sample-reply"><span class="agent-reply-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 5.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"></path></svg></span><p>I’ll check open shifts and call-outs.</p></div></div>
+        </div><div id="aiAgentResponse" class="agent-transcript" role="status" hidden></div>
       </div>
-      <form id="aiAgentForm" class="agent-composer"><label class="sr-only" for="aiAgentQuestion">Message Elite Bridge AI</label><textarea id="aiAgentQuestion" maxlength="350" rows="1" required placeholder="Ask a question or write a prompt…"></textarea><button id="aiAgentSubmit" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.5 14-3-5.5L5 12Z"></path><path d="m11.5 13.5 4-4"></path></svg></button></form>
-      <div class="agent-quick-prompts" aria-label="Suggested questions"><button type="button" data-agent-prompt="What should I focus on today?">What should I focus on today?</button><button type="button" data-agent-prompt="Which coverage issues should I review first?">Review coverage issues</button><button type="button" data-agent-prompt="Summarize the staffing picture for the next seven days.">Summarize next 7 days</button></div>
-      <div class="agent-footnote"><span aria-hidden="true">♧</span><span>Only your question and staffing totals are shared with AI. No names, addresses, or care notes.</span></div>
-      <details class="agent-data-details"><summary>About AI privacy and availability</summary><p>Requests use Vercel AI Gateway no-training routing; provider retention rules may still apply. Free monthly credits apply, so replies may pause if the allowance is used.</p></details>
+      <form id="aiAgentForm" class="agent-composer"><label class="sr-only" for="aiAgentQuestion">Message Elite Bridge AI</label><textarea id="aiAgentQuestion" maxlength="350" rows="1" placeholder="Ask a question…"></textarea><button id="aiAgentSubmit" type="submit" aria-label="Send message"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 14-7-4.5 14-3-5.5L5 12Z"></path><path d="m11.5 13.5 4-4"></path></svg></button></form>
+      <div class="agent-quick-prompts" aria-label="Suggested questions"><button type="button" data-agent-prompt="What should I focus on today?">What needs attention?</button><button type="button" data-agent-prompt="Which coverage issues should I review first?">Review coverage</button></div>
+      <div class="agent-footnote"><span aria-hidden="true">◉</span><span>Staffing totals only · read-only</span></div>
+      <details class="agent-data-details"><summary>Privacy & AI details</summary><p>No names, addresses, or care notes are sent. Requests use Vercel AI Gateway no-training routing; provider retention rules may still apply. Free monthly credits apply.</p></details>
     </article>
   </div>
 </section>
