@@ -23,18 +23,88 @@ footer{padding:0 0 32px;border-top:1px solid #e7ece9;background:#f8faf9;color:va
 @media(max-width:680px){.wrap{width:min(calc(100% - 30px),520px)}.nav{min-height:66px}.logo img{width:150px}.nav-links{display:none}.nav-actions{gap:12px}.nav-actions .btn{min-height:38px;padding:0 12px;font-size:10px}.hero{padding:48px 0 39px}.hero-grid{grid-template-columns:1fr;gap:22px}.hero h1{font-size:clamp(39px,11vw,54px)}.hero-copy{font-size:14px}.preview{min-height:320px}.dash-card{padding:15px;border-radius:17px}.dash-heading h2{font-size:18px}.float{right:0;bottom:3px}.preview-note{bottom:-17px}.proof-row{grid-template-columns:1fr;padding:7px 0}.proof-item{justify-content:flex-start;padding:11px 5px}.proof-item+.proof-item{border-left:0;border-top:1px solid var(--line)}section.content{padding:62px 0}.section-head{margin-bottom:27px}.section-head h2{font-size:32px}.section-head>p:last-child{font-size:12px}.features,.steps,.package-grid,.audience-grid,.faqs,.apps-layout,.org-grid{grid-template-columns:1fr}.apps-photo{min-height:280px}.app-card{padding:19px}.store-links img{height:38px}.feature,.step{padding:21px}.package{padding:23px}.desc{min-height:0}.audience-grid{gap:25px}.audience h2,.org-copy h2{font-size:33px}.org-visual{gap:9px}.org-card{min-height:143px;padding:17px}.cta{padding-bottom:60px}.cta-panel{display:block;padding:25px 22px}.cta-actions{margin-top:17px}.cta-actions .btn{flex:1}footer{padding-bottom:27px}.footer-links-area{display:block;padding:0 0 18px}.footer-group{border-bottom:1px solid #dfe7e3}.footer-accordion{display:block}.footer-accordion summary{display:flex;align-items:center;justify-content:space-between;min-height:67px;color:#24243d;font-size:18px;font-weight:750;list-style:none;cursor:pointer}.footer-accordion summary::-webkit-details-marker{display:none}.footer-accordion summary:after{content:"";width:9px;height:9px;margin-right:4px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s}.footer-accordion[open] summary:after{transform:rotate(225deg)}.footer-group ul{gap:12px;padding:0 0 19px}.footer-group a{font-size:13px}.footer-brand{padding:31px 0 14px}.footer-logo img{width:180px}.footer-tagline{margin:12px auto 18px;font-size:16px}.footer-social{width:42px;height:42px}.footer-stores{gap:13px}.footer-store-group nav{flex-wrap:wrap}.footer-stores a{min-height:47px;padding:4px 8px}.footer-stores img{height:34px;max-width:140px}.footer-trust{gap:6px;margin-top:20px}.footer-trust span{padding:7px 9px;font-size:8px}.footer-legal{gap:12px 20px;margin-top:23px}.footer-legal a{font-size:11px}.copyright{margin-top:22px;font-size:10px}.footer-contact{flex-wrap:wrap}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 
-/* Clear, product-led hero and an overview based on the live employer workspace. */
-.hero{padding:68px 0 72px;background:radial-gradient(ellipse at 86% 8%,rgba(200,139,44,.2),transparent 28%),linear-gradient(132deg,#062e23,#0c503b)}
-.hero-grid{grid-template-columns:1.02fr .98fr;gap:46px}
-.hero h1{color:#fff}.hero h1 em{color:#e6b94e}.hero .eyebrow{color:#efcf86}.hero .hero-copy{color:rgba(255,255,255,.78)}.hero .checks{color:rgba(255,255,255,.82)}.hero .checks span:before{color:#a9d3b4}.hero .btn.outline{border-color:rgba(255,255,255,.45);color:#fff;background:rgba(255,255,255,.07)}.hero .btn.outline:hover{background:rgba(255,255,255,.14)}
-.hero-preview{min-height:440px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:7px}.hero-preview:after{display:none}
-.dash-window{position:relative;z-index:1;width:100%;overflow:hidden;border:1px solid rgba(255,255,255,.9);border-radius:18px;background:#f6f9f7;box-shadow:0 22px 60px rgba(0,0,0,.22);transform:perspective(1400px) rotateY(-3deg) rotateX(1deg)}
-.dash-window .dash-top{padding:12px 15px;background:#fff}.dash-window .dash-brand{font-size:11px}.dash-window .mark{width:28px;height:28px}.dash-window .dash-top small{font-size:8px}
-.workspace-preview{display:grid;grid-template-columns:155px 1fr;min-height:340px}.workspace-nav{display:grid;align-content:start;gap:6px;padding:15px 10px;border-right:1px solid #e1e9e4;background:#fff;color:#52635a;font-size:9px;font-weight:700}.workspace-nav b{margin:8px 0 2px;color:#9aa59e;font-size:7px;letter-spacing:.1em}.workspace-nav span{padding:8px 7px;border-radius:7px}.workspace-nav .selected{color:#07513a;background:#e6f1e9}.workspace-main{padding:16px}.workspace-title{display:flex;justify-content:space-between;align-items:center;gap:10px}.workspace-title h2{margin:0 0 4px;color:#113c2c;font-size:16px;letter-spacing:-.03em}.workspace-title p{margin:0;color:#819087;font-size:9px}.workspace-title>span{color:#328356;font-size:8px;font-weight:800;white-space:nowrap}.action-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0;padding:11px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}.action-tiles div{display:grid;align-content:start;gap:7px;min-height:81px;padding:9px;border:1px solid #e8eeea;border-radius:9px;color:#9f762f;font-size:12px}.action-tiles b{color:#1b3d2e;font-size:9px}.action-tiles small{color:#87938c;font-size:7px}.workflow-preview{padding:12px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}.workflow-preview .workspace-title h2{font-size:14px}.schedule-btn{padding:7px 9px;border:1px solid #e5ebe7;border-radius:7px;color:#315343!important}.workflow-rows{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}.workflow-rows span{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:2px 7px;padding:8px;border:1px solid #edf1ee;border-radius:8px}.workflow-rows i{grid-row:span 2;display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#edf4e9;color:#508157;font-size:9px;font-style:normal;font-weight:900}.workflow-rows b{color:#294436;font-size:8px}.workflow-rows small{color:#849188;font-size:7px}.hero-preview .float{position:static;align-self:flex-end;margin:9px 0 0;z-index:2}
-@media(max-width:680px){.hero{padding:39px 0 35px}.hero-grid{grid-template-columns:1fr;gap:21px}.hero h1{max-width:500px;margin-bottom:14px;font-size:clamp(35px,9.3vw,43px);line-height:1.04;letter-spacing:-.05em}.hero-copy{max-width:520px;margin-bottom:19px;font-size:13px;line-height:1.6}.hero-preview{min-height:310px;padding:3px;margin-top:3px}.workspace-preview{grid-template-columns:93px 1fr;min-height:270px}.workspace-nav{gap:3px;padding:8px 5px;font-size:7px}.workspace-nav b{font-size:6px}.workspace-nav span{padding:6px 4px}.workspace-main{padding:10px 8px}.workspace-title h2{font-size:13px}.workspace-title p{font-size:7px}.workspace-title>span{font-size:6px}.action-tiles{gap:4px;margin:8px 0;padding:6px}.action-tiles div{gap:5px;min-height:67px;padding:6px}.action-tiles b{font-size:7px}.action-tiles small{font-size:6px}.workflow-preview{padding:8px}.workflow-preview .workspace-title h2{font-size:11px}.workflow-preview .workspace-title p{font-size:6px}.schedule-btn{padding:5px;font-size:6px}.workflow-rows{gap:4px;margin-top:8px}.workflow-rows span{grid-template-columns:18px 1fr;gap:2px 5px;padding:5px}.workflow-rows i{width:18px;height:18px;font-size:7px}.workflow-rows b{font-size:6px}.workflow-rows small{font-size:5px}.hero-preview .float{right:7px;bottom:7px;padding:7px 9px;font-size:7px}.hero-preview .float small{font-size:6px}}
+/* Deputy-inspired product-led presentation, using Elite Bridge branding and copy. */
+.announcement{padding:10px 16px;background:#073c2d;color:#fff;text-align:center;font-size:11px;font-weight:650;letter-spacing:.025em}
+.announcement strong{color:#f0ce86}
+.announcement a{margin-left:8px;color:#fff;font-weight:850;text-decoration:underline;text-underline-offset:3px}
+.hero{padding:75px 0 79px;background:radial-gradient(ellipse at 82% 20%,rgba(212,230,215,.82),transparent 33%),radial-gradient(ellipse at 8% 100%,rgba(245,232,207,.58),transparent 30%),linear-gradient(120deg,#f8faf7,#edf4ef)}
+.hero-grid{grid-template-columns:1fr 1fr;gap:55px}
+.hero h1{max-width:620px;color:#073c2d;font-size:clamp(47px,5.7vw,74px);line-height:1.01;letter-spacing:-.063em}
+.hero h1 em{color:#b77f2a}
+.hero .eyebrow{color:#8a6424}
+.hero .hero-copy{max-width:545px;color:#56675e;font-size:17px;line-height:1.7}
+.hero .checks{color:#53655b}
+.hero .checks span:before{color:#3c8054}
+.hero .btn{min-height:52px;border-radius:999px;padding:0 23px;font-size:13px}
+.hero .btn.gold{background:#073c2d;color:#fff}
+.hero .btn.gold:hover{background:#0e5941}
+.hero .btn.outline{border-color:#d3dfd7;color:#073c2d;background:rgba(255,255,255,.75)}
+.hero .btn.outline:hover{background:#fff}
+.hero-preview{min-height:445px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:7px}
+.dash-window{position:relative;z-index:1;width:100%;overflow:hidden;border:1px solid rgba(255,255,255,.95);border-radius:20px;background:#f6f9f7;box-shadow:0 28px 68px rgba(20,58,40,.17);transform:perspective(1400px) rotateY(-2deg) rotateX(1deg)}
+.dash-window .dash-top{padding:13px 16px;background:#fff}
+.dash-window .dash-brand{font-size:11px}
+.dash-window .mark{width:29px;height:29px}
+.dash-window .dash-top small{font-size:8px}
+.workspace-preview{display:grid;grid-template-columns:155px 1fr;min-height:340px}
+.workspace-nav{display:grid;align-content:start;gap:6px;padding:15px 10px;border-right:1px solid #e1e9e4;background:#fff;color:#52635a;font-size:9px;font-weight:700}
+.workspace-nav b{margin:8px 0 2px;color:#9aa59e;font-size:7px;letter-spacing:.1em}
+.workspace-nav span{padding:8px 7px;border-radius:7px}
+.workspace-nav .selected{color:#07513a;background:#e6f1e9}
+.workspace-main{padding:16px}
+.workspace-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.workspace-title h2{margin:0 0 4px;color:#113c2c;font-size:16px;letter-spacing:-.03em}
+.workspace-title p{margin:0;color:#819087;font-size:9px}
+.workspace-title>span{color:#328356;font-size:8px;font-weight:800;white-space:nowrap}
+.action-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0;padding:11px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}
+.action-tiles div{display:grid;align-content:start;gap:7px;min-height:81px;padding:9px;border:1px solid #e8eeea;border-radius:9px;color:#9f762f;font-size:12px}
+.action-tiles b{color:#1b3d2e;font-size:9px}
+.action-tiles small{color:#87938c;font-size:7px}
+.workflow-preview{padding:12px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}
+.workflow-preview .workspace-title h2{font-size:14px}
+.schedule-btn{padding:7px 9px;border:1px solid #e5ebe7;border-radius:7px;color:#315343!important}
+.workflow-rows{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
+.workflow-rows span{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:2px 7px;padding:8px;border:1px solid #edf1ee;border-radius:8px}
+.workflow-rows i{grid-row:span 2;display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#edf4e9;color:#508157;font-size:9px;font-style:normal;font-weight:900}
+.workflow-rows b{color:#294436;font-size:8px}
+.workflow-rows small{color:#849188;font-size:7px}
+.hero-preview .float{position:static;align-self:flex-end;margin:10px 0 0;z-index:2}
+@media(max-width:900px){.hero-grid{gap:32px}}
+@media(max-width:680px){
+ .announcement{padding:9px 12px;font-size:9px}
+ .hero{padding:48px 0 44px}
+ .hero-grid{grid-template-columns:1fr;gap:21px}
+ .hero h1{max-width:520px;margin-bottom:14px;color:#073c2d;font-size:clamp(38px,9.8vw,54px);line-height:1.03;letter-spacing:-.055em}
+ .hero-copy{max-width:520px;margin-bottom:19px;color:#56675e;font-size:14px;line-height:1.65}
+ .hero-preview{min-height:310px;padding:3px;margin-top:3px}
+ .workspace-preview{grid-template-columns:93px 1fr;min-height:270px}
+ .workspace-nav{gap:3px;padding:8px 5px;font-size:7px}
+ .workspace-nav b{font-size:6px}
+ .workspace-nav span{padding:6px 4px}
+ .workspace-main{padding:10px 8px}
+ .workspace-title h2{font-size:13px}
+ .workspace-title p{font-size:7px}
+ .workspace-title>span{font-size:6px}
+ .action-tiles{gap:4px;margin:8px 0;padding:6px}
+ .action-tiles div{gap:5px;min-height:67px;padding:6px}
+ .action-tiles b{font-size:7px}
+ .action-tiles small{font-size:6px}
+ .workflow-preview{padding:8px}
+ .workflow-preview .workspace-title h2{font-size:11px}
+ .workflow-preview .workspace-title p{font-size:6px}
+ .schedule-btn{padding:5px;font-size:6px}
+ .workflow-rows{gap:4px;margin-top:8px}
+ .workflow-rows span{grid-template-columns:18px 1fr;gap:2px 5px;padding:5px}
+ .workflow-rows i{width:18px;height:18px;font-size:7px}
+ .workflow-rows b{font-size:6px}
+ .workflow-rows small{font-size:5px}
+ .hero-preview .float{right:7px;bottom:7px;padding:7px 9px;font-size:7px}
+ .hero-preview .float small{font-size:6px}
+}
 </style>
 </head>
 <body>
+<div class="announcement">One connected workspace for care teams <strong>— from staffing needs to shift follow-through.</strong><a href="#platform">Explore the platform →</a></div>
 <header><div class="wrap nav"><a class="logo" href="/" aria-label="Elite Bridge Staffing home"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/elite-bridge-logo-brand.webp" alt="Elite Bridge Staffing"></a><nav class="nav-links" aria-label="Main navigation"><a href="#platform">Platform</a><a href="#organization-controls">Organization tools</a><a href="#how">How it works</a><a href="#packages">Packages</a><a href="#apps">Mobile apps</a></nav><div class="nav-actions"><a class="signin" href="/dashboard">Sign in</a><a class="btn" href="#packages">Explore packages →</a></div></div></header>
 <main>
 <section class="hero"><div class="wrap hero-grid"><div><p class="eyebrow">Care staffing software</p><h1>Keep every care shift <em>moving.</em></h1><p class="hero-copy">Coordinate shifts, caregiver applications, attendance, timesheets and team access from one employer web dashboard, with mobile tools for caregivers.</p><div class="actions"><a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a software demo →</a><a class="btn outline" href="#packages">Explore packages</a></div><div class="checks"><span>One web dashboard for employers</span><span>Mobile tools for caregivers</span><span>Built for non-medical care teams</span></div></div>
