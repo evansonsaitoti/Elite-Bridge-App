@@ -52,26 +52,65 @@
   const aiAgentForm = document.getElementById('aiAgentForm');
   const aiAgentQuestion = document.getElementById('aiAgentQuestion');
   const aiAgentResponse = document.getElementById('aiAgentResponse');
+  const aiAgentWelcome = document.getElementById('aiAgentWelcome');
   const aiAgentSubmit = document.getElementById('aiAgentSubmit');
+  const aiAgentConversation = document.getElementById('aiAgentConversation');
   document.querySelectorAll('[data-agent-prompt]').forEach((button) => button.addEventListener('click', () => {
     if (!aiAgentQuestion) return;
     aiAgentQuestion.value = button.dataset.agentPrompt || '';
     aiAgentQuestion.focus();
   }));
+  document.querySelector('[data-agent-new-chat]')?.addEventListener('click', () => {
+    if (aiAgentResponse) { aiAgentResponse.replaceChildren(); aiAgentResponse.hidden = true; }
+    if (aiAgentWelcome) aiAgentWelcome.hidden = false;
+    if (aiAgentQuestion) { aiAgentQuestion.value = ''; aiAgentQuestion.focus(); }
+  });
   aiAgentForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const command = aiAgentQuestion?.value.trim();
-    if (!command || !aiAgentResponse || !aiAgentSubmit) return;
-    aiAgentSubmit.disabled = true;
+    if (!command || !aiAgentResponse || !aiAgentSubmit || !aiAgentConversation) return;
+    if (aiAgentWelcome) aiAgentWelcome.hidden = true;
     aiAgentResponse.hidden = false;
-    aiAgentResponse.textContent = 'Reviewing your organization’s staffing totals…';
+    aiAgentResponse.replaceChildren();
+    const userMessage = document.createElement('div');
+    userMessage.className = 'agent-user-message';
+    userMessage.textContent = command;
+    const reply = document.createElement('div');
+    reply.className = 'agent-assistant-message';
+    const avatar = document.createElement('span');
+    avatar.className = 'agent-reply-avatar';
+    avatar.setAttribute('aria-hidden', 'true');
+    avatar.textContent = '✦';
+    const body = document.createElement('div');
+    body.className = 'agent-reply-body';
+    const title = document.createElement('strong');
+    title.textContent = 'Elite Bridge AI';
+    const thinking = document.createElement('p');
+    thinking.className = 'agent-thinking';
+    thinking.innerHTML = '<span></span><span></span><span></span> Checking your staffing overview…';
+    body.append(title, thinking);
+    reply.append(avatar, body);
+    aiAgentResponse.append(userMessage, reply);
+    aiAgentSubmit.disabled = true;
+    aiAgentQuestion.disabled = true;
+    aiAgentQuestion.value = '';
+    aiAgentConversation.scrollTop = aiAgentConversation.scrollHeight;
     try {
       const data = await api('/ai/chat', { method: 'POST', body: JSON.stringify({ command }) });
-      aiAgentResponse.textContent = data.answer || 'No response was returned.';
+      const answer = document.createElement('p');
+      answer.className = 'agent-answer';
+      answer.textContent = data.answer || 'No response was returned.';
+      body.replaceChildren(title, answer);
     } catch (error) {
-      aiAgentResponse.textContent = error.message || 'The AI Agent could not respond right now.';
+      const answer = document.createElement('p');
+      answer.className = 'agent-answer agent-error';
+      answer.textContent = error.message || 'The AI Agent could not respond right now.';
+      body.replaceChildren(title, answer);
     } finally {
       aiAgentSubmit.disabled = false;
+      aiAgentQuestion.disabled = false;
+      aiAgentQuestion.focus();
+      aiAgentConversation.scrollTop = aiAgentConversation.scrollHeight;
     }
   });
 
