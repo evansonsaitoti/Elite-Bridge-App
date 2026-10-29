@@ -6,46 +6,48 @@ Elite Bridge Employer
 
 ## Subtitle
 
-Hire and manage care teams
+Healthcare workforce management
 
 ## Promotional text
 
-Hire, schedule and manage your care workforce. Publish opportunities, organize assigned caregivers and review time activity connected to the Elite Bridge Caregiver app.
+Coordinate healthcare schedules, open shifts, applications and time activity in one employer workspace. Designed for organizations managing medical and non-medical teams.
 
 ## Description
 
-Elite Bridge Employer gives care agencies, staffing organizations, and other eligible care employers a dedicated place to connect with caregivers.
+Elite Bridge Employer is the employer workspace for the Elite Bridge healthcare workforce platform. It helps healthcare organizations coordinate their own teams, staffing needs, schedules and workforce activity.
 
 Use Elite Bridge Employer to:
 
 - Create an employer account for your organization
 - Maintain an organization profile and service area
-- Publish matched care Shift Offers with schedule, qualification, location, pay, and responsibilities
-- Choose instant claim or employer approval for each shift
+- Publish shift opportunities with schedule, qualifications, location, pay and responsibilities
+- Choose instant claim or employer review for each shift
 - View open and assigned shifts
-- Manage assigned caregivers in a live team directory
-- Review upcoming assignments, credentials and employee contact records
-- Monitor caregiver clock-ins and clock-outs for assigned visits
-- Receive applications from Elite Bridge caregivers
-- Review caregiver-submitted profile information
+- Manage staff in a team directory
+- Review assignments, credentials and employee contact records
+- Monitor clock-ins and clock-outs for assigned work
+- Receive applications from professionals using the connected Elite Bridge platform
+- Review submitted profile information
 - Approve or decline applications
-- Receive push alerts for caregiver applications and urgent call-outs
-- Review persistent staffing notifications in the app
-- Cancel open or assigned shifts and notify affected caregivers
+- Receive push alerts for applications and urgent call-outs
+- Review staffing notifications in the app
+- Cancel open or assigned shifts and notify affected team members
 - Manage employer account access and support
 - Delete your account directly in the app
 
-TWO DISTINCT APPS, ONE CONNECTED MARKETPLACE
+## A platform for healthcare organizations
 
-Elite Bridge Employer is exclusively for organizations posting and managing care opportunities. Care professionals use the separately listed Elite Bridge Caregiver app to discover opportunities, apply, and manage their work. Information moves securely between the two apps through the shared Elite Bridge production platform.
+Elite Bridge is workforce management software, not a healthcare provider or staffing agency. Organizations use the platform to coordinate their own staff and work opportunities. Each organization remains responsible for its hiring, eligibility criteria, credentials, care delivery and workplace requirements. The platform does not provide clinical care or medical advice.
 
-Caregiver accounts cannot access Elite Bridge Employer. The employer controls the eligibility criteria and chooses whether each shift is first-qualified-claim or employer-approval.
+## Connected apps
 
-Elite Bridge Employer and Elite Bridge Caregiver are companion apps with distinctive features for opposite sides of the same staffing transaction—not duplicate versions of one application.
+Elite Bridge Employer is for organizations coordinating healthcare work. Professionals use the separately listed Elite Care app to access invitations, eligible work opportunities, schedules and work updates. Information moves between the apps through the Elite Bridge platform.
+
+Employer accounts control eligibility criteria and choose whether each shift is first-qualified-claim or employer-review.
 
 ## Keywords
 
-care employer,care staffing,caregiver hiring,home care,shift scheduling,staffing agency
+healthcare workforce,healthcare scheduling,staff management,shift coordination,healthcare employer,attendance,timesheets
 
 ## Primary category
 
@@ -53,15 +55,15 @@ Business
 
 ## Screenshot order
 
-1. Employer-only welcome screen — “Two apps. One connected marketplace.”
-2. Public employer registration
-3. Employer Home workforce dashboard and persistent navigation
-4. Publish a matched Shift Offer with instant-claim or review-first assignment
+1. Employer welcome screen — healthcare workforce management
+2. Employer registration
+3. Employer workforce dashboard and persistent navigation
+4. Publish a shift with instant-claim or review-first assignment
 5. Manage posted shifts and cancellations
-6. Review caregiver applicants and staffing notifications
-7. Manage the assigned caregiver team directory
+6. Review applicants and staffing notifications
+7. Manage the staff directory
 8. Review time and attendance activity
 9. Edit organization profile
-10. Employer account, Privacy Policy, sign out, support, and protected deletion controls
+10. Employer account, Privacy Policy, sign out, support, and account deletion controls
 
-Every screenshot must come from Build 28 and must not show features absent from the submitted binary.
+Screenshots must match the current submitted build and must not show unavailable features.
