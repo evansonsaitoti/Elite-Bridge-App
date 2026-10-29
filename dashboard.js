@@ -86,7 +86,7 @@
     const avatar = document.createElement('span');
     avatar.className = 'agent-reply-avatar';
     avatar.setAttribute('aria-hidden', 'true');
-    avatar.textContent = '✦';
+    avatar.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-7l-5 3v-3H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2Z"></path></svg>';
     const body = document.createElement('div');
     body.className = 'agent-reply-body';
     const title = document.createElement('strong');
