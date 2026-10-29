@@ -60,6 +60,12 @@
     aiAgentQuestion.value = button.dataset.agentPrompt || '';
     aiAgentQuestion.focus();
   }));
+  aiAgentQuestion?.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' && !event.shiftKey) {
+      event.preventDefault();
+      if (!aiAgentSubmit?.disabled) aiAgentForm?.requestSubmit();
+    }
+  });
   document.querySelector('[data-agent-new-chat]')?.addEventListener('click', () => {
     if (aiAgentResponse) { aiAgentResponse.replaceChildren(); aiAgentResponse.hidden = true; }
     if (aiAgentWelcome) aiAgentWelcome.hidden = false;
