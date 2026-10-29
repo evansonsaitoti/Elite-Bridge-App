@@ -10,10 +10,10 @@ import { warmEmployerService } from "../lib/api";
 const PRIVACY_URL = "https://elitebridgestaffing.com/privacy/";
 const TERMS_URL = "https://elitebridgestaffing.com/terms/";
 const slides = [
-  { image: require("../assets/images/employer-welcome-hero.jpg"), eyebrow: "SMARTER CARE STAFFING", title: "Fill the right shift—faster.", body: "Create an opportunity once and reach active caregivers whose profile matches your care needs." },
-  { image: require("../assets/images/employer-welcome-matches.jpg"), eyebrow: "MATCHED SHIFT OFFERS", title: "Post once. Notify every qualified match.", body: "Schedule, location, pay and responsibilities arrive together in Elite Bridge Caregiver." },
-  { image: require("../assets/images/employer-welcome-review.jpg"), eyebrow: "YOUR WORKFORCE, YOUR RULES", title: "Choose speed or hands-on approval.", body: "Use Instant claim for urgent coverage or Review first when you want to select the caregiver." },
-  { image: require("../assets/images/employer-welcome-operations.jpg"), eyebrow: "CONNECTED OPERATIONS", title: "Stay informed from post to placement.", body: "Track applicants, claimed shifts, call-outs and staffing notifications from one employer workspace." },
+  { image: require("../assets/images/employer-welcome-hero.jpg"), eyebrow: "HEALTHCARE WORKFORCE MANAGEMENT", title: "Keep your healthcare team connected.", body: "Coordinate schedules, staffing needs, applications and time activity through one employer workspace." },
+  { image: require("../assets/images/employer-welcome-matches.jpg"), eyebrow: "SHIFT COORDINATION", title: "Keep shift details in one place.", body: "Share schedule, location, pay and responsibilities with eligible professionals through the connected Elite Bridge platform." },
+  { image: require("../assets/images/employer-welcome-review.jpg"), eyebrow: "YOUR WORKFORCE, YOUR RULES", title: "Choose how your team reviews requests.", body: "Use Instant claim for urgent coverage or Review first when your organization wants to select applicants." },
+  { image: require("../assets/images/employer-welcome-operations.jpg"), eyebrow: "CONNECTED OPERATIONS", title: "Follow work from shift to timesheet.", body: "Track applicants, assigned staff, call-outs and workforce notifications from one employer workspace." },
 ];
 
 export default function EmployerWelcomeScreen() {
@@ -45,15 +45,15 @@ export default function EmployerWelcomeScreen() {
               {slides.map((_, index) => <TouchableOpacity key={index} accessibilityLabel={`Show employer feature ${index + 1}`} onPress={() => setActiveSlide(index)} style={[styles.dot, index === activeSlide && styles.dotActive]} />)}
             </View>
             <View style={styles.services}>
-              {["Personal care", "Companionship", "Respite", "Meal support"].map((service) => <View key={service} style={styles.servicePill}><Text style={styles.serviceText}>{service}</Text></View>)}
+              {["Medical teams", "Non-medical teams", "Care at home", "Healthcare facilities"].map((service) => <View key={service} style={styles.servicePill}><Text style={styles.serviceText}>{service}</Text></View>)}
             </View>
           </View>
         </SafeAreaView>
       </ImageBackground>
 
       <SafeAreaView edges={["bottom"]} style={styles.actionSheet}>
-        <Text style={styles.sheetTitle}>Care organizations start here</Text>
-        <Text style={styles.sheetBody}>A dedicated employer app connected to the separately listed Elite Bridge Caregiver app.</Text>
+        <Text style={styles.sheetTitle}>Healthcare organizations start here</Text>
+        <Text style={styles.sheetBody}>Healthcare workforce software for organizations managing their own teams, connected with the Elite Care app for invited staff.</Text>
         <View style={styles.actionRow}>
           <TouchableOpacity style={styles.secondary} onPress={() => router.push("/register")}><Text style={styles.secondaryText}>Sign up</Text></TouchableOpacity>
           <TouchableOpacity style={styles.primary} onPress={() => router.push("/sign-in")}><Text style={styles.primaryText}>Log in</Text></TouchableOpacity>
