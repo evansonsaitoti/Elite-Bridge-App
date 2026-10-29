@@ -336,6 +336,29 @@ h1,h2,h3{font-family:"Sora","Lato",sans-serif}.footer-logo img{width:190px;heigh
 @media(prefers-reduced-motion:reduce){.hero-slide-image,.hero-slider-controls button,.hero-slider-dots button{transition:none}}
 
 .hero-preview .dash-window{left:-12px;bottom:74px;width:74%;max-width:480px}.footer-logo img{width:250px}@media(max-width:680px){.footer-logo img{width:min(100%,300px)}}
+
+/* Mobile hero layout: keep the care photo and product preview in separate cards */
+@media(max-width:680px){
+  .hero-preview{display:flex;flex-direction:column;align-items:stretch;gap:12px;min-height:0;padding:0 0 16px}
+  .hero-image-frame{position:relative;inset:auto;height:clamp(180px,58vw,230px);flex:0 0 auto;border-radius:18px}
+  .hero-slide-image{object-position:center 42%}
+  .hero-preview .dash-window{position:relative;left:auto;bottom:auto;width:100%;max-width:none;margin:0;transform:none}
+  .hero-preview .float{position:relative;right:auto;bottom:auto;align-self:flex-start;max-width:100%;margin:0}
+  .caregiver-preview{position:relative;left:auto;bottom:auto;width:100%;max-width:none;margin:0}
+  .hero-preview[data-slide="caregiver"] .caregiver-preview{display:block}
+  .hero-preview[data-slide="employer"] .caregiver-preview{display:none}
+  .hero-slider-controls{position:relative;right:auto;bottom:auto;left:auto;justify-content:center;height:42px;margin:0}
+}
+footer .footer-group h2,
+footer .footer-group a,
+footer .footer-accordion summary,
+footer .footer-contact a,
+footer .footer-tagline,
+footer .footer-bottom,
+footer .footer-trust span,
+footer .footer-store-group>span{color:#fff}
+footer .footer-accordion summary:after{border-color:#fff}
+
 </style>
 </head>
 <body>
