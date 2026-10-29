@@ -3,10 +3,14 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#073c2d">
 <meta name="description" content="Coordinate care staffing with Elite Bridge. Manage shifts, caregiver applications, schedules and timesheets in one connected workspace.">
-<title>Elite Bridge | Care staffing, connected</title><link rel="icon" href="/logo-icon.png">
+<title>Elite Bridge | Care staffing, connected</title>
+<link rel="icon" href="/logo-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{--g:#073c2d;--g2:#0e5941;--gold:#c88b2c;--ink:#172720;--muted:#66756d;--line:#e1e9e4;--pale:#f3f7f4;--white:#fff;--shadow:0 24px 70px rgba(14,49,35,.12)}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}body{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{width:min(1160px,calc(100% - 44px));margin:auto}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}body{margin:0;color:var(--ink);font-family:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{width:min(1160px,calc(100% - 44px));margin:auto}
 header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo img{width:178px;display:block}.nav-links,.nav-actions{display:flex;align-items:center;gap:24px}.nav-links a,.nav-actions a{font-size:12px;font-weight:750}.nav-links a{color:#617168}.nav-links a:hover{color:var(--g)}.nav-actions{gap:18px}.signin{color:var(--g)}.btn{min-height:47px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 19px;border:1px solid transparent;border-radius:12px;background:var(--g);color:#fff;font-size:12px;font-weight:850;box-shadow:0 9px 20px rgba(7,60,45,.14);transition:.18s}.btn:hover{transform:translateY(-1px);background:var(--g2)}.btn.gold{background:var(--gold)}.btn.outline{background:#fff;color:var(--g);border-color:#cedbd2;box-shadow:none}.btn.outline:hover{background:var(--pale)}.nav .btn{min-height:41px;padding:0 15px}
 .hero{padding:72px 0 75px;background:radial-gradient(ellipse at 83% 13%,rgba(200,139,44,.14),transparent 26%),linear-gradient(#fbfcfb,#f0f5f2)}.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:46px}.eyebrow{display:flex;align-items:center;gap:9px;margin:0 0 17px;color:var(--g2);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eyebrow:before{content:"";width:23px;height:2px;background:var(--gold)}h1,h2,h3,p{margin-top:0}.hero h1{max-width:610px;margin-bottom:19px;color:var(--g);font-size:clamp(43px,5.2vw,67px);line-height:1.02;letter-spacing:-.055em}.hero h1 em{color:var(--gold);font-style:normal}.hero-copy{max-width:550px;margin-bottom:25px;color:#586960;font-size:16px;line-height:1.75}.actions{display:flex;flex-wrap:wrap;gap:11px}.checks{display:flex;flex-wrap:wrap;gap:15px;margin-top:22px;color:#68776f;font-size:11px;font-weight:750}.checks span:before{content:"✓";margin-right:6px;color:#3c8054;font-size:14px}
 .preview{position:relative;min-height:420px;display:grid;place-items:center}.orb{position:absolute;inset:8% 2% 3% 5%;border-radius:48% 52% 45% 55%;background:linear-gradient(145deg,#e1eee7,#f6ead6);transform:rotate(-5deg)}.dash-card{position:relative;width:min(480px,100%);padding:21px;border:1px solid #fff;border-radius:21px;background:rgba(255,255,255,.96);box-shadow:var(--shadow);transform:rotate(1deg)}.dash-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:15px;border-bottom:1px solid var(--line)}.dash-brand{display:flex;align-items:center;gap:9px;color:var(--g);font-size:12px;font-weight:900}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#f3d58c;background:var(--g);font-weight:900}.dash-top small{color:#89968f;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.dash-heading{display:flex;align-items:flex-end;justify-content:space-between;margin:18px 0 13px}.dash-heading h2{margin:0;color:var(--g);font-size:21px;letter-spacing:-.04em}.dash-heading p{margin:5px 0 0;color:#849188;font-size:10px}.live{padding:6px 9px;border-radius:20px;color:#287044;background:#e8f5eb;font-size:9px;font-weight:900}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{padding:11px;border:1px solid #e9efeb;border-radius:11px;background:#fbfcfb}.stat small{display:block;color:#79877f;font-size:9px;font-weight:750}.stat strong{display:block;margin-top:7px;color:var(--g);font-size:20px}.label{margin:18px 0 7px;color:#65746b;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.person{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:9px;padding:10px 0;border-top:1px solid #edf1ee}.avatar{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;color:#8c5e1a;background:#fbf1df;font-size:9px;font-weight:900}.person b{display:block;color:#293a31;font-size:10px}.person small{display:block;margin-top:3px;color:#87938c;font-size:9px}.state{color:#398353;font-size:8px;font-weight:900}.dash-bottom{display:flex;justify-content:space-between;margin-top:8px;padding-top:12px;border-top:1px solid var(--line);color:#819087;font-size:9px;font-weight:750}.float{position:absolute;right:-12px;bottom:17px;padding:12px 14px;border:1px solid #e8eee9;border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(20,53,39,.1);color:#344a3d;font-size:10px;font-weight:900}.float small{display:block;margin-top:4px;color:#7e8a83;font-size:9px;font-weight:600}
@@ -24,6 +28,10 @@ footer{padding:0 0 32px;border-top:1px solid #e7ece9;background:#f8faf9;color:va
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
 
 /* Deputy-inspired product-led presentation, using Elite Bridge branding and copy. */
+body{font-family:"DM Sans",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+h1,h2,h3{font-family:"Plus Jakarta Sans","DM Sans",ui-sans-serif,sans-serif;font-weight:750;letter-spacing:-.035em}
+.hero h1{letter-spacing:-.055em}
+.section-head h2{letter-spacing:-.04em}
 .announcement{padding:10px 16px;background:#073c2d;color:#fff;text-align:center;font-size:11px;font-weight:650;letter-spacing:.025em}
 .announcement strong{color:#f0ce86}
 .announcement a{margin-left:8px;color:#fff;font-weight:850;text-decoration:underline;text-underline-offset:3px}
@@ -36,8 +44,8 @@ footer{padding:0 0 32px;border-top:1px solid #e7ece9;background:#f8faf9;color:va
 .hero .checks{color:#53655b}
 .hero .checks span:before{color:#3c8054}
 .hero .btn{min-height:52px;border-radius:999px;padding:0 23px;font-size:13px}
-.hero .btn.gold{background:#073c2d;color:#fff}
-.hero .btn.gold:hover{background:#0e5941}
+.hero .btn.gold{background:#d6a249;color:#173023}
+.hero .btn.gold:hover{background:#e3b65e}
 .hero .btn.outline{border-color:#d3dfd7;color:#073c2d;background:rgba(255,255,255,.75)}
 .hero .btn.outline:hover{background:#fff}
 .hero-preview{min-height:445px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:7px}
