@@ -11,6 +11,7 @@ import { shiftSchedule } from "../services/shift-schedule";
 import { ensureOperations } from "../db/operations";
 import { checkGeofence } from "../services/geofence";
 import { sendShiftSms } from "../services/sms";
+import { sendShiftEmails } from "../services/shift-email";
 import { employerForUser } from "../services/employerMemberships";
 
 const router = Router();
@@ -453,6 +454,12 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
       FROM caregivers c JOIN users u ON u.id = c.user_id
       WHERE c.is_available = true AND u.is_active = true
         AND (
+          EXISTS (SELECT 1 FROM employer_caregivers ec WHERE ec.employer_id = ${employer.id}
+            AND ec.caregiver_user_id = c.user_id AND ec.status = 'active')
+          OR EXISTS (SELECT 1 FROM shift_applications sa JOIN shift_posts prior ON prior.id = sa.shift_id
+            WHERE sa.caregiver_id = c.id AND sa.status = 'approved' AND prior.employer_id = ${employer.id})
+        )
+        AND (
           COALESCE(jsonb_array_length(c.certifications::jsonb), 0) = 0
           OR LOWER(c.certifications::text) LIKE ${`%${data.caregiverType.toLowerCase()}%`}
           OR LOWER(c.specialties::text) LIKE ${`%${data.serviceType.toLowerCase()}%`}
@@ -467,13 +474,14 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
           ${`${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()}`}, ${createdShift.id})
       `);
     }
-    void sendPushToUsers(matchedUserIds, {
+    await sendPushToUsers(matchedUserIds, {
       title: data.urgency === "urgent" ? "Urgent matched shift" : "New matched shift",
       body: `${data.serviceType} in ${data.location.city}, ${data.location.state.toUpperCase()}`,
       data: { type: "new_shift_offer", shiftId: createdShift.id, assignmentMode: data.assignmentMode },
     });
     await sendOperationsAlert("New shift posted", `Employer #${employer.id} posted shift #${createdShift.id}.`);
     await sendShiftSms(matchedUserIds, createdShift.id).catch(() => console.warn('Shift SMS delivery could not be completed'));
+    await sendShiftEmails(matchedUserIds, createdShift.id).catch(() => console.warn('Shift email delivery could not be completed'));
     res.status(201).json({ shift: mapShift(createdShift), matchedCaregivers: matchedUserIds.length });
   } catch (error) {
     next(error);
@@ -554,9 +562,9 @@ router.post("/:shiftId/claim", authMiddleware, async (req: AuthRequest, res, nex
       INSERT INTO notifications (user_id, type, title, message, related_id)
       VALUES (${shift.employer_user_id}, 'shift_claimed', 'Shift claimed', 'A qualified caregiver claimed your matched shift offer.', ${shiftId})
     `);
-    void sendPushToUsers([shift.employer_user_id], {
+    await sendPushToUsers([shift.employer_user_id], {
       title: "Shift claimed",
-      body: `A qualified caregiver claimed ${shift.title}.`,
+      body: "A qualified caregiver claimed your shift. Open Elite Work for details.",
       data: { type: "shift_claimed", shiftId, applicationId: assigned.application.id },
     });
     await sendOperationsAlert("Shift claimed", `Shift #${shiftId} for employer #${shift.employer_id} has been claimed.`);
@@ -585,7 +593,7 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
     `);
     const caregiversResult = await db.execute(sql`SELECT c.user_id FROM shift_applications sa JOIN caregivers c ON c.id = sa.caregiver_id WHERE sa.shift_id = ${shiftId} AND sa.status = 'approved'`);
     const caregiverUserIds = (caregiversResult as any).rows.map((row: any) => row.user_id);
-    void sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
+    await sendPushToUsers(caregiverUserIds, { title: "Shift cancelled", body: "The employer cancelled an assigned Elite Bridge shift.", data: { type: "shift_cancelled", shiftId } });
     await sendOperationsAlert("Shift cancelled", `Employer #${employer.id} cancelled shift #${shiftId}.`);
     res.status(204).send();
   } catch (error) { next(error); }
@@ -612,6 +620,12 @@ router.patch("/employer/:shiftId/pickup", authMiddleware, async (req: AuthReques
       FROM caregivers c JOIN users u ON u.id = c.user_id
       WHERE c.is_available = true AND u.is_active = true
         AND (
+          EXISTS (SELECT 1 FROM employer_caregivers ec WHERE ec.employer_id = ${employer.id}
+            AND ec.caregiver_user_id = c.user_id AND ec.status = 'active')
+          OR EXISTS (SELECT 1 FROM shift_applications sa JOIN shift_posts prior ON prior.id = sa.shift_id
+            WHERE sa.caregiver_id = c.id AND sa.status = 'approved' AND prior.employer_id = ${employer.id})
+        )
+        AND (
           COALESCE(jsonb_array_length(c.certifications::jsonb), 0) = 0
           OR LOWER(c.certifications::text) LIKE ${`%${String(shift.caregiver_type || "").toLowerCase()}%`}
           OR LOWER(c.specialties::text) LIKE ${`%${String(shift.service_type || "").toLowerCase()}%`}
@@ -625,11 +639,12 @@ router.patch("/employer/:shiftId/pickup", authMiddleware, async (req: AuthReques
         VALUES (${userId}, 'shift_offer', 'Shift open for pickup', ${`${shift.service_type} in ${shift.city}, ${shift.state}`}, ${shiftId})
       `);
     }
-    void sendPushToUsers(userIds, {
+    await sendPushToUsers(userIds, {
       title: "Shift open for pickup",
       body: `${shift.service_type} in ${shift.city}, ${shift.state}`,
       data: { type: "new_shift_offer", shiftId, assignmentMode: "instant" },
     });
+    await Promise.allSettled([sendShiftSms(userIds, shiftId), sendShiftEmails(userIds, shiftId)]);
     res.json({ shift: mapShift(shift), matchedCaregivers: userIds.length });
   } catch (error) { next(error); }
 });
@@ -664,9 +679,9 @@ router.post("/employer/:shiftId/assign", authMiddleware, async (req: AuthRequest
         'Elite Bridge assigned you to a care visit. Open the caregiver app for details.',
         ${shiftId})
     `);
-    void sendPushToUsers([shift.caregiver_user_id], {
+    await sendPushToUsers([shift.caregiver_user_id], {
       title: "New shift assignment",
-      body: `You were assigned to ${shift.title}.`,
+      body: "You have a new shift assignment. Open Elite Care for details.",
       data: { type: "direct_shift_assignment", shiftId, applicationId: assigned.application.id },
     });
     await sendOperationsAlert("Direct shift assignment", `Employer #${employer.id} assigned caregiver #${caregiverId} to shift #${shiftId}.`);
@@ -702,9 +717,9 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
       RETURNING *
     `);
     if (!(result as any).rows[0]) throw new AppError(409, "You already have an assignment or call-out for this shift");
-    void sendPushToUsers([shift.employer_user_id], {
+    await sendPushToUsers([shift.employer_user_id], {
       title: "New caregiver application",
-      body: `A caregiver applied for ${shift.title}.`,
+      body: "A caregiver applied for your shift. Open Elite Work for details.",
       data: { type: "new_application", shiftId, applicationId: (result as any).rows[0].id },
     });
     await sendOperationsAlert("New shift application", `A caregiver applied for shift #${shiftId}. Employer account #${shift.employer_user_id} can review the application.`);
@@ -821,7 +836,7 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
           'Your Elite Bridge shift application was approved. Open the caregiver app for the assignment details.',
           ${application.shift_id})
       `);
-      void sendPushToUsers([application.caregiver_user_id], {
+      await sendPushToUsers([application.caregiver_user_id], {
         title: "Shift approved",
         body: "Your shift application was approved. Open Elite Bridge Caregiver for assignment details.",
         data: { type: "application_approved", shiftId: application.shift_id },
@@ -835,7 +850,7 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
               ${application.shift_id})
           `);
         }
-        void sendPushToUsers(competingUserIds, {
+        await sendPushToUsers(competingUserIds, {
           title: "Application update",
           body: "The agency selected another caregiver for this shift. New opportunities are available.",
           data: { type: "application_rejected", shiftId: application.shift_id },
@@ -848,7 +863,7 @@ router.patch("/employer/applications/:applicationId", authMiddleware, async (req
           'The agency selected another caregiver for this shift. New opportunities are available in Elite Bridge.',
           ${application.shift_id})
       `);
-      void sendPushToUsers([application.caregiver_user_id], {
+      await sendPushToUsers([application.caregiver_user_id], {
         title: "Application update",
         body: "The agency selected another caregiver for this shift. New opportunities are available.",
         data: { type: "application_rejected", shiftId: application.shift_id },
@@ -922,9 +937,9 @@ router.post("/:shiftId/callout", authMiddleware, async (req: AuthRequest, res, n
     await refreshShiftStatus(tx, shiftId);
     return { assignment, callout: (callout as any).rows[0], status: (await tx.execute(sql`SELECT status FROM shift_posts WHERE id = ${shiftId}`) as any).rows[0].status };
     });
-    void sendPushToUsers([result.assignment.employer_user_id], {
+    await sendPushToUsers([result.assignment.employer_user_id], {
       title: "Urgent shift call-out",
-      body: `A caregiver called out of ${result.assignment.title}. The shift has been reopened as urgent.`,
+      body: "A caregiver called out. The shift has been reopened as urgent; open Elite Work for details.",
       data: { type: "shift_callout", shiftId },
     });
     await sendOperationsAlert("Urgent shift call-out", `Shift #${shiftId} for employer #${result.assignment.employer_id} needs replacement coverage.`);
@@ -1013,7 +1028,7 @@ router.post("/employer/callouts/:calloutId/launch-rescue", authMiddleware, async
       `);
     }
 
-    void sendPushToUsers(ranked.map((candidate: any) => candidate.user_id), {
+    await sendPushToUsers(ranked.map((candidate: any) => candidate.user_id), {
       title: "Priority shift offer",
       body: `Urgent coverage is needed for ${callout.title}. Review the offer in Elite Bridge Caregiver.`,
       data: { type: "replacement_offer", shiftId: callout.shift_id, calloutId },

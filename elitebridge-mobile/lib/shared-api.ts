@@ -1,4 +1,4 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { getToken, setToken, removeToken } from "./secure-session";
 import * as Location from "expo-location";
 import type { ClockLocation } from "./timekeeping";
 
@@ -64,7 +64,7 @@ export function operationsApi(path: string, method = 'GET', body?: unknown) {
 
 async function request<T>(path: string, init: RequestInit = {}, includeAuth = true): Promise<T> {
   if (!API_BASE_URL) throw new Error("Shared API is not configured");
-  const token = includeAuth ? await AsyncStorage.getItem(TOKEN_KEY) : null;
+  const token = includeAuth ? await getToken(TOKEN_KEY) : null;
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...init,
     headers: {
@@ -95,7 +95,7 @@ export async function ensureCaregiverBackendSession(email: string, password: str
   if (result.user.role !== "caregiver") {
     throw new Error("This account is not a caregiver account. Agency coordinators should use Elite Bridge Employer.");
   }
-  await AsyncStorage.setItem(TOKEN_KEY, result.token);
+  await setToken(result.token, TOKEN_KEY);
   return result.user;
 }
 
@@ -113,7 +113,7 @@ export async function registerCaregiverAccount(input: {
     body: JSON.stringify({ ...input, email: input.email.trim().toLowerCase(), role: "caregiver" }),
   }, false);
   if (result.user.role !== "caregiver") throw new Error("The service did not create a caregiver account.");
-  await AsyncStorage.setItem(TOKEN_KEY, result.token);
+  await setToken(result.token, TOKEN_KEY);
   return result.user;
 }
 
@@ -155,14 +155,14 @@ export async function uploadCaregiverProfilePhoto(photo: string): Promise<void> 
 }
 
 export async function clearCaregiverBackendSession() {
-  await AsyncStorage.removeItem(TOKEN_KEY);
+  await removeToken(TOKEN_KEY);
 }
 
 export async function deleteCaregiverBackendAccount(): Promise<"deleted" | "local-only"> {
-  const token = await AsyncStorage.getItem(TOKEN_KEY);
+  const token = await getToken(TOKEN_KEY);
   if (!token) return "local-only";
   await request<void>("/api/auth/account", { method: "DELETE" });
-  await AsyncStorage.removeItem(TOKEN_KEY);
+  await removeToken(TOKEN_KEY);
   return "deleted";
 }
 

@@ -134,6 +134,23 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     await request("/bookings", caregiver, "POST", shift(), 403);
     await request("/bookings", employer, "POST", shift("review", { endTime: "09:00" }), 400);
   });
+  it("emails only the posting team's caregivers and respects preference plus event deduplication", async () => {
+    const start = outbound.post.mock.calls.length;
+    const posted = await request("/bookings", employer, "POST", shift(), 201);
+    const mail = outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject === "A shift is available in Elite Care");
+    expect(mail.map(([, body]) => body.to[0])).toEqual([caregiver.user.email]);
+    expect(mail[0][1].text).not.toContain("Test only");
+    const { sendShiftEmails } = await import("../src/services/shift-email");
+    await sendShiftEmails([caregiver.user.id, caregiver.user.id], posted.shift.id);
+    expect(outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject === "A shift is available in Elite Care")).toHaveLength(1);
+    await request("/notifications/preferences", caregiver, "PUT", { emailShiftAlerts: false });
+    expect((await request("/notifications/preferences", replacement)).emailShiftAlerts).toBe(true);
+    const after = outbound.post.mock.calls.length;
+    const muted = await request("/bookings", employer, "POST", shift(), 201);
+    expect(outbound.post.mock.calls.slice(after).filter(([, body]) => body.subject === "A shift is available in Elite Care")).toHaveLength(0);
+    await request("/notifications/preferences", caregiver, "PUT", { emailShiftAlerts: true });
+    await database.query("DELETE FROM shift_posts WHERE id IN ($1, $2)", [posted.shift.id, muted.shift.id]);
+  });
   it("posts a shift and synchronizes web, mobile and employer feeds", async () => {
     reviewShift = (await request("/bookings", employer, "POST", shift(), 201)).shift;
     const mobile = (await request("/bookings/open", caregiver)).shifts;

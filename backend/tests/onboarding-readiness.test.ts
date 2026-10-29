@@ -28,7 +28,7 @@ it("calculates employer setup from saved profile, invitations, and shifts", asyn
             ? { team: [] }
             : path === "/messages/conversations"
               ? { conversations: [] }
-              : path === "/employers/7"
+              : path === "/employers/me"
                 ? { companyName: "Sunrise Home", serviceArea: ["Companionship"], billingAddress: { address: "1 Main St", city: "Lowell", state: "MA", zipCode: "01852" } }
                 : path === "/employers/invitations"
                   ? { invitations: [{ id: 1, status: "pending", expiresAt: "2026-09-25", createdAt: "2026-09-18" }] }
