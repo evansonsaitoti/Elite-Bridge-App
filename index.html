@@ -1,527 +1,94 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#073c2d">
-<meta name="description" content="Healthcare workforce management software for medical and non-medical care organizations. Coordinate teams, schedules, attendance and timesheets in one connected workspace.">
-<title>Elite Bridge | Healthcare workforce management</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2064%2064%22%3E%3Crect%20width%3D%2264%22%20height%3D%2264%22%20rx%3D%2214%22%20fill%3D%22%23073c2d%22%2F%3E%3Ccircle%20cx%3D%2222%22%20cy%3D%2216%22%20r%3D%225%22%20fill%3D%22%23fff%22%2F%3E%3Ccircle%20cx%3D%2242%22%20cy%3D%2216%22%20r%3D%225%22%20fill%3D%22%23fff%22%2F%3E%3Cpath%20d%3D%22M8%2048c1-13%2010-22%2024-22s23%209%2024%2022%22%20fill%3D%22none%22%20stroke%3D%22%23fff%22%20stroke-width%3D%227%22%20stroke-linecap%3D%22round%22%2F%3E%3Cpath%20d%3D%22M32%2052%2018%2037c-5-6%203-14%209-8l5%205%205-5c6-6%2014%202%209%208L32%2052z%22%20fill%3D%22%23c88b2c%22%20stroke%3D%22%23fff%22%20stroke-width%3D%222.5%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--g:#073c2d;--g2:#0e5941;--gold:#c88b2c;--ink:#172720;--muted:#66756d;--line:#e1e9e4;--pale:#f3f7f4;--white:#fff;--shadow:0 24px 70px rgba(14,49,35,.12)}
-*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:85px}body{margin:0;color:var(--ink);font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}.wrap{width:min(1160px,calc(100% - 44px));margin:auto}
-header{position:sticky;top:0;z-index:10;background:rgba(255,255,255,.95);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}.nav{min-height:76px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo img{width:178px;display:block}.nav-links,.nav-actions{display:flex;align-items:center;gap:24px}.nav-links a,.nav-actions a{font-size:12px;font-weight:750}.nav-links a{color:#617168}.nav-links a:hover{color:var(--g)}.nav-actions{gap:18px}.signin{color:var(--g)}.btn{min-height:47px;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 19px;border:1px solid transparent;border-radius:12px;background:var(--g);color:#fff;font-size:12px;font-weight:850;box-shadow:0 9px 20px rgba(7,60,45,.14);transition:.18s}.btn:hover{transform:translateY(-1px);background:var(--g2)}.btn.gold{background:var(--gold)}.btn.outline{background:#fff;color:var(--g);border-color:#cedbd2;box-shadow:none}.btn.outline:hover{background:var(--pale)}.nav .btn{min-height:41px;padding:0 15px}
-.hero{padding:72px 0 75px;background:radial-gradient(ellipse at 83% 13%,rgba(200,139,44,.14),transparent 26%),linear-gradient(#fbfcfb,#f0f5f2)}.hero-grid{display:grid;grid-template-columns:1.02fr .98fr;align-items:center;gap:46px}.eyebrow{display:flex;align-items:center;gap:9px;margin:0 0 17px;color:var(--g2);font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase}.eyebrow:before{content:"";width:23px;height:2px;background:var(--gold)}h1,h2,h3,p{margin-top:0}.hero h1{max-width:610px;margin-bottom:19px;color:var(--g);font-size:clamp(43px,5.2vw,67px);line-height:1.02;letter-spacing:-.055em}.hero h1 em{color:var(--gold);font-style:normal}.hero-copy{max-width:550px;margin-bottom:25px;color:#586960;font-size:16px;line-height:1.75}.actions{display:flex;flex-wrap:wrap;gap:11px}.checks{display:flex;flex-wrap:wrap;gap:15px;margin-top:22px;color:#68776f;font-size:11px;font-weight:750}.checks span:before{content:"✓";margin-right:6px;color:#3c8054;font-size:14px}
-.preview{position:relative;min-height:420px;display:grid;place-items:center}.orb{position:absolute;inset:8% 2% 3% 5%;border-radius:48% 52% 45% 55%;background:linear-gradient(145deg,#e1eee7,#f6ead6);transform:rotate(-5deg)}.dash-card{position:relative;width:min(480px,100%);padding:21px;border:1px solid #fff;border-radius:21px;background:rgba(255,255,255,.96);box-shadow:var(--shadow);transform:rotate(1deg)}.dash-top{display:flex;align-items:center;justify-content:space-between;padding-bottom:15px;border-bottom:1px solid var(--line)}.dash-brand{display:flex;align-items:center;gap:9px;color:var(--g);font-size:12px;font-weight:900}.mark{display:grid;place-items:center;width:34px;height:34px;border-radius:10px;color:#f3d58c;background:var(--g);font-weight:900}.dash-top small{color:#89968f;font-size:9px;font-weight:800;letter-spacing:.1em;text-transform:uppercase}.dash-heading{display:flex;align-items:flex-end;justify-content:space-between;margin:18px 0 13px}.dash-heading h2{margin:0;color:var(--g);font-size:21px;letter-spacing:-.04em}.dash-heading p{margin:5px 0 0;color:#849188;font-size:10px}.live{padding:6px 9px;border-radius:20px;color:#287044;background:#e8f5eb;font-size:9px;font-weight:900}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{padding:11px;border:1px solid #e9efeb;border-radius:11px;background:#fbfcfb}.stat small{display:block;color:#79877f;font-size:9px;font-weight:750}.stat strong{display:block;margin-top:7px;color:var(--g);font-size:20px}.label{margin:18px 0 7px;color:#65746b;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}.person{display:grid;grid-template-columns:32px 1fr auto;align-items:center;gap:9px;padding:10px 0;border-top:1px solid #edf1ee}.avatar{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;color:#8c5e1a;background:#fbf1df;font-size:9px;font-weight:900}.person b{display:block;color:#293a31;font-size:10px}.person small{display:block;margin-top:3px;color:#87938c;font-size:9px}.state{color:#398353;font-size:8px;font-weight:900}.dash-bottom{display:flex;justify-content:space-between;margin-top:8px;padding-top:12px;border-top:1px solid var(--line);color:#819087;font-size:9px;font-weight:750}.float{position:absolute;right:-12px;bottom:17px;padding:12px 14px;border:1px solid #e8eee9;border-radius:12px;background:#fff;box-shadow:0 12px 32px rgba(20,53,39,.1);color:#344a3d;font-size:10px;font-weight:900}.float small{display:block;margin-top:4px;color:#7e8a83;font-size:9px;font-weight:600}
-.proof{border-block:1px solid var(--line)}.proof-row{display:grid;grid-template-columns:repeat(3,1fr);padding:19px 0}.proof-item{display:flex;justify-content:center;align-items:center;gap:10px;padding:4px 13px}.proof-item+.proof-item{border-left:1px solid var(--line)}.proof-icon{display:grid;place-items:center;width:33px;height:33px;border-radius:10px;color:var(--g);background:#e8f1eb;font-weight:900}.proof-item b{display:block;color:var(--g);font-size:11px}.proof-item small{display:block;margin-top:3px;color:#7c8982;font-size:9px}
-section.content{padding:82px 0}.section-head{max-width:710px;margin:0 auto 37px;text-align:center}.section-head .eyebrow{justify-content:center}.section-head h2{margin-bottom:12px;color:var(--g);font-size:clamp(31px,4vw,44px);line-height:1.1;letter-spacing:-.045em}.section-head>p:last-child{margin:0;color:var(--muted);font-size:14px;line-height:1.75}.features{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.feature{padding:24px;border:1px solid var(--line);border-radius:17px;background:#fff;transition:.2s}.feature:hover{transform:translateY(-3px);box-shadow:0 15px 34px rgba(19,56,40,.07);border-color:#c7d8ce}.icon{display:grid;place-items:center;width:43px;height:43px;margin-bottom:16px;border-radius:13px;color:var(--g);background:#e8f1eb;font-size:18px}.feature h3{margin-bottom:8px;color:var(--g);font-size:16px}.feature p{margin:0;color:#68776f;font-size:12px;line-height:1.7}
-.apps-section{background:linear-gradient(145deg,#f4f7f4,#eef4f0)}.apps-layout{display:grid;grid-template-columns:.9fr 1.1fr;gap:20px;align-items:stretch}.apps-photo{position:relative;min-height:470px;overflow:hidden;border-radius:22px;background:#dde7df}.apps-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.apps-photo:after{content:"";position:absolute;inset:35% 0 0;background:linear-gradient(transparent,rgba(5,40,29,.72))}.apps-photo-caption{position:absolute;z-index:1;right:22px;bottom:22px;left:22px;color:white}.apps-photo-caption strong{display:block;margin-bottom:5px;font-size:17px}.apps-photo-caption span{font-size:11px;line-height:1.5;color:rgba(255,255,255,.86)}.apps-list{display:grid;gap:14px}.app-card{padding:23px;border:1px solid #dce7df;border-radius:18px;background:#fff;box-shadow:0 12px 28px rgba(14,49,35,.06)}.app-card-head{display:flex;align-items:center;gap:12px;margin-bottom:13px}.app-icon{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:var(--g);color:#f4d88e;font-size:15px;font-weight:950;letter-spacing:-.04em}.app-card h3{margin:0 0 3px;color:var(--g);font-size:19px}.app-card-head small{color:#76847c;font-size:10px;font-weight:750}.app-card>p{margin:0 0 12px;color:#607067;font-size:11px;line-height:1.65}.app-points{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 17px;padding:0;list-style:none}.app-points li{padding:6px 9px;border-radius:20px;background:#f0f5f1;color:#50645a;font-size:9px;font-weight:750}.store-links{display:flex;flex-wrap:wrap;align-items:center;gap:10px}.store-links a{display:inline-flex;align-items:center;min-height:43px}.store-links img{display:block;width:auto;height:42px;max-width:160px}.store-links .web-link{padding:0 14px;border:1px solid #cad8cf;border-radius:9px;color:var(--g);font-size:10px;font-weight:850}.store-note{margin:12px 0 0;color:#7b8981;font-size:9px;line-height:1.5}.workflow{background:var(--pale)}.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}.step{padding:25px;border:1px solid var(--line);border-radius:17px;background:#fff}.num{display:grid;place-items:center;width:34px;height:34px;margin-bottom:16px;border-radius:11px;background:var(--g);color:#fff;font-size:12px;font-weight:900}.step h3{margin-bottom:8px;color:var(--g);font-size:16px}.step p{margin:0;color:#68776f;font-size:12px;line-height:1.7}
-.package-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:15px;align-items:stretch}.package{display:flex;flex-direction:column;padding:24px;border:1px solid var(--line);border-radius:17px;background:#fff}.package.featured{border:2px solid var(--g);box-shadow:0 16px 36px rgba(7,60,45,.1)}.fit{margin:-7px 0 15px;color:#6c7b73;font-size:10px;line-height:1.5}.preview-note{position:absolute;left:0;bottom:3px;color:#64756b;font-size:9px;font-weight:650}.tag{margin-bottom:12px;color:#927136;font-size:9px;font-weight:900;letter-spacing:.12em;text-transform:uppercase}.package h3{margin-bottom:8px;color:var(--g);font-size:20px;letter-spacing:-.03em}.desc{min-height:42px;margin-bottom:16px;color:#6c7b73;font-size:11px;line-height:1.6}.quote{margin-bottom:16px;padding:10px 11px;border-radius:10px;background:#e8f1eb;color:var(--g);font-size:11px;font-weight:900}.package ul{display:grid;gap:10px;margin:0 0 22px;padding:0;list-style:none}.package li{display:flex;gap:8px;color:#52645a;font-size:11px;line-height:1.5}.package li:before{content:"✓";color:#33744d;font-weight:900}.package .btn{width:100%;margin-top:auto}.note{max-width:720px;margin:20px auto 0;color:#75837b;font-size:10px;line-height:1.6;text-align:center}
-.audience{background:linear-gradient(140deg,#073c2d,#0e5b42);color:#fff}.audience-grid{display:grid;grid-template-columns:1fr 1fr;align-items:center;gap:40px}.audience .eyebrow{color:#eed08b}.audience h2{max-width:500px;margin-bottom:13px;color:#fff;font-size:clamp(32px,4vw,45px);line-height:1.08;letter-spacing:-.045em}.audience-copy{max-width:540px;margin-bottom:20px;color:rgba(255,255,255,.78);font-size:13px;line-height:1.8}.role-list{display:grid;gap:11px}.role{display:flex;gap:11px;padding:13px;border:1px solid rgba(255,255,255,.15);border-radius:12px;background:rgba(255,255,255,.06)}.role>span{color:#f1cb74;font-weight:900}.role b{display:block;color:white;font-size:12px}.role small{display:block;margin-top:4px;color:rgba(255,255,255,.72);font-size:10px;line-height:1.5}
-.faqs{display:grid;grid-template-columns:1fr 1fr;gap:13px}.faq{padding:20px;border:1px solid var(--line);border-radius:14px}.faq h3{margin-bottom:7px;color:var(--g);font-size:13px}.faq p{margin:0;color:#68776f;font-size:11px;line-height:1.7}
-.cta{padding:0 0 80px}.cta-panel{display:flex;align-items:center;justify-content:space-between;gap:25px;padding:35px 38px;border-radius:20px;background:linear-gradient(120deg,#f6efdf,#f1f6f3)}.cta-panel h2{max-width:530px;margin-bottom:8px;color:var(--g);font-size:clamp(27px,3vw,36px);letter-spacing:-.04em}.cta-panel p{margin:0;color:#637168;font-size:12px;line-height:1.6}.cta-actions{display:flex;flex-wrap:wrap;gap:9px;flex-shrink:0}
-.org-control{background:#f5f8f6}.org-grid{display:grid;grid-template-columns:.95fr 1.05fr;align-items:center;gap:42px}.org-copy h2{max-width:540px;margin:0 0 14px;color:var(--g);font-size:clamp(32px,4vw,45px);line-height:1.08;letter-spacing:-.045em}.org-copy>p:last-of-type{max-width:550px;color:#637168;font-size:13px;line-height:1.8}.org-visual{display:grid;grid-template-columns:1fr 1fr;gap:12px}.org-card{min-height:155px;padding:21px;border:1px solid #dce7df;border-radius:17px;background:#fff;box-shadow:0 10px 28px rgba(14,49,35,.045)}.org-card:first-child{grid-column:span 2}.org-card-icon{display:grid;place-items:center;width:37px;height:37px;margin-bottom:14px;border-radius:12px;color:var(--g);background:#e8f1eb;font-size:17px;font-weight:900}.org-card h3{margin:0 0 7px;color:var(--g);font-size:15px}.org-card p{margin:0;color:#6a786f;font-size:11px;line-height:1.65}.role-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}.role-pills span{padding:5px 8px;border-radius:999px;background:#f0f5f1;color:#52645a;font-size:9px;font-weight:800}
-footer{padding:0 0 32px;border-top:1px solid #e7ece9;background:#f8faf9;color:var(--g)}.footer-links-area{display:grid;grid-template-columns:repeat(4,1fr);gap:30px;padding:43px 0 34px;border-bottom:1px solid #e2e9e5}.footer-group h2{margin:0 0 14px;color:var(--g);font-size:12px;letter-spacing:.02em}.footer-group ul{display:grid;gap:11px;margin:0;padding:0;list-style:none}.footer-group a{color:#637168;font-size:11px;font-weight:650}.footer-group a:hover{color:var(--g);text-decoration:underline;text-underline-offset:3px}.footer-brand{text-align:center;padding:34px 0 22px}.footer-logo img{width:190px}.footer-tagline{max-width:540px;margin:13px auto 20px;color:#34493d;font-size:clamp(15px,2vw,21px);line-height:1.45}.footer-socials{display:flex;justify-content:center;gap:10px;margin:20px 0 22px}.footer-social{display:grid;place-items:center;width:42px;height:42px;border:1px solid #deebe4;border-radius:50%;color:var(--g);background:#eaf3ee;font-size:15px;font-weight:900;transition:.18s}.footer-social:hover{transform:translateY(-2px);background:#dcebe2}.footer-stores{display:flex;justify-content:center;flex-wrap:wrap;gap:16px}.footer-store-group{display:grid;justify-items:center;gap:7px}.footer-store-group>span{color:#637168;font-size:9px;font-weight:850}.footer-store-group nav{display:flex;align-items:center;justify-content:center;gap:8px}.footer-stores a{display:inline-flex;align-items:center;justify-content:center;min-height:48px;padding:4px 10px;border:1px solid #cbd8d0;border-radius:10px;background:#fff}.footer-stores img{display:block;width:auto;height:37px;max-width:150px}.footer-trust{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin:25px auto 0}.footer-trust span{padding:8px 11px;border:1px solid #e1e9e4;border-radius:999px;background:#fff;color:#5c6d63;font-size:9px;font-weight:800}.footer-legal{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 25px;margin:28px auto 0;padding:0;list-style:none}.footer-legal a{color:#3e5548;font-size:11px;text-decoration:underline;text-underline-offset:3px}.copyright{margin:24px 0 0;color:#89958e;font-size:11px;text-align:center}.footer-accordion{display:contents}.footer-accordion summary{display:none}.footer-contact{display:flex;justify-content:center;gap:9px;margin-top:13px}.footer-contact a{color:#66776c;font-size:10px;font-weight:750}.mobile-cta{display:none}
-@media(max-width:900px){.nav-links{gap:15px}.hero-grid{gap:26px}.features{grid-template-columns:repeat(2,1fr)}.package-grid{gap:10px}.package{padding:20px}.audience-grid{gap:27px}.apps-layout{grid-template-columns:.8fr 1.2fr}.apps-photo{min-height:520px}.footer-links-area{gap:20px}}
-@media(max-width:680px){.wrap{width:min(calc(100% - 30px),520px)}.nav{min-height:66px}.logo img{width:150px}.nav-links{display:none}.nav-actions{gap:12px}.nav-actions .btn{min-height:38px;padding:0 12px;font-size:10px}.hero{padding:48px 0 39px}.hero-grid{grid-template-columns:1fr;gap:22px}.hero h1{font-size:clamp(39px,11vw,54px)}.hero-copy{font-size:14px}.preview{min-height:320px}.dash-card{padding:15px;border-radius:17px}.dash-heading h2{font-size:18px}.float{right:0;bottom:3px}.preview-note{bottom:-17px}.proof-row{grid-template-columns:1fr;padding:7px 0}.proof-item{justify-content:flex-start;padding:11px 5px}.proof-item+.proof-item{border-left:0;border-top:1px solid var(--line)}section.content{padding:62px 0}.section-head{margin-bottom:27px}.section-head h2{font-size:32px}.section-head>p:last-child{font-size:12px}.features,.steps,.package-grid,.audience-grid,.faqs,.apps-layout,.org-grid{grid-template-columns:1fr}.apps-photo{min-height:280px}.app-card{padding:19px}.store-links img{height:38px}.feature,.step{padding:21px}.package{padding:23px}.desc{min-height:0}.audience-grid{gap:25px}.audience h2,.org-copy h2{font-size:33px}.org-visual{gap:9px}.org-card{min-height:143px;padding:17px}.cta{padding-bottom:60px}.cta-panel{display:block;padding:25px 22px}.cta-actions{margin-top:17px}.cta-actions .btn{flex:1}footer{padding-bottom:27px}.footer-links-area{display:block;padding:0 0 18px}.footer-group{border-bottom:1px solid #dfe7e3}.footer-accordion{display:block}.footer-accordion summary{display:flex;align-items:center;justify-content:space-between;min-height:67px;color:#24243d;font-size:18px;font-weight:750;list-style:none;cursor:pointer}.footer-accordion summary::-webkit-details-marker{display:none}.footer-accordion summary:after{content:"";width:9px;height:9px;margin-right:4px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(45deg);transition:transform .18s}.footer-accordion[open] summary:after{transform:rotate(225deg)}.footer-group ul{gap:12px;padding:0 0 19px}.footer-group a{font-size:13px}.footer-brand{padding:31px 0 14px}.footer-logo img{width:180px}.footer-tagline{margin:12px auto 18px;font-size:16px}.footer-social{width:42px;height:42px}.footer-stores{gap:13px}.footer-store-group nav{flex-wrap:wrap}.footer-stores a{min-height:47px;padding:4px 8px}.footer-stores img{height:34px;max-width:140px}.footer-trust{gap:6px;margin-top:20px}.footer-trust span{padding:7px 9px;font-size:8px}.footer-legal{gap:12px 20px;margin-top:23px}.footer-legal a{font-size:11px}.copyright{margin-top:22px;font-size:10px}.footer-contact{flex-wrap:wrap}}
-@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{transition:none!important}}
-
-/* Deputy-inspired product-led presentation, using Elite Bridge branding and copy. */
-body{font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-h1,h2,h3{font-family:"Inter",ui-sans-serif,sans-serif;font-weight:750;letter-spacing:-.035em}
-.hero h1{letter-spacing:-.055em}
-.section-head h2{letter-spacing:-.04em}
-.announcement{padding:10px 16px;background:#073c2d;color:#fff;text-align:center;font-size:11px;font-weight:650;letter-spacing:.025em}
-.announcement strong{color:#f0ce86}
-.announcement a{margin-left:8px;color:#fff;font-weight:850;text-decoration:underline;text-underline-offset:3px}
-.hero{padding:75px 0 79px;background:radial-gradient(ellipse at 82% 20%,rgba(212,230,215,.82),transparent 33%),radial-gradient(ellipse at 8% 100%,rgba(245,232,207,.58),transparent 30%),linear-gradient(120deg,#f8faf7,#edf4ef)}
-.hero-grid{grid-template-columns:1fr 1fr;gap:55px}
-.hero h1{max-width:620px;color:#073c2d;font-size:clamp(47px,5.7vw,74px);line-height:1.01;letter-spacing:-.063em}
-.hero h1 em{color:#b77f2a}
-.hero .eyebrow{color:#8a6424}
-.hero .hero-copy{max-width:545px;color:#56675e;font-size:17px;line-height:1.7}
-.hero .checks{color:#53655b}
-.hero .checks span:before{color:#3c8054}
-.hero .btn{min-height:52px;border-radius:999px;padding:0 23px;font-size:13px}
-.hero .btn.gold{background:#d6a249;color:#173023}
-.hero .btn.gold:hover{background:#e3b65e}
-.hero .btn.outline{border-color:#d3dfd7;color:#073c2d;background:rgba(255,255,255,.75)}
-.hero .btn.outline:hover{background:#fff}
-.hero-preview{min-height:445px;display:flex;flex-direction:column;align-items:stretch;justify-content:center;padding:7px}
-.dash-window{position:relative;z-index:1;width:100%;overflow:hidden;border:1px solid rgba(255,255,255,.95);border-radius:20px;background:#f6f9f7;box-shadow:0 28px 68px rgba(20,58,40,.17);transform:perspective(1400px) rotateY(-2deg) rotateX(1deg)}
-.dash-window .dash-top{padding:13px 16px;background:#fff}
-.dash-window .dash-brand{font-size:11px}
-.dash-window .mark{width:29px;height:29px}
-.dash-window .dash-top small{font-size:8px}
-.workspace-preview{display:grid;grid-template-columns:155px 1fr;min-height:340px}
-.workspace-nav{display:grid;align-content:start;gap:6px;padding:15px 10px;border-right:1px solid #e1e9e4;background:#fff;color:#52635a;font-size:9px;font-weight:700}
-.workspace-nav b{margin:8px 0 2px;color:#9aa59e;font-size:7px;letter-spacing:.1em}
-.workspace-nav span{padding:8px 7px;border-radius:7px}
-.workspace-nav .selected{color:#07513a;background:#e6f1e9}
-.workspace-main{padding:16px}
-.workspace-title{display:flex;justify-content:space-between;align-items:center;gap:10px}
-.workspace-title h2{margin:0 0 4px;color:#113c2c;font-size:16px;letter-spacing:-.03em}
-.workspace-title p{margin:0;color:#819087;font-size:9px}
-.workspace-title>span{color:#328356;font-size:8px;font-weight:800;white-space:nowrap}
-.action-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0;padding:11px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}
-.action-tiles div{display:grid;align-content:start;gap:7px;min-height:81px;padding:9px;border:1px solid #e8eeea;border-radius:9px;color:#9f762f;font-size:12px}
-.action-tiles b{color:#1b3d2e;font-size:9px}
-.action-tiles small{color:#87938c;font-size:7px}
-.workflow-preview{padding:12px;border:1px solid #e4ebe7;border-radius:12px;background:#fff}
-.workflow-preview .workspace-title h2{font-size:14px}
-.schedule-btn{padding:7px 9px;border:1px solid #e5ebe7;border-radius:7px;color:#315343!important}
-.workflow-rows{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:12px}
-.workflow-rows span{display:grid;grid-template-columns:24px 1fr;align-items:center;gap:2px 7px;padding:8px;border:1px solid #edf1ee;border-radius:8px}
-.workflow-rows i{grid-row:span 2;display:grid;place-items:center;width:23px;height:23px;border-radius:8px;background:#edf4e9;color:#508157;font-size:9px;font-style:normal;font-weight:900}
-.workflow-rows b{color:#294436;font-size:8px}
-.workflow-rows small{color:#849188;font-size:7px}
-.hero-preview .float{position:static;align-self:flex-end;margin:10px 0 0;z-index:2}
-@media(max-width:900px){.hero-grid{gap:32px}}
-@media(max-width:680px){
- .announcement{padding:9px 12px;font-size:9px}
- .hero{padding:48px 0 44px}
- .hero-grid{grid-template-columns:1fr;gap:21px}
- .hero h1{max-width:520px;margin-bottom:14px;color:#073c2d;font-size:clamp(38px,9.8vw,54px);line-height:1.03;letter-spacing:-.055em}
- .hero-copy{max-width:520px;margin-bottom:19px;color:#56675e;font-size:14px;line-height:1.65}
- .hero-preview{min-height:310px;padding:3px;margin-top:3px}
- .workspace-preview{grid-template-columns:93px 1fr;min-height:270px}
- .workspace-nav{gap:3px;padding:8px 5px;font-size:7px}
- .workspace-nav b{font-size:6px}
- .workspace-nav span{padding:6px 4px}
- .workspace-main{padding:10px 8px}
- .workspace-title h2{font-size:13px}
- .workspace-title p{font-size:7px}
- .workspace-title>span{font-size:6px}
- .action-tiles{gap:4px;margin:8px 0;padding:6px}
- .action-tiles div{gap:5px;min-height:67px;padding:6px}
- .action-tiles b{font-size:7px}
- .action-tiles small{font-size:6px}
- .workflow-preview{padding:8px}
- .workflow-preview .workspace-title h2{font-size:11px}
- .workflow-preview .workspace-title p{font-size:6px}
- .schedule-btn{padding:5px;font-size:6px}
- .workflow-rows{gap:4px;margin-top:8px}
- .workflow-rows span{grid-template-columns:18px 1fr;gap:2px 5px;padding:5px}
- .workflow-rows i{width:18px;height:18px;font-size:7px}
- .workflow-rows b{font-size:6px}
- .workflow-rows small{font-size:5px}
- .hero-preview .float{right:7px;bottom:7px;padding:7px 9px;font-size:7px}
- .hero-preview .float small{font-size:6px}
-}
-/* Homepage flow inspired by Deputy, Clipboard and IntelyCare; all copy and branding remain Elite Bridge's. */
-.hero{padding:48px 0 64px;background:radial-gradient(ellipse at 82% 14%,rgba(24,115,77,.42),transparent 31%),radial-gradient(ellipse at 9% 88%,rgba(214,162,73,.16),transparent 26%),linear-gradient(135deg,#062e23,#0b503a);color:#fff}
-.hero-grid{display:grid;grid-template-columns:1fr;gap:25px}
-.hero-grid>div:first-child{text-align:center}
-.hero .eyebrow{justify-content:center;color:#f0cf86}
-.hero h1{max-width:900px;margin:0 auto 17px;color:#fff;font-size:clamp(48px,6.2vw,80px);line-height:.99;letter-spacing:-.065em}
-.hero h1 em{color:#e8b84c}
-.hero .hero-copy{max-width:720px;margin:0 auto 24px;color:rgba(255,255,255,.82);font-size:17px;line-height:1.65}
-.hero .actions{justify-content:center}
-.hero .btn{min-height:51px;border-radius:999px;padding:0 23px;font-size:13px}
-.hero .btn.gold{background:#d6a249;color:#173023}
-.hero .btn.gold:hover{background:#e4b65f}
-.hero .btn.outline{border-color:rgba(255,255,255,.43);color:#fff;background:rgba(255,255,255,.08)}
-.hero .btn.outline:hover{background:rgba(255,255,255,.15)}
-.hero .checks{justify-content:center;gap:20px;color:rgba(255,255,255,.8)}
-.hero .checks span:before{color:#f0cf86}
-.hero-capabilities{display:flex;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:23px}
-.hero-capabilities a{padding:8px 14px;border:1px solid rgba(255,255,255,.2);border-radius:999px;color:rgba(255,255,255,.9);background:rgba(255,255,255,.07);font-size:11px;font-weight:750;transition:background .18s,transform .18s}
-.hero-capabilities a:hover{transform:translateY(-1px);background:rgba(255,255,255,.16)}
-.hero-preview{width:min(1050px,100%);min-height:430px;margin:0 auto;padding:8px;display:flex;flex-direction:column;justify-content:center}
-.dash-window{position:relative;z-index:1;width:100%;overflow:hidden;border:1px solid rgba(255,255,255,.9);border-radius:20px;background:#f6f9f7;box-shadow:0 28px 70px rgba(0,0,0,.25);transform:perspective(1400px) rotateY(-1.5deg)}
-.dash-window .dash-top{padding:13px 16px;background:#fff}
-.workspace-preview{grid-template-columns:155px 1fr;min-height:340px}
-.hero-preview .float{position:static;align-self:flex-end;margin:10px 2px 0;z-index:2}
-.proof{background:#fff}
-.proof-row{padding:20px 0}
-.proof-item b{font-size:12px}
-.proof-item small{font-size:10px}
-section.content{padding:78px 0}
-.section-head{margin-bottom:35px}
-.section-head h2{font-family:"Inter",sans-serif;font-size:clamp(32px,4vw,48px);letter-spacing:-.045em}
-.section-head>p:last-child{max-width:680px;margin:0 auto;color:#66756d;font-size:14px;line-height:1.75}
-.feature{border-radius:18px}
-.industries{background:#f5f7f5}
-.industry-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.industry-card{min-height:220px;padding:23px;border:1px solid #e1e9e4;border-radius:17px;background:#fff;transition:transform .2s,box-shadow .2s}
-.industry-card:hover{transform:translateY(-3px);box-shadow:0 15px 35px rgba(19,56,40,.08)}
-.industry-icon{display:grid;place-items:center;width:42px;height:42px;margin-bottom:18px;border-radius:13px;background:#e8f1eb;color:#073c2d;font-size:18px;font-weight:800}
-.industry-card h3{margin:0 0 8px;color:#073c2d;font-size:16px;line-height:1.25}
-.industry-card p{margin:0;color:#68776f;font-size:12px;line-height:1.65}
-.industry-card a{display:inline-flex;gap:8px;align-items:center;margin-top:15px;color:#07513a;font-size:11px;font-weight:800}
-.industry-card a b{font-size:15px}
-.apps-section{background:#f1f5f2}
-.apps-photo{min-height:420px}
-.audience{background:linear-gradient(140deg,#073c2d,#0e5b42)}
-.org-control{background:#f5f8f6}
-.cta{padding:0 0 0}
-.cta-panel{min-height:210px;padding:45px 48px;border-radius:0;background:linear-gradient(125deg,#062e23,#0b503a);color:#fff}
-.cta-panel h2{color:#fff}
-.cta-panel p{color:rgba(255,255,255,.78)}
-.cta-panel .btn.outline{border-color:rgba(255,255,255,.45);background:transparent;color:#fff}
-.cta-panel .btn.outline:hover{background:rgba(255,255,255,.12)}
-footer{padding:0 0 25px;border-top:0;background:#062e23;color:#fff}
-.footer-links-area{border-color:rgba(255,255,255,.15)}
-.footer-group h2{color:#e8bd67}
-.footer-group a{color:#d1ddd5}
-.footer-group a:hover{color:#fff}
-.footer-brand{padding:40px 0 24px}
-.footer-tagline{color:#fff}
-.footer-social{border-color:rgba(255,255,255,.23);background:rgba(255,255,255,.08);color:#fff}
-.footer-stores a{border-color:rgba(255,255,255,.25)}
-.footer-trust span{border-color:rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:#dce7df}
-.footer-legal a,.footer-contact a{color:#dce7df}
-.copyright{color:#a7b9ae}
-@media(max-width:900px){.industry-grid{grid-template-columns:repeat(2,1fr)}.hero-preview{min-height:400px}.workspace-preview{grid-template-columns:125px 1fr}}
-@media(max-width:680px){
- .hero{padding:39px 0 43px}
- .hero-grid{gap:15px}
- .hero h1{font-size:clamp(39px,10vw,56px);line-height:1.02}
- .hero .hero-copy{font-size:14px}
- .hero .checks{gap:9px 14px;font-size:9px}
- .hero-capabilities{gap:6px;margin-top:17px}
- .hero-capabilities a{padding:7px 10px;font-size:9px}
- .hero-preview{min-height:300px;padding:2px}
- .workspace-preview{grid-template-columns:87px 1fr;min-height:270px}
- .workspace-nav{gap:3px;padding:8px 5px;font-size:7px}
- .workspace-nav b{font-size:6px}
- .workspace-nav span{padding:6px 4px}
- .workspace-main{padding:10px 8px}
- .workspace-title h2{font-size:13px}
- .workspace-title p{font-size:7px}
- .workspace-title>span{font-size:6px}
- .action-tiles{gap:4px;margin:8px 0;padding:6px}
- .action-tiles div{gap:5px;min-height:67px;padding:6px}
- .action-tiles b{font-size:7px}
- .action-tiles small{font-size:6px}
- .workflow-preview{padding:8px}
- .workflow-preview .workspace-title h2{font-size:11px}
- .workflow-preview .workspace-title p{font-size:6px}
- .schedule-btn{padding:5px;font-size:6px}
- .workflow-rows{gap:4px;margin-top:8px}
- .workflow-rows span{grid-template-columns:18px 1fr;gap:2px 5px;padding:5px}
- .workflow-rows i{width:18px;height:18px;font-size:7px}
- .workflow-rows b{font-size:6px}
- .workflow-rows small{font-size:5px}
- .industry-grid{grid-template-columns:1fr}
- .industry-card{min-height:0;padding:20px}
- .apps-photo{min-height:270px}
- .cta-panel{min-height:0;padding:31px 22px}
- .cta-panel .cta-actions{display:grid}
- .footer-links-area{padding-top:8px}
-}
-
-/* AI Agent concept showcase */
-.ai-agent{overflow:hidden;background:radial-gradient(ellipse at 78% 8%,rgba(41,129,90,.28),transparent 34%),linear-gradient(135deg,#062e23,#0b503a);color:#fff}
-.ai-agent .wrap{width:min(1240px,calc(100% - 44px))}
-.agent-tabs{display:flex;justify-content:space-between;gap:24px;overflow-x:auto;margin:-10px 0 50px;padding:0 4px 15px;border-bottom:1px solid rgba(255,255,255,.2);scrollbar-width:none}
-.agent-tabs::-webkit-scrollbar{display:none}
-.agent-tabs span{flex:0 0 auto;padding:0 0 12px;color:rgba(255,255,255,.68);font-size:13px;font-weight:750;white-space:nowrap}
-.agent-tabs .active{margin-bottom:-16px;border-bottom:3px solid #d9aa4f;color:#fff}
-.agent-layout{display:grid;grid-template-columns:.78fr 1.22fr;align-items:center;gap:54px}
-.agent-copy .eyebrow{color:#f0cf86}
-.agent-copy h2{max-width:480px;margin:0 0 15px;color:#fff;font-size:clamp(34px,4vw,49px);line-height:1.06;letter-spacing:-.05em}
-.agent-intro{max-width:520px;margin:0 0 24px;color:rgba(255,255,255,.78);font-size:14px;line-height:1.75}
-.agent-benefits{display:grid;gap:14px;margin:0;padding:0;list-style:none}
-.agent-benefits li{display:grid;grid-template-columns:32px 1fr;gap:11px}
-.agent-benefits li>span{display:grid;place-items:center;width:29px;height:29px;border:1px solid rgba(255,255,255,.22);border-radius:9px;color:#f0cf86;font-size:9px;font-weight:900}
-.agent-benefits b{display:block;margin:1px 0 4px;color:#fff;font-size:12px}
-.agent-benefits small{display:block;color:rgba(255,255,255,.68);font-size:10px;line-height:1.55}
-.agent-actions{display:flex;flex-direction:column;align-items:flex-start;gap:10px;margin-top:24px}
-.agent-actions .btn{border-radius:999px}
-.agent-actions>span{color:rgba(255,255,255,.65);font-size:9px}
-.agent-demo{overflow:hidden;border:1px solid rgba(255,255,255,.78);border-radius:20px;background:#f7faf8;box-shadow:0 28px 70px rgba(0,0,0,.24);color:#173b2b}
-.agent-demo-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid #e5ece7;background:#fff}
-.agent-brand{display:flex;align-items:center;gap:10px;color:#143d2b;font-size:11px;font-weight:900}
-.agent-brand small{display:block;margin-top:3px;color:#738279;font-size:8px;font-weight:700}
-.agent-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#073c2d;color:#f0cf86;font-weight:950}
-.agent-connected{padding:6px 9px;border-radius:999px;background:#f0f4f1;color:#67766d;font-size:8px;font-weight:800}
-.agent-tabs-mobile{display:flex;gap:15px;overflow:hidden;padding:12px 20px;border-bottom:1px solid #e5ece7;background:#fff}
-.agent-tabs-mobile span{color:#87938c;font-size:8px;font-weight:800;white-space:nowrap}
-.agent-tabs-mobile .active{color:#07513a}
-.agent-chat{max-width:570px;margin:0 auto;padding:23px 27px 18px}
-.agent-context{display:grid;gap:5px;margin-bottom:18px;padding:11px 13px;border:1px solid #e2ebe5;border-radius:11px;background:#fff}
-.agent-context>span,.agent-question small{color:#849189;font-size:7px;font-weight:900;letter-spacing:.1em}
-.agent-context b{color:#254335;font-size:10px}
-.agent-context small{color:#89958e;font-size:8px}
-.agent-question{display:flex;align-items:flex-start;gap:9px;margin:0 0 12px 10px}
-.agent-avatar{display:grid;place-items:center;flex:0 0 27px;height:27px;border-radius:9px;background:#e8f1eb;color:#07513a;font-size:8px;font-weight:900}
-.agent-question>div{padding:10px 12px;border:1px solid #e2ebe5;border-radius:4px 12px 12px;background:#fff}
-.agent-question p{margin:4px 0 0;color:#344a3c;font-size:10px;font-weight:700}
-.agent-answer{padding:15px;border:1px solid #e2ebe5;border-radius:14px;background:#fff;box-shadow:0 8px 24px rgba(14,49,35,.045)}
-.agent-answer-head{display:flex;align-items:center;gap:9px;margin-bottom:12px}
-.agent-spark{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#e8f1eb;color:#98702e;font-size:14px}
-.agent-answer-head b{display:block;color:#294538;font-size:10px}
-.agent-answer-head small{display:block;margin-top:3px;color:#8a968f;font-size:8px}
-.agent-result{display:grid;grid-template-columns:8px 1fr auto;align-items:center;gap:9px;padding:10px 0;border-top:1px solid #edf1ee}
-.result-dot{width:7px;height:7px;border-radius:50%}
-.result-dot.amber{background:#d2a047}.result-dot.green{background:#4e9a69}
-.agent-result b{display:block;color:#334c3e;font-size:9px}
-.agent-result small{display:block;margin-top:3px;color:#89958e;font-size:8px}
-.result-tag{padding:4px 6px;border-radius:999px;background:#fff5e2;color:#8b6929;font-size:7px;font-weight:900}
-.result-tag.review{background:#e8f3ea;color:#3d7a4f}
-.agent-followup{margin-top:10px;padding:9px 10px;border-radius:9px;background:#f2f6f3;color:#52655a;font-size:8px;line-height:1.5}
-.agent-prompt{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:14px;padding:11px 12px;border:1px solid #dce7df;border-radius:11px;background:#fff;color:#9aa59e;font-size:8px}
-.agent-prompt b{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#0b563e;color:#fff;font-size:14px}
-.agent-demo-foot{display:flex;align-items:center;gap:6px;padding:11px 20px;border-top:1px solid #e5ece7;background:#f1f6f3;color:#78867e;font-size:8px}
-.agent-demo-foot span{color:#a57c35}
-@media(max-width:900px){.agent-layout{grid-template-columns:1fr;gap:30px}.agent-copy{max-width:700px}.agent-copy h2{max-width:650px}.agent-demo{max-width:750px;width:100%;margin:auto}.agent-tabs{margin-bottom:34px}}
-@media(max-width:680px){.ai-agent .wrap{width:min(calc(100% - 30px),520px)}.agent-tabs{justify-content:flex-start;gap:22px;margin:-5px 0 28px;padding-bottom:11px}.agent-tabs span{font-size:10px}.agent-tabs .active{margin-bottom:-12px}.agent-layout{gap:25px}.agent-copy h2{font-size:33px}.agent-intro{font-size:12px}.agent-benefits{gap:12px}.agent-chat{padding:16px 12px 14px}.agent-demo-bar{padding:13px}.agent-connected{font-size:7px}.agent-tabs-mobile{gap:12px;padding:10px 13px}.agent-result small{font-size:7px}}
-
-h1,h2,h3{font-family:"Inter",sans-serif}.footer-logo img{width:190px;height:auto;background:transparent}
-.footer-brand{display:flex;flex-direction:column;align-items:center;text-align:center}.footer-logo{display:block;width:max-content;max-width:100%;margin:0 auto}.footer-logo img{display:block;max-width:100%;height:auto;object-fit:contain}
-
-/* Clipboard-inspired people-first hero and closing image, built for Elite Bridge */
-.hero{padding:62px 0 68px;background:linear-gradient(135deg,#062e23,#0b503a);color:#fff}
-.hero-grid{grid-template-columns:.88fr 1.12fr;align-items:center;gap:52px}
-.hero-grid>div:first-child{text-align:left}
-.hero .eyebrow{justify-content:flex-start;color:#f0cf86}
-.hero h1{max-width:620px;margin:0 0 18px;color:#fff;font-size:clamp(43px,5vw,66px);line-height:1.02;letter-spacing:-.06em}
-.hero .hero-copy{max-width:540px;margin:0 0 24px;color:rgba(255,255,255,.82);font-size:15px;line-height:1.72}
-.hero .actions{justify-content:flex-start}
-.hero .checks{justify-content:flex-start;gap:10px 16px}
-.hero-capabilities{justify-content:flex-start;gap:8px}
-.hero-capabilities a{border-color:rgba(255,255,255,.23);background:rgba(255,255,255,.07)}
-.hero-preview{position:relative;width:100%;min-height:525px;margin:0;padding:0 0 58px;display:block;overflow:visible}
-.hero-image-frame{position:absolute;inset:0 0 58px;overflow:hidden;border:1px solid rgba(255,255,255,.2);border-radius:25px;background:#e9eee9;box-shadow:0 26px 65px rgba(0,0,0,.22)}
-.hero-slide-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center center;transition:opacity .18s ease}
-.hero-image-shade{position:absolute;inset:38% 0 0;background:linear-gradient(180deg,transparent,rgba(5,31,22,.28))}
-.hero-image-caption{position:absolute;top:17px;left:17px;display:flex;align-items:center;gap:9px;padding:10px 13px;border:1px solid rgba(255,255,255,.8);border-radius:13px;background:rgba(255,255,255,.95);box-shadow:0 8px 25px rgba(0,0,0,.12);color:#173b2b}
-.hero-caption-mark{display:grid;place-items:center;width:30px;height:30px;border-radius:9px;background:#073c2d;color:#f0cf86;font-size:9px;font-weight:950}
-.hero-image-caption b{display:block;font-size:10px}
-.hero-image-caption small{display:block;margin-top:3px;color:#708077;font-size:8px}
-.hero-preview .dash-window{position:absolute;left:-20px;bottom:77px;width:88%;max-width:610px;transform:none;border-radius:16px;box-shadow:0 20px 50px rgba(0,0,0,.28)}
-.hero-preview .float{position:absolute;right:14px;bottom:77px;z-index:4;max-width:190px;padding:10px 12px;border-radius:11px;font-size:9px}
-.hero-preview .float small{font-size:8px}
-.caregiver-preview{display:none;position:absolute;left:-15px;bottom:78px;z-index:3;width:min(300px,76%);padding:15px;border:1px solid #fff;border-radius:17px;background:#fff;box-shadow:0 20px 48px rgba(0,0,0,.25);color:#183c2c}
-.caregiver-preview-top{display:flex;align-items:center;gap:9px;padding-bottom:12px;border-bottom:1px solid #e7eee9}
-.caregiver-mark{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:#073c2d;color:#f0cf86;font-size:9px;font-weight:950}
-.caregiver-preview-top b{display:block;font-size:11px}
-.caregiver-preview-top small{display:block;margin-top:3px;color:#839188;font-size:7px;font-weight:800}
-.caregiver-online{margin-left:auto;color:#4c9b62;font-size:10px}
-.caregiver-shift{display:grid;gap:6px;padding:14px 0 11px}
-.caregiver-shift>small{color:#917132;font-size:7px;font-weight:900;letter-spacing:.11em}
-.caregiver-shift>b{color:#173b2b;font-size:14px}
-.caregiver-shift>span{color:#75837a;font-size:9px}
-.caregiver-shift>div{display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:10px;border-top:1px solid #edf1ee;color:#417a50;font-size:8px;font-weight:800}
-.caregiver-shift a{color:#07513a}
-.caregiver-update{padding:9px;border-radius:9px;background:#eef5ef;color:#617267;font-size:8px}
-.caregiver-update span{margin-right:4px;color:#3b8b51;font-weight:900}
-.hero-preview[data-slide="caregiver"] .dash-window,.hero-preview[data-slide="caregiver"] .float{display:none}
-.hero-preview[data-slide="caregiver"] .caregiver-preview{display:block}
-.hero-slider-controls{position:absolute;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:flex-end;gap:11px;height:44px;color:#fff}
-.hero-slider-controls>button{display:grid;place-items:center;width:34px;height:34px;border:1px solid rgba(255,255,255,.28);border-radius:50%;background:transparent;color:#fff;font-size:22px;line-height:1;cursor:pointer;transition:background .18s,border-color .18s}
-.hero-slider-controls>button:hover{border-color:#d6a249;background:rgba(255,255,255,.1)}
-.hero-slider-dots{display:flex;align-items:center;gap:7px}
-.hero-slider-dots button{width:7px;height:7px;padding:0;border:0;border-radius:10px;background:rgba(255,255,255,.38);cursor:pointer;transition:width .2s,background .2s}
-.hero-slider-dots button[aria-current="true"]{width:22px;background:#e0b454}
-.hero-slider-controls>span{color:rgba(255,255,255,.72);font-size:8px;font-weight:800;letter-spacing:.08em}
-.cta{padding:0;background:#073c2d}
-.cta .wrap{width:100%;max-width:none;margin:0}
-.cta-panel{position:relative;isolation:isolate;overflow:hidden;display:flex;align-items:center;justify-content:space-between;gap:32px;min-height:520px;padding:64px max(24px,calc((100vw - 1160px)/2));border-radius:0;background:#073c2d}
-.cta-photo,.cta-photo-shade{position:absolute;inset:0;width:100%;height:100%;z-index:-1}
-.cta-photo{object-fit:cover;object-position:center 45%}
-.cta-photo-shade{background:linear-gradient(90deg,#062e23 0%,rgba(6,46,35,.96) 36%,rgba(6,46,35,.74) 58%,rgba(6,46,35,.12) 100%)}
-.cta-copy{max-width:570px}
-.cta-copy .eyebrow{color:#f0cf86;font-size:9px}
-.cta-panel h2{max-width:540px;color:#fff;font-size:clamp(30px,4vw,45px);line-height:1.07;letter-spacing:-.05em}
-.cta-panel p{color:rgba(255,255,255,.8);font-size:13px;line-height:1.7}
-.cta-actions{display:flex;flex-shrink:0;flex-wrap:wrap;gap:9px;justify-content:flex-end}
-.cta-panel .btn.outline{border-color:rgba(255,255,255,.55);background:rgba(255,255,255,.08);color:#fff}
-.cta-panel .btn.outline:hover{background:rgba(255,255,255,.17)}
-.footer-logo img{filter:brightness(0) invert(1)}
-@media(max-width:950px){.hero-grid{grid-template-columns:1fr;gap:28px}.hero-grid>div:first-child{text-align:center}.hero .eyebrow{justify-content:center}.hero .hero-copy{margin-left:auto;margin-right:auto}.hero .actions,.hero .checks,.hero-capabilities{justify-content:center}.hero-preview{width:min(760px,100%);min-height:500px;margin:0 auto}.cta-panel{min-height:460px;padding:40px max(28px,calc((100vw - 760px)/2))}}
-@media(max-width:680px){.hero{padding:40px 0 48px}.hero-grid{gap:22px}.hero h1{font-size:clamp(39px,10vw,52px)}.hero .hero-copy{font-size:13px}.hero .checks{gap:8px 12px;font-size:9px}.hero-preview{min-height:360px;padding-bottom:48px}.hero-image-frame{inset:0 0 48px;border-radius:18px}.hero-preview .dash-window{left:-3px;bottom:64px;width:96%;max-width:none}.hero-preview .float{right:4px;bottom:62px;max-width:135px;padding:7px 8px;font-size:7px}.hero-preview .float small{font-size:6px}.caregiver-preview{left:6px;bottom:62px;width:min(265px,82%);padding:12px}.hero-slider-controls{height:39px}.hero-slider-controls>button{width:30px;height:30px}.hero-image-caption{top:10px;left:10px;padding:8px 9px}.cta{padding:0}.cta-panel{display:block;min-height:440px;padding:27px 22px;border-radius:0;background:#073c2d}.cta-photo{object-position:61% center}.cta-photo-shade{background:linear-gradient(180deg,rgba(6,46,35,.97) 0%,rgba(6,46,35,.86) 45%,rgba(6,46,35,.24) 100%)}.cta-copy{max-width:100%}.cta-panel h2{font-size:32px}.cta-actions{justify-content:flex-start;margin-top:17px}.cta-actions .btn{flex:1}.footer-logo img{width:min(100%,300px)}}
-@media(prefers-reduced-motion:reduce){.hero-slide-image,.hero-slider-controls button,.hero-slider-dots button{transition:none}}
-
-.hero-preview .dash-window{left:-12px;bottom:74px;width:74%;max-width:480px}.footer-logo img{width:250px}@media(max-width:680px){.footer-logo img{width:min(100%,300px)}}
-
-/* Mobile hero layout: keep the care photo and product preview in separate cards */
-@media(max-width:680px){
-  .hero-preview{display:flex;flex-direction:column;align-items:stretch;gap:12px;min-height:0;padding:0 0 16px}
-  .hero-image-frame{position:relative;inset:auto;height:clamp(180px,58vw,230px);flex:0 0 auto;border-radius:18px}
-  .hero-slide-image{object-position:center 42%}
-  .hero-preview .dash-window{position:relative;left:auto;bottom:auto;width:100%;max-width:none;margin:0;transform:none}
-  .hero-preview .float{position:relative;right:auto;bottom:auto;align-self:flex-start;max-width:100%;margin:0}
-  .caregiver-preview{position:relative;left:auto;bottom:auto;width:100%;max-width:none;margin:0}
-  .hero-preview[data-slide="caregiver"] .caregiver-preview{display:block}
-  .hero-preview[data-slide="employer"] .caregiver-preview{display:none}
-  .hero-slider-controls{position:relative;right:auto;bottom:auto;left:auto;justify-content:center;height:42px;margin:0}
-}
-footer .footer-group h2,
-footer .footer-group a,
-footer .footer-accordion summary,
-footer .footer-contact a,
-footer .footer-tagline,
-footer .footer-bottom,
-footer .footer-trust span,
-footer .footer-store-group>span{color:#fff}
-footer .footer-accordion summary:after{border-color:#fff}
-
-
-/* Keep the footer logo itself centered at mobile widths. */
-@media(max-width:680px){footer .footer-logo{display:block;width:min(300px,100%);max-width:100%;margin-inline:auto;align-self:center}footer .footer-logo img{display:block;width:100%;max-width:100%;height:auto;margin-inline:auto}}
-
-/* Consistent typography and readable mobile copy. */
-body{font-family:"Inter",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;font-weight:400}
-h1,h2,h3,.section-head h2{font-family:inherit;font-weight:600;letter-spacing:-.03em}
-.btn,.nav-links a,.nav-actions a,.footer-accordion summary{font-weight:600}
-footer .footer-social{color:#fff;width:44px;height:44px}
-footer .footer-social svg{display:block;flex:none}
-footer .footer-social:hover{background:rgba(255,255,255,.16)}
-footer .footer-stores a{padding:0;border:0;border-radius:0;background:transparent;min-height:44px}
-footer .footer-stores img{height:44px;max-width:155px}
-footer .footer-store-group>span{font-size:12px;font-weight:500}
-@media(max-width:680px){
- .hero .hero-copy,.section-head>p:last-child,.agent-intro,.org-copy>p:last-of-type,.audience-copy{font-size:16px;line-height:1.65}
- .feature p,.step p,.app-card>p,.org-card p,.industry-card p,.faq p,.package .desc,.package li,.cta-panel p{font-size:15px;line-height:1.65}
- .feature h3,.step h3,.industry-card h3,.faq h3,.org-card h3{font-size:18px;line-height:1.35}
- .app-card-head small,.app-points li,.store-note,.fit,.note,.role small,.role-pills span,.agent-benefits small{font-size:12px;line-height:1.55}
- .agent-benefits b,.role b,.proof-item b{font-size:14px;font-weight:600}
- .proof-item small,.hero .checks{font-size:12px;line-height:1.5}
- .actions .btn,.package .btn,.cta-actions .btn{font-size:14px;min-height:46px;font-weight:600}
- .footer-group a,.footer-legal a,.footer-contact a{font-size:14px;line-height:1.6}
- .footer-contact{gap:12px 18px}
- .footer-trust span,.copyright{font-size:12px;line-height:1.6;font-weight:400}
- .footer-tagline{font-size:17px;line-height:1.6}
- .footer-store-group nav{gap:12px}
-}
-</style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#0b382b">
+  <meta name="description" content="Healthcare workforce software for coordinating staff, schedules, attendance, timesheets, and workforce records in one connected workspace.">
+  <link rel="icon" type="image/png" href="/elite-bridge-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <title>Elite Bridge | Healthcare Workforce Management</title>
+  <style>
+    :root{--forest:#0b382b;--forest-2:#155844;--sage:#eaf2ed;--mint:#dbece2;--gold:#c89a4b;--ink:#18372d;--muted:#64766d;--paper:#fff;--line:#e4ebe6;--shadow:0 24px 70px rgba(14,47,35,.12);--font:'Manrope',Arial,sans-serif}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:#fff;color:var(--ink);font-family:var(--font);-webkit-font-smoothing:antialiased}a{color:inherit;text-decoration:none}button{font:inherit}.container{width:min(1200px,calc(100% - 48px));margin-inline:auto}
+    .topline{background:var(--forest);color:#e9f3ed;text-align:center;padding:9px 16px;font-size:12px;font-weight:600;letter-spacing:.025em}.topline span{color:#f1d494;margin-right:8px}
+    .header{position:sticky;top:0;z-index:30;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid rgba(228,235,230,.75)}.nav{height:82px;display:flex;align-items:center;justify-content:space-between;gap:24px}.brand img{display:block;width:218px;max-height:58px;object-fit:contain;object-position:left center}.nav-links{display:flex;align-items:center;gap:34px;color:#42584d;font-size:14px;font-weight:700}.nav-links a:hover{color:var(--forest-2)}.nav-actions{display:flex;align-items:center;gap:22px;font-size:14px;font-weight:800}.signin{color:var(--forest)}.button{display:inline-flex;align-items:center;justify-content:center;gap:10px;border:1px solid transparent;border-radius:999px;padding:14px 23px;font-size:14px;font-weight:800;transition:transform .2s,background .2s,box-shadow .2s}.button:hover{transform:translateY(-2px)}.button-primary{background:var(--forest);color:white;box-shadow:0 8px 20px rgba(11,56,43,.16)}.button-primary:hover{background:#124936}.button-outline{border-color:#cbd9d0;color:var(--forest);background:#fff}.button-outline:hover{background:var(--sage)}.menu-toggle{display:none;border:0;background:transparent;color:var(--forest);padding:10px}
+    .hero{padding:88px 0 74px;text-align:center;background:linear-gradient(180deg,#f7faf8 0%,#fff 92%);overflow:hidden}.eyebrow{display:inline-flex;align-items:center;gap:9px;color:var(--forest-2);font-size:12px;line-height:1;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.eyebrow:before{content:"";width:7px;height:7px;border-radius:50%;background:var(--gold);box-shadow:0 0 0 4px rgba(200,154,75,.13)}.hero h1{max-width:920px;margin:24px auto 20px;font-size:clamp(43px,6.7vw,78px);line-height:1.08;letter-spacing:-.065em;font-weight:700;color:#122b22}.hero h1 .accent{color:#3b7a5d}.hero-copy{max-width:690px;margin:0 auto;color:#5e7167;font-size:18px;line-height:1.75}.hero-actions{display:flex;justify-content:center;gap:13px;margin:31px 0 34px}.hero-note{font-size:12px;color:#798980;font-weight:600}.hero-visual{position:relative;width:min(100%,1080px);height:440px;margin:54px auto 0;text-align:left}.hero-photo{position:absolute;inset:0 0 0 170px;overflow:hidden;border-radius:30px;background:#d9e7dd;box-shadow:var(--shadow)}.hero-photo img{width:100%;height:100%;display:block;object-fit:cover;object-position:center 42%}.photo-shade{position:absolute;inset:40% 0 0;background:linear-gradient(0deg,rgba(5,34,24,.53),transparent)}.photo-caption{position:absolute;left:32px;bottom:27px;color:#fff}.photo-caption strong{display:block;font-size:18px}.photo-caption span{font-size:13px;opacity:.9}.preview-card{position:absolute;z-index:2;left:0;top:50%;transform:translateY(-50%);width:440px;padding:22px;border-radius:22px;background:#fff;box-shadow:0 20px 70px rgba(15,42,31,.2);border:1px solid rgba(255,255,255,.9)}.preview-head{display:flex;align-items:center;justify-content:space-between;padding-bottom:17px;border-bottom:1px solid var(--line)}.preview-brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:14px}.mini-mark{display:grid;place-items:center;width:38px;height:38px;border-radius:13px;background:var(--forest);color:white;font-size:12px}.preview-label{font-size:9px;letter-spacing:.11em;color:#87948d;font-weight:800}.preview-title{margin:18px 0 3px;font-size:20px;font-weight:800;letter-spacing:-.04em}.preview-sub{font-size:11px;color:#839087;margin-bottom:14px}.schedule-row{display:grid;grid-template-columns:38px 1fr auto;align-items:center;gap:10px;padding:12px 0;border-bottom:1px solid #eef2ef}.day{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#eff5f0;color:var(--forest);font-weight:800;font-size:10px}.schedule-copy b{display:block;font-size:11px}.schedule-copy small{display:block;color:#8b9890;font-size:10px;margin-top:3px}.pill{border-radius:99px;padding:6px 9px;background:#eef7ef;color:#438157;font-size:9px;font-weight:800}.coverage{display:flex;justify-content:space-between;margin-top:14px;padding:12px 13px;border-radius:12px;background:#f6f8f6;font-size:10px;color:#596c61}.coverage strong{color:var(--forest)}
+    .intro{padding:92px 0 56px}.section-heading{text-align:center;max-width:760px;margin:0 auto 44px}.section-heading .eyebrow{margin-bottom:18px}.section-heading h2{margin:0;color:#15372b;font-size:clamp(34px,4.7vw,54px);line-height:1.15;letter-spacing:-.055em}.section-heading p{margin:17px auto 0;max-width:650px;color:var(--muted);font-size:16px;line-height:1.75}
+    .platform-card{display:grid;grid-template-columns:1fr 1fr;align-items:stretch;min-height:390px;overflow:hidden;background:#f4f7f4;border-radius:28px}.platform-copy{padding:54px 54px;display:flex;flex-direction:column;justify-content:center}.platform-copy h3{margin:16px 0 13px;font-size:32px;line-height:1.2;letter-spacing:-.05em}.platform-copy p{margin:0;color:var(--muted);line-height:1.75}.check-list{display:grid;gap:12px;margin:26px 0 29px;padding:0;list-style:none}.check-list li{display:flex;align-items:center;gap:11px;font-size:14px;font-weight:700}.check{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#dcece1;color:#276246;font-size:13px}.platform-art{position:relative;min-height:390px;background:var(--sage)}.platform-art img{width:100%;height:100%;object-fit:cover;display:block}.art-tag{position:absolute;right:22px;bottom:22px;padding:13px 17px;border-radius:14px;background:#fff;color:var(--forest);box-shadow:0 12px 30px rgba(15,42,31,.15);font-size:11px;font-weight:800}
+    .features{padding:76px 0 98px}.feature-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.feature{position:relative;min-height:260px;padding:29px;border:1px solid var(--line);border-radius:22px;background:#fff;transition:transform .2s,box-shadow .2s}.feature:hover{transform:translateY(-4px);box-shadow:0 18px 38px rgba(20,55,41,.08)}.feature-icon{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:#eaf2ed;color:var(--forest-2);margin-bottom:27px}.feature-icon svg{width:22px;height:22px}.feature h3{margin:0 0 10px;font-size:19px;letter-spacing:-.035em}.feature p{margin:0;color:var(--muted);font-size:14px;line-height:1.75}.feature a{display:inline-flex;margin-top:19px;align-items:center;gap:8px;color:var(--forest-2);font-weight:800;font-size:13px}
+    .audience{padding:84px 0;background:#f5f8f6}.audience-layout{display:grid;grid-template-columns:.8fr 1.2fr;align-items:center;gap:70px}.audience-copy .eyebrow{margin-bottom:17px}.audience-copy h2{margin:0 0 17px;font-size:clamp(34px,4vw,49px);line-height:1.15;letter-spacing:-.055em}.audience-copy p{margin:0;color:var(--muted);line-height:1.8}.audience-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.audience-item{display:flex;align-items:center;gap:12px;padding:19px;background:white;border:1px solid #e8eeea;border-radius:16px;font-size:13px;font-weight:800}.audience-item span{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:#eff5f0;color:var(--forest-2);font-size:14px}
+    .closing{padding:94px 0}.closing-card{position:relative;overflow:hidden;border-radius:30px;background:var(--forest);color:white;padding:68px 34px;text-align:center}.closing-card:before,.closing-card:after{content:"";position:absolute;border:1px solid rgba(255,255,255,.1);border-radius:50%;width:420px;height:420px;top:-240px;left:-90px}.closing-card:after{left:auto;right:-150px;top:auto;bottom:-320px;width:520px;height:520px}.closing-card>*{position:relative;z-index:1}.closing-card .eyebrow{color:#f0d49d}.closing-card h2{max-width:760px;margin:20px auto 14px;font-size:clamp(34px,5vw,56px);letter-spacing:-.06em;line-height:1.12}.closing-card p{max-width:600px;margin:0 auto 26px;color:#d5e3da;line-height:1.7}.closing-card .button{background:#fff;color:var(--forest)}
+    .footer{background:#092e23;color:#fff;padding:58px 0 26px}.footer-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:24px;padding-bottom:40px;border-bottom:1px solid rgba(255,255,255,.16)}.footer-logo img{width:230px;max-height:68px;object-fit:contain}.footer-tagline{font-size:13px;color:#c6d5cc;text-align:center;max-width:330px;line-height:1.7}.footer-links{display:flex;justify-content:flex-end;gap:22px;font-size:12px;color:#d3e0d7;font-weight:700}.footer-bottom{display:flex;justify-content:space-between;gap:20px;padding-top:23px;color:#a9bbb0;font-size:11px}.footer-bottom a{color:#e2ece6;text-decoration:underline;text-underline-offset:3px}
+    @media(max-width:900px){.nav-links{gap:19px}.hero{padding-top:70px}.hero-visual{height:390px}.hero-photo{left:115px}.preview-card{width:390px}.audience-layout{gap:38px}.platform-copy{padding:38px}}
+    @media(max-width:680px){.container{width:min(100% - 32px,560px)}.topline{font-size:10px}.nav{height:70px}.brand img{width:183px}.nav-links,.nav-actions{display:none}.menu-toggle{display:block}.mobile-menu{display:none;padding:0 0 16px}.mobile-menu.open{display:grid;gap:3px}.mobile-menu a{padding:12px 4px;color:#41594d;font-size:14px;font-weight:700;border-top:1px solid var(--line)}.mobile-menu .button{margin-top:8px}.hero{padding:66px 0 54px}.hero h1{font-size:clamp(40px,12vw,58px);max-width:500px;margin-top:20px}.hero-copy{font-size:15px;line-height:1.75}.hero-actions{flex-direction:column;align-items:stretch;max-width:330px;margin:26px auto 22px}.hero-note{font-size:11px}.hero-visual{height:auto;min-height:540px;margin-top:36px;display:flex;flex-direction:column;justify-content:flex-end}.hero-photo{inset:0 0 auto;height:350px;border-radius:24px}.hero-photo img{object-position:center}.photo-caption{left:20px;bottom:18px}.preview-card{position:relative;top:auto;left:auto;transform:none;width:calc(100% - 22px);margin:0 auto; padding:18px;align-self:center}.preview-title{font-size:18px}.schedule-row{grid-template-columns:34px 1fr auto;gap:8px;padding:10px 0}.coverage{font-size:9px}.intro{padding:70px 0 36px}.section-heading{margin-bottom:28px}.section-heading h2{font-size:36px}.section-heading p{font-size:14px}.platform-card{grid-template-columns:1fr}.platform-copy{padding:32px 24px 30px}.platform-copy h3{font-size:27px}.platform-art{min-height:260px;order:-1}.features{padding:42px 0 70px}.feature-grid{grid-template-columns:1fr;gap:12px}.feature{min-height:0;padding:24px}.feature-icon{margin-bottom:20px}.audience{padding:68px 0}.audience-layout{grid-template-columns:1fr;gap:28px}.audience-copy h2{font-size:36px}.audience-grid{gap:9px}.audience-item{padding:14px 11px;gap:8px;font-size:11px}.audience-item span{width:30px;height:30px;flex:0 0 30px}.closing{padding:60px 0}.closing-card{padding:54px 22px;border-radius:24px}.closing-card h2{font-size:38px}.closing-card p{font-size:14px}.footer{padding-top:43px}.footer-top{grid-template-columns:1fr;justify-items:center;text-align:center;padding-bottom:28px}.footer-logo img{width:216px}.footer-tagline{order:2}.footer-links{order:3;justify-content:center;flex-wrap:wrap;gap:16px}.footer-bottom{flex-direction:column;align-items:center;text-align:center;line-height:1.6}}
+    @media(prefers-reduced-motion:reduce){*,*:before,*:after{scroll-behavior:auto!important;transition:none!important}}
+  </style>
 </head>
 <body>
-<div class="announcement">One connected workspace for care teams <strong>— from staffing needs to shift follow-through.</strong><a href="#platform">Explore the platform →</a></div>
-<header><div class="wrap nav"><a class="logo" href="/" aria-label="Elite Bridge Staffing home"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/elite-bridge-logo-brand.webp" alt="Elite Bridge Staffing"></a><nav class="nav-links" aria-label="Main navigation"><a href="#platform">Platform</a><a href="#ai-agent">AI Agent</a><a href="#organization-controls">Organization tools</a><a href="#how">How it works</a><a href="#packages">Packages</a><a href="#industries">Care settings</a><a href="#apps">Mobile apps</a></nav><div class="nav-actions"><a class="signin" href="/dashboard">Sign in</a><a class="btn" href="#packages">Explore packages →</a></div></div></header>
-<main>
-<section class="hero"><div class="wrap hero-grid">
-<div class="hero-copy-column" id="hero-slide-content">
-<p class="eyebrow" data-hero-eyebrow>Healthcare workforce software</p>
-<h1 data-hero-title>Keep healthcare teams and shifts <em>connected.</em></h1>
-<p class="hero-copy" data-hero-copy>Coordinate healthcare team schedules, applications, attendance and timesheets from one employer web dashboard, with mobile tools for staff.</p>
-<div class="actions"><a class="btn gold" data-hero-primary href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a software demo →</a><a class="btn outline" data-hero-secondary href="#packages">Explore packages</a></div>
-<div class="checks"><span>One web dashboard for employers</span><span>Mobile tools for caregivers</span><span>Built for medical and non-medical healthcare teams</span></div>
-<nav class="hero-capabilities" aria-label="Elite Bridge capabilities"><a href="#platform">Staffing</a><a href="#how">How it works</a><a href="#organization-controls">Organization tools</a><a href="#apps">Mobile apps</a></nav>
-</div>
-<div class="preview hero-preview" data-hero-preview data-slide="employer" role="region" aria-label="Elite Bridge homepage slider">
-<div class="hero-image-frame"><img class="hero-slide-image" data-hero-image src="/elite-bridge-hero.webp" alt="Caregiver and older adult reviewing a schedule together"><div class="hero-image-shade" aria-hidden="true"></div>
-<div class="hero-image-caption"><span class="hero-caption-mark">EB</span><div><b data-hero-caption>For healthcare organizations</b><small data-hero-caption-note>Coordinate staff and daily operations in one place</small></div></div>
-</div>
-<div class="dash-window"><div class="dash-top"><div class="dash-brand"><span class="mark">EB</span> Elite Bridge Staffing</div><small>Employer workspace</small></div><div class="workspace-preview"><aside class="workspace-nav"><b>WORKSPACE</b><span class="selected">⌂ &nbsp; Overview</span><span>◷ &nbsp; Attendance</span><b>CARE OPERATIONS</b><span>▣ &nbsp; Shifts</span><span>♧ &nbsp; Clients</span><span>♙ &nbsp; Caregivers</span><span>▤ &nbsp; Timesheets</span><b>BUSINESS ADMINISTRATION</b><span>▣ &nbsp; Payroll</span><span>▤ &nbsp; Invoices</span></aside><div class="workspace-main"><div class="workspace-title"><div><h2>Quick actions</h2><p>Move today’s care operations forward</p></div><span>● &nbsp; Web dashboard</span></div><div class="action-tiles"><div>▣<b>Post a shift</b><small>Create a care opportunity</small></div><div>♧<b>Client record</b><small>Prepare care details</small></div><div>▤<b>Timesheets</b><small>Review and approve hours</small></div></div><div class="workflow-preview"><div class="workspace-title"><div><h2>Today’s workflow</h2><p>One place to see what needs action before care starts.</p></div><span class="schedule-btn">Open scheduling</span></div><div class="workflow-rows"><span><i>1</i><b>Fill open shifts</b><small>Review coverage needs</small></span><span><i>2</i><b>Check attendance</b><small>Follow today’s activity</small></span><span><i>3</i><b>Confirm caregiver network</b><small>Manage your team</small></span><span><i>4</i><b>Review payouts</b><small>Keep payroll organized</small></span></div></div></div></div></div>
-<div class="caregiver-preview" aria-label="Illustrative Elite Care mobile app preview">
-<div class="caregiver-preview-top"><span class="caregiver-mark">EC</span><div><b>Elite Care</b><small>CAREGIVER APP · SAMPLE PREVIEW</small></div><span class="caregiver-online">●</span></div>
-<div class="caregiver-shift"><small>UPCOMING SHIFT</small><b>Home care visit</b><span>Friday · 7:00 AM–3:00 PM</span><div><span>✓ Confirmed</span><a href="#apps">View details →</a></div></div>
-<div class="caregiver-update"><span>✓</span> Schedule update · just now</div>
-</div>
-<div class="hero-slider-controls" aria-label="Homepage slider controls">
-<button type="button" data-hero-prev aria-label="Previous homepage slide">‹</button>
-<div class="hero-slider-dots"><button type="button" data-hero-dot="0" aria-label="Show employer slide" aria-current="true"></button><button type="button" data-hero-dot="1" aria-label="Show caregiver slide" aria-current="false"></button></div>
-<span data-hero-count>01 / 02</span>
-<button type="button" data-hero-next aria-label="Next homepage slide">›</button>
-</div>
-<a class="float" href="/dashboard">Explore the web dashboard <small>Sign in or create an organization</small></a>
-</div></div></section>
-<section class="proof"><div class="wrap proof-row"><div class="proof-item"><span class="proof-icon">↗</span><span><b>Coordinate open shifts</b><small>Post needs and review applications</small></span></div><div class="proof-item"><span class="proof-icon">◷</span><span><b>Keep schedules visible</b><small>Organize coverage and confirmations</small></span></div><div class="proof-item"><span class="proof-icon">▤</span><span><b>Close the loop on hours</b><small>Manage attendance and timesheets</small></span></div></div></section>
-<section class="content" id="platform"><div class="wrap"><div class="section-head"><p class="eyebrow">A practical staffing workspace</p><h2>Less scattered coordination. More time focused on care.</h2><p>Elite Bridge brings daily staffing workflows together, so employers and caregivers can see what needs attention and act from the same connected platform.</p></div><div class="features">
-<article class="feature"><span class="icon">＋</span><h3>Post and fill shifts</h3><p>Create staffing opportunities, review caregiver applications and keep shift details easy to find.</p></article>
-<article class="feature"><span class="icon">▦</span><h3>Coordinate schedules</h3><p>Manage multiple shifts with clear confirmations and notices when only part of a schedule is posted.</p></article>
-<article class="feature"><span class="icon">◉</span><h3>Follow attendance</h3><p>Keep track of who is on duty and give your team a shared view of active coverage.</p></article>
-<article class="feature"><span class="icon">▤</span><h3>Organize timesheets</h3><p>Review work hours and export timesheets as PDFs for your records and payroll workflow.</p></article>
-<article class="feature"><span class="icon">✉</span><h3>Keep communication together</h3><p>Notifications lead to the related area so staff can follow up without searching through the app.</p></article>
-<article class="feature"><span class="icon">⌂</span><h3>Work on web and mobile</h3><p>Employers coordinate from the web dashboard while caregivers stay connected through the mobile app.</p></article>
-</div></div></section>
-
-<section class="content ai-agent" id="ai-agent">
-  <div class="wrap">
-    <div class="agent-tabs" aria-label="Elite Bridge product preview">
-      <span class="active">AI Agent</span><span>Scheduling</span><span>Timekeeping</span><span>Care team</span><span>Timesheets</span><span>Communication</span>
+  <div class="topline"><span>●</span>Healthcare workforce software designed around the people who make care happen</div>
+  <header class="header">
+    <div class="container nav">
+      <a class="brand" href="/" aria-label="Elite Bridge home"><img src="/logo.png" alt="Elite Bridge Staffing"></a>
+      <nav class="nav-links" aria-label="Main navigation"><a href="#platform">Platform</a><a href="#features">What it does</a><a href="#healthcare">Healthcare teams</a></nav>
+      <div class="nav-actions"><a class="signin" href="/dashboard">Sign in</a><a class="button button-primary" href="/signup?role=employer">Get started <span aria-hidden="true">↗</span></a></div>
+      <button class="menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false"><svg width="25" height="25" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
     </div>
-    <div class="agent-layout">
-      <div class="agent-copy">
-        <p class="eyebrow">A new way to work with your staffing data</p>
-        <h2>Meet the Elite Bridge AI Agent.</h2>
-        <p class="agent-intro">We’re developing a secure AI assistant for healthcare workforce teams. Ask questions about your workspace in plain language, get useful summaries, and prepare routine actions with your team’s permissions in mind.</p>
-        <ul class="agent-benefits">
-          <li><span>01</span><div><b>Find what needs attention</b><small>Surface open shifts, applications, and timesheets that need review.</small></div></li>
-          <li><span>02</span><div><b>Work in natural language</b><small>Get answers from the staffing information your organization allows.</small></div></li>
-          <li><span>03</span><div><b>Keep people in control</b><small>Planned AI connections will follow organization access and review rules.</small></div></li>
-        </ul>
-        <div class="agent-actions">
-          <a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20AI%20Agent">Ask us about the AI Agent →</a>
-          <span>ChatGPT and Claude connections via MCP are planned.</span>
-        </div>
-      </div>
-      <div class="agent-demo">
-        <div class="agent-demo-bar"><div class="agent-brand"><span class="agent-mark">E</span><span>Elite Bridge <small>AI Agent · concept preview</small></span></div><span class="agent-connected">Illustrative preview</span></div>
-        <div class="agent-tabs-mobile"><span class="active">AI Agent</span><span>Scheduling</span><span>Timesheets</span></div>
-        <div class="agent-chat">
-          <div class="agent-context"><span>WORKSPACE CONTEXT</span><b>Northside Care Team</b><small>Sample information · not connected to a live organization</small></div>
-          <div class="agent-question"><span class="agent-avatar">EB</span><div><small>YOUR QUESTION</small><p>Which shifts still need coverage this week?</p></div></div>
-          <div class="agent-answer"><div class="agent-answer-head"><span class="agent-spark">✦</span><div><b>Here’s the coverage summary</b><small>Based on the sample schedule shown</small></div></div>
-            <div class="agent-result"><span class="result-dot amber"></span><div><b>2 shifts need attention</b><small>Tue · 7:00 AM–3:00 PM · Home care</small></div><span class="result-tag">OPEN</span></div>
-            <div class="agent-result"><span class="result-dot green"></span><div><b>1 application to review</b><small>Caregiver application · Friday shift</small></div><span class="result-tag review">REVIEW</span></div>
-            <div class="agent-followup">Would you like a draft message for the open shift?</div>
+    <nav class="container mobile-menu" id="mobileMenu" aria-label="Mobile navigation"><a href="#platform">Platform</a><a href="#features">What it does</a><a href="#healthcare">Healthcare teams</a><a href="/dashboard">Sign in</a><a class="button button-primary" href="/signup?role=employer">Get started <span aria-hidden="true">↗</span></a></nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <span class="eyebrow">Healthcare workforce management</span>
+        <h1>Better organized teams.<br><span class="accent">More time for care.</span></h1>
+        <p class="hero-copy">Bring schedules, attendance, timesheets, and staff information together in one clear workspace—built for the people who keep healthcare moving.</p>
+        <div class="hero-actions"><a class="button button-primary" href="/signup?role=employer">Explore the platform <span aria-hidden="true">↗</span></a><a class="button button-outline" href="/dashboard">Sign in</a></div>
+        <p class="hero-note">For healthcare organizations managing their own workforce.</p>
+        <div class="hero-visual" aria-label="Elite Bridge workforce platform preview">
+          <div class="preview-card">
+            <div class="preview-head"><div class="preview-brand"><span class="mini-mark">EB</span><span>Elite Bridge</span></div><span class="preview-label">WORKFORCE OVERVIEW</span></div>
+            <div class="preview-title">Your team, at a glance</div><div class="preview-sub">A sample view of the day ahead</div>
+            <div class="schedule-row"><span class="day">MON</span><span class="schedule-copy"><b>Morning coverage</b><small>Schedule and share the shift</small></span><span class="pill">Planned</span></div>
+            <div class="schedule-row"><span class="day">TODAY</span><span class="schedule-copy"><b>Attendance review</b><small>See submitted time records</small></span><span class="pill">Ready</span></div>
+            <div class="schedule-row"><span class="day">TEAM</span><span class="schedule-copy"><b>Staff information</b><small>Keep workforce details organized</small></span><span class="pill">Updated</span></div>
+            <div class="coverage"><span>One connected employer workspace</span><strong>→</strong></div>
           </div>
-          <div class="agent-prompt"><span>Ask about staffing, schedules, or timesheets…</span><b>↑</b></div>
+          <div class="hero-photo"><img src="/elite-bridge-hero.webp" alt="Caregiver and older adult reviewing information together"><div class="photo-shade"></div><div class="photo-caption"><strong>Care coordination, with people at the center.</strong><span>Tools for the teams behind every shift.</span></div></div>
         </div>
-        <div class="agent-demo-foot"><span>✦</span> Concept preview · no live data or actions</div>
       </div>
-    </div>
-  </div>
-</section>
-<section class="content workflow" id="how"><div class="wrap"><div class="section-head"><p class="eyebrow">Get started in a few steps</p><h2>A clearer path from staffing need to confirmed shift.</h2><p>Start with your team and workflow today, then choose tools that fit your organization.</p></div><div class="steps"><article class="step"><span class="num">1</span><h3>Choose your workspace</h3><p>Set up as an employer coordinating care or a caregiver managing shifts and opportunities.</p></article><article class="step"><span class="num">2</span><h3>Bring your team together</h3><p>Post shifts, review applications and keep schedule details in one place.</p></article><article class="step"><span class="num">3</span><h3>Choose the right package</h3><p>Tell us about your team and setup. We’ll help identify a package for your workflow.</p></article></div></div></section>
-<section class="content apps-section" id="apps"><div class="wrap"><div class="section-head"><p class="eyebrow">Elite Bridge mobile apps</p><h2>Work updates in your pocket. Staffing tools for your team.</h2><p>Choose the app for your role. Elite Care is available on iPhone, iPad and Android. Employers can use Elite Work on Apple devices or sign in to the web workspace.</p></div><div class="apps-layout"><div class="apps-photo"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/care-planning.webp" alt="Caregiver helping an older adult review a care schedule"><div class="apps-photo-caption"><strong>Care work, connected to the people who make it happen.</strong><span>Real care photography from the Elite Bridge Staffing website.</span></div></div><div class="apps-list"><article class="app-card"><div class="app-card-head"><span class="app-icon" aria-hidden="true">EC</span><span><h3>Elite Care</h3><small>For caregivers · iPhone, iPad and Android</small></span></div><p>Find and manage eligible work opportunities, review shifts and assignments, update availability, record hours and receive work notifications.</p><ul class="app-points"><li>Find and apply for shifts</li><li>Manage schedules</li><li>Track work hours</li></ul><div class="store-links"><a href="https://apps.apple.com/us/app/elite-care/id6770962152" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Care on the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a><a href="https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver" target="_blank" rel="noopener noreferrer" aria-label="Get Elite Care on Google Play"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/google-play.svg" alt="Get it on Google Play"></a></div><p class="store-note">An approved Elite Bridge caregiver account is required to access work assignments.</p></article><article class="app-card"><div class="app-card-head"><span class="app-icon" aria-hidden="true">EW</span><span><h3>Elite Work</h3><small>For employers · Apple devices and web</small></span></div><p>Coordinate schedules, review caregiver applications, respond to call-outs and follow daily staffing priorities from your employer workspace.</p><ul class="app-points"><li>Manage open shifts</li><li>Review applications</li><li>Coordinate coverage</li></ul><div class="store-links"><a href="https://apps.apple.com/us/app/elite-work/id6798899931" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Work on the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a><a class="web-link" href="/dashboard">Open employer workspace →</a></div><p class="store-note">Elite Work is available in the Apple App Store and as a web workspace.</p></article></div></div></div></section>
-<section class="content audience" id="roles"><div class="wrap audience-grid"><div><p class="eyebrow">A place for every role</p><h2>One platform to connect the people doing the work.</h2><p class="audience-copy">Employers need a clear view of staffing and coverage. Caregivers need an easy way to find shifts, stay informed and manage their work. Elite Bridge connects both sides.</p><a class="btn gold" href="/dashboard">Open the workspace →</a></div><div class="role-list"><div class="role"><span>✓</span><div><b>For employers</b><small>Coordinate caregivers, shifts, applications, attendance and timesheets.</small></div></div><div class="role"><span>✓</span><div><b>For caregivers</b><small>Stay connected to opportunities, schedules and shift updates.</small></div></div><div class="role"><span>✓</span><div><b>For healthcare organizations</b><small>Discuss a software package that fits your staffing workflow and team setup.</small></div></div></div></div></section>
-<section class="content org-control" id="organization-controls"><div class="wrap org-grid"><div class="org-copy"><p class="eyebrow">More control on the web</p><h2>Your organization. Your people. Your workspace.</h2><p>Give each team the right level of access, make the portal feel like your organization, and manage day-to-day staffing from a full web dashboard. Connect an approved AI assistant through MCP when you want to work with your portal conversationally.</p><div class="actions"><a class="btn" href="/dashboard">Explore the web workspace →</a><a class="btn outline" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20organization%20features">Ask about organization features</a></div></div><div class="org-visual" aria-label="Organization management features"><article class="org-card"><span class="org-card-icon" aria-hidden="true">◎</span><h3>Set access by role</h3><p>Give organization owners, admins, schedulers, billing staff and viewers access suited to their responsibilities.</p><div class="role-pills"><span>Owner</span><span>Admin</span><span>Scheduler</span><span>Billing</span><span>Viewer</span></div></article><article class="org-card"><span class="org-card-icon" aria-hidden="true">▧</span><h3>Make the portal yours</h3><p>Upload your organization logo so your team sees a familiar workspace.</p></article><article class="org-card"><span class="org-card-icon" aria-hidden="true">✳</span><h3>Connect AI with MCP</h3><p>Use approved AI clients with organization access controlled by member permissions.</p></article></div></div></section>
-<section class="content industries" id="industries"><div class="wrap"><div class="section-head"><p class="eyebrow">Care settings</p><h2>Workforce coordination for healthcare organizations.</h2><p>From home-based services to healthcare facilities, coordinate your workforce in one connected platform.</p></div><div class="industry-grid"><article class="industry-card"><span class="industry-icon">⌂</span><h3>Home-based care</h3><p>Coordinate staff schedules, assignments and updates for services delivered at home.</p><a href="#platform">Explore staffing tools <b>→</b></a></article><article class="industry-card"><span class="industry-icon">▦</span><h3>Healthcare facilities</h3><p>Keep workforce needs, shift coverage and team communication visible in one workspace.</p><a href="#how">See how it works <b>→</b></a></article><article class="industry-card"><span class="industry-icon">♡</span><h3>Clinics and community teams</h3><p>Coordinate team schedules and workforce updates across care settings.</p><a href="#apps">Explore Elite Care <b>→</b></a></article><article class="industry-card"><span class="industry-icon">↗</span><h3>Medical and non-medical teams</h3><p>Organize workforce workflows by role, schedule and responsibility.</p><a href="#packages">Find a package <b>→</b></a></article></div></div></section>
-<section class="content" id="packages"><div class="wrap"><div class="section-head"><p class="eyebrow">Packages for your workflow</p><h2>Start with what your healthcare team needs.</h2><p>Compare a starting point by team size and workflow. We’ll confirm the right configuration and pricing with you.</p></div><div class="package-grid">
-<article class="package"><span class="tag">For smaller teams</span><h3>Essentials</h3><p class="desc">Core tools to organize open shifts and keep a small care team coordinated.</p><p class="fit"><strong>Best for:</strong> smaller teams getting their staffing workflow in one place.</p><div class="quote">Pricing tailored to your team</div><ul><li>Employer workspace access</li><li>Shift posting and applications</li><li>Caregiver profiles and schedules</li><li>Web and mobile access</li></ul><a class="btn outline" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20Essentials%20package">Ask about Essentials</a></article>
-<article class="package featured"><span class="tag">For growing teams</span><h3>Team Operations</h3><p class="desc">More visibility across schedules, staff activity and daily follow-through.</p><p class="fit"><strong>Best for:</strong> growing teams coordinating more shifts and follow-up.</p><div class="quote">Pricing tailored to your team</div><ul><li>Everything in Essentials</li><li>Multiple shift coordination</li><li>Attendance and schedule visibility</li><li>Timesheet PDF exports</li><li>Connected notifications</li></ul><a class="btn" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20Team%20Operations%20package">Ask about Team Operations</a></article>
-<article class="package"><span class="tag">For agencies and facilities</span><h3>Organization</h3><p class="desc">A tailored setup for healthcare organizations with broader coordination needs.</p><p class="fit"><strong>Best for:</strong> agencies and facilities that need a workflow fit discussion.</p><div class="quote">Pricing tailored to your team</div><ul><li>Team Operations features</li><li>Workflow setup discussion</li><li>Organization onboarding support</li><li>Package fit review with our team</li></ul><a class="btn outline" href="mailto:info@elitebridgestaffing.com?subject=Elite%20Bridge%20Organization%20package">Discuss your organization</a></article>
-</div><p class="note">Package details and pricing are confirmed with Elite Bridge before purchase. Availability may depend on your organization’s size and setup.</p></div></section>
-<section class="content" id="faq"><div class="wrap"><div class="section-head"><p class="eyebrow">Questions</p><h2>Good to know before you choose.</h2></div><div class="faqs"><article class="faq"><h3>What is Elite Bridge?</h3><p>Elite Bridge is a healthcare workforce management platform, not a healthcare provider or staffing agency. Organizations use the software to coordinate their own teams, shifts and workforce operations. It does not deliver clinical care or medical advice.</p></article><article class="faq"><h3>Can I use the same account on web and mobile?</h3><p>Yes. The web portal and mobile app are designed to work with the same Elite Bridge account.</p></article><article class="faq"><h3>What happens in a software demo?</h3><p>We’ll walk through the relevant workflows, learn about your team and answer questions about package fit. There’s no online purchase required.</p></article><article class="faq"><h3>Do you publish fixed software prices?</h3><p>Package pricing is discussed based on your team and setup. Contact us and we’ll walk through the available options.</p></article><article class="faq"><h3>How do I open my existing workspace?</h3><p>Choose “Sign in” above or go directly to the dashboard login.</p></article></div></div></section>
-<section class="cta"><div class="wrap"><div class="cta-panel"><img class="cta-photo" src="/elite-bridge-closing.webp" alt="A care coordinator and caregivers connect with an older adult while reviewing a schedule" loading="lazy"><div class="cta-photo-shade" aria-hidden="true"></div><div class="cta-copy"><p class="eyebrow">Care works better together</p><h2>Bring your staffing team into one connected workspace.</h2><p>See how Elite Bridge can support your schedules, caregiver coordination and day-to-day follow-through.</p></div><div class="cta-actions"><a class="btn gold" href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A">Book a demo</a><a class="btn outline" href="/dashboard">Sign in</a></div></div></div></section>
-</main>
-<footer><div class="wrap"><div class="footer-links-area">
-<section class="footer-group"><details class="footer-accordion"><summary>Platform</summary><ul><li><a href="#platform">Staffing platform</a></li><li><a href="#organization-controls">Organization controls</a></li><li><a href="#packages">Packages</a></li><li><a href="#apps">Mobile apps</a></li></ul></details></section>
-<section class="footer-group"><details class="footer-accordion"><summary>Company</summary><ul><li><a href="https://elitebridgestaffing.com/">About Elite Bridge</a></li><li><a href="https://elitebridgestaffing.com/careers/">Caregiver careers</a></li><li><a href="mailto:info@elitebridgestaffing.com">Contact our team</a></li><li><a href="/dashboard">Organization sign in</a></li></ul></details></section>
-<section class="footer-group"><details class="footer-accordion"><summary>Resources</summary><ul><li><a href="#how">How the platform works</a></li><li><a href="#faq">Frequently asked questions</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li></ul></details></section>
-<section class="footer-group"><details class="footer-accordion"><summary>Get started</summary><ul><li><a href="#packages">Explore software packages</a></li><li><a href="mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo">Book a software demo</a></li><li><a href="/dashboard">Sign in to the web dashboard</a></li><li><a href="#apps">Download an app</a></li></ul></details></section>
-</div><div class="footer-brand"><a class="logo footer-logo" href="/" aria-label="Elite Bridge Staffing home"><img src="/elite-bridge-logo-transparent.webp" alt="Elite Bridge Staffing"></a><p class="footer-tagline">Healthcare workforce software that helps organizations and caregivers stay connected.</p><div class="footer-socials" aria-label="Contact Elite Bridge"><a class="footer-social" href="mailto:info@elitebridgestaffing.com" aria-label="Email Elite Bridge"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg></a><a class="footer-social" href="tel:+15082519346" aria-label="Call Elite Bridge at 508-251-9346"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.69 2.79a2 2 0 0 1-.45 2.11L8.09 9.89a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.89.33 1.83.56 2.79.69A2 2 0 0 1 22 16.92z"/></svg></a><a class="footer-social" href="https://elitebridgestaffing.com/" aria-label="Visit Elite Bridge main website"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a18 18 0 0 1 0 18 18 18 0 0 1 0-18z"/></svg></a></div><div class="footer-stores" aria-label="Download Elite Bridge apps"><div class="footer-store-group"><span>Elite Work · employer app</span><nav aria-label="Elite Work app downloads"><a href="https://apps.apple.com/us/app/elite-work/id6798899931" target="_blank" rel="noopener noreferrer" aria-label="Download Elite Work from the App Store"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/app-store.svg" alt="Download on the App Store"></a><a href="#" aria-label="Elite Work Google Play listing coming soon" title="Google Play listing coming soon"><img src="https://elitebridgestaffing.com/wp-content/themes/elite-bridge-wp-final/assets/google-play.svg" alt="Get it on Google Play"></a></nav></div></div><div class="footer-trust" aria-label="Platform capabilities"><span>Organization role controls</span><span>Custom organization branding</span><span>Permission-based AI connections</span></div><ul class="footer-legal"><li><a href="/privacy">Privacy</a></li><li><a href="/terms">Terms</a></li><li><a href="mailto:info@elitebridgestaffing.com">Contact</a></li></ul><div class="footer-contact"><a href="mailto:info@elitebridgestaffing.com">info@elitebridgestaffing.com</a><a href="tel:+15082519346">(508) 251-9346</a><a href="/dashboard">Web dashboard sign in</a></div><p class="copyright">© 2026 Elite Bridge Staffing. Healthcare workforce management software for medical and non-medical care organizations.</p></div></div></footer>
-<script>
-(() => {
-  const preview=document.querySelector("[data-hero-preview]");
-  if(!preview)return;
-  const slides=[
-    {type:"employer",eyebrow:"Healthcare workforce software",title:"Keep healthcare teams and shifts <em>connected.</em>",copy:"Coordinate healthcare team schedules, applications, attendance and timesheets from one employer web dashboard, with mobile tools for staff.",primary:"Book a software demo →",primaryHref:"mailto:info@elitebridgestaffing.com?subject=Book%20an%20Elite%20Bridge%20software%20demo&body=Hello%20Elite%20Bridge%2C%0A%0AI%27d%20like%20to%20book%20a%20software%20demo.%0A%0AOrganization%3A%0ATeam%20size%3A%0APreferred%20days%2Ftimes%3A",secondary:"Explore packages",secondaryHref:"#packages",image:"/elite-bridge-hero.webp",alt:"Caregiver and older adult reviewing a schedule together",caption:"For healthcare organizations",note:"Coordinate staff and daily operations in one place"},
-    {type:"caregiver",eyebrow:"For caregivers",title:"Find your next shift. <em>Stay connected.</em>",copy:"Explore eligible work opportunities, check shift details and keep schedules and work updates together in the Elite Care app.",primary:"Explore Elite Care →",primaryHref:"#apps",secondary:"See employer tools",secondaryHref:"#platform",image:"/elite-bridge-caregiver-slide.webp",alt:"Caregiver checking a shift update beside an older adult at home",caption:"For caregivers",note:"Opportunities, schedules and updates"}
-  ];
-  const image=preview.querySelector("[data-hero-image]");
-  const eyebrow=document.querySelector("[data-hero-eyebrow]");
-  const title=document.querySelector("[data-hero-title]");
-  const copy=document.querySelector("[data-hero-copy]");
-  const primary=document.querySelector("[data-hero-primary]");
-  const secondary=document.querySelector("[data-hero-secondary]");
-  const caption=document.querySelector("[data-hero-caption]");
-  const captionNote=document.querySelector("[data-hero-caption-note]");
-  const counter=preview.querySelector("[data-hero-count]");
-  const dots=[...preview.querySelectorAll("[data-hero-dot]")];
-  let active=0;
-  const show=(index)=>{
-    active=(index+slides.length)%slides.length;
-    const slide=slides[active];
-    preview.dataset.slide=slide.type;
-    eyebrow.textContent=slide.eyebrow;
-    title.innerHTML=slide.title;
-    copy.textContent=slide.copy;
-    primary.textContent=slide.primary;primary.href=slide.primaryHref;
-    secondary.textContent=slide.secondary;secondary.href=slide.secondaryHref;
-    image.src=slide.image;image.alt=slide.alt;
-    caption.textContent=slide.caption;captionNote.textContent=slide.note;
-    counter.textContent=(active+1).toString().padStart(2,"0")+" / "+slides.length.toString().padStart(2,"0");
-    dots.forEach((dot,i)=>dot.setAttribute("aria-current",String(i===active)));
-  };
-  preview.querySelector("[data-hero-prev]").addEventListener("click",()=>show(active-1));
-  preview.querySelector("[data-hero-next]").addEventListener("click",()=>show(active+1));
-  dots.forEach((dot)=>dot.addEventListener("click",()=>show(Number(dot.dataset.heroDot))));
-})();
-</script></body></html>
+    </section>
+    <section class="intro" id="platform">
+      <div class="container">
+        <div class="section-heading"><span class="eyebrow">Meet Elite Bridge</span><h2>One clearer way to coordinate the work behind care.</h2><p>Less switching between tools. Better visibility for managers and staff. A shared view of the workday from the employer workspace to the staff app.</p></div>
+        <div class="platform-card">
+          <div class="platform-copy"><span class="eyebrow">Connected workforce tools</span><h3>From the first shift plan to the final timesheet.</h3><p>Keep daily coordination in one place so your team can spend less time chasing updates and more time focused on care.</p><ul class="check-list"><li><span class="check">✓</span>Plan and share staff schedules</li><li><span class="check">✓</span>Track attendance and review time</li><li><span class="check">✓</span>Keep workforce information organized</li></ul><a class="button button-primary" href="/signup?role=employer">See the employer workspace <span aria-hidden="true">↗</span></a></div>
+          <div class="platform-art"><img src="/elite-bridge-closing.webp" alt="Care team using a tablet to coordinate support"><div class="art-tag">Employer web + staff mobile apps</div></div>
+        </div>
+      </div>
+    </section>
+    <section class="features" id="features">
+      <div class="container">
+        <div class="section-heading"><span class="eyebrow">Work with more clarity</span><h2>Everything your team needs to stay connected.</h2><p>Purposeful tools for the everyday workforce tasks that keep care organizations running.</p></div>
+        <div class="feature-grid">
+          <article class="feature"><span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="3"/><path d="M16 2v4M8 2v4M3 9h18M8 13h3M8 17h7"/></svg></span><h3>Coordinate schedules</h3><p>Plan shifts, share updates with staff, and make it easier for everyone to see what is coming up.</p><a href="/signup?role=employer">Explore scheduling <span>→</span></a></article>
+          <article class="feature"><span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2M8 2h8"/></svg></span><h3>Follow attendance and hours</h3><p>Bring time records and attendance activity together for clearer review and more organized operations.</p><a href="/signup?role=employer">Explore timekeeping <span>→</span></a></article>
+          <article class="feature"><span class="feature-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM20 8v6M23 11h-6"/></svg></span><h3>Keep staff details organized</h3><p>Give managers and team members a shared place for essential workforce information and communication.</p><a href="/signup?role=employer">Explore team tools <span>→</span></a></article>
+        </div>
+      </div>
+    </section>
+    <section class="audience" id="healthcare">
+      <div class="container audience-layout">
+        <div class="audience-copy"><span class="eyebrow">Built for healthcare</span><h2>One platform for the people who make care happen.</h2><p>Elite Bridge is focused on healthcare workforce coordination, supporting organizations with teams across home care, senior care, clinics, and community-based services.</p></div>
+        <div class="audience-grid"><div class="audience-item"><span>⌂</span>Home care teams</div><div class="audience-item"><span>✚</span>Clinics and practices</div><div class="audience-item"><span>♡</span>Senior care providers</div><div class="audience-item"><span>◎</span>Community care teams</div></div>
+      </div>
+    </section>
+    <section class="closing"><div class="container"><div class="closing-card"><span class="eyebrow">Make the workday easier</span><h2>Bring your workforce into one connected view.</h2><p>See how Elite Bridge can help your healthcare organization manage schedules, attendance, timesheets, and team information.</p><a class="button" href="/signup?role=employer">Get started with Elite Bridge <span aria-hidden="true">↗</span></a></div></div></section>
+  </main>
+  <footer class="footer"><div class="container"><div class="footer-top"><a class="footer-logo" href="/" aria-label="Elite Bridge home"><img src="/logo-white.png" alt="Elite Bridge Staffing"></a><p class="footer-tagline">Healthcare workforce software to help teams stay organized, connected, and ready for the day.</p><nav class="footer-links" aria-label="Footer navigation"><a href="#platform">Platform</a><a href="/privacy">Privacy</a><a href="/terms">Terms</a><a href="mailto:info@elitebridgestaffing.com">Contact</a></nav></div><div class="footer-bottom"><span>© 2026 Elite Bridge Staffing LLC. All rights reserved.</span><a href="/dashboard">Web dashboard sign in</a></div></div></footer>
+  <script>
+    const menuToggle=document.getElementById('menuToggle');const mobileMenu=document.getElementById('mobileMenu');menuToggle.addEventListener('click',()=>{const isOpen=mobileMenu.classList.toggle('open');menuToggle.setAttribute('aria-expanded',String(isOpen));menuToggle.setAttribute('aria-label',isOpen?'Close menu':'Open menu')});mobileMenu.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{mobileMenu.classList.remove('open');menuToggle.setAttribute('aria-expanded','false')}));
+  </script>
+</body>
+</html>
