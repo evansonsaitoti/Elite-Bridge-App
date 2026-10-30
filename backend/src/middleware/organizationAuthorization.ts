@@ -36,7 +36,9 @@ function startsWithRoute(path: string, prefixes: string[]) {
 
 export async function organizationAuthorization(req: Request, res: Response, next: NextFunction) {
   try {
-    const path = req.originalUrl.split("?")[0];
+    // Express routes are case-insensitive and accept a trailing slash by default.
+    // Apply the same normalization before evaluating permissions.
+    const path = req.originalUrl.split("?")[0].toLowerCase().replace(/\/+$/, "");
     if (path.startsWith("/api/auth/") || path.startsWith("/api/mcp") || path === "/api/employers/team-invitations/accept") return next();
     const token = req.headers.authorization?.split(" ")[1];
     if (!token) return next();
@@ -66,6 +68,14 @@ export async function organizationAuthorization(req: Request, res: Response, nex
 
     const method = req.method.toUpperCase();
     const write = !["GET", "HEAD", "OPTIONS"].includes(method);
+    // These handlers scope every operation to the authenticated user's ID.
+    // Read-only organization access must still support personal push settings.
+    const ownNotificationWrite =
+      (path === "/api/notifications/device" && ["POST", "DELETE"].includes(method)) ||
+      (path === "/api/notifications/preferences" && method === "PUT") ||
+      (path === "/api/notifications/read-all" && method === "POST") ||
+      (/^\/api\/notifications\/\d+\/read$/.test(path) && method === "PATCH");
+    if (ownNotificationWrite) return next();
     if (!write) {
       if ((membership.role === "scheduler" || membership.role === "viewer")
         && (startsWithRoute(path, financialReads) || (path.startsWith("/api/bookings/") && path.includes("/timesheets")))) {
@@ -90,3 +100,4 @@ export async function organizationAuthorization(req: Request, res: Response, nex
     next(error);
   }
 }
+

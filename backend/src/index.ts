@@ -33,6 +33,7 @@ import careHandoffsRoutes from "./routes/careHandoffs";
 import careSiteChecklistRoutes from "./routes/careSiteChecklist";
 import smsRoutes from "./routes/sms";
 import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
+import { configureRealtime } from "./services/realtime";
 import { organizationAuthorization } from "./middleware/organizationAuthorization";
 
 const app = express();
@@ -92,29 +93,8 @@ app.use("/api/care-site-checklists", careSiteChecklistRoutes);
 app.use("/api/sms", smsRoutes);
 app.use("/api/mcp", mcpRoutes);
 
-// Socket.IO for real-time features
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
-  socket.on("join", (userId: number) => {
-    socket.join(`user_${userId}`);
-  });
-
-  socket.on("send_message", (data) => {
-    io.to(`user_${data.recipientId}`).emit("receive_message", data);
-  });
-
-  socket.on("typing", (data) => {
-    io.to(`user_${data.recipientId}`).emit("user_typing", {
-      senderId: data.senderId,
-      isTyping: data.isTyping,
-    });
-  });
-
-  socket.on("send_notification", (data) => {
-    io.to(`user_${data.userId}`).emit("receive_notification", data);
-  });
-});
+// Authenticated, server-originated updates only. Messages use authorized REST routes.
+configureRealtime(io);
 
 // Error handling
 app.use(errorHandler);
@@ -155,4 +135,5 @@ process.on("SIGTERM", () => {
 });
 
 export { app, httpServer, io };
+
 

@@ -54,6 +54,7 @@ beforeAll(async () => {
   await ensureCoreTables();
   const app = express();
   app.use(express.json());
+  app.use("/api", (await import("../src/middleware/organizationAuthorization")).organizationAuthorization);
   for (const route of ["auth", "employers", "caregivers", "bookings", "messages", "notifications", "payroll", "operations", "sms"]) {
     app.use(`/api/${route}`, (await import(`../src/routes/${route}.ts`)).default);
   }
@@ -470,3 +471,4 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     }
   });
 });
+

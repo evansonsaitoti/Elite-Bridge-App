@@ -199,6 +199,7 @@ router.patch("/team/:membershipId", authMiddleware, requireRole("employer"), asy
     const target = await (db as any).$client.query("SELECT id, role, user_id FROM employer_memberships WHERE id=$1 AND employer_id=$2 LIMIT 1", [id, membership.employer.id]);
     if (!target.rows[0]) throw new AppError(404, "Organization member not found.");
     if (target.rows[0].role === "owner") throw new AppError(403, "The organization owner role cannot be changed here.");
+    if (membership.role !== "owner" && data.role === "admin") throw new AppError(403, "Only the owner can assign the admin role.");
     if (membership.role === "admin" && target.rows[0].role === "admin") throw new AppError(403, "Only the owner can change an admin's access.");
     await (db as any).$client.query("UPDATE employer_memberships SET role=$1, updated_at=NOW() WHERE id=$2", [data.role, id]);
     res.json({ message: "Organization role updated.", role: data.role });
@@ -603,3 +604,4 @@ router.put("/:id", authMiddleware, async (req: AuthRequest, res, next) => {
 });
 
 export default router;
+

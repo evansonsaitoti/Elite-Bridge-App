@@ -5,8 +5,14 @@ import { db } from "../db/index.js";
 import { messages, users } from "../db/schema.js";
 import { authMiddleware, AuthRequest } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
+import { ensureCoreTables } from "../db/bootstrap.js";
+import { sharedOrganization } from "../services/teamAccess.js";
 
 const router = Router();
+router.use(authMiddleware);
+router.use(async (_req, _res, next) => {
+  try { await ensureCoreTables(); next(); } catch (error) { next(error); }
+});
 
 // Get all conversations for the current user
 router.get("/conversations", authMiddleware, async (req: AuthRequest, res, next) => {
@@ -39,7 +45,8 @@ router.get("/conversations", authMiddleware, async (req: AuthRequest, res, next)
         profileImage: users.profileImage
       })
       .from(users)
-      .where(sql`${users.id} IN (${sql.join(contactIds, sql`,`)})`);
+      .where(and(sql`${users.id} IN (${sql.join(contactIds, sql`,`)})`,
+        eq(users.isActive, true), sharedOrganization(userId, sql`${users.id}`)));
       
     res.json({ conversations: contacts });
   } catch (error) {
@@ -61,10 +68,10 @@ router.get("/:contactId", authMiddleware, async (req: AuthRequest, res, next) =>
       .select()
       .from(messages)
       .where(
-        or(
+        and(sharedOrganization(userId, contactId), or(
           and(eq(messages.senderId, userId), eq(messages.recipientId, contactId)),
           and(eq(messages.senderId, contactId), eq(messages.recipientId, userId))
-        )
+        ))
       )
       .orderBy(desc(messages.createdAt));
       
@@ -79,9 +86,14 @@ router.post("/", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     const senderId = req.user!.id;
     const { recipientId, content } = z.object({
-      recipientId: z.number(),
-      content: z.string().min(1)
+      recipientId: z.number().int().positive(),
+      content: z.string().trim().min(1).max(2000)
     }).parse(req.body);
+
+    const peer = await db.select({ id: users.id }).from(users).where(and(
+      eq(users.id, recipientId), eq(users.isActive, true), sharedOrganization(senderId, recipientId)
+    )).limit(1);
+    if (!peer.length) throw new AppError(404, "Active team contact not found.");
     
     const newMessage = await db
       .insert(messages)

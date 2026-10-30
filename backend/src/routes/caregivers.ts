@@ -2,12 +2,28 @@ import { Router } from "express";
 import { z } from "zod";
 import { db } from "../db";
 import { caregivers, users } from "../db/schema";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { ensureCoreTables } from "../db/bootstrap";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 
 const router = Router();
+
+// Contact and screening details are organization records, not a public directory.
+// Preserve visibility for staff with a booking in that organization as well as
+// staff invited before their first assignment.
+function visibleCaregivers(user: NonNullable<AuthRequest["user"]>) {
+  if (user.role === "admin") return sql`true`;
+  if (user.role === "caregiver") return eq(caregivers.userId, user.id);
+  return sql`EXISTS (
+    SELECT 1 FROM employer_memberships m WHERE m.user_id=${user.id} AND (
+      EXISTS (SELECT 1 FROM employer_caregivers ec WHERE ec.employer_id=m.employer_id
+        AND ec.caregiver_user_id=${caregivers.userId} AND ec.status='active')
+      OR EXISTS (SELECT 1 FROM bookings b WHERE b.employer_id=m.employer_id
+        AND b.caregiver_id=${caregivers.id})
+    )
+  )`;
+}
 
 const updateProfileSchema = z.object({
   bio: z.string().optional(),
@@ -120,9 +136,10 @@ router.put("/me/photo", authMiddleware, async (req: AuthRequest, res, next) => {
   } catch (error) { next(error); }
 });
 
-// List all caregivers (for employer discovery)
-router.get("/", authMiddleware, async (req, res, next) => {
+// List only caregivers whose private details the signed-in user may access.
+router.get("/", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
+    await ensureCoreTables();
     const allCaregivers = await db
       .select({
         id: caregivers.id,
@@ -142,8 +159,10 @@ router.get("/", authMiddleware, async (req, res, next) => {
         profileImage: users.profileImage,
       })
       .from(caregivers)
-      .innerJoin(users, eq(caregivers.userId, users.id));
+      .innerJoin(users, eq(caregivers.userId, users.id))
+      .where(visibleCaregivers(req.user!));
 
+    res.setHeader("Cache-Control", "no-store");
     res.json({ caregivers: allCaregivers });
   } catch (error) {
     next(error);
@@ -217,8 +236,9 @@ router.put("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
 });
 
 // Get caregiver profile
-router.get("/:userId", authMiddleware, async (req, res, next) => {
+router.get("/:userId", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
+    await ensureCoreTables();
     const userId = parseInt(req.params.userId);
     if (isNaN(userId)) {
       throw new AppError(400, "Invalid user ID");
@@ -246,13 +266,14 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
       })
       .from(caregivers)
       .innerJoin(users, eq(caregivers.userId, users.id))
-      .where(eq(caregivers.userId, userId))
+      .where(and(eq(caregivers.userId, userId), visibleCaregivers(req.user!)))
       .limit(1);
 
     if (profile.length === 0) {
       throw new AppError(404, "Caregiver profile not found");
     }
 
+    res.setHeader("Cache-Control", "no-store");
     res.json({ profile: profile[0] });
   } catch (error) {
     next(error);
@@ -260,3 +281,4 @@ router.get("/:userId", authMiddleware, async (req, res, next) => {
 });
 
 export default router;
+

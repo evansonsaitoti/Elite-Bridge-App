@@ -34,7 +34,9 @@ async function canCommunicate(req:AuthRequest,peerId:number) {
         SELECT 1 FROM employer_caregivers ec
         JOIN employers e ON e.id=ec.employer_id
         WHERE ec.caregiver_user_id=${req.user!.id}
-        AND ec.status='active' AND e.user_id=p.id
+        AND ec.status='active' AND EXISTS (
+          SELECT 1 FROM employer_memberships m WHERE m.employer_id=e.id AND m.user_id=p.id
+        )
       ))
     ) LIMIT 1`));
   if (!allowed.length) throw new AppError(404,"Active care-team contact not found.");
@@ -62,7 +64,8 @@ router.get("/contacts",async(req:AuthRequest,res,next)=>{
           e.company_name
         FROM employer_caregivers ec
         JOIN employers e ON e.id=ec.employer_id
-        JOIN users u ON u.id=e.user_id AND u.role='employer' AND u.is_active=true
+        JOIN employer_memberships m ON m.employer_id=e.id
+        JOIN users u ON u.id=m.user_id AND u.role='employer' AND u.is_active=true
         WHERE ec.caregiver_user_id=${req.user!.id} AND ec.status='active'
         ORDER BY u.first_name,u.last_name LIMIT 25`);
     const ids=rows(result);
@@ -131,3 +134,4 @@ router.post("/:peerId/read",async(req:AuthRequest,res,next)=>{
 });
 
 export default router;
+
