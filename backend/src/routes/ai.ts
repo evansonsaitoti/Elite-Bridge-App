@@ -7,6 +7,7 @@ import { employers } from "../db/schema";
 import { authMiddleware, AuthRequest } from "../middleware/auth";
 import { AppError } from "../middleware/errorHandler";
 import { employerForUser } from "../services/employerMemberships";
+import { aiGatewayToken } from "../services/aiGatewayAuth";
 
 const router = Router();
 const askSchema = z.object({ command: z.string().trim().min(2).max(500) });
@@ -186,7 +187,7 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res, next) => {
       upcomingAssignmentsNextSevenDays: Number((bookingResult as any).rows[0]?.upcoming_assignments || 0),
     };
 
-    const gatewayToken = process.env.AI_GATEWAY_API_KEY || process.env.VERCEL_OIDC_TOKEN;
+    const gatewayToken = aiGatewayToken(req.headers);
     if (!gatewayToken) return res.status(503).json({ message: "The AI connection is not configured for this deployment." });
 
     const modelResponse = await fetch("https://ai-gateway.vercel.sh/v1/chat/completions", {
@@ -221,3 +222,4 @@ router.post("/chat", authMiddleware, async (req: AuthRequest, res, next) => {
 });
 
 export default router;
+
