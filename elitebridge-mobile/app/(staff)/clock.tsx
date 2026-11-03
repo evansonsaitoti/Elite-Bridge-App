@@ -13,6 +13,7 @@ import {
   View,
 } from "react-native";
 
+import { TimeCorrectionForm } from "@/components/time-correction-form";
 import { ScreenContainer } from "@/components/screen-container";
 import { useAuth } from "@/hooks/use-auth";
 import { useColors } from "@/hooks/use-colors";
@@ -272,6 +273,7 @@ export default function StaffClock() {
         contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
         showsVerticalScrollIndicator={false}
       >
+        <TimeCorrectionForm shiftId={shiftId} onSaved={refresh} />
         <TouchableOpacity onPress={()=>router.push("/(staff)/handoff")} accessibilityRole="button"
           style={{backgroundColor:"#EAF4EE",borderRadius:14,padding:15,marginBottom:14,borderWidth:1,borderColor:"#CDE1D3"}}>
           <Text style={{color:"#0A4A35",fontSize:15,fontWeight:"900"}}>↗ Caregiver handoff</Text>

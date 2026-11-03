@@ -1,6 +1,10 @@
-import { shiftOpportunityRoute } from "./shift-link";
+import { parseShiftId, shiftOpportunityRoute } from "./shift-link";
 
 export function caregiverNotificationRoute(type: unknown, shiftId?: unknown) {
+  if (type === "attendance_reminder") {
+    const id = parseShiftId(shiftId);
+    return { pathname: "/(staff)/clock" as const, params: { ...(id ? {shiftId:String(id)} : {}), destination:"clock" } };
+  }
   if (type === "team_message") return "/(staff)/chat" as const;
   if (type === "care_handoff" || type === "care_checklist") return "/(staff)/handoff" as const;
   if (type === "timesheet_review" || type === "timesheet_ready") return "/(staff)/timesheets" as const;

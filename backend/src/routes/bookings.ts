@@ -14,6 +14,9 @@ import { sendShiftSms } from "../services/sms";
 import { sendShiftEmails } from "../services/shift-email";
 import { employerForUser } from "../services/employerMemberships";
 
+import { ensureClockReminders } from "../services/clock-reminders";
+import { ensureTimeCorrections } from "../services/time-corrections";
+
 const router = Router();
 type ShiftTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 
@@ -1195,6 +1198,105 @@ router.get("/caregiver/timekeeping", authMiddleware, async (req: AuthRequest, re
     const timesheets = await db.execute(sql`SELECT * FROM shift_timesheets WHERE caregiver_id = ${caregiver.id} ORDER BY clock_in_at DESC`);
     res.json({ activities: (activities as any).rows.map(attendanceRecord), timesheets: (timesheets as any).rows.map(attendanceRecord) });
   } catch (error) { next(error); }
+});
+
+
+router.get('/employer/attendance-reminders',authMiddleware,async(req:AuthRequest,res,next)=>{
+  try {const e=await getOrCreateEmployer(req);await ensureClockReminders();
+    const enabled=(process.env.CLOCK_REMINDER_EMPLOYER_IDS||'').split(',').map(Number).includes(e.id) && Boolean(process.env.CRON_SECRET) && Number.isFinite(new Date(process.env.CLOCK_REMINDERS_ENABLED_AT||'').getTime());
+    const run=(await db.execute(sql`SELECT * FROM clock_reminder_runs WHERE employer_id=${e.id}`) as any).rows[0];
+    res.setHeader('Cache-Control','no-store');res.json({enabled,lastRunAt:utcTimestamp(run?.last_run_at),attempted:run?.attempted||0});
+  }catch(error){next(error);}
+});
+router.get('/caregiver/timesheets/corrections',authMiddleware,async(req:AuthRequest,res,next)=>{
+  try {await ensureShiftPostsTable();await ensureTimeCorrections();const c=await getOrCreateCaregiver(req);
+    res.json({requests:(await db.execute(sql`SELECT * FROM time_correction_requests WHERE caregiver_id=${c.id} ORDER BY id DESC LIMIT 100`) as any).rows.map(attendanceRecord)});
+  }catch(error){next(error);}
+});
+router.get('/employer/timesheets/corrections',authMiddleware,async(req:AuthRequest,res,next)=>{
+  try {await ensureShiftPostsTable();await ensureTimeCorrections();const e=await getOrCreateEmployer(req);
+    res.json({requests:(await db.execute(sql`SELECT r.*,u.first_name,u.last_name FROM time_correction_requests r JOIN caregivers c ON c.id=r.caregiver_id JOIN users u ON u.id=c.user_id WHERE r.employer_id=${e.id} ORDER BY r.id DESC LIMIT 100`) as any).rows.map(attendanceRecord)});
+  }catch(error){next(error);}
+});
+router.post('/caregiver/timesheets/corrections',authMiddleware,async(req:AuthRequest,res,next)=>{
+  try {
+    await ensureShiftPostsTable();await ensureTimeCorrections();const c=await getOrCreateCaregiver(req);
+    const data=z.object({shiftId:z.number().int().positive(),clockInAt:z.string().datetime({offset:true}),clockOutAt:z.string().datetime({offset:true}),reason:z.string().trim().min(3).max(2000)}).parse(req.body);
+    const start=new Date(data.clockInAt),end=new Date(data.clockOutAt),now=Date.now();
+    if(end<=start || end.getTime()>now || end.getTime()-start.getTime()>86400000 || start.getTime()<now-31*86400000) throw new AppError(400,'Enter actual past times, within the last 31 days, for a visit of no more than 24 hours.');
+    const result=await db.transaction(async tx=>{
+      await tx.execute(sql`SELECT id FROM caregivers WHERE id=${c.id} FOR UPDATE`);
+      const shift=(await tx.execute(sql`SELECT sp.*,e.user_id employer_user_id FROM shift_posts sp JOIN employers e ON e.id=sp.employer_id WHERE sp.id=${data.shiftId} FOR UPDATE OF sp`) as any).rows[0];
+      const assignment=(await tx.execute(sql`SELECT id FROM shift_applications WHERE shift_id=${data.shiftId} AND caregiver_id=${c.id} AND status='approved'`) as any).rows[0];
+      if(!shift||!assignment||['cancelled','closed'].includes(shift.status)) throw new AppError(403,'An active or completed assigned shift is required.');
+      if(start.getTime()<new Date(utcTimestamp(shift.start_time)!).getTime()-86400000 || end.getTime()>new Date(utcTimestamp(shift.end_time)!).getTime()+86400000) throw new AppError(400,'The times must relate to the selected shift. Contact your agency for other adjustments.');
+      const sheet=(await tx.execute(sql`SELECT * FROM shift_timesheets WHERE shift_id=${data.shiftId} AND caregiver_id=${c.id} FOR UPDATE`) as any).rows[0];
+      if(sheet?.status==='approved') throw new AppError(409,'These hours are already approved. Contact your agency for a payroll adjustment.');
+      const activities=(await tx.execute(sql`SELECT * FROM shift_activities WHERE shift_id=${data.shiftId} AND caregiver_id=${c.id} ORDER BY id`) as any).rows;
+      const original=JSON.stringify({timesheet:sheet||null,activities});
+      const r=(await tx.execute(sql`INSERT INTO time_correction_requests(shift_id,caregiver_id,employer_id,requested_by,clock_in_at,clock_out_at,reason,original) VALUES(${data.shiftId},${c.id},${shift.employer_id},${req.user!.id},${start},${end},${data.reason},${original}::jsonb) RETURNING *`) as any).rows[0];
+      await tx.execute(sql`INSERT INTO notifications(user_id,type,title,message,related_id) VALUES(${shift.employer_user_id},'timesheet_ready','Time correction requested','Review the reported hours and reason before approving.',${data.shiftId})`);
+      return {request:r,employerUserId:shift.employer_user_id};
+    });
+    await sendPushToUsers([result.employerUserId],{title:'Time correction requested',body:'A caregiver has requested a time correction. Review it in your employer workspace.',data:{type:'timesheet_ready',shiftId:data.shiftId}});
+    res.status(201).json({request:attendanceRecord(result.request)});
+  }catch(error:any){if(error?.code==='23505'||error?.cause?.code==='23505')return next(new AppError(409,'A correction request is already awaiting review for this shift.'));next(error);}
+});
+router.patch('/employer/timesheets/corrections/:requestId',authMiddleware,async(req:AuthRequest,res,next)=>{
+  try {
+    await ensureShiftPostsTable();await ensureTimeCorrections();const employer=await getOrCreateEmployer(req);
+    const id=z.coerce.number().int().positive().parse(req.params.requestId);
+    const data=z.object({decision:z.enum(['approved','rejected']),note:z.string().trim().min(3).max(2000)}).parse(req.body);
+    const found=(await db.execute(sql`SELECT * FROM time_correction_requests WHERE id=${id} AND employer_id=${employer.id}`) as any).rows[0];
+    if(!found)throw new AppError(404,'Request not found');
+    const result=await db.transaction(async tx=>{
+      const caregiver=(await tx.execute(sql`SELECT * FROM caregivers WHERE id=${found.caregiver_id} FOR UPDATE`) as any).rows[0];
+      const shift=(await tx.execute(sql`SELECT * FROM shift_posts WHERE id=${found.shift_id} FOR UPDATE`) as any).rows[0];
+      const r=(await tx.execute(sql`SELECT * FROM time_correction_requests WHERE id=${id} AND employer_id=${employer.id} FOR UPDATE`) as any).rows[0];
+      if(r.status!=='pending')throw new AppError(409,'This request has already been reviewed.');
+      if(data.decision==='approved'){
+        const assignment=(await tx.execute(sql`SELECT * FROM shift_applications WHERE shift_id=${r.shift_id} AND caregiver_id=${r.caregiver_id} AND status='approved'`) as any).rows[0];
+        if(!assignment||['cancelled','closed'].includes(shift.status))throw new AppError(409,'The assignment changed. Reject this request and review with the caregiver.');
+        const sheet=(await tx.execute(sql`SELECT * FROM shift_timesheets WHERE shift_id=${r.shift_id} AND caregiver_id=${r.caregiver_id} FOR UPDATE`) as any).rows[0];
+        const activities=(await tx.execute(sql`SELECT * FROM shift_activities WHERE shift_id=${r.shift_id} AND caregiver_id=${r.caregiver_id} ORDER BY id`) as any).rows;
+        // Reject stale approval instead of overwriting punches or a separately approved payroll record.
+        if(JSON.stringify({timesheet:sheet||null,activities})!==JSON.stringify(r.original)) {
+          // JSONB key order differs; compare canonical snapshots.
+          const canonical=(v:any):string=>JSON.stringify(v,(_,x)=>x&&typeof x==='object'&&!Array.isArray(x)?Object.keys(x).sort().reduce((o:any,k)=>(o[k]=x[k],o),{}):x);
+          if(canonical({timesheet:sheet||null,activities})!==canonical(r.original))throw new AppError(409,'Time records changed after this request. Reject it and ask for a fresh correction.');
+        }
+        if(sheet?.status==='approved')throw new AppError(409,'Approved hours require a payroll adjustment.');
+        const start=new Date(utcTimestamp(r.clock_in_at)!),end=new Date(utcTimestamp(r.clock_out_at)!);
+        const overlap=(await tx.execute(sql`SELECT id FROM shift_timesheets WHERE caregiver_id=${r.caregiver_id} AND shift_id<>${r.shift_id} AND clock_in_at<${end} AND clock_out_at>${start} LIMIT 1`) as any).rows[0];
+        const otherActive=(await tx.execute(sql`SELECT i.id FROM shift_activities i WHERE i.caregiver_id=${r.caregiver_id} AND i.shift_id<>${r.shift_id} AND i.type='clock_in' AND NOT EXISTS(SELECT 1 FROM shift_activities o WHERE o.caregiver_id=i.caregiver_id AND o.shift_id=i.shift_id AND o.type='clock_out' AND o.id>i.id) LIMIT 1`) as any).rows[0];
+        if(overlap||otherActive)throw new AppError(409,'Resolve overlapping or active time records before approving.');
+        const minutes=Math.round((end.getTime()-start.getTime())/60000);
+        if(minutes<=0)throw new AppError(400,'At least one minute is required.');
+        const rate=Number(sheet?.hourly_rate||assignment.caregiver_pay_rate||caregiver.hourly_rate||shift.hourly_rate);
+        if(!Number.isFinite(rate)||rate<=0)throw new AppError(409,'Set a valid assignment pay rate first.');
+        const total=(minutes/60*rate).toFixed(2),note=`Approved correction #${id}: ${r.reason}`;
+        // Keep original clock evidence intact. Only add explicitly labeled missing events.
+        if(!sheet){
+          const open=await findLatestClockIn(r.shift_id,r.caregiver_id,tx);
+          if(!open) await tx.execute(sql`INSERT INTO shift_activities(shift_id,caregiver_id,type,notes,timestamp) VALUES(${r.shift_id},${r.caregiver_id},'clock_in',${note},${start})`);
+          if(activities.at(-1)?.type==='break_start') await tx.execute(sql`INSERT INTO shift_activities(shift_id,caregiver_id,type,notes,timestamp) VALUES(${r.shift_id},${r.caregiver_id},'break_end',${note},${end})`);
+          await tx.execute(sql`INSERT INTO shift_activities(shift_id,caregiver_id,type,notes,timestamp) VALUES(${r.shift_id},${r.caregiver_id},'clock_out',${note},${end})`);
+        }
+        const saved=(await tx.execute(sql`INSERT INTO shift_timesheets(shift_id,caregiver_id,employer_id,clock_in_at,clock_out_at,worked_minutes,hourly_rate,total_amount,status,notes,agency_note,approved_at)
+          VALUES(${r.shift_id},${r.caregiver_id},${employer.id},${start},${end},${minutes},${String(rate)},${total},'approved',${note},${data.note},CURRENT_TIMESTAMP)
+          ON CONFLICT(shift_id,caregiver_id) DO UPDATE SET clock_in_at=EXCLUDED.clock_in_at,clock_out_at=EXCLUDED.clock_out_at,worked_minutes=EXCLUDED.worked_minutes,total_amount=EXCLUDED.total_amount,status='approved',notes=CONCAT(shift_timesheets.notes,E'\n',EXCLUDED.notes),agency_note=EXCLUDED.agency_note,approved_at=CURRENT_TIMESTAMP,updated_at=CURRENT_TIMESTAMP RETURNING id`) as any).rows[0];
+        await tx.execute(sql`INSERT INTO timesheet_reviews(timesheet_id,actor_user_id,action,note) VALUES(${saved.id},${req.user!.id},'correction_approved',${data.note})`);
+        await tx.execute(sql`UPDATE caregivers SET total_hours=COALESCE(total_hours,0)+${String((minutes-Number(sheet?.worked_minutes||0))/60)},updated_at=CURRENT_TIMESTAMP WHERE id=${r.caregiver_id}`);
+        await refreshShiftStatus(tx,r.shift_id);
+        await tx.execute(sql`UPDATE bookings SET status='completed',total_amount=${total},updated_at=CURRENT_TIMESTAMP WHERE caregiver_id=${r.caregiver_id} AND employer_id=${employer.id} AND start_time=${new Date(utcTimestamp(shift.start_time)!)} AND end_time=${new Date(utcTimestamp(shift.end_time)!)} AND status IN('confirmed','in_progress')`);
+      }
+      await tx.execute(sql`UPDATE time_correction_requests SET status=${data.decision},reviewed_by=${req.user!.id},review_note=${data.note},reviewed_at=CURRENT_TIMESTAMP WHERE id=${id}`);
+      await tx.execute(sql`INSERT INTO notifications(user_id,type,title,message,related_id) VALUES(${caregiver.user_id},'timesheet_review','Time correction reviewed',${`Your correction request was ${data.decision}. Open your time clock for details.`},${r.shift_id})`);
+      return {userId:caregiver.user_id,shiftId:r.shift_id};
+    });
+    await sendPushToUsers([result.userId],{title:'Time correction reviewed',body:`Your correction request was ${data.decision}.`,data:{type:'timesheet_review',shiftId:result.shiftId}});
+    res.json({status:data.decision});
+  }catch(error){next(error);}
 });
 
 router.post("/:shiftId/break", authMiddleware, async (req: AuthRequest, res, next) => {

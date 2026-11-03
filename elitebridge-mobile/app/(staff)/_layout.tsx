@@ -25,7 +25,7 @@ export default function StaffLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const router = useRouter();
-  const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
+  const { shiftId, destination } = useLocalSearchParams<{ shiftId?: string; destination?: string }>();
   const selectedShiftId = parseShiftId(shiftId);
   const [ready, setReady] = useState(false);
   const lastResponse = useRef<string | null>(null);
@@ -33,7 +33,7 @@ export default function StaffLayout() {
   useEffect(() => {
     let mounted = true;
     const signIn = () => router.replace(selectedShiftId
-      ? { pathname: "/(auth)/login", params: { shiftId: String(selectedShiftId) } }
+      ? { pathname: "/(auth)/login", params: { shiftId: String(selectedShiftId), ...(destination === "clock" ? {destination:"clock"} : {}) } }
       : "/(root)");
     AsyncStorage.getItem("elitebridge-session")
       .then((stored) => {
@@ -55,7 +55,7 @@ export default function StaffLayout() {
       })
       .catch(() => signIn());
     return () => { mounted = false; };
-  }, [router, selectedShiftId]);
+  }, [router, selectedShiftId, destination]);
 
   useEffect(() => {
     if (!ready) return;

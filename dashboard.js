@@ -1066,8 +1066,35 @@
     }
     refreshTimesheetShareSummary();
   }
+  async function loadTimeCorrections(container, employerView, applications) {
+    let panel = document.getElementById('timeCorrectionPanel');
+    if (!panel) { panel = document.createElement('section'); panel.id = 'timeCorrectionPanel'; panel.className = 'surface surface-pad'; container.before(panel); }
+    try {
+      const [{requests=[]},reminders] = await Promise.all([api(`/bookings/${employerView?'employer':'caregiver'}/timesheets/corrections`),employerView?api('/bookings/employer/attendance-reminders').catch(()=>null):Promise.resolve(null)]);
+      const format = value => value ? new Date(value).toLocaleString() : 'No punch recorded';
+      panel.innerHTML = `${employerView?`<h2>Clock reminders</h2><p>${reminders?.enabled?`Enabled · Last check: ${reminders.lastRunAt?escapeHtml(format(reminders.lastRunAt)):"Waiting for first check"}`:"Reminder status unavailable or not enabled."}</p><p>15 minutes before start · 5 minutes late · Employer alert at 15 minutes late · 10 minutes after end if still clocked in.</p>`:""}<h2>Time correction requests</h2><p>Original clock records are preserved. Reported hours change only after employer approval.</p>${!employerView?`<form data-time-correction-request class="field"><label>Assigned shift<select name="shiftId" required><option value="">Select a shift</option>${applications.filter(a=>a.status==='approved'&&!['cancelled','closed'].includes(a.shift.status)&&new Date(a.shift.startTime)<new Date()).map(a=>`<option value="${a.shift.id}">${escapeHtml(a.shift.title)} · ${escapeHtml(format(a.shift.startTime))}</option>`).join('')}</select></label><p>Use your device's local time zone (${escapeHtml(Intl.DateTimeFormat().resolvedOptions().timeZone)}).</p><label>Actual start<input type="datetime-local" name="start" required></label><label>Actual end<input type="datetime-local" name="end" required></label><label>Reason<textarea name="reason" required minlength="3" maxlength="2000"></textarea></label><button class="primary-button" type="submit">Request correction</button></form>`:''}${requests.length?requests.map(r=>`<article class="surface-pad"><strong>${employerView?escapeHtml(`${r.first_name} ${r.last_name}`):'Your request'} · ${escapeHtml(r.status)}</strong><p>Requested: ${escapeHtml(format(r.clock_in_at))} – ${escapeHtml(format(r.clock_out_at))}</p>${employerView?`<p>Original: ${escapeHtml(format(r.original?.timesheet?.clock_in_at||r.original?.activities?.find(a=>a.type==='clock_in')?.timestamp))} – ${escapeHtml(format(r.original?.timesheet?.clock_out_at||r.original?.activities?.find(a=>a.type==='clock_out')?.timestamp))}</p>`:''}<p>${escapeHtml(r.reason)}</p>${r.review_note?`<p>Review: ${escapeHtml(r.review_note)}</p>`:''}${employerView&&r.status==='pending'?`<form data-time-correction-review="${r.id}" class="field"><label>Review note<textarea name="note" required minlength="3" maxlength="2000"></textarea></label><div><button class="primary-button" type="submit" value="approved">Approve corrected hours</button> <button class="secondary-button" type="submit" value="rejected">Reject request</button></div></form>`:''}</article>`).join(''):'<p>No correction requests.</p>'}`;
+    } catch(error) {panel.innerHTML='<h2>Time correction requests</h2><p>Requests could not be loaded. Refresh to try again.</p>';}
+  }
+  document.addEventListener('submit', async event => {
+    const form=event.target;
+    if(!form.matches('[data-time-correction-request], [data-time-correction-review]'))return;
+    event.preventDefault();if(savingTime)return;
+    const data=new FormData(form),review=form.dataset.timeCorrectionReview,decision=event.submitter?.value;
+    if(review && !['approved','rejected'].includes(decision))return;
+    if(review && decision==='approved' && !window.confirm('Approve these corrected hours for payroll review? Original clock evidence is retained.'))return;
+    savingTime=true;form.querySelectorAll('button').forEach(b=>b.disabled=true);
+    try {
+      const body=review?{decision,note:String(data.get('note')||'')}:{shiftId:Number(data.get('shiftId')),clockInAt:new Date(String(data.get('start'))).toISOString(),clockOutAt:new Date(String(data.get('end'))).toISOString(),reason:String(data.get('reason')||'')};
+      await api(`/bookings/${review?'employer':'caregiver'}/timesheets/corrections${review?'/'+review:''}`,{method:review?'PATCH':'POST',body:JSON.stringify(body)});
+      notify(review?'Correction review saved.':'Correction requested. Your employer will review the reported hours.');
+      await(review?loadEmployer():loadCaregiver());
+    }catch(error){notify(error.message||'Could not save the correction.');}
+    finally{savingTime=false;form.querySelectorAll('button').forEach(b=>b.disabled=false);}
+  });
+
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
+    void loadTimeCorrections(container, employerView, applications);
     if (employerView) {
       employerManualTimesheets = sheets.filter(sheet => sheet.entry_source === 'manual_missed_clock_in');
       syncTimesheetSharePanel();

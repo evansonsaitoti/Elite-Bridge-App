@@ -10,7 +10,7 @@ import { parseShiftId, shiftOpportunityRoute } from "@/lib/shift-link";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
+  const { shiftId, destination } = useLocalSearchParams<{ shiftId?: string; destination?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -37,7 +37,7 @@ export default function LoginScreen() {
         name: `${user.firstName} ${user.lastName}`.trim(),
         signedInAt: new Date().toISOString(),
       }));
-      router.replace(parseShiftId(shiftId) ? shiftOpportunityRoute(shiftId) : "/(staff)/home");
+      router.replace(parseShiftId(shiftId) ? destination === "clock" ? {pathname:"/(staff)/clock",params:{shiftId}} : shiftOpportunityRoute(shiftId) : "/(staff)/home");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not sign you in.");
     } finally {

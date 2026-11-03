@@ -21,7 +21,7 @@ export default function RootLayout() {
       const data = response.notification.request.content.data;
       if (data?.type === "team_message") router.push("/messages");
       else if (data?.type === "care_handoff" || data?.type === "care_checklist") router.push("/handoffs");
-      else if (data?.type === "timesheet_ready" || data?.type === "timesheet_review") router.push("/time");
+      else if (data?.type === "attendance_alert" || data?.type === "timesheet_ready" || data?.type === "timesheet_review") router.push("/time");
       else if (data?.type === "shift_application" || data?.type === "shift_callout") router.push("/applications");
     });
     return () => sub.remove();

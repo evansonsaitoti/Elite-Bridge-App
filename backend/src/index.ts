@@ -36,6 +36,8 @@ import mcpRoutes, { mcpDiscoveryRouter } from "./routes/mcp";
 import { configureRealtime } from "./services/realtime";
 import { organizationAuthorization } from "./middleware/organizationAuthorization";
 
+import clockReminderRoutes from "./routes/clockReminders";
+
 const app = express();
 const httpServer = createServer(app);
 const io = new SocketIOServer(httpServer, {
@@ -67,6 +69,8 @@ app.get("/health", async (req, res) => {
 
 // Public OAuth discovery metadata for the MCP endpoint
 app.use(mcpDiscoveryRouter);
+
+app.use("/api/cron/clock-reminders", clockReminderRoutes);
 
 // API Routes
 app.use("/api/auth", authRoutes);

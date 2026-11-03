@@ -256,3 +256,9 @@ export async function respondToRescueOffer(offerId: number, status: "accepted" |
     { method: "POST", body: JSON.stringify({ status }) },
   );
 }
+
+export type TimeCorrectionRequest = {id:number;shift_id:number;clock_in_at:string;clock_out_at:string;reason:string;status:string;review_note:string|null};
+export function fetchTimeCorrections() {return request<{requests:TimeCorrectionRequest[]}>("/api/bookings/caregiver/timesheets/corrections");}
+export function requestTimeCorrection(data:{shiftId:number;clockInAt:string;clockOutAt:string;reason:string}) {
+  return request("/api/bookings/caregiver/timesheets/corrections",{method:"POST",body:JSON.stringify(data)});
+}
