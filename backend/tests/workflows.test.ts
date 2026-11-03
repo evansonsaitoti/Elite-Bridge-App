@@ -138,17 +138,17 @@ describe.sequential("Employer and caregiver lifecycle", () => {
   it("emails only the posting team's caregivers and respects preference plus event deduplication", async () => {
     const start = outbound.post.mock.calls.length;
     const posted = await request("/bookings", employer, "POST", shift(), 201);
-    const mail = outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject === "A shift is available in Elite Care");
+    const mail = outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject?.startsWith("Elite Care: Available shift"));
     expect(mail.map(([, body]) => body.to[0])).toEqual([caregiver.user.email]);
     expect(mail[0][1].text).not.toContain("Test only");
     const { sendShiftEmails } = await import("../src/services/shift-email");
     await sendShiftEmails([caregiver.user.id, caregiver.user.id], posted.shift.id);
-    expect(outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject === "A shift is available in Elite Care")).toHaveLength(1);
+    expect(outbound.post.mock.calls.slice(start).filter(([, body]) => body.subject?.startsWith("Elite Care: Available shift"))).toHaveLength(1);
     await request("/notifications/preferences", caregiver, "PUT", { emailShiftAlerts: false });
     expect((await request("/notifications/preferences", replacement)).emailShiftAlerts).toBe(true);
     const after = outbound.post.mock.calls.length;
     const muted = await request("/bookings", employer, "POST", shift(), 201);
-    expect(outbound.post.mock.calls.slice(after).filter(([, body]) => body.subject === "A shift is available in Elite Care")).toHaveLength(0);
+    expect(outbound.post.mock.calls.slice(after).filter(([, body]) => body.subject?.startsWith("Elite Care: Available shift"))).toHaveLength(0);
     await request("/notifications/preferences", caregiver, "PUT", { emailShiftAlerts: true });
     await database.query("DELETE FROM shift_posts WHERE id IN ($1, $2)", [posted.shift.id, muted.shift.id]);
   });
@@ -160,6 +160,15 @@ describe.sequential("Employer and caregiver lifecycle", () => {
     expect(web[0].id).toBe(reviewShift.id);
     expect((await request("/bookings/employer/my", employer)).shifts[0].id).toBe(reviewShift.id);
     expect((await request("/bookings/employer/my", otherEmployer)).shifts).toEqual([]);
+  });
+  it("reminds only eligible connected caregivers without changing approval mode or duplicating email", async () => {
+    const before = outbound.post.mock.calls.length;
+    const result = await request(`/bookings/employer/${reviewShift.id}/notify`, employer, "POST");
+    expect(result).toMatchObject({matchedCaregivers:1,pushStatus:"attempted"});
+    expect((await request("/bookings/employer/my", employer)).shifts.find((s:any)=>s.id===reviewShift.id).assignmentMode).toBe("review");
+    expect(outbound.post.mock.calls.slice(before).filter(([,body])=>body.subject?.startsWith("Elite Care: Available shift"))).toHaveLength(0);
+    await request(`/bookings/employer/${reviewShift.id}/notify`, otherEmployer, "POST", undefined, 409);
+    await request(`/bookings/employer/${reviewShift.id}/notify`, caregiver, "POST", undefined, 403);
   });
   it("keeps qualification filtering identical across web and mobile", async () => {
     await request("/bookings", employer, "POST", shift("review", { serviceType: "specialist", caregiverType: "RN" }), 201);

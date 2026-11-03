@@ -1,3 +1,4 @@
+import { DailyCoverage } from "../components/daily-coverage";
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -79,6 +80,7 @@ export default function TimeScreen() {
   };
 
   return <SafeAreaView edges={["bottom"]} style={styles.safe}><ScrollView contentContainerStyle={styles.content} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => void load(true)} tintColor={colors.green} />}>
+    <DailyCoverage />
     <View style={styles.summary}><View><Text style={styles.summaryLabel}>CURRENT ATTENDANCE</Text><Text style={styles.summaryValue}>{clockedIn} clocked in</Text><Text style={styles.summaryBody}>Live activity from caregivers assigned through Elite Bridge shifts.</Text></View><View style={styles.clockIcon}><Ionicons color="#FFFFFF" name="time" size={27} /></View></View>
     <View style={styles.timesheetSummary}>
       <View style={styles.timesheetMetric}><Text style={styles.timesheetValue}>{pendingTimesheets}</Text><Text style={styles.timesheetLabel}>Pending timesheets</Text></View>

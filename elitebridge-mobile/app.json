@@ -2,7 +2,7 @@
   "expo": {
     "name": "Elite Care",
     "slug": "elitebridge-mobile",
-    "version": "1.3.3",
+    "version": "1.3.4",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "elitebridge",
@@ -10,17 +10,20 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.app.elitebridgemobile",
-      "buildNumber": "69",
+      "buildNumber": "70",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
         "NSPhotoLibraryUsageDescription": "Allow Elite Care to select a caregiver profile photo.",
         "NSMicrophoneUsageDescription": "Elite Bridge needs microphone access for voice communication.",
         "NSLocationWhenInUseUsageDescription": "Elite Bridge records your location only when you clock in or out of a scheduled visit."
-      }
+      },
+      "associatedDomains": [
+        "applinks:app.elitebridgestaffing.com"
+      ]
     },
     "android": {
       "package": "com.elitebridgestaffing.caregiver",
-      "versionCode": 69,
+      "versionCode": 70,
       "adaptiveIcon": {
         "backgroundColor": "#FFFFFF",
         "foregroundImage": "./assets/images/android-icon-foreground.png"

@@ -1,4 +1,5 @@
-import { getToken, setToken, removeToken } from "./secure-session";
+import { notifySessionExpired } from "./session-expired";
+import { getToken, setToken, removeToken, removeRejectedToken } from "./secure-session";
 import * as Location from "expo-location";
 import type { ClockLocation } from "./timekeeping";
 
@@ -75,6 +76,10 @@ async function request<T>(path: string, init: RequestInit = {}, includeAuth = tr
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401 && includeAuth && (token ? await removeRejectedToken(TOKEN_KEY,token) : !(await getToken(TOKEN_KEY)))) {
+      notifySessionExpired();
+      throw Object.assign(new Error("Your session expired. Please sign in again to continue."), { status: 401 });
+    }
     const error = new Error(body?.message || body?.error || `Request failed (${response.status})`) as Error & { status?: number };
     error.status = response.status;
     throw error;
@@ -255,4 +260,10 @@ export async function respondToRescueOffer(offerId: number, status: "accepted" |
     `/api/bookings/caregiver/offers/${offerId}/respond`,
     { method: "POST", body: JSON.stringify({ status }) },
   );
+}
+
+export type TimeCorrectionRequest = {id:number;shift_id:number;clock_in_at:string;clock_out_at:string;reason:string;status:string;review_note:string|null};
+export function fetchTimeCorrections() {return request<{requests:TimeCorrectionRequest[]}>("/api/bookings/caregiver/timesheets/corrections");}
+export function requestTimeCorrection(data:{shiftId:number;clockInAt:string;clockOutAt:string;reason:string}) {
+  return request("/api/bookings/caregiver/timesheets/corrections",{method:"POST",body:JSON.stringify(data)});
 }

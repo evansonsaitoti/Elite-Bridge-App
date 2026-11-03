@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { config } from "../config/env";
+import { buildShiftEmail, type ShiftEmailDetails } from "./shift-email-template";
 import { sendTransactionalEmail } from "./notifications";
 
 let ready: Promise<void> | undefined;
@@ -22,6 +23,11 @@ export async function sendShiftEmails(userIds: number[], shiftId: number): Promi
   const ids = [...new Set(userIds.filter(Number.isInteger))];
   if (!ids.length) return;
   await ensureNotificationPreferences();
+  const shift = (await db.execute(sql`SELECT id, service_type, start_time, end_time, time_zone,
+    city, state, assignment_mode FROM shift_posts WHERE id=${shiftId}
+    AND status IN ('open', 'assigned') AND start_time > CURRENT_TIMESTAMP`) as any).rows[0] as ShiftEmailDetails | undefined;
+  if (!shift) return;
+  const email = buildShiftEmail(shift, config.WEB_APP_URL);
   const recipients = (await db.execute(sql`
     SELECT u.id, u.email FROM users u
     LEFT JOIN notification_preferences p ON p.user_id = u.id
@@ -39,13 +45,7 @@ export async function sendShiftEmails(userIds: number[], shiftId: number): Promi
         ON CONFLICT (user_id, shift_id) DO NOTHING RETURNING id
       `) as any).rows[0];
       if (!claim) return;
-      const accepted = await sendTransactionalEmail(user.email, "A shift is available in Elite Care", [
-        "A shift from your care team is available for review.",
-        "Open Elite Care and choose Shifts → Available shifts, or sign in to your workspace:",
-        `${config.WEB_APP_URL.replace(/\/$/, "")}/dashboard`,
-        "",
-        "You can turn off shift emails in Elite Care notification settings.",
-      ].join("\n"));
+      const accepted = await sendTransactionalEmail(user.email, email.subject, email.text, email.html);
       await db.execute(sql`UPDATE shift_email_deliveries
         SET status=${accepted ? "provider_accepted" : "failed_or_unknown"}, updated_at=CURRENT_TIMESTAMP
         WHERE id=${claim.id}`);

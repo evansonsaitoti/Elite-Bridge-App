@@ -23,7 +23,7 @@ export default function NotificationsScreen() {
         return;
       }
     }
-    if (item.type === "timesheet_ready" || item.type === "timesheet_review") router.push("/time");
+    if (item.type === "coverage_warning" || item.type === "attendance_alert" || item.type === "timesheet_ready" || item.type === "timesheet_review") router.push("/time");
     else if (item.type === "team_message") router.push("/messages");
     else if (item.type === "care_handoff" || item.type === "care_checklist") router.push("/handoffs");
     else if (item.type === "shift_application") router.push("/applications");

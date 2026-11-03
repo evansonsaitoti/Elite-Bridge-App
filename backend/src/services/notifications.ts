@@ -20,9 +20,9 @@ type VerificationDetails = {
   verificationUrl: string;
 };
 
-export async function sendTransactionalEmail(to: string, subject: string, text: string): Promise<boolean> {
+export async function sendTransactionalEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
   try {
-    return await sendEmail({ to, subject, text });
+    return await sendEmail({ to, subject, text, html });
   } catch {
     // Provider errors can contain credentials and message content.
     console.error("Transactional email failed; check the email provider delivery log");
@@ -87,18 +87,27 @@ type PushMessage = {
   data?: Record<string, string | number | boolean>;
 };
 
+export async function ensurePushHistory() {
+  await db.execute(sql`CREATE TABLE IF NOT EXISTS push_delivery_attempts (
+    id SERIAL PRIMARY KEY,user_id INTEGER NOT NULL,shift_id INTEGER,type TEXT NOT NULL,
+    status TEXT NOT NULL,accepted INTEGER NOT NULL DEFAULT 0,rejected INTEGER NOT NULL DEFAULT 0,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP)`);
+}
 export async function sendPushToUsers(userIds: number[], message: PushMessage): Promise<void> {
+  const uniqueIds=[...new Set(userIds.filter(Number.isInteger))];
+  if(!uniqueIds.length)return;
   try {
-    const uniqueIds = [...new Set(userIds.filter(Number.isInteger))];
-    if (!uniqueIds.length) return;
-    const result = await db.execute(sql`
-      SELECT expo_push_token FROM push_tokens
-      WHERE user_id IN (${sql.join(uniqueIds.map((id) => sql`${id}`), sql`, `)})
-    `);
-    await deliverPush((result as any).rows.map((row: any) => row.expo_push_token), message);
-  } catch (error) {
-    console.error("Push recipient lookup failed");
-  }
+    await ensurePushHistory();
+    const rows=(await db.execute(sql`SELECT user_id,expo_push_token FROM push_tokens WHERE user_id IN (${sql.join(uniqueIds.map(id=>sql`${id}`),sql`,`)})`) as any).rows;
+    for(const userId of uniqueIds){
+      const tokens=rows.filter((r:any)=>r.user_id===userId).map((r:any)=>r.expo_push_token);
+      const shiftId=Number(message.data?.shiftId);
+      const record=(await db.execute(sql`INSERT INTO push_delivery_attempts(user_id,shift_id,type,status)
+        VALUES(${userId},${Number.isSafeInteger(shiftId)&&shiftId>0?shiftId:null},${String(message.data?.type||'notification')},'attempting') RETURNING id`) as any).rows[0];
+      const outcome=await deliverPush(tokens,message);
+      await db.execute(sql`UPDATE push_delivery_attempts SET status=${outcome.status},accepted=${outcome.accepted},rejected=${outcome.rejected} WHERE id=${record.id}`);
+    }
+  }catch {console.error("Push dispatch or history recording failed");}
 }
 
 export async function sendPushToRole(role: "caregiver" | "employer", message: PushMessage): Promise<void> {
@@ -115,9 +124,10 @@ export async function sendPushToRole(role: "caregiver" | "employer", message: Pu
   }
 }
 
-async function deliverPush(tokens: string[], message: PushMessage): Promise<void> {
+async function deliverPush(tokens: string[], message: PushMessage): Promise<{status:string;accepted:number;rejected:number}> {
+  let accepted=0,rejected=0,unknown=0;
   const uniqueTokens = [...new Set(tokens)].filter((token) => /^ExponentPushToken\[[^\]]+\]$|^ExpoPushToken\[[^\]]+\]$/.test(token));
-  if (!uniqueTokens.length) return;
+  if (!uniqueTokens.length) return {status:"no_device",accepted:0,rejected:0};
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (config.EXPO_ACCESS_TOKEN) headers.Authorization = `Bearer ${config.EXPO_ACCESS_TOKEN}`;
 
@@ -136,14 +146,18 @@ async function deliverPush(tokens: string[], message: PushMessage): Promise<void
 
       const tickets = Array.isArray(response.data?.data) ? response.data.data : [response.data?.data];
       for (const ticket of tickets) {
+        if(ticket?.status==="ok")accepted++; else if(ticket?.status==="error")rejected++; else unknown++;
         if (ticket?.status === "error") console.warn("Expo push ticket rejected", String(ticket.details?.error || "unknown"));
       }
+      if(tickets.length<batch.length)unknown+=batch.length-tickets.length;
       const invalid = batch.filter((_, itemIndex) => tickets[itemIndex]?.details?.error === "DeviceNotRegistered");
       if (invalid.length) {
         await db.execute(sql`DELETE FROM push_tokens WHERE expo_push_token IN (${sql.join(invalid.map((token) => sql`${token}`), sql`, `)})`);
       }
     } catch (error) {
+      unknown+=batch.length;
       console.error("Expo push request failed; check provider configuration");
     }
   }
+  return {status:unknown?'unknown':rejected?(accepted?'partially_accepted':'rejected'):'provider_accepted',accepted,rejected};
 }

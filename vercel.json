@@ -48,6 +48,17 @@
   ],
   "routes": [
     {
+      "src": "/.well-known/apple-app-site-association",
+      "dest": "/apple-app-site-association.json",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    },
+    {
+      "src": "/view-shift/?",
+      "dest": "/view-shift.html"
+    },
+    {
       "src": "/",
       "dest": "/index.html"
     },

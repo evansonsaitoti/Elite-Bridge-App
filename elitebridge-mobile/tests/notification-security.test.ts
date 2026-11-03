@@ -11,7 +11,7 @@ vi.mock("expo-secure-store", () => ({
   setItemAsync: vi.fn(async (key: string, value: string) => { state.secure.set(key, value); }),
   deleteItemAsync: vi.fn(async (key: string) => { state.secure.delete(key); }),
 }));
-import { getToken, setToken, removeToken } from "../lib/secure-session";
+import { getToken, setToken, removeToken, removeRejectedToken } from "../lib/secure-session";
 import { caregiverNotificationRoute } from "../lib/notification-route";
 beforeEach(() => { state.plain.clear(); state.secure.clear(); state.platform.OS = "ios"; vi.clearAllMocks(); });
 describe("native session migration", () => {
@@ -35,8 +35,16 @@ describe("native session migration", () => {
 describe("notification navigation", () => {
   it("routes offers, cancellations, messages and unknown types safely", () => {
     expect(caregiverNotificationRoute("new_shift_offer")).toBe("/(staff)/opportunities");
-    expect(caregiverNotificationRoute("shift_cancelled")).toBe("/(staff)/shifts");
+    expect(caregiverNotificationRoute("shift_cancelled")).toBe("/(staff)/notifications");
     expect(caregiverNotificationRoute("team_message")).toBe("/(staff)/chat");
     expect(caregiverNotificationRoute("https://untrusted.example")).toBe("/(staff)/notifications");
   });
+});
+
+it("does not erase a newer session when a stale request returns 401",async()=>{
+  await setToken('old','session');await setToken('new','session');
+  expect(await removeRejectedToken('session','old')).toBe(false);
+  expect(await getToken('session')).toBe('new');
+  expect(await removeRejectedToken('session','new')).toBe(true);
+  expect(await getToken('session')).toBeNull();
 });

@@ -1,5 +1,6 @@
+import { notifySessionExpired } from "./session-expired";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getToken, setToken, removeToken } from "./secure-session";
+import { getToken, setToken, removeToken, removeRejectedToken } from "./secure-session";
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -248,6 +249,10 @@ async function request<T>(path: string, init: RequestInit = {}, authenticated = 
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401 && authenticated && (token ? await removeRejectedToken(TOKEN_KEY,token) : !(await getToken(TOKEN_KEY)))) {
+      notifySessionExpired();
+      throw Object.assign(new Error("Your session expired. Please sign in again to continue."), { status: 401 });
+    }
     const error = new Error(body?.message || body?.error || "The request could not be completed.") as ApiError;
     error.status = response.status;
     throw error;

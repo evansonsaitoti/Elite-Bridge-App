@@ -1,7 +1,8 @@
+import { onSessionExpired } from "@/lib/session-expired";
 import * as Notifications from "expo-notifications";
 import { caregiverNotificationRoute } from "@/lib/notification-route";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Slot, usePathname, useRouter } from "expo-router";
+import { Slot, useLocalSearchParams, usePathname, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { ActivityIndicator, AppState, Pressable, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -9,6 +10,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { enableCaregiverPushNotifications } from "@/lib/push-notifications";
+
+import { parseShiftId } from "@/lib/shift-link";
 
 const STAFF_TABS = [
   { label: "Home", route: "/(staff)/home", match: "/home", icon: "house.fill" },
@@ -23,19 +26,30 @@ export default function StaffLayout() {
   const insets = useSafeAreaInsets();
   const pathname = usePathname();
   const router = useRouter();
+  const { shiftId, destination } = useLocalSearchParams<{ shiftId?: string; destination?: string }>();
+  const selectedShiftId = parseShiftId(shiftId);
   const [ready, setReady] = useState(false);
   const lastResponse = useRef<string | null>(null);
 
+  useEffect(() => onSessionExpired(() => {
+    setReady(false);
+    void AsyncStorage.removeItem("elitebridge-session");
+    router.replace({pathname:"/(auth)/login",params:{expired:"1",...(selectedShiftId?{shiftId:String(selectedShiftId)}:{}),...(destination==="clock"?{destination:"clock"}:{})}});
+  }), [router, selectedShiftId, destination]);
+
   useEffect(() => {
     let mounted = true;
+    const signIn = () => router.replace(selectedShiftId
+      ? { pathname: "/(auth)/login", params: { shiftId: String(selectedShiftId), ...(destination === "clock" ? {destination:"clock"} : {}) } }
+      : "/(root)");
     AsyncStorage.getItem("elitebridge-session")
       .then((stored) => {
         if (!mounted) return;
-        if (!stored) { router.replace("/(root)"); return; }
+        if (!stored) { signIn(); return; }
         try {
           const session = JSON.parse(stored) as { role?: string };
           if (session.role !== "staff") {
-            router.replace("/(root)");
+            signIn();
             return;
           }
           void AsyncStorage.getItem("elitebridge-caregiver-settings-v1")
@@ -44,11 +58,11 @@ export default function StaffLayout() {
               return false;
             }).catch(() => false);
           setReady(true);
-        } catch { router.replace("/(root)"); }
+        } catch { signIn(); }
       })
-      .catch(() => router.replace("/(root)"));
+      .catch(() => signIn());
     return () => { mounted = false; };
-  }, [router]);
+  }, [router, selectedShiftId, destination]);
 
   useEffect(() => {
     if (!ready) return;
@@ -72,7 +86,7 @@ export default function StaffLayout() {
       const id = response.notification.request.identifier;
       if (lastResponse.current === id) return;
       lastResponse.current = id;
-      router.push(caregiverNotificationRoute(response.notification.request.content.data?.type));
+      router.push(caregiverNotificationRoute(response.notification.request.content.data?.type, response.notification.request.content.data?.shiftId));
       void Notifications.clearLastNotificationResponseAsync().catch(() => undefined);
     };
     let liveResponseReceived = false;

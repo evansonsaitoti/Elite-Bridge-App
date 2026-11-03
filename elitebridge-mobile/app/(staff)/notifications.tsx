@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import { useFocusEffect, useRouter } from "expo-router";
 import { ActivityIndicator, RefreshControl, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import { caregiverNotificationRoute } from "@/lib/notification-route";
 import { operationsApi } from "@/lib/shared-api";
 
-type AgencyAlert = { id:number;type:string;title:string;message:string;related_id:number|null;is_read:boolean;created_at:string };
+type AgencyAlert = { id:number;type:string;title:string;message:string;related_id:number|null;is_read:boolean;created_at:string;acknowledged_at?:string|null };
 export default function Notifications() {
   const router=useRouter();
   const [alerts,setAlerts]=useState<AgencyAlert[]>([]);
@@ -13,12 +14,9 @@ export default function Notifications() {
   useFocusEffect(useCallback(()=>{void load();return ()=>{};},[load]));
   const open=async(a:AgencyAlert)=>{
     try{if(!a.is_read) await operationsApi("/notifications/"+a.id+"/read","PATCH");setAlerts(v=>v.map(n=>n.id===a.id?{...n,is_read:true}:n));}catch(e){setError(e instanceof Error?e.message:"Could not mark notification as read");return;}
-    if(a.type==="team_message")router.push("/(staff)/chat");
-    else if(a.type==="care_handoff")router.push("/(staff)/handoff");
-    else if(a.type==="timesheet_review")router.push("/(staff)/timesheets");
-    else if(a.type==="shift_offer"||a.type==="new_shift_offer"||a.type==="shift_open")router.push("/(staff)/opportunities");
-    else router.push("/(staff)/shifts");
+    router.push(caregiverNotificationRoute(a.type,a.related_id));
   };
+  const acknowledge=async(a:AgencyAlert)=>{try{await operationsApi('/notifications/'+a.id+'/acknowledge','PATCH');await load();}catch(e){setError(e instanceof Error?e.message:'Could not acknowledge');}};
   const allRead=async()=>{try{await operationsApi("/notifications/read-all","POST");setAlerts(v=>v.map(a=>({...a,is_read:true})));setError("");}catch(e){setError(e instanceof Error?e.message:"Could not mark all read");}};
   return <ScrollView style={{flex:1,backgroundColor:"#F5F9F6"}} contentContainerStyle={{padding:18,paddingBottom:40}}
     refreshControl={<RefreshControl refreshing={loading} onRefresh={()=>void load()}/>}>
@@ -27,11 +25,11 @@ export default function Notifications() {
     {error ? <Text accessibilityRole="alert" style={{color:"#A33333",marginBottom:12}}>{error}</Text> : null}
     {loading&&!alerts.length?<ActivityIndicator color="#075B42"/>:null}
     {!loading&&!alerts.length&&!error?<Text style={{color:"#637A6D"}}>No agency notifications yet.</Text>:null}
-    {alerts.map(a=><TouchableOpacity key={a.id} accessibilityRole="button" onPress={()=>void open(a)}
+    {alerts.map(a=><View key={a.id}><TouchableOpacity accessibilityRole="button" onPress={()=>void open(a)}
       style={{padding:16,marginBottom:10,borderRadius:18,borderWidth:1,borderColor:a.is_read?"#DDE8E1":"#85B9A0",backgroundColor:a.is_read?"#FFF":"#EAF5EE"}}>
       <Text style={{color:"#123D2B",fontSize:16,fontWeight:"900"}}>{a.is_read?"":"● "}{a.title}</Text>
       <Text style={{color:"#536C5E",marginTop:6,fontSize:13,lineHeight:19}}>{a.message}</Text>
       <Text style={{color:"#819084",fontSize:11,marginTop:9}}>{new Date(a.created_at).toLocaleString("en-US")}</Text>
-    </TouchableOpacity>)}
+    </TouchableOpacity>{['shift_update','shift_cancelled'].includes(a.type)?<TouchableOpacity accessibilityRole="button" disabled={!!a.acknowledged_at} onPress={()=>void acknowledge(a)} style={{padding:14,marginBottom:16,backgroundColor:'#EAF5EE',borderRadius:12}}><Text style={{color:'#075B42',fontWeight:'800'}}>{a.acknowledged_at?'Acknowledged':'I acknowledge this change'}</Text></TouchableOpacity>:null}</View>)}
   </ScrollView>;
 }

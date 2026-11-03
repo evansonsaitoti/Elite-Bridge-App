@@ -835,7 +835,7 @@
     const actions = document.getElementById('shiftDetailActions');
     if (!actions) return;
     actions.innerHTML = status === 'open'
-      ? `${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(title)}">Invite caregiver</button>`
+      ? `${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}<button class="secondary-button" type="button" data-notify-shift="${shift.id}">Send shift alert</button><button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(title)}">Invite caregiver</button>`
       : status === 'assigned'
         ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button><button class="primary-button" type="button" data-close-shift-detail>Done</button>`
         : `<button class="primary-button" type="button" data-close-shift-detail>Done</button>`;
@@ -863,7 +863,7 @@
       const action = !employerView && expectedRole === 'caregiver'
         ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
         : employerView && expectedRole === 'employer' && status === 'open'
-          ? `<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button>${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}`
+          ? `<button class="secondary-button" type="button" data-notify-shift="${shift.id}">Send shift alert</button><button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button>${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}`
           : employerView && expectedRole === 'employer' && status === 'assigned' ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
       return `
       <article class="shift-card" data-searchable data-shift-card-id="${shift.id}" tabindex="0" role="button" aria-label="Open details for ${escapeHtml(shift.title || shift.serviceType || 'care shift')}">
@@ -965,6 +965,17 @@
       document.getElementById('inviteFirstName')?.focus();
       return;
     }
+    const alertShift = event.target.closest('[data-notify-shift]');
+    if (alertShift) {
+      if (savingTime) return;
+      savingTime = true; alertShift.disabled = true;
+      try {
+        const result = await api(`/bookings/employer/${encodeURIComponent(alertShift.dataset.notifyShift)}/notify`, {method:'POST'});
+        notify(`Alert attempted for ${Number(result.matchedCaregivers || 0)} eligible caregivers. Shift emails are sent only once per caregiver.`);
+      } catch (error) { notify(error.message || 'Could not send shift alerts.'); }
+      finally { savingTime = false; alertShift.disabled = false; }
+      return;
+    }
     const pickup = event.target.closest('[data-open-pickup]');
     if (pickup) {
       shiftDetailDialog?.close();
@@ -1055,8 +1066,69 @@
     }
     refreshTimesheetShareSummary();
   }
+  let dailyDate = '';
+  async function loadDailyOverview() {
+    const target=document.getElementById('activityList');if(!target)return;
+    let panel=document.getElementById('dailyCoveragePanel');
+    if(!panel){panel=document.createElement('section');panel.id='dailyCoveragePanel';panel.className='surface surface-pad';target.before(panel);}
+    const today=new Date();if(!dailyDate)dailyDate=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const start=new Date(dailyDate+'T00:00:00'),end=new Date(start);end.setDate(end.getDate()+1);
+    try {
+      const {shifts=[],updates=[],deliveries=[]}=await api(`/bookings/employer/daily-overview?start=${encodeURIComponent(start.toISOString())}&end=${encodeURIComponent(end.toISOString())}`);
+      const time=v=>new Date(/Z$|[+-]\d\d:\d\d$/.test(v)?v:v+'Z').toLocaleString();
+      panel.innerHTML=`<h2>Daily coverage</h2><p>Live attendance and unfilled positions. Times use ${escapeHtml(Intl.DateTimeFormat().resolvedOptions().timeZone)}.</p><label>Day <input type="date" data-coverage-date value="${dailyDate}"></label> <button type="button" class="secondary-button" data-coverage-refresh>Refresh</button><p>Unfilled-shift warnings are sent within two hours of the start.</p>${shifts.length?shifts.map(s=>`<article class="surface-pad"><strong>${escapeHtml(s.title)}</strong><p>${escapeHtml(time(s.start_time))} – ${escapeHtml(time(s.end_time))}</p><p>${escapeHtml(s.status)} · ${s.assigned}/${s.number_of_caregivers} assigned${!['cancelled','closed','completed'].includes(s.status)&&s.assigned<s.number_of_caregivers?' · Needs coverage':''}</p>${['cancelled','closed'].includes(s.status)?'':s.caregivers.map(c=>`<p>${escapeHtml(c.name)} · <strong>${escapeHtml(c.state)}</strong></p>`).join('')}${['open','assigned'].includes(s.status)&&new Date(s.start_time)>new Date()?`<details><summary>Change schedule</summary><form data-reschedule="${s.id}"><label>New start<input name="start" type="datetime-local" required></label><label>New end<input name="end" type="datetime-local" required></label><p>Assigned caregivers will be notified and asked to acknowledge.</p><button type="submit" class="primary-button">Save schedule and notify</button></form></details>`:''}</article>`).join(''):'<p>No shifts for this day.</p>'}<details><summary>Shift-change acknowledgments (${updates.length})</summary><p>Opening an alert does not acknowledge a schedule change.</p>${updates.map(u=>`<p><strong>${escapeHtml(u.first_name+' '+u.last_name)}</strong> · ${escapeHtml(u.title)} · Shift ${u.related_id} · ${escapeHtml(time(u.created_at))}<br>${u.acknowledged_at?'Acknowledged '+escapeHtml(time(u.acknowledged_at)):u.read_at?'Opened · Awaiting acknowledgment':'Awaiting acknowledgment'}</p>`).join('')||'<p>No changes awaiting review.</p>'}</details><details><summary>Recent push attempts (${deliveries.length})</summary><p>Provider accepted means accepted for delivery—not proof it appeared on the phone. Unknown attempts are not automatically resent.</p>${deliveries.map(d=>`<p>${escapeHtml(d.first_name+' '+d.last_name)} · ${escapeHtml(d.type.replace(/_/g,' '))} · <strong>${escapeHtml(d.status.replace(/_/g,' '))}</strong> · ${escapeHtml(time(d.created_at))}</p>`).join('')||'<p>No recorded push attempts yet.</p>'}</details>`;
+    }catch(error){panel.innerHTML='<h2>Daily coverage</h2><p>Could not load coverage. Refresh to try again.</p><button data-coverage-refresh>Refresh</button>';}
+  }
+  document.addEventListener('change',event=>{if(event.target.matches('[data-coverage-date]')){dailyDate=event.target.value;void loadDailyOverview();}});
+  document.addEventListener('click',event=>{if(event.target.closest('[data-coverage-refresh]'))void loadDailyOverview();});
+  document.addEventListener('submit',async event=>{
+    const form=event.target;if(!form.matches('[data-reschedule]'))return;event.preventDefault();
+    if(!window.confirm('Save this schedule change and notify assigned caregivers?'))return;
+    const button=form.querySelector('button');if(button.disabled)return;button.disabled=true;
+    try{const data=new FormData(form);await api(`/bookings/employer/${form.dataset.reschedule}/schedule`,{method:'PATCH',body:JSON.stringify({start:new Date(String(data.get('start'))).toISOString(),end:new Date(String(data.get('end'))).toISOString()})});notify('Schedule updated. Assigned caregivers have been notified.');await loadEmployer();}
+    catch(error){notify(error.message||'Could not reschedule');}finally{button.disabled=false;}
+  });
+
+  async function loadCaregiverAcknowledgments(panel) {
+    try {
+      const {notifications=[]}=await api('/notifications');
+      const changes=notifications.filter(n=>['shift_update','shift_cancelled'].includes(n.type));
+      if(!changes.length)return;
+      const section=document.createElement('section');section.innerHTML=`<h2>Shift changes</h2>${changes.map(n=>`<article class="surface-pad"><strong>${escapeHtml(n.title)}</strong><p>${escapeHtml(n.message)}</p>${n.acknowledged_at?'<p>Acknowledged</p>':`<button class="primary-button" data-acknowledge="${n.id}">I acknowledge this change</button>`}</article>`).join('')}`;
+      panel.prepend(section);
+    }catch{ /* Correction requests remain available when notification history cannot load. */ }
+  }
+  document.addEventListener('click',async event=>{const button=event.target.closest('[data-acknowledge]');if(!button||button.disabled)return;button.disabled=true;try{await api(`/notifications/${button.dataset.acknowledge}/acknowledge`,{method:'PATCH'});button.textContent='Acknowledged';}catch(error){button.disabled=false;notify(error.message||'Could not acknowledge');}});
+  async function loadTimeCorrections(container, employerView, applications) {
+    let panel = document.getElementById('timeCorrectionPanel');
+    if (!panel) { panel = document.createElement('section'); panel.id = 'timeCorrectionPanel'; panel.className = 'surface surface-pad'; container.before(panel); }
+    try {
+      const [{requests=[]},reminders] = await Promise.all([api(`/bookings/${employerView?'employer':'caregiver'}/timesheets/corrections`),employerView?api('/bookings/employer/attendance-reminders').catch(()=>null):Promise.resolve(null)]);
+      const format = value => value ? new Date(value).toLocaleString() : 'No punch recorded';
+      panel.innerHTML = `${employerView?`<h2>Clock reminders</h2><p>${reminders?.enabled?`Enabled · Last check: ${reminders.lastRunAt?escapeHtml(format(reminders.lastRunAt)):"Waiting for first check"}`:"Reminder status unavailable or not enabled."}</p><p>15 minutes before start · 5 minutes late · Employer alert at 15 minutes late · 10 minutes after end if still clocked in.</p>`:""}<h2>Time correction requests</h2><p>Original clock records are preserved. Reported hours change only after employer approval.</p>${!employerView?`<form data-time-correction-request class="field"><label>Assigned shift<select name="shiftId" required><option value="">Select a shift</option>${applications.filter(a=>a.status==='approved'&&!['cancelled','closed'].includes(a.shift.status)&&new Date(a.shift.startTime)<new Date()).map(a=>`<option value="${a.shift.id}">${escapeHtml(a.shift.title)} · ${escapeHtml(format(a.shift.startTime))}</option>`).join('')}</select></label><p>Use your device's local time zone (${escapeHtml(Intl.DateTimeFormat().resolvedOptions().timeZone)}).</p><label>Actual start<input type="datetime-local" name="start" required></label><label>Actual end<input type="datetime-local" name="end" required></label><label>Reason<textarea name="reason" required minlength="3" maxlength="2000"></textarea></label><button class="primary-button" type="submit">Request correction</button></form>`:''}${requests.length?requests.map(r=>`<article class="surface-pad"><strong>${employerView?escapeHtml(`${r.first_name} ${r.last_name}`):'Your request'} · ${escapeHtml(r.status)}</strong><p>Requested: ${escapeHtml(format(r.clock_in_at))} – ${escapeHtml(format(r.clock_out_at))}</p>${employerView?`<p>Original: ${escapeHtml(format(r.original?.timesheet?.clock_in_at||r.original?.activities?.find(a=>a.type==='clock_in')?.timestamp))} – ${escapeHtml(format(r.original?.timesheet?.clock_out_at||r.original?.activities?.find(a=>a.type==='clock_out')?.timestamp))}</p>`:''}<p>${escapeHtml(r.reason)}</p>${r.review_note?`<p>Review: ${escapeHtml(r.review_note)}</p>`:''}${employerView&&r.status==='pending'?`<form data-time-correction-review="${r.id}" class="field"><label>Review note<textarea name="note" required minlength="3" maxlength="2000"></textarea></label><div><button class="primary-button" type="submit" value="approved">Approve corrected hours</button> <button class="secondary-button" type="submit" value="rejected">Reject request</button></div></form>`:''}</article>`).join(''):'<p>No correction requests.</p>'}`;
+      if(!employerView)void loadCaregiverAcknowledgments(panel);
+    } catch(error) {panel.innerHTML='<h2>Time correction requests</h2><p>Requests could not be loaded. Refresh to try again.</p>';}
+  }
+  document.addEventListener('submit', async event => {
+    const form=event.target;
+    if(!form.matches('[data-time-correction-request], [data-time-correction-review]'))return;
+    event.preventDefault();if(savingTime)return;
+    const data=new FormData(form),review=form.dataset.timeCorrectionReview,decision=event.submitter?.value;
+    if(review && !['approved','rejected'].includes(decision))return;
+    if(review && decision==='approved' && !window.confirm('Approve these corrected hours for payroll review? Original clock evidence is retained.'))return;
+    savingTime=true;form.querySelectorAll('button').forEach(b=>b.disabled=true);
+    try {
+      const body=review?{decision,note:String(data.get('note')||'')}:{shiftId:Number(data.get('shiftId')),clockInAt:new Date(String(data.get('start'))).toISOString(),clockOutAt:new Date(String(data.get('end'))).toISOString(),reason:String(data.get('reason')||'')};
+      await api(`/bookings/${review?'employer':'caregiver'}/timesheets/corrections${review?'/'+review:''}`,{method:review?'PATCH':'POST',body:JSON.stringify(body)});
+      notify(review?'Correction review saved.':'Correction requested. Your employer will review the reported hours.');
+      await(review?loadEmployer():loadCaregiver());
+    }catch(error){notify(error.message||'Could not save the correction.');}
+    finally{savingTime=false;form.querySelectorAll('button').forEach(b=>b.disabled=false);}
+  });
+
   function renderTimesheets(container, sheets, employerView, applications = []) {
     if (!container) return;
+    void loadTimeCorrections(container, employerView, applications);
     if (employerView) {
       employerManualTimesheets = sheets.filter(sheet => sheet.entry_source === 'manual_missed_clock_in');
       syncTimesheetSharePanel();
@@ -2726,6 +2798,7 @@
     renderShiftRows(document.getElementById('overviewShiftList'), shifts.slice(0, 4), true);
     renderShiftRows(document.getElementById('allShiftList'), shifts, true);
     renderActivities(document.getElementById('activityList'), activities);
+    void loadDailyOverview();
     if (timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled') {
       renderTimesheets(document.getElementById('timesheetList'), timesheets, true);
       void loadTimesheetEmailHistory();

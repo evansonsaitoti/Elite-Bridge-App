@@ -52,8 +52,8 @@ if (!dashboardSource.includes('route: "/invoices"')) failures.push("The home inv
 const shiftSource = fs.readFileSync(path.join(appDir, "shifts.tsx"), "utf8");
 if (!shiftSource.includes('label="All locations"')) failures.push("The schedule location filter is missing its All locations option.");
 if (appConfig.expo.ios.bundleIdentifier !== "com.app.elitebridgeemployer") failures.push("Employer bundle identifier changed.");
-if (appConfig.expo.version !== "1.3.9") failures.push("Employer release version must be 1.3.9.");
-if (appConfig.expo.ios.buildNumber !== "43") failures.push("Employer iOS build number must be 43.");
+if (appConfig.expo.version !== "1.3.10") failures.push("Employer release version must be 1.3.10.");
+if (appConfig.expo.ios.buildNumber !== "44") failures.push("Employer iOS build number must be 44.");
 
 if (failures.length) {
   console.error(failures.map((failure) => `- ${failure}`).join("\n"));
