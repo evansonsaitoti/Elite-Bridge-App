@@ -1,3 +1,4 @@
+import { ensureShiftFollowup } from '../services/shift-followup';
 import { Router } from "express";
 import { sql } from "drizzle-orm";
 import { z } from "zod";
@@ -36,12 +37,23 @@ router.put("/preferences", authMiddleware, async (req: AuthRequest, res, next) =
   } catch (error) { next(error); }
 });
 
+router.patch('/:id/acknowledge', authMiddleware, async(req:AuthRequest,res,next)=>{
+  try {
+    await ensureCoreTables();await ensureShiftFollowup();
+    const id=z.coerce.number().int().positive().parse(req.params.id);
+    const row=(await db.execute(sql`UPDATE notifications SET acknowledged_at=COALESCE(acknowledged_at,CURRENT_TIMESTAMP),is_read=true,read_at=COALESCE(read_at,CURRENT_TIMESTAMP)
+      WHERE id=${id} AND user_id=${req.user!.id} AND type IN ('shift_update','shift_cancelled') RETURNING id,acknowledged_at`) as any).rows[0];
+    if(!row)throw new AppError(404,'Update not found');res.json(row);
+  }catch(error){next(error);}
+});
+
 router.get("/", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureCoreTables();
+    await ensureShiftFollowup();
     if (!req.user) throw new AppError(401, "User not authenticated");
     const result = await db.execute(sql`
-      SELECT id, type, title, message, related_id, is_read, read_at, created_at
+      SELECT id, type, title, message, related_id, is_read, read_at, acknowledged_at, created_at
       FROM notifications WHERE user_id = ${req.user.id}
       ORDER BY created_at DESC LIMIT 100
     `);

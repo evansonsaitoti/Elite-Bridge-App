@@ -1,4 +1,5 @@
-import { getToken, setToken, removeToken } from "./secure-session";
+import { notifySessionExpired } from "./session-expired";
+import { getToken, setToken, removeToken, removeRejectedToken } from "./secure-session";
 
 declare const process: { env: { EXPO_PUBLIC_API_URL?: string } };
 
@@ -117,6 +118,10 @@ async function request<T>(path: string, init: RequestInit = {}, includeAuth = tr
   });
   const body = await response.json().catch(() => ({}));
   if (!response.ok) {
+    if (response.status === 401 && includeAuth && (token ? await removeRejectedToken(TOKEN_KEY,token) : !(await getToken(TOKEN_KEY)))) {
+      notifySessionExpired();
+      throw Object.assign(new Error("Your session expired. Please sign in again to continue."), { status: 401 });
+    }
     const error = new Error(body?.message || body?.error || `Request failed (${response.status})`) as Error & { status?: number };
     error.status = response.status;
     throw error;

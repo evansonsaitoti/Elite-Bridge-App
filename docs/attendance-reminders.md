@@ -11,3 +11,15 @@ Caregivers submit actual start/end times and a reason from the web time clock or
 Native clock routing, correction UI, hidden opportunity pay and Universal Links require the next Elite Care release. Employer attendance-alert routing requires the next Elite Work release. Installed apps can receive pushes and view notifications; web correction submission/review is available after deployment.
 
 Validation uses isolated PostgreSQL with mocked providers: exact timing, deduplication, cancellation, assignment, ownership, employer scope, stale alerts, future/invalid corrections, duplicate requests, approval audit and stale-review rejection. No production attendance or payroll records are created for tests.
+
+
+## Coverage and shift changes
+- Within two hours before an unfilled shift, the same scoped cron creates one employer coverage warning per start time. Fully staffed, cancelled, past and out-of-scope shifts are excluded.
+- Employer Attendance includes a local-calendar-day coverage view, recent shift-change acknowledgments, and push attempt history. Native Elite Work Time includes today's coverage and recent history.
+- Upcoming shifts can be rescheduled from the web Attendance view. Owner authorization, existing punches, assignment races and overlapping caregiver assignments are checked. Schedule changes and cancellation notices are stored transactionally.
+- Caregivers explicitly acknowledge each change in Notifications (mobile) or Timesheets (web). Marking read is separate and never implies acknowledgment.
+- Push attempt history reports no_device, attempting, provider_accepted, rejected, partially_accepted or unknown. Acceptance is not a handset delivery receipt. Unknown attempts are not blindly resent. Historical sends before this deployment are not backfilled.
+- Mobile 401 recovery clears only the rejected session, preserves a newly signed-in token, and navigates to sign-in. Network errors and authorization failures do not clear sessions. No passwords are stored for silent reauthentication.
+
+## Next mobile release
+Elite Care 1.3.4 (70), Elite Work 1.3.10 (44). TestFlight upload and App Store release must be verified separately from the website/backend deployment.

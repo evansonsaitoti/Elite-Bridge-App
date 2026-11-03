@@ -5,6 +5,7 @@ export function caregiverNotificationRoute(type: unknown, shiftId?: unknown) {
     const id = parseShiftId(shiftId);
     return { pathname: "/(staff)/clock" as const, params: { ...(id ? {shiftId:String(id)} : {}), destination:"clock" } };
   }
+  if (type === "shift_update" || type === "shift_cancelled") return "/(staff)/notifications" as const;
   if (type === "team_message") return "/(staff)/chat" as const;
   if (type === "care_handoff" || type === "care_checklist") return "/(staff)/handoff" as const;
   if (type === "timesheet_review" || type === "timesheet_ready") return "/(staff)/timesheets" as const;

@@ -42,3 +42,14 @@ export function removeToken(key: string): Promise<void> {
     await AsyncStorage.removeItem(key);
   });
 }
+
+// Keep compare-and-remove in the same queue so a late 401 cannot erase a new sign-in.
+export function removeRejectedToken(key: string, rejected: string): Promise<boolean> {
+  return serial(key, async () => {
+    const current = Platform.OS === "web" ? await AsyncStorage.getItem(key) : await SecureStore.getItemAsync(`${key}-secure`);
+    if (current !== rejected) return false;
+    if (Platform.OS !== "web") await SecureStore.deleteItemAsync(`${key}-secure`);
+    await AsyncStorage.removeItem(key);
+    return true;
+  });
+}

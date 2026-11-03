@@ -10,12 +10,12 @@ import { parseShiftId, shiftOpportunityRoute } from "@/lib/shift-link";
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { shiftId, destination } = useLocalSearchParams<{ shiftId?: string; destination?: string }>();
+  const { shiftId, destination, expired } = useLocalSearchParams<{ shiftId?: string; destination?: string; expired?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [error, setError] = useState(expired === "1" ? "Your session expired. Please sign in again to continue." : "");
 
   const handleLogin = async () => {
     setError("");

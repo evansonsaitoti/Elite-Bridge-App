@@ -17,7 +17,7 @@ const slides = [
   {
     eyebrow: "SHIFT DETAILS IN ONE PLACE",
     title: "Know the details before you respond.",
-    body: "Review schedule, location, pay and role responsibilities together, then claim or apply when eligible.",
+    body: "Review schedule, location and role responsibilities together, then claim or apply when eligible.",
     image: require("../../assets/images/caregiver-welcome-support.png"),
   },
   {

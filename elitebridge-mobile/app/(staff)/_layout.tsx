@@ -1,3 +1,4 @@
+import { onSessionExpired } from "@/lib/session-expired";
 import * as Notifications from "expo-notifications";
 import { caregiverNotificationRoute } from "@/lib/notification-route";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,6 +30,12 @@ export default function StaffLayout() {
   const selectedShiftId = parseShiftId(shiftId);
   const [ready, setReady] = useState(false);
   const lastResponse = useRef<string | null>(null);
+
+  useEffect(() => onSessionExpired(() => {
+    setReady(false);
+    void AsyncStorage.removeItem("elitebridge-session");
+    router.replace({pathname:"/(auth)/login",params:{expired:"1",...(selectedShiftId?{shiftId:String(selectedShiftId)}:{}),...(destination==="clock"?{destination:"clock"}:{})}});
+  }), [router, selectedShiftId, destination]);
 
   useEffect(() => {
     let mounted = true;

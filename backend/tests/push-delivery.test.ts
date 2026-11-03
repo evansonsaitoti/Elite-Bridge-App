@@ -1,3 +1,4 @@
+import { PgDialect } from "drizzle-orm/pg-core";
 import { beforeEach, expect, it, vi } from "vitest";
 const mock = vi.hoisted(() => ({ execute: vi.fn(), post: vi.fn() }));
 vi.mock("../src/db", () => ({ db: { execute: mock.execute } }));
@@ -5,7 +6,7 @@ vi.mock("../src/config/env", () => ({ config: {} }));
 vi.mock("../src/services/email", () => ({ sendEmail: vi.fn() }));
 vi.mock("axios", () => ({ default: { post: mock.post } }));
 import { sendPushToUsers } from "../src/services/notifications";
-beforeEach(() => { vi.clearAllMocks(); mock.execute.mockResolvedValue({ rows: [{ expo_push_token: "ExpoPushToken[local-test]" }] }); });
+beforeEach(() => { vi.clearAllMocks(); mock.execute.mockResolvedValue({ rows: [{ id:1,user_id:1,expo_push_token: "ExpoPushToken[local-test]" }] }); });
 it("waits for Expo acceptance and uses the configured Android channel", async () => {
   let accept!: (value: unknown) => void;
   mock.post.mockImplementation(() => new Promise(resolve => { accept = resolve; }));
@@ -20,5 +21,5 @@ it("waits for Expo acceptance and uses the configured Android channel", async ()
 it("removes an invalid device token without logging provider payloads", async () => {
   mock.post.mockResolvedValue({ data: { data: [{ status: "error", details: { error: "DeviceNotRegistered" } }] } });
   await sendPushToUsers([1], { title: "Test", body: "Test" });
-  expect(mock.execute).toHaveBeenCalledTimes(2);
+  expect(mock.execute.mock.calls.some(([query]) => new PgDialect().sqlToQuery(query).sql.includes("DELETE FROM push_tokens"))).toBe(true);
 });
