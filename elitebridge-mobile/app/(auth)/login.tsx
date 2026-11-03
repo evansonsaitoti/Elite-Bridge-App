@@ -1,13 +1,16 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import { ActivityIndicator, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import { ScreenContainer } from "@/components/screen-container";
 import { ensureCaregiverBackendSession, sharedApiConfigured } from "@/lib/shared-api";
 
+import { parseShiftId, shiftOpportunityRoute } from "@/lib/shift-link";
+
 export default function LoginScreen() {
   const router = useRouter();
+  const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +37,7 @@ export default function LoginScreen() {
         name: `${user.firstName} ${user.lastName}`.trim(),
         signedInAt: new Date().toISOString(),
       }));
-      router.replace("/(staff)/home");
+      router.replace(parseShiftId(shiftId) ? shiftOpportunityRoute(shiftId) : "/(staff)/home");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "We could not sign you in.");
     } finally {

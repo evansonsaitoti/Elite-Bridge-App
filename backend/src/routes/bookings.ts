@@ -599,6 +599,37 @@ router.patch("/employer/:shiftId/cancel", authMiddleware, async (req: AuthReques
   } catch (error) { next(error); }
 });
 
+// Explicit reminder for an existing shift; never changes assignment mode or coverage.
+router.post("/employer/:shiftId/notify", authMiddleware, async (req: AuthRequest, res, next) => {
+  try {
+    await ensureShiftPostsTable();
+    const employer = await getOrCreateEmployer(req);
+    const shiftId = Number(req.params.shiftId);
+    if (!Number.isSafeInteger(shiftId) || shiftId <= 0) throw new AppError(400, "Invalid shift ID");
+    const shift = (await db.execute(sql`SELECT * FROM shift_posts sp WHERE id=${shiftId}
+      AND employer_id=${employer.id} AND status IN ('open', 'assigned') AND start_time > CURRENT_TIMESTAMP
+      AND (SELECT COUNT(*) FROM shift_applications sa WHERE sa.shift_id=sp.id AND sa.status='approved') < sp.number_of_caregivers`) as any).rows[0];
+    if (!shift) throw new AppError(409, "This shift has no available positions or is no longer upcoming");
+    const matches = (await db.execute(sql`SELECT c.user_id FROM caregivers c JOIN users u ON u.id=c.user_id
+      WHERE c.is_available=true AND u.is_active=true AND u.role='caregiver'
+      AND (EXISTS (SELECT 1 FROM employer_caregivers ec WHERE ec.employer_id=${employer.id}
+        AND ec.caregiver_user_id=c.user_id AND ec.status='active')
+        OR EXISTS (SELECT 1 FROM shift_applications sa JOIN shift_posts prior ON prior.id=sa.shift_id
+          WHERE sa.caregiver_id=c.id AND sa.status='approved' AND prior.employer_id=${employer.id}))
+      AND NOT EXISTS (SELECT 1 FROM shift_applications sa WHERE sa.shift_id=${shiftId} AND sa.caregiver_id=c.id AND sa.status='approved')
+      AND (COALESCE(jsonb_array_length(c.certifications::jsonb),0)=0
+        OR LOWER(c.certifications::text) LIKE ${`%${shift.caregiver_type.toLowerCase()}%`}
+        OR LOWER(c.specialties::text) LIKE ${`%${shift.service_type.toLowerCase()}%`}) LIMIT 100`) as any).rows;
+    const userIds = matches.map((row: any) => row.user_id);
+    for (const userId of userIds) await db.execute(sql`INSERT INTO notifications (user_id,type,title,message,related_id)
+      VALUES (${userId},'shift_offer','Available shift',${`${shift.service_type} in ${shift.city}, ${shift.state}`},${shiftId})`);
+    await sendPushToUsers(userIds, {title:"Available shift",body:`${shift.service_type} in ${shift.city}, ${shift.state}`,
+      data:{type:"shift_offer",shiftId,assignmentMode:shift.assignment_mode}});
+    await sendShiftEmails(userIds, shiftId).catch(() => console.warn("Shift email delivery could not be completed"));
+    res.json({matchedCaregivers:userIds.length, pushStatus:"attempted", emailStatus:"new_recipients_only"});
+  } catch (error) { next(error); }
+});
+
 router.patch("/employer/:shiftId/pickup", authMiddleware, async (req: AuthRequest, res, next) => {
   try {
     await ensureShiftPostsTable();

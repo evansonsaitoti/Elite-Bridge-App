@@ -16,7 +16,10 @@
         "NSPhotoLibraryUsageDescription": "Allow Elite Care to select a caregiver profile photo.",
         "NSMicrophoneUsageDescription": "Elite Bridge needs microphone access for voice communication.",
         "NSLocationWhenInUseUsageDescription": "Elite Bridge records your location only when you clock in or out of a scheduled visit."
-      }
+      },
+      "associatedDomains": [
+        "applinks:app.elitebridgestaffing.com"
+      ]
     },
     "android": {
       "package": "com.elitebridgestaffing.caregiver",

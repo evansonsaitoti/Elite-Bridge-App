@@ -835,7 +835,7 @@
     const actions = document.getElementById('shiftDetailActions');
     if (!actions) return;
     actions.innerHTML = status === 'open'
-      ? `${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(title)}">Invite caregiver</button>`
+      ? `${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}<button class="secondary-button" type="button" data-notify-shift="${shift.id}">Send shift alert</button><button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(title)}">Invite caregiver</button>`
       : status === 'assigned'
         ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button><button class="primary-button" type="button" data-close-shift-detail>Done</button>`
         : `<button class="primary-button" type="button" data-close-shift-detail>Done</button>`;
@@ -863,7 +863,7 @@
       const action = !employerView && expectedRole === 'caregiver'
         ? (shift.applicationStatus === 'pending' ? '<span class="status neutral">Applied</span>' : `<button class="primary-button" type="button" data-shift-op="${shift.assignmentMode === 'instant' ? 'claim' : 'apply'}" data-shift-id="${shift.id}">${shift.assignmentMode === 'instant' ? 'Claim position' : 'Apply'}</button>`)
         : employerView && expectedRole === 'employer' && status === 'open'
-          ? `<button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button>${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}`
+          ? `<button class="secondary-button" type="button" data-notify-shift="${shift.id}">Send shift alert</button><button class="primary-button" type="button" data-invite-shift-id="${shift.id}" data-shift-location="${escapeHtml(cityState || '')}" data-shift-title="${escapeHtml(shift.title || shift.serviceType || 'Care shift')}">Invite caregiver</button>${shift.assignmentMode === 'instant' ? '<span class="status assigned">Open for pickup</span>' : `<button class="secondary-button" type="button" data-open-pickup="${shift.id}">Open for pickup</button>`}`
           : employerView && expectedRole === 'employer' && status === 'assigned' ? `<button class="secondary-button" type="button" data-shift-op="cancel" data-shift-id="${shift.id}">Cancel shift</button>` : '';
       return `
       <article class="shift-card" data-searchable data-shift-card-id="${shift.id}" tabindex="0" role="button" aria-label="Open details for ${escapeHtml(shift.title || shift.serviceType || 'care shift')}">
@@ -963,6 +963,17 @@
       if (noteField) noteField.value = `Invited for ${inviteShift.dataset.shiftTitle || 'this open shift'}.`;
       inviteDialog?.showModal();
       document.getElementById('inviteFirstName')?.focus();
+      return;
+    }
+    const alertShift = event.target.closest('[data-notify-shift]');
+    if (alertShift) {
+      if (savingTime) return;
+      savingTime = true; alertShift.disabled = true;
+      try {
+        const result = await api(`/bookings/employer/${encodeURIComponent(alertShift.dataset.notifyShift)}/notify`, {method:'POST'});
+        notify(`Alert attempted for ${Number(result.matchedCaregivers || 0)} eligible caregivers. Shift emails are sent only once per caregiver.`);
+      } catch (error) { notify(error.message || 'Could not send shift alerts.'); }
+      finally { savingTime = false; alertShift.disabled = false; }
       return;
     }
     const pickup = event.target.closest('[data-open-pickup]');

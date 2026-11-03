@@ -20,9 +20,9 @@ type VerificationDetails = {
   verificationUrl: string;
 };
 
-export async function sendTransactionalEmail(to: string, subject: string, text: string): Promise<boolean> {
+export async function sendTransactionalEmail(to: string, subject: string, text: string, html?: string): Promise<boolean> {
   try {
-    return await sendEmail({ to, subject, text });
+    return await sendEmail({ to, subject, text, html });
   } catch {
     // Provider errors can contain credentials and message content.
     console.error("Transactional email failed; check the email provider delivery log");

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
@@ -36,6 +36,8 @@ import {
   type CaregiverShift,
   type RescueOffer,
 } from "@/lib/shared-api";
+
+import { parseShiftId } from "@/lib/shift-link";
 
 const AVAILABILITY_KEY = "elitebridge-caregiver-available-now-v1";
 
@@ -86,6 +88,9 @@ function opportunityScore(shift: CaregiverShift, preferences: CaregiverPreferenc
 export default function CaregiverOpportunities() {
   const colors = useColors();
   const router = useRouter();
+  const { shiftId } = useLocalSearchParams<{ shiftId?: string }>();
+  const selectedId = parseShiftId(shiftId);
+  const [feedLoaded, setFeedLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [availableNow, setAvailableNow] = useState(false);
   const [availableShifts, setAvailableShifts] = useState<CaregiverShift[]>([]);
@@ -132,6 +137,7 @@ export default function CaregiverOpportunities() {
       setAvailableShifts(shifts);
       setApplications(myApplications);
       setOffers(priorityOffers);
+      setFeedLoaded(true);
       setSyncMessage("Live agency sync");
     } catch (error) {
       setSyncMessage(error instanceof Error ? `Sync issue: ${error.message}` : "Shared service unavailable");
@@ -141,8 +147,9 @@ export default function CaregiverOpportunities() {
   };
 
   useEffect(() => {
+    setFeedLoaded(false);
     void refreshFeed();
-  }, []);
+  }, [selectedId]);
 
   const filteredShifts = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -326,6 +333,14 @@ export default function CaregiverOpportunities() {
       contentContainerStyle={{ padding: 16, paddingBottom: 140 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={refreshFeed} />}
     >
+      {selectedId ? <View accessibilityLabel="Selected shift">
+        <Text style={{fontSize:24,fontWeight:"900",color:colors.foreground,marginBottom:12}}>Your selected shift</Text>
+        {!feedLoaded ? <Text style={{color:colors.muted,marginBottom:16}}>{syncMessage}</Text> : (() => {
+          const selected = availableShifts.find(shift => shift.id === selectedId);
+          return selected ? renderShiftCard(selected) : <Text style={{color:colors.muted,marginBottom:16}}>This shift is no longer available to apply for. Check your assigned shifts or contact your agency.</Text>;
+        })()}
+        <TouchableOpacity onPress={() => router.replace("/(staff)/shifts")} style={{paddingVertical:12}}><Text style={{color:colors.primary}}>View my shifts</Text></TouchableOpacity>
+      </View> : null}
       <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 18 }}>
         <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
           <Image source={require("../../assets/images/elitebridge-logo.png")} style={{ width: 42, height: 42, borderRadius: 14 }} resizeMode="contain" accessibilityLabel="Elite Bridge logo" />
