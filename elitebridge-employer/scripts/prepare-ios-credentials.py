@@ -136,26 +136,26 @@ def make_macos_compatible_p12(password: str) -> None:
     )
 
 
-def ensure_push_capability(token: str, bundle_id: str) -> None:
+def ensure_capability(token: str, bundle_id: str, capability: str) -> None:
     capability_path = f"/v1/bundleIds/{bundle_id}/bundleIdCapabilities"
     capabilities = api_request(token, "GET", capability_path).get("data", [])
-    if any(item.get("attributes", {}).get("capabilityType") == "PUSH_NOTIFICATIONS" for item in capabilities):
+    if any(item.get("attributes", {}).get("capabilityType") == capability for item in capabilities):
         return
 
     payload = {
         "data": {
             "type": "bundleIdCapabilities",
-            "attributes": {"capabilityType": "PUSH_NOTIFICATIONS"},
+            "attributes": {"capabilityType": capability},
             "relationships": {
                 "bundleId": {"data": {"type": "bundleIds", "id": bundle_id}}
             },
         }
     }
     api_request(token, "POST", "/v1/bundleIdCapabilities", payload)
-    print(f"Enabled Push Notifications for the {APP_LABEL} bundle identifier.")
+    print(f"Enabled {capability} for the {APP_LABEL} bundle identifier.")
 
 
-def verify_push_entitlement(profile_path: str) -> None:
+def verify_push_entitlement(profile_path: str, associated_domains: bool = False) -> None:
     decoded_path = "/tmp/elitebridge-profile.plist"
     subprocess.check_call(
         [
@@ -166,6 +166,8 @@ def verify_push_entitlement(profile_path: str) -> None:
         stderr=subprocess.DEVNULL,
     )
     profile = plistlib.loads(pathlib.Path(decoded_path).read_bytes())
+    if associated_domains and "com.apple.developer.associated-domains" not in profile.get("Entitlements", {}):
+        raise RuntimeError("Apple provisioning profile is missing Associated Domains for app links.")
     if "aps-environment" not in profile.get("Entitlements", {}):
         raise RuntimeError("Apple provisioning profile is missing the aps-environment push entitlement.")
 
@@ -225,7 +227,11 @@ def main():
             f"Apple Developer does not have the registered bundle identifier {BUNDLE_IDENTIFIER}."
         )
     bundle_id = bundle_data[0]["id"]
-    ensure_push_capability(token, bundle_id)
+    ensure_capability(token, bundle_id, "PUSH_NOTIFICATIONS")
+    app_config = json.loads(pathlib.Path("app.json").read_text())
+    associated_domains = bool(app_config.get("expo", {}).get("ios", {}).get("associatedDomains"))
+    if associated_domains:
+        ensure_capability(token, bundle_id, "ASSOCIATED_DOMAINS")
 
     profile_name = f"Elite Bridge {APP_LABEL} App Store {int(time.time())}"
     payload = {
@@ -245,7 +251,7 @@ def main():
     if not profile_content:
         raise RuntimeError("Apple created the profile but did not return profileContent.")
     pathlib.Path(PROFILE_PATH).write_bytes(base64.b64decode(profile_content))
-    verify_push_entitlement(PROFILE_PATH)
+    verify_push_entitlement(PROFILE_PATH, associated_domains)
 
     credentials = {
         "ios": {
