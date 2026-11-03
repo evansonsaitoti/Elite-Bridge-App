@@ -299,9 +299,8 @@ export default function CaregiverOpportunities() {
             <Text style={{ color: colors.foreground, fontSize: 12, lineHeight: 17, fontWeight: "800", marginTop: 3 }}>{formatDateTime(shift.startTime, shift.endTime)}</Text>
           </View>
           <View style={{ width: 86, borderRadius: 14, backgroundColor: "#F8FAF9", padding: 10 }}>
-            <Text style={{ color: colors.muted, fontSize: 10, fontWeight: "800" }}>PAY</Text>
-            <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900", marginTop: 3 }}>${Number(shift.hourlyRate).toFixed(0)}/hr</Text>
-            <Text style={{ color: colors.muted, fontSize: 10, marginTop: 2 }}>{shiftHours(shift)}</Text>
+            <Text style={{ color: colors.muted, fontSize: 10, fontWeight: "800" }}>DURATION</Text>
+            <Text style={{ color: colors.foreground, fontSize: 14, fontWeight: "900", marginTop: 3 }}>{shiftHours(shift)}</Text>
           </View>
         </View>
 

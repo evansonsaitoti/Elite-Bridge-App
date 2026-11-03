@@ -16,16 +16,31 @@ export function buildShiftEmail(shift: ShiftEmailDetails, webAppUrl: string) {
   const endDate = end.toLocaleDateString("en-US", dateOptions);
   const hours = `${start.toLocaleTimeString("en-US", timeOptions)} – ${date !== endDate ? endDate + " " : ""}${end.toLocaleTimeString("en-US", timeOptions)}`;
   const location = [shift.city,shift.state].filter(Boolean).join(", ");
-  const instruction = shift.assignment_mode === "instant" ? "Open Elite Care to review and claim this shift if you are eligible." : "Open Elite Care to review and apply. Your agency will confirm the assignment.";
+  const instruction = shift.assignment_mode === "instant" ? "Review the details and claim this shift if you are eligible." : "Review the details and apply. Your agency will confirm the assignment.";
   const subject = `Elite Care: Available shift — ${date}`;
-  const text = ["Available shift",date,hours,shift.service_type,location,instruction,`View shift: ${url.href}`,"You can turn off shift emails in Elite Care notification settings."].join("\n\n");
-  const html = `<div lang="en" style="font-family:Arial,Helvetica,sans-serif;background:#f3f7f5;padding:24px 12px;color:#101828">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:auto;background:#fff;border-radius:18px"><tr><td style="padding:28px">
-<img src="${escape(new URL("/invoice-approved-logo.webp", url).href)}" width="210" alt="Elite Bridge Staffing" style="display:block;max-width:100%;height:auto">
-<p style="color:#97671c;font-size:12px;letter-spacing:2px;margin-top:30px">ELITE CARE</p><h1 style="font-size:28px;color:#0a4a35;margin:8px 0 24px">A shift is available</h1>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-top:1px solid #dce7e1;border-bottom:1px solid #dce7e1"><tr><td style="padding:22px 0">
-<strong style="font-size:19px">${escape(date)}</strong><p style="font-size:18px;margin:8px 0">${escape(hours)}</p><p style="margin:8px 0">${escape(shift.service_type)} · ${escape(location)}</p>
-<a href="${escape(url.href)}" style="display:inline-block;padding:15px 24px;margin-top:14px;border-radius:9px;background:#0a4a35;color:#fff;text-decoration:none;font-weight:bold">View shift</a>
-</td></tr></table><p style="line-height:1.6">${escape(instruction)}</p><p style="color:#667085;font-size:13px;line-height:1.6">Availability may change. Manage shift emails in Elite Care notification settings.</p></td></tr></table></div>`;
+  const text = ["Available shift",date,hours,shift.service_type,location,instruction,`View shift: ${url.href}`,"Manage shift emails in your app notification settings."].join("\n\n");
+  const html = `<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta http-equiv="X-UA-Compatible" content="IE=edge"><title>Available shift</title></head>
+<body style="margin:0;background-color:#f4f6f5;font-family:Arial,Helvetica,sans-serif;color:#172b24">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#f4f6f5"><tr><td align="center" style="padding-top:32px;padding-right:16px;padding-bottom:32px;padding-left:16px">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background-color:#ffffff" bgcolor="#ffffff">
+<tr><td align="center" style="padding-top:36px;padding-right:28px;padding-bottom:30px;padding-left:28px;border-bottom:3px solid #c68c2e">
+<img src="${escape(new URL("/invoice-approved-logo.webp", url).href)}" width="210" border="0" alt="Elite Bridge Staffing" style="display:block;width:210px;max-width:100%;height:auto">
+</td></tr>
+<tr><td style="padding-top:32px;padding-right:32px;padding-bottom:32px;padding-left:32px">
+<h1 style="font-family:Arial,Helvetica,sans-serif;font-size:26px;line-height:34px;font-weight:600;color:#0a4a35;margin-top:0;margin-bottom:24px">Available shift</h1>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="padding-bottom:22px;border-bottom:1px solid #e3e9e5">
+<p style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:27px;color:#172b24;margin-top:0;margin-bottom:6px;font-weight:bold">${escape(date)}</p>
+<p style="font-family:Arial,Helvetica,sans-serif;font-size:18px;line-height:27px;color:#172b24;margin-top:0;margin-bottom:12px">${escape(hours)}</p>
+<p style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:24px;color:#53655c;margin-top:0;margin-bottom:0">${escape(shift.service_type)} · ${escape(location)}</p>
+</td></tr></table>
+<p style="font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:25px;color:#53655c;margin-top:22px;margin-bottom:24px">${escape(instruction)}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" bgcolor="#0a4a35" style="background-color:#0a4a35;border-radius:6px">
+<a href="${escape(url.href)}" style="display:inline-block;padding-top:15px;padding-right:30px;padding-bottom:15px;padding-left:30px;font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:22px;color:#ffffff;text-decoration:none;font-weight:bold">View shift</a>
+</td></tr></table>
+</td></tr>
+<tr><td bgcolor="#f8faf9" style="background-color:#f8faf9;padding-top:20px;padding-right:32px;padding-bottom:20px;padding-left:32px;border-top:1px solid #e3e9e5">
+<p style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:20px;color:#68776f;margin-top:0;margin-bottom:0">Availability may change. Manage shift emails in your app notification settings.</p>
+</td></tr></table></td></tr></table></body></html>`;
   return {subject,text,html,url:url.href};
 }
