@@ -9,6 +9,7 @@ import { ensureCoreTables } from "../db/bootstrap.js";
 import { authMiddleware, AuthRequest, requireRole } from "../middleware/auth.js";
 import { AppError } from "../middleware/errorHandler.js";
 import { config } from "../config/env.js";
+import { caregiverInviteLogo } from "../services/caregiver-invite-logo.js";
 import { appStoreIcon, googlePlayIcon } from "../services/caregiver-invite-icons.js";
 import { sendEmail, escapeEmailHtml } from "../services/email.js";
 import { sendSms, smsReady } from "../services/sms.js";
@@ -294,7 +295,7 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
         const androidUrl = escapeEmailHtml(appLinks.android);
         emailSent = await sendEmail({
           to: data.email,
-          subject: "Your caregiver invitation",
+          subject: `Join your care team at ${employer.companyName}`,
           text: [
             `Hello ${data.firstName},`, "",
             `${employer.companyName} invited you to join its care team. Create your account using the link below within 7 days.`,
@@ -304,13 +305,14 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
             "Google Play: " + appLinks.android,
           ].join("\n"),
           attachments: [
+            { filename: "elite-bridge-staffing.png", content: caregiverInviteLogo, contentType: "image/png", cid: "care-agency-logo" },
             { filename: "app-store.png", content: appStoreIcon, contentType: "image/png", cid: "care-app-store" },
             { filename: "google-play.png", content: googlePlayIcon, contentType: "image/png", cid: "care-google-play" },
           ],
           html: [
             '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f6f4;font:16px Arial,Helvetica,sans-serif;color:#20362d;"><tr><td align="center" style="padding:16px 8px;">',
-            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-top:3px solid #c39a42;"><tr><td style="padding:24px;">',
-            '<div align="center"><img src="https://app.elitebridgestaffing.com/invoice-approved-logo.webp" width="210" alt="Elite Bridge Staffing — Staffing You Can Rely On" style="display:block;width:210px;max-width:100%;height:auto;border:0;" /></div>',
+            '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#fff;border-top:3px solid #c39a42;">',
+            '<tr><td align="center" style="padding:22px 8px 8px;"><img src="cid:care-agency-logo" width="208" height="52" alt="Elite Bridge Staffing — Staffing You Can Rely On" style="display:block;width:208px;height:52px;border:0;" /></td></tr><tr><td style="padding:0 24px 24px;">',
             '<h1 style="font-size:22px;color:#104733;margin:24px 0 14px;">Join your care team</h1>',
             `<p>Hello ${displayName},</p><p style="line-height:1.5;">${displayAgency} invited you to join its care team. Create your account to see your shifts and schedule.</p>`,
             `<a href="${signupUrl}" style="display:inline-block;background:#104733;color:#fff;padding:13px 22px;border-radius:6px;text-decoration:none;font-weight:bold;">Accept invitation</a>`,
