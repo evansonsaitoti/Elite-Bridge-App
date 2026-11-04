@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db";
 import { config } from "../config/env";
 import { buildShiftEmail, type ShiftEmailDetails } from "./shift-email-template";
+import { calendarLink } from "../routes/shift-calendar";
 import { sendTransactionalEmail } from "./notifications";
 
 let ready: Promise<void> | undefined;
@@ -27,7 +28,6 @@ export async function sendShiftEmails(userIds: number[], shiftId: number): Promi
     city, state, assignment_mode FROM shift_posts WHERE id=${shiftId}
     AND status IN ('open', 'assigned') AND start_time > CURRENT_TIMESTAMP`) as any).rows[0] as ShiftEmailDetails | undefined;
   if (!shift) return;
-  const email = buildShiftEmail(shift, config.WEB_APP_URL);
   const recipients = (await db.execute(sql`
     SELECT u.id, u.email FROM users u
     LEFT JOIN notification_preferences p ON p.user_id = u.id
@@ -39,6 +39,7 @@ export async function sendShiftEmails(userIds: number[], shiftId: number): Promi
   // Unknown provider outcomes are recorded and are never automatically retried.
   for (let offset = 0; offset < recipients.length; offset += 5) {
     const results = await Promise.allSettled(recipients.slice(offset, offset + 5).map(async user => {
+      const email = buildShiftEmail(shift, config.WEB_APP_URL, await calendarLink(user.id));
       const claim = (await db.execute(sql`
         INSERT INTO shift_email_deliveries (user_id, shift_id, status)
         VALUES (${user.id}, ${shiftId}, 'submitting')
