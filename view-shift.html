@@ -1,7 +1,7 @@
 <!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>View your shift | Elite Care</title><style>[hidden]{display:none!important}body{font-family:Arial,sans-serif;background:#f3f7f5;color:#101828;margin:0;padding:24px}main{max-width:480px;margin:8vh auto;background:white;border-radius:20px;padding:32px}img{max-width:220px}h1{color:#0a4a35}p{line-height:1.6}a{display:block;padding:16px;border-radius:10px;margin:16px 0;background:#0a4a35;color:white;text-align:center;text-decoration:none}.secondary{background:#eaf4ef;color:#0a4a35}</style></head><body><main><img src="/invoice-approved-logo.webp" alt="Elite Bridge Staffing"><h1>View your shift in Elite Care</h1><p id="message">Open the app to review availability and apply or claim. Your agency may need to approve the assignment.</p><a id="open" hidden>Open Elite Care</a><a class="secondary" href="https://apps.apple.com/app/id6770962152">Get Elite Care for iPhone</a><p>If your email browser stays on this page, tap Open Elite Care to continue.</p></main><script>
 const id = new URLSearchParams(location.search).get('shiftId');
 if (id && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id))) {
-  const appUrl = 'elitebridge://view-shift?shiftId=' + id;
+  const appUrl = 'elitebridge://opportunities?shiftId=' + id;
   const android = /Android/i.test(navigator.userAgent);
   const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
