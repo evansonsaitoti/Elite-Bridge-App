@@ -5,7 +5,7 @@ describe("caregiver shift email",()=>{
  it("uses facility time and a specific HTTPS link with approval wording",()=>{
  const mail=buildShiftEmail(shift,"https://app.elitebridgestaffing.com");
  expect(mail.text).toContain("9:00 AM EST – 1:00 PM EST");
- expect(mail.url).toBe("https://app.elitebridgestaffing.com/view-shift?shiftId=34");
+ expect(mail.url).toBe("https://app.elitebridgestaffing.com/opportunities?shiftId=34");
  expect(mail.html).toContain("View shift");expect(mail.text).toContain("agency will confirm");
  });
  it("escapes fields and distinguishes overnight instant shifts",()=>{
