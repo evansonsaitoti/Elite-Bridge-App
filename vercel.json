@@ -48,6 +48,10 @@
   ],
   "routes": [
     {
+      "src": "/api/calendar/(.*)",
+      "dest": "https://elite-bridge-shared-api-evans.vercel.app/api/calendar/$1"
+    },
+    {
       "src": "/.well-known/apple-app-site-association",
       "dest": "/apple-app-site-association.json",
       "headers": {
