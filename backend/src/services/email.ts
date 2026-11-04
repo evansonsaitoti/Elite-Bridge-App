@@ -2,7 +2,7 @@ import nodemailer from "nodemailer";
 import axios from "axios";
 import { config } from "../config/env.js";
 
-type EmailAttachment = { filename: string; content: Buffer; contentType?: string };
+type EmailAttachment = { filename: string; content: Buffer; contentType?: string; cid?: string };
 type EmailMessage = { from?: string; to: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
 
 const DEFAULT_FROM = "Elite Bridge Staffing <info@elitebridgestaffing.com>";
@@ -80,6 +80,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
       attachments: signed.attachments?.map((attachment) => ({
         filename: attachment.filename,
         content: attachment.content.toString("base64"),
+        ...(attachment.cid ? { content_id: attachment.cid } : {}),
         ...(attachment.contentType ? { content_type: attachment.contentType } : {}),
       })),
     }, {
