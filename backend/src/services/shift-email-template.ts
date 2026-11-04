@@ -6,7 +6,7 @@ export type ShiftEmailDetails = {
 const escape = (value: string) => value.replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]!));
 export function buildShiftEmail(shift: ShiftEmailDetails, webAppUrl: string) {
   if (!Number.isSafeInteger(shift.id) || shift.id <= 0) throw new Error("Invalid shift ID");
-  const url = new URL("/view-shift", webAppUrl);
+  const url = new URL("/opportunities", webAppUrl);
   if (url.protocol !== "https:") throw new Error("Shift links require HTTPS");
   url.searchParams.set("shiftId", String(shift.id));
   const start = new Date(shift.start_time), end = new Date(shift.end_time);
