@@ -836,7 +836,7 @@ router.post("/:shiftId/apply", authMiddleware, async (req: AuthRequest, res, nex
     await sendPushToUsers([shift.employer_user_id], {
       title: "New caregiver application",
       body: "A caregiver applied for your shift. Open Elite Work for details.",
-      data: { type: "new_application", shiftId, applicationId: (result as any).rows[0].id },
+      data: { type: "shift_application", shiftId, applicationId: (result as any).rows[0].id },
     });
     await sendOperationsAlert("New shift application", `A caregiver applied for shift #${shiftId}. Employer account #${shift.employer_user_id} can review the application.`);
     res.status(201).json({ application: (result as any).rows[0] });
