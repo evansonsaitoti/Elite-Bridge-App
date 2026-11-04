@@ -37,6 +37,7 @@ const invitationSchema = z
     firstName: z.string().trim().min(1).max(100),
     lastName: z.string().trim().max(100).optional(),
     email: z.string().trim().email().transform((value) => value.toLowerCase()).optional(),
+    cc: z.string().trim().email().optional(),
     phone: z.string().trim().min(7).max(20).optional(),
   })
   .refine((data) => data.email || data.phone, {
@@ -295,6 +296,7 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
         const androidUrl = escapeEmailHtml(appLinks.android);
         emailSent = await sendEmail({
           to: data.email,
+          cc: data.cc,
           subject: `Join your care team at ${employer.companyName}`,
           text: [
             `Hello ${data.firstName},`, "",

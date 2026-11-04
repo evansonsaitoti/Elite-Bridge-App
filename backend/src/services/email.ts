@@ -3,7 +3,7 @@ import axios from "axios";
 import { config } from "../config/env.js";
 
 type EmailAttachment = { filename: string; content: Buffer; contentType?: string; cid?: string };
-type EmailMessage = { from?: string; to: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
+type EmailMessage = { from?: string; to: string; cc?: string; subject: string; text: string; html?: string; attachments?: EmailAttachment[] };
 
 const DEFAULT_FROM = "Elite Bridge Staffing <info@elitebridgestaffing.com>";
 const SIGNATURE_MARKER = "elite-bridge-official-signature";
@@ -74,6 +74,7 @@ export async function sendEmail(message: EmailMessage): Promise<boolean> {
     const response = await axios.post("https://api.resend.com/emails", {
       from,
       to: [signed.to],
+      ...(signed.cc ? { cc: [signed.cc] } : {}),
       subject: signed.subject,
       text: signed.text,
       html: signed.html,

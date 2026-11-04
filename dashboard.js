@@ -718,7 +718,8 @@
   inviteForm?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const formData = new FormData(inviteForm);
-    const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'phone', 'role', 'location', 'note'].map((key) => [key, String(formData.get(key) || '').trim()]));
+    const payload = Object.fromEntries(['firstName', 'lastName', 'email', 'cc', 'phone', 'role', 'location', 'note'].map((key) => [key, String(formData.get(key) || '').trim()]));
+    if (payload.cc && !payload.email) { notify('Enter a caregiver email address to send a copy.'); return; }
     if (!payload.email && !payload.phone) { notify('Enter an email address or phone number.'); return; }
     Object.keys(payload).forEach((key) => { if (!payload[key]) delete payload[key]; });
     const submit = document.getElementById('inviteSubmit');
@@ -739,7 +740,7 @@
       const noteLine = payload.note ? `\n\nNote: ${payload.note}` : '';
       const emailBody = `Join our care team on Elite Bridge${inviteContext ? ` for ${inviteContext}` : ''}.${noteLine}\n\nAccept your secure invitation and create access with your email, phone and password. You can finish the rest of your profile later: ${data.inviteUrl}\nDownload the caregiver app: ${caregiverAppUrl}`;
       const textBody = `Join Elite Bridge${payload.location ? ` (${payload.location})` : ''}. Create access now and finish your profile later: ${data.inviteUrl} App: ${caregiverAppUrl}`;
-      document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}?subject=${encodeURIComponent('Your Elite Bridge invitation')}&body=${encodeURIComponent(emailBody)}`;
+      document.getElementById('emailInvite').href = `mailto:${encodeURIComponent(payload.email || '')}${payload.cc ? '?cc=' + encodeURIComponent(payload.cc) + '&' : '?'}subject=${encodeURIComponent('Your Elite Bridge invitation')}&body=${encodeURIComponent(emailBody)}`;
       document.getElementById('textInvite').href = `sms:${encodeURIComponent(payload.phone || '')}?body=${encodeURIComponent(textBody)}`;
       result.hidden = false;
       notify('Caregiver invitation created.');
