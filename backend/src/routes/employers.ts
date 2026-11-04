@@ -316,8 +316,8 @@ router.post("/invitations", authMiddleware, requireRole("employer", "admin"), as
             `<a href="${signupUrl}" style="display:inline-block;background:#104733;color:#fff;padding:13px 22px;border-radius:6px;text-decoration:none;font-weight:bold;">Accept invitation</a>`,
             '<p style="font-size:13px;color:#52655a;margin:9px 0 22px;">This invitation expires in 7 days.</p>',
             '<p style="border-top:1px solid #dce6e0;padding-top:18px;line-height:1.5;">After registration, download <strong>Elite Care</strong> and sign in with the same email.</p>',
-            ...[[iosUrl, "care-app-store", "App Store"], [androidUrl, "care-google-play", "Google Play"]].map(([url, cid, label]) =>
-              `<a href="${url}" style="display:inline-block;background:#18231e;color:#fff;padding:9px 10px;margin:0 4px 4px 0;border-radius:5px;text-decoration:none;font-size:14px;"><img src="cid:${cid}" width="20" height="20" alt="" style="vertical-align:middle;border:0;" />&nbsp; ${label}</a>`),
+            `<a href="${iosUrl}" style="display:inline-block;margin:4px 8px 4px 0;"><img src="cid:care-app-store" width="120" height="40" alt="Download on the App Store" style="display:block;border:0;" /></a> `,
+            `<a href="${androidUrl}" style="display:inline-block;margin:4px 0;"><img src="cid:care-google-play" width="134" height="40" alt="Get it on Google Play" style="display:block;border:0;" /></a>`,
             '<!-- elite-bridge-official-signature --><p style="font-size:13px;margin:19px 0 0;"><a href="mailto:info@elitebridgestaffing.com" style="color:#446455;">Contact support</a></p>',
             '</td></tr></table></td></tr></table>',
           ].join(""),
