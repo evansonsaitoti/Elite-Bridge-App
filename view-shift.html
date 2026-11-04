@@ -1,28 +1,60 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>View your shift | Elite Care</title><style>[hidden]{display:none!important}body{font-family:Arial,sans-serif;background:#f3f7f5;color:#101828;margin:0;padding:24px}main{max-width:480px;margin:8vh auto;background:white;border-radius:20px;padding:32px}img{max-width:220px}h1{color:#0a4a35}p{line-height:1.6}a{display:block;padding:16px;border-radius:10px;margin:16px 0;background:#0a4a35;color:white;text-align:center;text-decoration:none}.secondary{background:#eaf4ef;color:#0a4a35}</style></head><body><main><img src="/invoice-approved-logo.webp" alt="Elite Bridge Staffing"><h1>View your shift in Elite Care</h1><p id="message">Open the app to review availability and apply or claim. Your agency may need to approve the assignment.</p><a id="open" hidden>Open Elite Care</a><a class="secondary" href="https://apps.apple.com/app/id6770962152">Get Elite Care for iPhone</a><p>If your email browser stays on this page, tap Open Elite Care to continue.</p></main><script>
-const id = new URLSearchParams(location.search).get('shiftId');
-const all = location.pathname.replace(/\/$/, '') === '/opportunities' && id === null;
-if (all || (id && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id)))) {
-  const selection = all ? '' : '?shiftId=' + id;
-  if (all) document.querySelector('h1').textContent = 'Available shifts in Elite Care';
-  const appUrl = 'elitebridge://opportunities' + selection;
-  const android = /Android/i.test(navigator.userAgent);
-  const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-  const target = android
-    ? 'intent://opportunities' + selection + '#Intent;scheme=elitebridge;package=com.elitebridgestaffing.caregiver;end'
-    : appUrl;
-  const button = document.getElementById('open');
-  button.href = target;
-  button.hidden = false;
-  if (android) {
-    const store = document.querySelector('.secondary');
-    store.href = 'https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver';
-    store.textContent = 'Get Elite Care for Android';
-  }
-  if ((android || appleMobile) && document.visibilityState === 'visible') {
-    window.location.replace(target);
-  }
-} else {
-  document.getElementById('message').textContent = 'This shift link is invalid. Open Elite Care and contact your agency.';
-}
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Elite Care</title>
+  <style>
+    [hidden] { display: none !important; }
+    body { margin: 0; background: white; color: #172b24; font: 16px/1.5 system-ui, sans-serif; }
+    main { padding: 24px; text-align: center; }
+    a { display: inline-block; padding: 10px; color: #0a4a35; }
+  </style>
+</head>
+<body>
+  <main hidden>
+    <p id="error" hidden>This shift link is invalid.</p>
+    <a id="open" hidden>Open Elite Care</a>
+    <a id="store" href="https://apps.apple.com/app/id6770962152">Get Elite Care for iPhone</a>
+  </main>
+  <noscript>Enable JavaScript to open Elite Care from this browser.</noscript>
+  <script>
+    const fallback = document.querySelector('main');
+    const id = new URLSearchParams(location.search).get('shiftId');
+    const all = location.pathname.replace(/\/$/, '') === '/opportunities' && id === null;
+    const android = /Android/i.test(navigator.userAgent);
+    const appleMobile = /iPhone|iPad|iPod/i.test(navigator.userAgent) ||
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (android) {
+      const store = document.getElementById('store');
+      store.href = 'https://play.google.com/store/apps/details?id=com.elitebridgestaffing.caregiver';
+      store.textContent = 'Get Elite Care for Android';
+    }
+    if (all || (id && /^[1-9]\d*$/.test(id) && Number.isSafeInteger(Number(id)))) {
+      const selection = all ? '' : '?shiftId=' + id;
+      const target = android
+        ? 'intent://opportunities' + selection + '#Intent;scheme=elitebridge;package=com.elitebridgestaffing.caregiver;end'
+        : 'elitebridge://opportunities' + selection;
+      const button = document.getElementById('open');
+      button.href = target;
+      button.hidden = false;
+      if ((android || appleMobile) && document.visibilityState === 'visible') {
+        // Start the handoff before displaying any web content.
+        let elapsed = false;
+        const recover = () => {
+          if (elapsed && document.visibilityState === 'visible' && document.hasFocus()) fallback.hidden = false;
+        };
+        window.addEventListener('focus', recover);
+        document.addEventListener('visibilitychange', recover);
+        window.setTimeout(() => { elapsed = true; recover(); }, 3000);
+        window.location.replace(target);
+      } else {
+        fallback.hidden = false;
+      }
+    } else {
+      document.getElementById('error').hidden = false;
+      fallback.hidden = false;
+    }
+  </script>
+</body>
+</html>
