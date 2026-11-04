@@ -55,7 +55,7 @@
       }
     },
     {
-      "src": "/view-shift/?",
+      "src": "/(?:view-shift|opportunities)/?",
       "dest": "/view-shift.html"
     },
     {
