@@ -30,6 +30,7 @@ async function dashboard(role: 'caregiver' | 'employer', responses: Record<strin
     const data = defaults[path] || {};
     return { ok: !(data instanceof Error), status: data instanceof Error ? 500 : 200, json: async () => data instanceof Error ? { error: data.message } : data };
   }) as any;
+  if (role === 'employer') w.eval(readFileSync('../management-board.js', 'utf8'));
   w.eval(readFileSync('../dashboard.js', 'utf8'));
   await vi.waitFor(() => expect(calls.length).toBeGreaterThan(3));
   await new Promise(resolve => setTimeout(resolve, 0));
@@ -82,3 +83,23 @@ describe('Existing web dashboards', () => {
     expect(document.querySelector('[data-clock-action]')).toBeNull();
   });
 });
+
+ describe('Management admin entry point', () => {
+  it('prefills admin role and sends an invitation without creating a separate organization', async () => {
+    const { w, document, calls } = await dashboard('employer', {
+      '/employers/team': {yourRole:'owner', members:[], invitations:[]},
+      '/employers/me': {profile:{organizationRole:'owner'}},
+      '/employers/team/invitations': {emailSent:true}
+    });
+    const shortcut = document.querySelector('[data-invite-admin]') as HTMLButtonElement;
+    expect(shortcut.hidden).toBe(false);shortcut.click();
+    expect((document.getElementById('teamInviteRole') as HTMLSelectElement).value).toBe('admin');
+    (document.getElementById('teamInviteEmail') as HTMLInputElement).value='manager@example.com';
+    document.getElementById('teamInviteForm')!.dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));
+    await vi.waitFor(()=>expect(calls).toContainEqual({path:'/employers/team/invitations',method:'POST',body:{email:'manager@example.com',role:'admin'}}));
+  });
+  it('keeps the second-admin shortcut hidden for nonowners', async () => {
+    const {document} = await dashboard('employer', {'/employers/team':{yourRole:'admin',members:[],invitations:[]}});
+    expect((document.querySelector('[data-invite-admin]') as HTMLButtonElement).hidden).toBe(true);
+  });
+ });

@@ -654,12 +654,21 @@
       if (status) status.textContent = error.message || 'Could not save the logo.';
     } finally { event.target.value = ''; }
   });
+  document.querySelector('[data-invite-admin]')?.addEventListener('click', () => {
+    activateView('settings');
+    document.getElementById('teamInviteRole').value = 'admin';
+    document.getElementById('teamInviteEmail').focus();
+    document.getElementById('teamInviteStatus').textContent = 'The new admin can manage this organization. Only you, the owner, can appoint or remove other admins.';
+  });
   document.getElementById('teamInviteForm')?.addEventListener('submit', async (event) => {
     event.preventDefault();
     const email = document.getElementById('teamInviteEmail')?.value.trim();
     const role = document.getElementById('teamInviteRole')?.value;
     const status = document.getElementById('teamInviteStatus');
-    if (!email || !role) return;
+    if (!email || !role || !event.target.reportValidity()) return;
+    const submit = event.target.querySelector('[type=submit]');
+    if (submit.disabled) return;
+    submit.disabled = true;
     try {
       const result = await api('/employers/team/invitations', { method: 'POST', body: JSON.stringify({ email, role }) });
       if (status) status.textContent = result.emailSent ? `Invitation sent to ${email}.` : `Invitation created. Share this link with ${email}: ${result.invitationUrl}`;
@@ -667,7 +676,7 @@
       await loadOrganizationTeam();
     } catch (error) {
       if (status) status.textContent = error.message || 'Could not send the team invitation.';
-    }
+    } finally { submit.disabled = false; }
   });
   document.querySelectorAll('[data-go-view]').forEach((button) => button.addEventListener('click', () => activateView(button.dataset.goView)));
   document.querySelectorAll('[data-location-filter]').forEach((button) => button.addEventListener('click', () => {
@@ -2667,6 +2676,7 @@
     try {
       const data = await api('/employers/team');
       const canManage = ['owner', 'admin'].includes(data.yourRole);
+      document.querySelectorAll('[data-invite-admin]').forEach(button => { button.hidden = data.yourRole !== 'owner'; });
       const form = document.getElementById('teamInviteForm');
       if (form) form.hidden = !canManage;
       const adminOption = document.querySelector('[data-owner-only]');
@@ -2784,6 +2794,10 @@
       ...(timesheetResult.status === 'fulfilled' ? timesheetResult.value.timesheets || [] : []),
       ...(manualTimesheetResult.status === 'fulfilled' ? manualTimesheetResult.value.manualTimesheets || [] : []),
     ];
+    window.EliteManagementBoard?.update({ shifts, applications: applicationsResult.status === 'fulfilled' ? applicationsResult.value.applications || [] : null,
+      timesheets: timesheetResult.status === 'fulfilled' && manualTimesheetResult.status === 'fulfilled' ? timesheets : null,
+      available: shiftResult.status === 'fulfilled', organizationRole: profile?.organizationRole,
+      openShift: renderShiftDetail, navigate: activateView });
     const pendingTimesheets = timesheets.filter(t => t.status === 'pending_approval').length;
     const pendingApplications = applicationsResult.status === 'fulfilled' ? (applicationsResult.value.applications || []).filter(a => a.status === 'pending').length : 0;
     const unfilled = shifts.filter(shift => ['open', 'assigned', 'in_progress'].includes(shift.status) && shift.remainingPositions > 0).length;
